@@ -4,19 +4,14 @@
 loto7_logic_predictor.py
 
 loto7_predictions.csv を使わず、loto7.csv の過去実績だけで
-ロト7の次回候補を生成する予測ロジックです。
+ロト7の次回候補を生成し、loto7_predictions.csv 互換形式で保存する。
 
-主な方針:
-- 直近10/20/50/100回の出現頻度
-- ペア・三連の同時出現相性
-- 前回数字の残し方
-- 奇偶、低中高、合計値、連番の構成評価
-- 5口全体の重複分散
-- 未来リークなしのバックテスト
+保存形式:
+    抽せん日,予測1,信頼度1,...,予測25,信頼度25
 
 注意:
-宝くじの当せんはランダム性が強く、的中保証は確認できません。
-このコードは過去実績に基づく候補生成・検証ツールです。
+    宝くじの当せんはランダム性が強く、的中保証は確認できません。
+    このコードは過去実績に基づく候補生成・検証ツールです。
 """
 
 from __future__ import annotations
@@ -31,13 +26,16 @@ import urllib.request
 from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
 
 DEFAULT_CSV_URL = "https://raw.githubusercontent.com/Joker7822/loto7/main/loto7.csv"
+DEFAULT_OUTPUT_CSV = "loto7_predictions.csv"
 NUM_MIN = 1
 NUM_MAX = 37
 PICK_SIZE = 7
+DEFAULT_SAVE_COUNT = 25
 
 
 @dataclass(frozen=True)
@@ -118,8 +116,10 @@ def load_draws(source: str = DEFAULT_CSV_URL) -> List[Draw]:
     return draws
 
 
-def format_ticket(ticket: Sequence[int]) -> str:
-    return ", ".join(f"{n:02d}" for n in sorted(ticket))
+def format_ticket(ticket: Sequence[int], zero_pad: bool = True) -> str:
+    if zero_pad:
+        return ", ".join(f"{n:02d}" for n in sorted(ticket))
+    return ", ".join(str(n) for n in sorted(ticket))
 
 
 def recent_draws(draws: Sequence[Draw], window: int) -> Sequence[Draw]:
@@ -148,10 +148,10 @@ def last_seen_gaps(draws: Sequence[Draw]) -> Dict[int, int]:
             last[n] = idx
 
     latest_idx = len(draws) - 1
-    gaps: Dict[int, int] = {}
-    for n, idx in last.items():
-        gaps[n] = len(draws) + 1 if idx is None else latest_idx - idx
-    return gaps
+    return {
+        n: (len(draws) + 1 if idx is None else latest_idx - idx)
+        for n, idx in last.items()
+    }
 
 
 def normalized(counter: Counter, n: int, max_value: Optional[float] = None) -> float:
@@ -175,6 +175,7 @@ def build_number_scores(draws: Sequence[Draw]) -> Dict[int, float]:
     max100 = max(c100.values()) if c100 else 1
 
     scores: Dict[int, float] = {}
+
     for n in range(NUM_MIN, NUM_MAX + 1):
         hot_score = (
             4.0 * normalized(c10, n, max10)
@@ -403,6 +404,95 @@ def predict(draws: Sequence[Draw], num_tickets: int = 5, pool_size: int = 21) ->
     return select_diverse_tickets(ranked, num_tickets=num_tickets)
 
 
+def confidence_values(ranked: Sequence[TicketScore]) -> List[float]:
+    """
+    loto7_predictions.csv の既存レンジに合わせて、
+    1位=0.970、最下位=0.720付近になるよう正規化する。
+    """
+    if not ranked:
+        return []
+    scores = [x.score for x in ranked]
+    max_score = max(scores)
+    min_score = min(scores)
+
+    if max_score == min_score:
+        return [0.970 for _ in ranked]
+
+    values = []
+    for s in scores:
+        conf = 0.720 + ((s - min_score) / (max_score - min_score)) * 0.250
+        values.append(round(conf, 3))
+    return values
+
+
+def prediction_csv_header(save_count: int = DEFAULT_SAVE_COUNT) -> List[str]:
+    header = ["抽せん日"]
+    for i in range(1, save_count + 1):
+        header.extend([f"予測{i}", f"信頼度{i}"])
+    return header
+
+
+def prediction_row(target_date: str, ranked: Sequence[TicketScore], save_count: int = DEFAULT_SAVE_COUNT) -> Dict[str, str]:
+    header = prediction_csv_header(save_count)
+    row: Dict[str, str] = {key: "" for key in header}
+    row["抽せん日"] = target_date
+
+    top = list(ranked[:save_count])
+    confs = confidence_values(top)
+
+    for i in range(1, save_count + 1):
+        if i <= len(top):
+            row[f"予測{i}"] = format_ticket(top[i - 1].ticket, zero_pad=False)
+            row[f"信頼度{i}"] = f"{confs[i - 1]:.3f}".rstrip("0").rstrip(".")
+        else:
+            row[f"予測{i}"] = ""
+            row[f"信頼度{i}"] = ""
+
+    return row
+
+
+def save_predictions_csv(
+    output_path: str,
+    target_date: str,
+    ranked: Sequence[TicketScore],
+    save_count: int = DEFAULT_SAVE_COUNT,
+) -> None:
+    """
+    loto7_predictions.csv 互換形式で保存する。
+    同じ抽せん日が既に存在する場合は上書きし、なければ追記する。
+    """
+    path = Path(output_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    header = prediction_csv_header(save_count)
+    new_row = prediction_row(target_date, ranked, save_count)
+
+    rows: List[Dict[str, str]] = []
+    if path.exists():
+        with path.open("r", encoding="utf-8-sig", newline="") as f:
+            reader = csv.DictReader(f)
+            for old in reader:
+                normalized_row = {key: old.get(key, "") for key in header}
+                rows.append(normalized_row)
+
+    replaced = False
+    for idx, old in enumerate(rows):
+        if old.get("抽せん日") == target_date:
+            rows[idx] = new_row
+            replaced = True
+            break
+
+    if not replaced:
+        rows.append(new_row)
+
+    rows.sort(key=lambda r: r.get("抽せん日", ""))
+
+    with path.open("w", encoding="utf-8-sig", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=header)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
 def evaluate_prediction(ticket: Sequence[int], actual_main: Sequence[int]) -> int:
     return len(set(ticket) & set(actual_main))
 
@@ -487,7 +577,7 @@ def print_recent_summary(draws: Sequence[Draw]) -> None:
 
 
 def print_predictions(tickets: Sequence[TicketScore]) -> None:
-    print("=== 次回予測 5口 ===")
+    print("=== 次回予測 ===")
     for i, t in enumerate(tickets, start=1):
         d = t.detail
         print(
@@ -522,14 +612,17 @@ def print_backtest_summary(result: Dict[str, object]) -> None:
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser(
-        description="loto7.csv の実績だけでロト7予測5口とバックテストを出力します。"
+        description="loto7.csv の実績だけでロト7予測とバックテストを出力し、loto7_predictions.csv形式で保存します。"
     )
     parser.add_argument("--csv", default=DEFAULT_CSV_URL, help="loto7.csv のURLまたはローカルパス")
-    parser.add_argument("--tickets", type=int, default=5, help="出力する口数")
+    parser.add_argument("--tickets", type=int, default=5, help="画面に表示する口数")
     parser.add_argument("--pool-size", type=int, default=21, help="候補プールサイズ。大きいほど遅くなる")
     parser.add_argument("--backtest", action="store_true", help="バックテストも実行する")
     parser.add_argument("--min-train", type=int, default=100, help="バックテストの初期学習回数")
     parser.add_argument("--backtest-pool-size", type=int, default=19, help="バックテスト時の候補プールサイズ")
+    parser.add_argument("--output-csv", default=DEFAULT_OUTPUT_CSV, help="保存先CSV。既定: loto7_predictions.csv")
+    parser.add_argument("--save-count", type=int, default=DEFAULT_SAVE_COUNT, help="保存する予測数。既定: 25")
+    parser.add_argument("--no-save", action="store_true", help="予測CSVを保存しない")
     args = parser.parse_args(argv)
 
     draws = load_draws(args.csv)
@@ -537,9 +630,30 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print("抽せんデータを読み込めませんでした。", file=sys.stderr)
         return 1
 
+    latest = draws[-1]
+    target_date = next_friday_after(latest.date)
+
     print_recent_summary(draws)
-    tickets = predict(draws, num_tickets=args.tickets, pool_size=args.pool_size)
-    print_predictions(tickets)
+
+    display_tickets = predict(draws, num_tickets=args.tickets, pool_size=args.pool_size)
+    print_predictions(display_tickets)
+
+    if not args.no_save:
+        ranked_for_csv = rank_tickets(
+            draws,
+            pool_size=args.pool_size,
+            max_rank=max(args.save_count, DEFAULT_SAVE_COUNT),
+        )
+        save_predictions_csv(
+            output_path=args.output_csv,
+            target_date=target_date,
+            ranked=ranked_for_csv,
+            save_count=args.save_count,
+        )
+        print(f"保存完了: {args.output_csv}")
+        print(f"保存形式: 抽せん日, 予測1, 信頼度1 ... 予測{args.save_count}, 信頼度{args.save_count}")
+        print(f"対象抽せん日: {target_date}")
+        print()
 
     if args.backtest:
         bt = backtest(
