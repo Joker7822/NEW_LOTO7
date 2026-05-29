@@ -14,7 +14,7 @@ on:
       save_count:
         description: "Number of predictions to save"
         required: false
-        default: "25"
+        default: "10"
   schedule:
     # JST Friday 21:30 = UTC Friday 12:30
     - cron: "30 12 * * 5"
