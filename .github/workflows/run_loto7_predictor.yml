@@ -1,0 +1,97 @@
+name: Run Loto7 Predictor
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_backtest:
+        description: "Run backtest after prediction"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+      save_count:
+        description: "Number of predictions to save"
+        required: false
+        default: "25"
+  schedule:
+    # JST Friday 21:30 = UTC Friday 12:30
+    - cron: "30 12 * * 5"
+
+permissions:
+  contents: write
+
+env:
+  PYTHON_VERSION: "3.11"
+  OUTPUT_CSV: "loto7_predictions.csv"
+
+jobs:
+  predict:
+    name: Generate Loto7 predictions
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Show Python version
+        run: python --version
+
+      - name: Run predictor
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          SAVE_COUNT="${{ github.event.inputs.save_count || '25' }}"
+          RUN_BACKTEST="${{ github.event.inputs.run_backtest || 'false' }}"
+
+          if [ "$RUN_BACKTEST" = "true" ]; then
+            python loto7_logic_predictor.py \
+              --output-csv "$OUTPUT_CSV" \
+              --save-count "$SAVE_COUNT" \
+              --backtest
+          else
+            python loto7_logic_predictor.py \
+              --output-csv "$OUTPUT_CSV" \
+              --save-count "$SAVE_COUNT"
+          fi
+
+      - name: Show generated files
+        shell: bash
+        run: |
+          set -euo pipefail
+          ls -la
+          echo "--- ${OUTPUT_CSV} preview ---"
+          if [ -f "$OUTPUT_CSV" ]; then
+            tail -n 5 "$OUTPUT_CSV"
+          else
+            echo "$OUTPUT_CSV was not generated."
+            exit 1
+          fi
+
+      - name: Commit prediction CSV
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add "$OUTPUT_CSV"
+
+          if git diff --cached --quiet; then
+            echo "No prediction changes to commit."
+            exit 0
+          fi
+
+          git commit -m "Update Loto7 predictions"
+          git push
