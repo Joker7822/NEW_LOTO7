@@ -3,7 +3,7 @@
 """
 loto7_logic_predictor.py
 
-loto7_predictions.csv を使わず、loto7.csv の過去実績だけで
+loto7_predictions.csv を使わず、同一リポジトリ内の loto7.csv の過去実績だけで
 ロト7の次回候補を生成し、loto7_predictions.csv 互換形式で保存する。
 
 追加バックテスト:
@@ -38,7 +38,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
 
-DEFAULT_CSV_URL = "https://raw.githubusercontent.com/Joker7822/loto7/main/loto7.csv"
+DEFAULT_CSV_URL = "loto7.csv"
 DEFAULT_OUTPUT_CSV = "loto7_predictions.csv"
 DEFAULT_BACKTEST_CSV = "loto7_backtest_summary.csv"
 
@@ -850,9 +850,9 @@ def build_prize_table_from_args(args: argparse.Namespace) -> Dict[int, int]:
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser(
-        description="loto7.csv の実績だけでロト7予測とバックテストを出力し、loto7_predictions.csv形式で保存します。"
+        description="同一リポジトリ内の loto7.csv だけでロト7予測とバックテストを出力し、loto7_predictions.csv形式で保存します。"
     )
-    parser.add_argument("--csv", default=DEFAULT_CSV_URL, help="loto7.csv のURLまたはローカルパス")
+    parser.add_argument("--csv", default=DEFAULT_CSV_URL, help="loto7.csv のURLまたはローカルパス。既定: loto7.csv")
     parser.add_argument("--tickets", type=int, default=5, help="画面に表示・バックテストする口数")
     parser.add_argument("--pool-size", type=int, default=21, help="候補プールサイズ。大きいほど遅くなる")
     parser.add_argument("--backtest", action="store_true", help="バックテストも実行する")
