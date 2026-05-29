@@ -6,12 +6,20 @@ loto7_logic_predictor.py
 loto7_predictions.csv を使わず、loto7.csv の過去実績だけで
 ロト7の次回候補を生成し、loto7_predictions.csv 互換形式で保存する。
 
-保存形式:
-    抽せん日,予測1,信頼度1,...,予測25,信頼度25
+追加バックテスト:
+    - 等級判定
+    - ボーナス数字対応
+    - 購入金額
+    - 当せん金額
+    - 回収率
+    - 5口全体の収支
+    - 明細CSV出力
 
 注意:
-    宝くじの当せんはランダム性が強く、的中保証は確認できません。
-    このコードは過去実績に基づく候補生成・検証ツールです。
+    loto7.csv には各回の実際の当せん金額が含まれていません。
+    公式にも当せん金額は発売額・当せん口数で毎回変動すると説明されています。
+    そのため、バックテストの当せん金額は --prize1 ～ --prize6 で指定する
+    「設定当せん金額」に基づく概算です。
 """
 
 from __future__ import annotations
@@ -32,10 +40,24 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 DEFAULT_CSV_URL = "https://raw.githubusercontent.com/Joker7822/loto7/main/loto7.csv"
 DEFAULT_OUTPUT_CSV = "loto7_predictions.csv"
+DEFAULT_BACKTEST_CSV = "loto7_backtest_summary.csv"
+
 NUM_MIN = 1
 NUM_MAX = 37
 PICK_SIZE = 7
 DEFAULT_SAVE_COUNT = 25
+DEFAULT_UNIT_COST = 300
+
+# 実際の当せん金額ではなく、バックテスト用の設定値。
+# 正確な回収率を出すには、各回の等級別当せん金額CSVを別途用意してください。
+DEFAULT_PRIZE_TABLE = {
+    1: 700_000_000,
+    2: 7_300_000,
+    3: 730_000,
+    4: 9_100,
+    5: 1_400,
+    6: 1_000,
+}
 
 
 @dataclass(frozen=True)
@@ -51,6 +73,14 @@ class TicketScore:
     ticket: Tuple[int, ...]
     score: float
     detail: Dict[str, float]
+
+
+@dataclass(frozen=True)
+class PrizeResult:
+    main_matches: int
+    bonus_matches: int
+    grade: Optional[int]
+    prize: int
 
 
 def parse_numbers(value: str) -> Tuple[int, ...]:
@@ -405,10 +435,6 @@ def predict(draws: Sequence[Draw], num_tickets: int = 5, pool_size: int = 21) ->
 
 
 def confidence_values(ranked: Sequence[TicketScore]) -> List[float]:
-    """
-    loto7_predictions.csv の既存レンジに合わせて、
-    1位=0.970、最下位=0.720付近になるよう正規化する。
-    """
     if not ranked:
         return []
     scores = [x.score for x in ranked]
@@ -457,10 +483,6 @@ def save_predictions_csv(
     ranked: Sequence[TicketScore],
     save_count: int = DEFAULT_SAVE_COUNT,
 ) -> None:
-    """
-    loto7_predictions.csv 互換形式で保存する。
-    同じ抽せん日が既に存在する場合は上書きし、なければ追記する。
-    """
     path = Path(output_path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -493,8 +515,82 @@ def save_predictions_csv(
         writer.writerows(rows)
 
 
+def classify_loto7_prize(
+    ticket: Sequence[int],
+    actual_main: Sequence[int],
+    actual_bonus: Sequence[int],
+    prize_table: Dict[int, int],
+) -> PrizeResult:
+    ticket_set = set(ticket)
+    main_matches = len(ticket_set & set(actual_main))
+    bonus_matches = len(ticket_set & set(actual_bonus))
+
+    grade: Optional[int]
+    if main_matches == 7:
+        grade = 1
+    elif main_matches == 6 and bonus_matches >= 1:
+        grade = 2
+    elif main_matches == 6:
+        grade = 3
+    elif main_matches == 5:
+        grade = 4
+    elif main_matches == 4:
+        grade = 5
+    elif main_matches == 3 and bonus_matches >= 1:
+        grade = 6
+    else:
+        grade = None
+
+    prize = prize_table.get(grade, 0) if grade is not None else 0
+    return PrizeResult(main_matches=main_matches, bonus_matches=bonus_matches, grade=grade, prize=prize)
+
+
+def grade_label(grade: Optional[int]) -> str:
+    return "ハズレ" if grade is None else f"{grade}等"
+
+
 def evaluate_prediction(ticket: Sequence[int], actual_main: Sequence[int]) -> int:
     return len(set(ticket) & set(actual_main))
+
+
+def backtest_detail_header(num_tickets: int) -> List[str]:
+    header = [
+        "抽せん日",
+        "回別",
+        "本数字",
+        "ボーナス数字",
+        "口数",
+        "購入金額",
+        "当せん金額",
+        "収支",
+        "回収率",
+        "最高等級",
+        "最高本数字一致数",
+        "最高ボーナス一致数",
+        "当せん口数",
+    ]
+    for i in range(1, num_tickets + 1):
+        header.extend(
+            [
+                f"予測{i}",
+                f"予測{i}_本数字一致",
+                f"予測{i}_ボーナス一致",
+                f"予測{i}_等級",
+                f"予測{i}_当せん金額",
+            ]
+        )
+    return header
+
+
+def write_backtest_detail_csv(rows: Sequence[Dict[str, object]], path: str, num_tickets: int) -> None:
+    out_path = Path(path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    header = backtest_detail_header(num_tickets)
+    with out_path.open("w", encoding="utf-8-sig", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=header)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({key: row.get(key, "") for key in header})
 
 
 def backtest(
@@ -502,33 +598,121 @@ def backtest(
     min_train: int = 100,
     num_tickets: int = 5,
     pool_size: int = 19,
+    unit_cost: int = DEFAULT_UNIT_COST,
+    prize_table: Optional[Dict[int, int]] = None,
+    detail_output_csv: Optional[str] = DEFAULT_BACKTEST_CSV,
 ) -> Dict[str, object]:
     if len(draws) <= min_train:
         raise ValueError("バックテストには min_train より多いデータが必要です。")
+
+    if min_train < 1:
+        raise ValueError("min_train は1以上にしてください。第2回から検証する場合は --min-train 1 です。")
+
+    if prize_table is None:
+        prize_table = dict(DEFAULT_PRIZE_TABLE)
 
     top1_hits: List[int] = []
     best5_hits: List[int] = []
     hit_dist_top1: Counter = Counter()
     hit_dist_best5: Counter = Counter()
 
+    total_purchase = 0
+    total_prize = 0
+    total_winning_tickets = 0
+
+    top1_purchase = 0
+    top1_prize = 0
+
+    all_ticket_grade_dist: Counter = Counter()
+    best_grade_dist: Counter = Counter()
+
+    detail_rows: List[Dict[str, object]] = []
+
     for i in range(min_train, len(draws)):
         train = draws[:i]
         actual = draws[i]
         tickets = predict(train, num_tickets=num_tickets, pool_size=pool_size)
-        hits = [evaluate_prediction(t.ticket, actual.main) for t in tickets]
 
+        results = [
+            classify_loto7_prize(
+                ticket=t.ticket,
+                actual_main=actual.main,
+                actual_bonus=actual.bonus,
+                prize_table=prize_table,
+            )
+            for t in tickets
+        ]
+
+        hits = [r.main_matches for r in results]
         top1 = hits[0]
         best5 = max(hits)
+
         top1_hits.append(top1)
         best5_hits.append(best5)
         hit_dist_top1[top1] += 1
         hit_dist_best5[best5] += 1
 
+        draw_purchase = len(tickets) * unit_cost
+        draw_prize = sum(r.prize for r in results)
+        draw_profit = draw_prize - draw_purchase
+        draw_return_rate = draw_prize / draw_purchase if draw_purchase else 0.0
+
+        total_purchase += draw_purchase
+        total_prize += draw_prize
+        total_winning_tickets += sum(1 for r in results if r.grade is not None)
+
+        top1_purchase += unit_cost
+        top1_prize += results[0].prize if results else 0
+
+        grades = [r.grade for r in results if r.grade is not None]
+        for r in results:
+            all_ticket_grade_dist[grade_label(r.grade)] += 1
+        best_grade: Optional[int] = min(grades) if grades else None
+        best_grade_dist[grade_label(best_grade)] += 1
+
+        row: Dict[str, object] = {
+            "抽せん日": actual.date,
+            "回別": actual.draw_no if actual.draw_no is not None else "",
+            "本数字": format_ticket(actual.main),
+            "ボーナス数字": format_ticket(actual.bonus),
+            "口数": len(tickets),
+            "購入金額": draw_purchase,
+            "当せん金額": draw_prize,
+            "収支": draw_profit,
+            "回収率": round(draw_return_rate, 6),
+            "最高等級": grade_label(best_grade),
+            "最高本数字一致数": max(r.main_matches for r in results) if results else 0,
+            "最高ボーナス一致数": max(r.bonus_matches for r in results) if results else 0,
+            "当せん口数": sum(1 for r in results if r.grade is not None),
+        }
+
+        for idx, (ticket, result) in enumerate(zip(tickets, results), start=1):
+            row[f"予測{idx}"] = format_ticket(ticket.ticket)
+            row[f"予測{idx}_本数字一致"] = result.main_matches
+            row[f"予測{idx}_ボーナス一致"] = result.bonus_matches
+            row[f"予測{idx}_等級"] = grade_label(result.grade)
+            row[f"予測{idx}_当せん金額"] = result.prize
+
+        detail_rows.append(row)
+
+    if detail_output_csv:
+        write_backtest_detail_csv(detail_rows, detail_output_csv, num_tickets=num_tickets)
+
     def rate(values: Sequence[int], threshold: int) -> float:
         return sum(1 for x in values if x >= threshold) / len(values) if values else 0.0
 
+    total_profit = total_prize - total_purchase
+    total_return_rate = total_prize / total_purchase if total_purchase else 0.0
+    top1_profit = top1_prize - top1_purchase
+    top1_return_rate = top1_prize / top1_purchase if top1_purchase else 0.0
+
     return {
         "trials": len(top1_hits),
+        "min_train": min_train,
+        "evaluated_from_draw_index": min_train + 1,
+        "tickets_per_draw": num_tickets,
+        "unit_cost": unit_cost,
+        "prize_table": prize_table,
         "top1_avg": sum(top1_hits) / len(top1_hits),
         "best5_avg": sum(best5_hits) / len(best5_hits),
         "top1_ge2": rate(top1_hits, 2),
@@ -539,12 +723,28 @@ def backtest(
         "best5_ge4": rate(best5_hits, 4),
         "top1_dist": dict(sorted(hit_dist_top1.items())),
         "best5_dist": dict(sorted(hit_dist_best5.items())),
+        "total_purchase": total_purchase,
+        "total_prize": total_prize,
+        "total_profit": total_profit,
+        "total_return_rate": total_return_rate,
+        "total_winning_tickets": total_winning_tickets,
+        "top1_purchase": top1_purchase,
+        "top1_prize": top1_prize,
+        "top1_profit": top1_profit,
+        "top1_return_rate": top1_return_rate,
+        "all_ticket_grade_dist": dict(sorted(all_ticket_grade_dist.items())),
+        "best_grade_dist": dict(sorted(best_grade_dist.items())),
+        "detail_output_csv": detail_output_csv or "",
     }
 
 
 def next_friday_after(date_str: str) -> str:
     dt = datetime.strptime(date_str, "%Y-%m-%d").date()
     return (dt + timedelta(days=7)).isoformat()
+
+
+def yen(value: int) -> str:
+    return f"{value:,}円"
 
 
 def print_recent_summary(draws: Sequence[Draw]) -> None:
@@ -590,24 +790,62 @@ def print_predictions(tickets: Sequence[TicketScore]) -> None:
     print()
 
 
+def print_prize_table(prize_table: Dict[int, int], unit_cost: int) -> None:
+    print("=== バックテスト用 設定金額 ===")
+    print(f"1口購入金額: {yen(unit_cost)}")
+    for grade in range(1, 7):
+        print(f"{grade}等: {yen(prize_table.get(grade, 0))}")
+    print("※実際の当せん金額は各回で変動します。正確な収支には各回の実当せん金額データが必要です。")
+    print()
+
+
 def print_backtest_summary(result: Dict[str, object]) -> None:
     print("=== バックテスト結果 ===")
     print(f"検証回数: {result['trials']}")
-    print(f"1口目 平均一致数: {result['top1_avg']:.3f}")
-    print(f"5口内ベスト 平均一致数: {result['best5_avg']:.3f}")
+    print(f"開始条件: min_train={result['min_train']} / 第{result['evaluated_from_draw_index']}回相当から検証")
+    print(f"1回あたり口数: {result['tickets_per_draw']}")
+    print(f"1口購入金額: {yen(int(result['unit_cost']))}")
     print()
-    print("1口目:")
-    print(f"  2個以上: {result['top1_ge2']:.1%}")
-    print(f"  3個以上: {result['top1_ge3']:.1%}")
-    print(f"  4個以上: {result['top1_ge4']:.1%}")
-    print(f"  分布: {result['top1_dist']}")
+    print("一致数:")
+    print(f"  1口目 平均一致数: {result['top1_avg']:.3f}")
+    print(f"  5口内ベスト 平均一致数: {result['best5_avg']:.3f}")
+    print("  1口目:")
+    print(f"    2個以上: {result['top1_ge2']:.1%}")
+    print(f"    3個以上: {result['top1_ge3']:.1%}")
+    print(f"    4個以上: {result['top1_ge4']:.1%}")
+    print(f"    分布: {result['top1_dist']}")
+    print("  5口内ベスト:")
+    print(f"    2個以上: {result['best5_ge2']:.1%}")
+    print(f"    3個以上: {result['best5_ge3']:.1%}")
+    print(f"    4個以上: {result['best5_ge4']:.1%}")
+    print(f"    分布: {result['best5_dist']}")
     print()
-    print("5口内ベスト:")
-    print(f"  2個以上: {result['best5_ge2']:.1%}")
-    print(f"  3個以上: {result['best5_ge3']:.1%}")
-    print(f"  4個以上: {result['best5_ge4']:.1%}")
-    print(f"  分布: {result['best5_dist']}")
+    print("等級・収支:")
+    print(f"  5口合計 購入金額: {yen(int(result['total_purchase']))}")
+    print(f"  5口合計 当せん金額: {yen(int(result['total_prize']))}")
+    print(f"  5口合計 収支: {yen(int(result['total_profit']))}")
+    print(f"  5口合計 回収率: {float(result['total_return_rate']) * 100:.2f}%")
+    print(f"  5口合計 当せん口数: {result['total_winning_tickets']}")
+    print(f"  1口目 購入金額: {yen(int(result['top1_purchase']))}")
+    print(f"  1口目 当せん金額: {yen(int(result['top1_prize']))}")
+    print(f"  1口目 収支: {yen(int(result['top1_profit']))}")
+    print(f"  1口目 回収率: {float(result['top1_return_rate']) * 100:.2f}%")
+    print(f"  全予測口 等級分布: {result['all_ticket_grade_dist']}")
+    print(f"  各回ベスト等級分布: {result['best_grade_dist']}")
+    if result.get("detail_output_csv"):
+        print(f"  明細CSV: {result['detail_output_csv']}")
     print()
+
+
+def build_prize_table_from_args(args: argparse.Namespace) -> Dict[int, int]:
+    return {
+        1: int(args.prize1),
+        2: int(args.prize2),
+        3: int(args.prize3),
+        4: int(args.prize4),
+        5: int(args.prize5),
+        6: int(args.prize6),
+    }
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
@@ -615,14 +853,23 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         description="loto7.csv の実績だけでロト7予測とバックテストを出力し、loto7_predictions.csv形式で保存します。"
     )
     parser.add_argument("--csv", default=DEFAULT_CSV_URL, help="loto7.csv のURLまたはローカルパス")
-    parser.add_argument("--tickets", type=int, default=5, help="画面に表示する口数")
+    parser.add_argument("--tickets", type=int, default=5, help="画面に表示・バックテストする口数")
     parser.add_argument("--pool-size", type=int, default=21, help="候補プールサイズ。大きいほど遅くなる")
     parser.add_argument("--backtest", action="store_true", help="バックテストも実行する")
-    parser.add_argument("--min-train", type=int, default=100, help="バックテストの初期学習回数")
+    parser.add_argument("--min-train", type=int, default=100, help="バックテストの初期学習回数。第2回から検証するなら1")
     parser.add_argument("--backtest-pool-size", type=int, default=19, help="バックテスト時の候補プールサイズ")
+    parser.add_argument("--backtest-output-csv", default=DEFAULT_BACKTEST_CSV, help="バックテスト明細CSV")
+    parser.add_argument("--no-backtest-csv", action="store_true", help="バックテスト明細CSVを保存しない")
     parser.add_argument("--output-csv", default=DEFAULT_OUTPUT_CSV, help="保存先CSV。既定: loto7_predictions.csv")
     parser.add_argument("--save-count", type=int, default=DEFAULT_SAVE_COUNT, help="保存する予測数。既定: 25")
     parser.add_argument("--no-save", action="store_true", help="予測CSVを保存しない")
+    parser.add_argument("--unit-cost", type=int, default=DEFAULT_UNIT_COST, help="1口の購入金額。既定: 300")
+    parser.add_argument("--prize1", type=int, default=DEFAULT_PRIZE_TABLE[1], help="1等の設定当せん金額")
+    parser.add_argument("--prize2", type=int, default=DEFAULT_PRIZE_TABLE[2], help="2等の設定当せん金額")
+    parser.add_argument("--prize3", type=int, default=DEFAULT_PRIZE_TABLE[3], help="3等の設定当せん金額")
+    parser.add_argument("--prize4", type=int, default=DEFAULT_PRIZE_TABLE[4], help="4等の設定当せん金額")
+    parser.add_argument("--prize5", type=int, default=DEFAULT_PRIZE_TABLE[5], help="5等の設定当せん金額")
+    parser.add_argument("--prize6", type=int, default=DEFAULT_PRIZE_TABLE[6], help="6等の設定当せん金額")
     args = parser.parse_args(argv)
 
     draws = load_draws(args.csv)
@@ -656,11 +903,17 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print()
 
     if args.backtest:
+        prize_table = build_prize_table_from_args(args)
+        print_prize_table(prize_table, args.unit_cost)
+        detail_csv = None if args.no_backtest_csv else args.backtest_output_csv
         bt = backtest(
             draws,
             min_train=args.min_train,
             num_tickets=args.tickets,
             pool_size=args.backtest_pool_size,
+            unit_cost=args.unit_cost,
+            prize_table=prize_table,
+            detail_output_csv=detail_csv,
         )
         print_backtest_summary(bt)
 
