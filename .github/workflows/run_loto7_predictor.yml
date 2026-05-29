@@ -70,9 +70,15 @@ jobs:
 
           SCRAPE_MONTHS="${{ github.event.inputs.scrape_months || '3' }}"
 
-          python scrapingloto7.py \
-            --csv "$LOTO7_CSV" \
-            --months "$SCRAPE_MONTHS"
+          if python scrapingloto7.py --csv "$LOTO7_CSV" --months "$SCRAPE_MONTHS"; then
+            echo "loto7.csv update completed."
+          else
+            echo "WARNING: scrapingloto7.py failed. Continue with existing $LOTO7_CSV."
+            if [ ! -f "$LOTO7_CSV" ]; then
+              echo "ERROR: $LOTO7_CSV does not exist, cannot continue."
+              exit 1
+            fi
+          fi
 
       - name: Run predictor
         shell: bash
@@ -83,6 +89,8 @@ jobs:
           RUN_BACKTEST="${{ github.event.inputs.run_backtest || 'false' }}"
           MIN_TRAIN="${{ github.event.inputs.min_train || '1' }}"
           BACKTEST_POOL_SIZE="${{ github.event.inputs.backtest_pool_size || '19' }}"
+
+          echo "RUN_BACKTEST=$RUN_BACKTEST" >> "$GITHUB_ENV"
 
           if [ "$RUN_BACKTEST" = "true" ]; then
             python loto7_logic_predictor.py \
@@ -117,13 +125,18 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [ -f "$BACKTEST_CSV" ]; then
-            python summarize_backtest_results.py \
-              --input-csv "$BACKTEST_CSV" \
-              --output-txt "$BACKTEST_RESULT_TXT" \
-              --output-csv "$BACKTEST_RESULT_CSV"
+          if [ "${RUN_BACKTEST:-false}" = "true" ]; then
+            if [ -f "$BACKTEST_CSV" ]; then
+              python summarize_backtest_results.py \
+                --input-csv "$BACKTEST_CSV" \
+                --output-txt "$BACKTEST_RESULT_TXT" \
+                --output-csv "$BACKTEST_RESULT_CSV"
+            else
+              echo "ERROR: $BACKTEST_CSV was not generated despite RUN_BACKTEST=true."
+              exit 1
+            fi
           else
-            echo "$BACKTEST_CSV was not generated. Skip backtest summary export."
+            echo "RUN_BACKTEST=false. Skip backtest summary export."
           fi
 
       - name: Show generated files
@@ -156,26 +169,18 @@ jobs:
             exit 1
           fi
 
-          echo "--- ${BACKTEST_CSV} preview ---"
-          if [ -f "$BACKTEST_CSV" ]; then
+          if [ "${RUN_BACKTEST:-false}" = "true" ]; then
+            echo "--- ${BACKTEST_CSV} preview ---"
             head -n 5 "$BACKTEST_CSV"
             tail -n 5 "$BACKTEST_CSV"
-          else
-            echo "$BACKTEST_CSV was not generated. This is OK when run_backtest=false."
-          fi
 
-          echo "--- ${BACKTEST_RESULT_TXT} preview ---"
-          if [ -f "$BACKTEST_RESULT_TXT" ]; then
+            echo "--- ${BACKTEST_RESULT_TXT} preview ---"
             cat "$BACKTEST_RESULT_TXT"
-          else
-            echo "$BACKTEST_RESULT_TXT was not generated. This is OK when run_backtest=false."
-          fi
 
-          echo "--- ${BACKTEST_RESULT_CSV} preview ---"
-          if [ -f "$BACKTEST_RESULT_CSV" ]; then
+            echo "--- ${BACKTEST_RESULT_CSV} preview ---"
             cat "$BACKTEST_RESULT_CSV"
           else
-            echo "$BACKTEST_RESULT_CSV was not generated. This is OK when run_backtest=false."
+            echo "RUN_BACKTEST=false. Skip backtest file previews."
           fi
 
       - name: Commit prediction outputs
@@ -187,14 +192,8 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add "$LOTO7_CSV" "$OUTPUT_CSV" "$OUTPUT_TXT"
-          if [ -f "$BACKTEST_CSV" ]; then
-            git add "$BACKTEST_CSV"
-          fi
-          if [ -f "$BACKTEST_RESULT_TXT" ]; then
-            git add "$BACKTEST_RESULT_TXT"
-          fi
-          if [ -f "$BACKTEST_RESULT_CSV" ]; then
-            git add "$BACKTEST_RESULT_CSV"
+          if [ "${RUN_BACKTEST:-false}" = "true" ]; then
+            git add "$BACKTEST_CSV" "$BACKTEST_RESULT_TXT" "$BACKTEST_RESULT_CSV"
           fi
 
           if git diff --cached --quiet; then
