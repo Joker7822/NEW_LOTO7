@@ -15,6 +15,14 @@ on:
         description: "Number of predictions to save"
         required: false
         default: "10"
+      min_train:
+        description: "Initial training draws for backtest. Use 1 to test from draw 2."
+        required: false
+        default: "1"
+      backtest_pool_size:
+        description: "Candidate pool size for backtest. Smaller is faster."
+        required: false
+        default: "19"
   schedule:
     # JST Friday 21:30 = UTC Friday 12:30
     - cron: "30 12 * * 5"
@@ -26,6 +34,7 @@ env:
   PYTHON_VERSION: "3.11"
   OUTPUT_CSV: "loto7_predictions.csv"
   OUTPUT_TXT: "latest_loto7_prediction.txt"
+  BACKTEST_CSV: "loto7_backtest_summary.csv"
 
 jobs:
   predict:
@@ -54,12 +63,17 @@ jobs:
 
           SAVE_COUNT="${{ github.event.inputs.save_count || '25' }}"
           RUN_BACKTEST="${{ github.event.inputs.run_backtest || 'false' }}"
+          MIN_TRAIN="${{ github.event.inputs.min_train || '1' }}"
+          BACKTEST_POOL_SIZE="${{ github.event.inputs.backtest_pool_size || '19' }}"
 
           if [ "$RUN_BACKTEST" = "true" ]; then
             python loto7_logic_predictor.py \
               --output-csv "$OUTPUT_CSV" \
               --save-count "$SAVE_COUNT" \
-              --backtest
+              --backtest \
+              --min-train "$MIN_TRAIN" \
+              --backtest-pool-size "$BACKTEST_POOL_SIZE" \
+              --backtest-output-csv "$BACKTEST_CSV"
           else
             python loto7_logic_predictor.py \
               --output-csv "$OUTPUT_CSV" \
@@ -100,6 +114,14 @@ jobs:
             exit 1
           fi
 
+          echo "--- ${BACKTEST_CSV} preview ---"
+          if [ -f "$BACKTEST_CSV" ]; then
+            head -n 5 "$BACKTEST_CSV"
+            tail -n 5 "$BACKTEST_CSV"
+          else
+            echo "$BACKTEST_CSV was not generated. This is OK when run_backtest=false."
+          fi
+
       - name: Commit prediction outputs
         shell: bash
         run: |
@@ -109,6 +131,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add "$OUTPUT_CSV" "$OUTPUT_TXT"
+          if [ -f "$BACKTEST_CSV" ]; then
+            git add "$BACKTEST_CSV"
+          fi
 
           if git diff --cached --quiet; then
             echo "No prediction changes to commit."
