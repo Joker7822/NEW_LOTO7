@@ -25,6 +25,7 @@ permissions:
 env:
   PYTHON_VERSION: "3.11"
   OUTPUT_CSV: "loto7_predictions.csv"
+  OUTPUT_TXT: "latest_loto7_prediction.txt"
 
 jobs:
   predict:
@@ -65,11 +66,24 @@ jobs:
               --save-count "$SAVE_COUNT"
           fi
 
+      - name: Export latest prediction text
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          SAVE_COUNT="${{ github.event.inputs.save_count || '25' }}"
+
+          python export_latest_prediction_txt.py \
+            --input-csv "$OUTPUT_CSV" \
+            --output-txt "$OUTPUT_TXT" \
+            --max-predictions "$SAVE_COUNT"
+
       - name: Show generated files
         shell: bash
         run: |
           set -euo pipefail
           ls -la
+
           echo "--- ${OUTPUT_CSV} preview ---"
           if [ -f "$OUTPUT_CSV" ]; then
             tail -n 5 "$OUTPUT_CSV"
@@ -78,7 +92,15 @@ jobs:
             exit 1
           fi
 
-      - name: Commit prediction CSV
+          echo "--- ${OUTPUT_TXT} preview ---"
+          if [ -f "$OUTPUT_TXT" ]; then
+            cat "$OUTPUT_TXT"
+          else
+            echo "$OUTPUT_TXT was not generated."
+            exit 1
+          fi
+
+      - name: Commit prediction outputs
         shell: bash
         run: |
           set -euo pipefail
@@ -86,12 +108,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add "$OUTPUT_CSV"
+          git add "$OUTPUT_CSV" "$OUTPUT_TXT"
 
           if git diff --cached --quiet; then
             echo "No prediction changes to commit."
             exit 0
           fi
 
-          git commit -m "Update Loto7 predictions"
+          git commit -m "Update Loto7 prediction outputs"
           git push
