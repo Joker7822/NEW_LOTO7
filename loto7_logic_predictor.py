@@ -1209,7 +1209,19 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--prize4", type=int, default=DEFAULT_PRIZE_TABLE[4], help="4等の設定当せん金額")
     parser.add_argument("--prize5", type=int, default=DEFAULT_PRIZE_TABLE[5], help="5等の設定当せん金額")
     parser.add_argument("--prize6", type=int, default=DEFAULT_PRIZE_TABLE[6], help="6等の設定当せん金額")
+
+    parser.add_argument(
+        "--backtest-output-csv",
+        default=None,
+        help="旧workflow互換オプション"
+    )
+
     args = parser.parse_args(argv)
+
+    
+    if args.backtest_output_csv:
+        args.backtest_summary_csv = args.backtest_output_csv
+
 
     draws = load_draws(args.csv)
     if not draws:
