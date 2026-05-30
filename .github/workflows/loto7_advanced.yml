@@ -1,0 +1,45 @@
+name: NEW_LOTO7 Advanced
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 12 * * 2,5'
+
+permissions:
+  contents: write
+
+jobs:
+  predict:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run predictor
+        env:
+          LOTO7_MONTE_CARLO: 30000
+          LOTO7_BACKTEST_MONTE_CARLO: 2000
+          LOTO7_OPTUNA_TRIALS: 30
+        run: |
+          python loto7_logic_predictor.py \
+            --tickets 10 \
+            --pool-size 24 \
+            --save-count 10
+
+      - name: Commit results
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add loto7_predictions.csv latest_loto7_prediction.txt loto7_memorybank.csv loto7_advanced_weights.json || true
+          git diff --cached --quiet || git commit -m "auto update loto7 prediction"
+          git push
