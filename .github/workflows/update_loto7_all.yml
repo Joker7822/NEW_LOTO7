@@ -1,0 +1,80 @@
+name: Update Loto7 All
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_backtest:
+        description: "Run backtest"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+      min_train:
+        description: "Use 1 to backtest from draw 2"
+        required: false
+        default: "1"
+      backtest_pool_size:
+        description: "Smaller is faster"
+        required: false
+        default: "16"
+      save_count:
+        description: "Prediction count"
+        required: false
+        default: "10"
+      scrape_months:
+        description: "Recent months to scrape"
+        required: false
+        default: "3"
+  schedule:
+    - cron: "30 12 * * 5"
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check syntax
+        run: python -m py_compile scrapingloto7.py loto7_logic_predictor.py export_latest_prediction_txt.py summarize_backtest_results.py
+
+      - name: Update loto7.csv
+        run: python scrapingloto7.py --csv loto7.csv --months "${{ github.event.inputs.scrape_months || '3' }}"
+
+      - name: Generate prediction
+        run: python loto7_logic_predictor.py --csv loto7.csv --output-csv loto7_predictions.csv --save-count "${{ github.event.inputs.save_count || '10' }}"
+
+      - name: Export latest txt
+        run: python export_latest_prediction_txt.py --input-csv loto7_predictions.csv --output-txt latest_loto7_prediction.txt --max-predictions "${{ github.event.inputs.save_count || '10' }}"
+
+      - name: Run backtest
+        if: ${{ github.event.inputs.run_backtest == 'true' }}
+        run: python loto7_logic_predictor.py --csv loto7.csv --no-save --backtest --min-train "${{ github.event.inputs.min_train || '1' }}" --backtest-pool-size "${{ github.event.inputs.backtest_pool_size || '16' }}" --backtest-output-csv loto7_backtest_summary.csv
+
+      - name: Summarize backtest
+        if: ${{ github.event.inputs.run_backtest == 'true' }}
+        run: python summarize_backtest_results.py --input-csv loto7_backtest_summary.csv --output-txt loto7_backtest_result.txt --output-csv loto7_backtest_result.csv
+
+      - name: Show outputs
+        run: |
+          tail -n 5 loto7.csv
+          tail -n 5 loto7_predictions.csv
+          cat latest_loto7_prediction.txt
+          if [ -f loto7_backtest_result.txt ]; then cat loto7_backtest_result.txt; fi
+
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Update Loto7 data and outputs
+          file_pattern: loto7.csv loto7_predictions.csv latest_loto7_prediction.txt loto7_backtest_summary.csv loto7_backtest_result.txt loto7_backtest_result.csv
