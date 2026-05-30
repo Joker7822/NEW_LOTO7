@@ -1,4 +1,4 @@
-name: Update Loto7 All
+name: loto7_logic_predictor
 
 on:
   workflow_dispatch:
