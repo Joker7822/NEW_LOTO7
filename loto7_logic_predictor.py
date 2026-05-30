@@ -57,6 +57,11 @@ DEFAULT_TICKETS = 10
 DEFAULT_SAVE_COUNT = 10
 DEFAULT_UNIT_COST = 300
 
+# GitHub Actions 30分制限対策。
+# 通常予測は pool_size=24 でも問題ないが、全件バックテストでは組合せ数が爆発するため、
+# バックテスト時だけ候補プールを安全側に自動圧縮する。
+DEFAULT_BACKTEST_POOL_CAP = 16
+
 LOW_RANGE = range(1, 13)
 MID_RANGE = range(13, 26)
 HIGH_RANGE = range(26, 38)
@@ -811,6 +816,9 @@ def write_backtest_summary_csv(result: Dict[str, object], path: str) -> None:
         "検証回数",
         "初期学習回数",
         "検証開始回相当",
+        "要求バックテスト候補プール",
+        "実効バックテスト候補プール",
+        "直近検証回数指定",
         "1回あたり口数",
         "1口購入金額",
         "1口目平均一致数",
@@ -840,6 +848,9 @@ def write_backtest_summary_csv(result: Dict[str, object], path: str) -> None:
         "検証回数": result["trials"],
         "初期学習回数": result["min_train"],
         "検証開始回相当": result["evaluated_from_draw_index"],
+        "要求バックテスト候補プール": result.get("requested_backtest_pool_size", ""),
+        "実効バックテスト候補プール": result.get("effective_backtest_pool_size", ""),
+        "直近検証回数指定": result.get("max_backtest_draws", 0),
         "1回あたり口数": result["tickets_per_draw"],
         "1口購入金額": result["unit_cost"],
         "1口目平均一致数": round(float(result["top1_avg"]), 6),
@@ -888,6 +899,9 @@ def write_backtest_report_txt(result: Dict[str, object], path: str) -> None:
     lines.append(f"検証回数: {result['trials']}")
     lines.append(f"初期学習回数: {result['min_train']}")
     lines.append(f"検証開始回相当: 第{result['evaluated_from_draw_index']}回")
+    lines.append(f"要求バックテスト候補プール: {result.get('requested_backtest_pool_size', '')}")
+    lines.append(f"実効バックテスト候補プール: {result.get('effective_backtest_pool_size', '')}")
+    lines.append(f"直近検証回数指定: {result.get('max_backtest_draws', 0)}")
     lines.append(f"1回あたり口数: {result['tickets_per_draw']}")
     lines.append(f"1口購入金額: {yen(int(result['unit_cost']))}")
     lines.append("")
@@ -937,12 +951,22 @@ def backtest(
     detail_output_csv: str = DEFAULT_BACKTEST_DETAIL_CSV,
     summary_output_csv: str = DEFAULT_BACKTEST_SUMMARY_CSV,
     report_output_txt: str = DEFAULT_BACKTEST_REPORT_TXT,
+    pool_cap: int = DEFAULT_BACKTEST_POOL_CAP,
+    max_backtest_draws: int = 0,
 ) -> Dict[str, object]:
     if len(draws) <= min_train:
         raise ValueError("バックテストには min_train より多いデータが必要です。")
 
     if min_train < 1:
         raise ValueError("min_train は1以上にしてください。第2回から検証する場合は --min-train 1 です。")
+
+    if max_backtest_draws and max_backtest_draws > 0:
+        # 直近N回だけ検証する場合も、学習に必要な過去データは残す。
+        start_index = max(min_train, len(draws) - max_backtest_draws)
+    else:
+        start_index = min_train
+
+    effective_pool_size = min(pool_size, pool_cap) if pool_cap and pool_cap > 0 else pool_size
 
     if prize_table is None:
         prize_table = dict(DEFAULT_PRIZE_TABLE)
@@ -964,10 +988,10 @@ def backtest(
 
     detail_rows: List[Dict[str, object]] = []
 
-    for i in range(min_train, len(draws)):
+    for i in range(start_index, len(draws)):
         train = draws[:i]
         actual = draws[i]
-        tickets = predict(train, num_tickets=num_tickets, pool_size=pool_size)
+        tickets = predict(train, num_tickets=num_tickets, pool_size=effective_pool_size)
 
         results = [
             classify_loto7_prize(
@@ -1044,7 +1068,10 @@ def backtest(
     result = {
         "trials": len(top1_hits),
         "min_train": min_train,
-        "evaluated_from_draw_index": min_train + 1,
+        "evaluated_from_draw_index": start_index + 1,
+        "requested_backtest_pool_size": pool_size,
+        "effective_backtest_pool_size": effective_pool_size,
+        "max_backtest_draws": max_backtest_draws,
         "tickets_per_draw": num_tickets,
         "unit_cost": unit_cost,
         "prize_table": prize_table,
@@ -1141,6 +1168,9 @@ def print_backtest_summary(result: Dict[str, object]) -> None:
     print("=== バックテスト結果 ===")
     print(f"検証回数: {result['trials']}")
     print(f"開始条件: min_train={result['min_train']} / 第{result['evaluated_from_draw_index']}回相当から検証")
+    print(f"要求バックテスト候補プール: {result.get('requested_backtest_pool_size', '')}")
+    print(f"実効バックテスト候補プール: {result.get('effective_backtest_pool_size', '')}")
+    print(f"直近検証回数指定: {result.get('max_backtest_draws', 0)}")
     print(f"1回あたり口数: {result['tickets_per_draw']}")
     print(f"1口購入金額: {yen(int(result['unit_cost']))}")
     print()
@@ -1194,7 +1224,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--pool-size", type=int, default=24, help="候補プールサイズ。大きいほど遅くなる。既定: 24")
     parser.add_argument("--backtest", action="store_true", help="バックテストも実行する")
     parser.add_argument("--min-train", type=int, default=100, help="バックテストの初期学習回数。第2回から検証するなら1")
-    parser.add_argument("--backtest-pool-size", type=int, default=22, help="バックテスト時の候補プールサイズ")
+    parser.add_argument("--backtest-pool-size", type=int, default=16, help="バックテスト時の候補プールサイズ。既定: 16")
+    parser.add_argument("--backtest-pool-cap", type=int, default=DEFAULT_BACKTEST_POOL_CAP, help="Actionsタイムアウト防止用のバックテスト候補プール上限。既定: 16")
+    parser.add_argument("--max-backtest-draws", type=int, default=0, help="直近N回だけバックテストする。0なら全件")
     parser.add_argument("--output-csv", default=DEFAULT_OUTPUT_CSV, help="予測CSV保存先")
     parser.add_argument("--latest-txt", default=DEFAULT_LATEST_TXT, help="最新予測TXT保存先")
     parser.add_argument("--save-count", type=int, default=DEFAULT_SAVE_COUNT, help="保存する予測数。既定: 10")
@@ -1267,6 +1299,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             detail_output_csv=args.backtest_detail_csv,
             summary_output_csv=args.backtest_summary_csv,
             report_output_txt=args.backtest_report_txt,
+            pool_cap=args.backtest_pool_cap,
+            max_backtest_draws=args.max_backtest_draws,
         )
         print_backtest_summary(bt)
 
