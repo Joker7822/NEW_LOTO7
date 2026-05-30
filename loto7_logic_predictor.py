@@ -5,16 +5,14 @@ loto7_logic_predictor.py
 
 NEW_LOTO7 用 Loto7 予測・バックテスト統合エントリポイント。
 
-このファイルは既存の実行ファイル名を維持したまま、改善版ロジックを直接利用します。
-改善ロジック本体は loto7_enhanced_predictor.py にあります。
+既存の実行ファイル名とCLIを維持したまま、Advanced Optimizerを直接利用します。
 
-統合済み改善:
-    - 時系列減衰つき番号スコア
-    - 時系列減衰つきペア・トリプル相関スコア
-    - 高一致履歴パターン再利用
-    - Pattern / Balanced / High / Low / Cold 戦略
-    - 下一桁偏り、前回・前々回重複、連番、低中高、奇偶、合計値の構造評価
-    - バックテスト時の未来リーク防止
+接続済みAdvanced機能:
+    - 等級特化学習: 6本一致・5本一致・4本一致を強く評価
+    - Walk Forward完全検証: 検証対象回より前のデータだけで予測
+    - Optuna自動最適化: 未導入環境ではRandom Searchへ自動フォールバック
+    - MonteCarlo組合せ探索: 固定候補プール外も探索
+    - 的中履歴MemoryBank: 4本一致以上の構造を蓄積・再利用
 
 注意:
     ロト7は独立抽せんのため、的中保証は確認できません。
@@ -247,7 +245,7 @@ def print_recent_summary(draws: Sequence[Draw]) -> None:
 
 
 def print_predictions(tickets: Sequence[TicketScore]) -> None:
-    print("=== 次回予測 ===")
+    print("=== Advanced Optimizer 次回予測 ===")
     scores = score_normalized_values(tickets)
     for i, t in enumerate(tickets, start=1):
         d = t.detail
@@ -263,7 +261,8 @@ def print_predictions(tickets: Sequence[TicketScore]) -> None:
             f" | repeat_last={int(d.get('repeat_last', 0))}"
             f" | pair={d.get('pair', 0):.3f}"
             f" | triple={d.get('triple', 0):.3f}"
-            f" | pattern={d.get('pattern', 0):.3f}"
+            f" | memory={d.get('memory', d.get('pattern', 0)):.3f}"
+            f" | grade6={d.get('grade6', 0):.3f}"
         )
     print()
 
@@ -307,10 +306,9 @@ def save_predictions_csv(output_path: str, target_date: str, ranked: Sequence[Ti
 def write_compat_report(summary: Dict[str, object], report_path: str) -> None:
     out = Path(report_path)
     out.parent.mkdir(parents=True, exist_ok=True)
-
     lines = [
-        "Loto7 バックテストレポート",
-        "============================",
+        "Loto7 Advanced Optimizer バックテストレポート",
+        "===========================================",
         "",
         "基本条件",
         "----------------------------",
@@ -318,7 +316,7 @@ def write_compat_report(summary: Dict[str, object], report_path: str) -> None:
         f"初期学習回数: {summary.get('初期学習回数', '')}",
         f"検証開始回相当: {summary.get('検証開始回相当', '')}",
         f"1回あたり口数: {summary.get('1回あたり口数', '')}",
-        f"候補プール: {summary.get('候補プール', '')}",
+        f"候補プール: {summary.get('実効バックテスト候補プール', summary.get('候補プール', ''))}",
         "",
         "一致数",
         "----------------------------",
@@ -338,16 +336,16 @@ def write_compat_report(summary: Dict[str, object], report_path: str) -> None:
         f"全予測口等級分布: {summary.get('全予測口等級分布', '')}",
         f"各回ベスト等級分布: {summary.get('各回ベスト等級分布', '')}",
         "",
+        "Advanced情報",
+        "----------------------------",
+        f"最適化重み: {summary.get('最適化重み', '')}",
+        f"MemoryBank件数: {summary.get('MemoryBank件数', '')}",
+        "",
         "注意",
         "----------------------------",
         "当せん金額は設定値ベースの概算です。",
         "正確な回収率には各回の実当せん金額データが必要です。",
         "的中保証は確認できません。",
-        "",
-        "============================",
-        "当選履歴一覧",
-        "============================",
-        "詳細は loto7_backtest_detail.csv を確認してください。",
     ]
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -364,15 +362,18 @@ def build_prize_table_from_args(args: argparse.Namespace) -> Dict[int, int]:
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
-    parser = argparse.ArgumentParser(description="loto7.csv だけでロト7予測とバックテストを出力します。")
+    parser = argparse.ArgumentParser(description="loto7.csv だけでロト7予測とAdvancedバックテストを出力します。")
     parser.add_argument("--csv", default=DEFAULT_CSV_URL, help="loto7.csv のURLまたはローカルパス。既定: loto7.csv")
     parser.add_argument("--tickets", type=int, default=DEFAULT_TICKETS, help="画面表示・バックテストする口数。既定: 10")
     parser.add_argument("--pool-size", type=int, default=24, help="候補プールサイズ。大きいほど遅くなります。既定: 24")
     parser.add_argument("--backtest", action="store_true", help="バックテストも実行する")
     parser.add_argument("--min-train", type=int, default=100, help="バックテストの初期学習回数。第2回から検証するなら1")
     parser.add_argument("--backtest-pool-size", type=int, default=16, help="バックテスト時の候補プールサイズ。既定: 16")
-    parser.add_argument("--backtest-pool-cap", type=int, default=DEFAULT_BACKTEST_POOL_CAP, help="互換用。改善版では backtest-pool-size を使用")
+    parser.add_argument("--backtest-pool-cap", type=int, default=DEFAULT_BACKTEST_POOL_CAP, help="Actionsタイムアウト防止用の上限。既定: 16")
     parser.add_argument("--max-backtest-draws", type=int, default=0, help="直近N回だけバックテストする。0なら全件")
+    parser.add_argument("--monte-carlo", type=int, default=None, help="通常予測のMonteCarlo探索数。未指定なら環境変数または既定値")
+    parser.add_argument("--backtest-monte-carlo", type=int, default=None, help="バックテスト時のMonteCarlo探索数。環境変数LOTO7_BACKTEST_MONTE_CARLOへ反映")
+    parser.add_argument("--disable-optimize", action="store_true", help="Optuna/Random Search最適化を無効化し、保存済み重みまたは既定重みを使う")
     parser.add_argument("--output-csv", default=DEFAULT_OUTPUT_CSV, help="予測CSV保存先")
     parser.add_argument("--latest-txt", default=DEFAULT_LATEST_TXT, help="最新予測TXT保存先")
     parser.add_argument("--save-count", type=int, default=DEFAULT_SAVE_COUNT, help="保存する予測数。既定: 10")
@@ -393,9 +394,17 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if args.backtest_output_csv:
         args.backtest_summary_csv = args.backtest_output_csv
 
-    # 改善版ロジックをここで読み込む。
-    # 先にこのファイルで互換クラス・関数を定義しているため、循環import時も安全に解決できる。
-    from loto7_enhanced_predictor import enhanced_predict, save_latest_txt, enhanced_backtest
+    if args.disable_optimize:
+        import os
+        os.environ["LOTO7_DISABLE_OPTIMIZE"] = "1"
+    if args.monte_carlo is not None:
+        import os
+        os.environ["LOTO7_MONTE_CARLO"] = str(args.monte_carlo)
+    if args.backtest_monte_carlo is not None:
+        import os
+        os.environ["LOTO7_BACKTEST_MONTE_CARLO"] = str(args.backtest_monte_carlo)
+
+    from loto7_advanced_optimizer import advanced_predict, save_latest_txt, advanced_backtest
 
     draws = load_draws(args.csv)
     if not draws:
@@ -407,11 +416,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     print_recent_summary(draws)
 
-    display_tickets = enhanced_predict(
+    display_tickets = advanced_predict(
         draws,
         num_tickets=args.tickets,
         pool_size=args.pool_size,
         hit_pattern_csv=args.backtest_detail_csv,
+        monte_carlo_iterations=args.monte_carlo,
+        optimize=not args.disable_optimize,
     )
     print_predictions(display_tickets)
 
@@ -442,7 +453,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print()
 
         max_backtest_draws = args.max_backtest_draws if args.max_backtest_draws > 0 else 0
-        summary = enhanced_backtest(
+        summary = advanced_backtest(
             draws,
             min_train=args.min_train,
             num_tickets=args.tickets,
@@ -454,7 +465,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         )
         write_compat_report(summary, args.backtest_report_txt)
 
-        print("=== バックテスト結果 ===")
+        print("=== Advanced バックテスト結果 ===")
         for key, value in summary.items():
             print(f"{key}: {value}")
         print(f"保存完了: {args.backtest_summary_csv}")
