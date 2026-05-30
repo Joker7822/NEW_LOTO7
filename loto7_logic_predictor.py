@@ -938,7 +938,28 @@ def write_backtest_report_txt(result: Dict[str, object], path: str) -> None:
     lines.append("正確な回収率には各回の実当せん金額データが必要です。")
     lines.append("的中保証は確認できません。")
 
+
+    lines.append("")
+    lines.append("============================")
+    lines.append("当選履歴一覧")
+    lines.append("============================")
+
+    history = result.get("winning_history", [])
+    if not history:
+        lines.append("当選履歴なし")
+    else:
+        for hit in history:
+            lines.append(f"{hit['date']} 第{hit['draw_no']}回")
+            lines.append(f"予測{hit['ticket_no']} / 戦略:{hit['strategy']}")
+            lines.append(f"{hit['grade']}等")
+            lines.append(f"組合せ: {hit['ticket']}")
+            lines.append(f"本数字一致: {hit['main_matches']}")
+            lines.append(f"ボーナス一致: {hit['bonus_matches']}")
+            lines.append(f"当選金額: {hit['prize']:,}円")
+            lines.append("--------------------------------")
+
     out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
 
 
 def backtest(
@@ -987,6 +1008,7 @@ def backtest(
     best_grade_dist: Counter = Counter()
 
     detail_rows: List[Dict[str, object]] = []
+    winning_history: List[Dict[str, object]] = []
 
     for i in range(start_index, len(draws)):
         train = draws[:i]
@@ -1055,6 +1077,19 @@ def backtest(
             row[f"予測{idx}_等級"] = grade_label(result.grade)
             row[f"予測{idx}_当せん金額"] = result.prize
 
+            if result.grade is not None:
+                winning_history.append({
+                    "date": actual.date,
+                    "draw_no": actual.draw_no,
+                    "ticket_no": idx,
+                    "grade": result.grade,
+                    "main_matches": result.main_matches,
+                    "bonus_matches": result.bonus_matches,
+                    "prize": result.prize,
+                    "ticket": format_ticket(ticket.ticket),
+                    "strategy": ticket.strategy,
+                })
+
         detail_rows.append(row)
 
     def rate(values: Sequence[int], threshold: int) -> float:
@@ -1099,6 +1134,7 @@ def backtest(
         "detail_output_csv": detail_output_csv,
         "summary_output_csv": summary_output_csv,
         "report_output_txt": report_output_txt,
+        "winning_history": winning_history,
     }
 
     write_backtest_detail_csv(detail_rows, detail_output_csv, num_tickets=num_tickets)
