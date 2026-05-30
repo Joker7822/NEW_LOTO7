@@ -2,34 +2,69 @@
 # -*- coding: utf-8 -*-
 """Advanced Loto7 optimizer for NEW_LOTO7.
 
-Features:
-- grade-focused scoring for 5+ and 6+ main-number matches
+Implemented features:
+- grade-focused scoring for 3rd-prize style hits (6 main-number matches) with 5+/4+ support
 - walk-forward validation without future data
 - Optuna optimization with random-search fallback
-- Monte Carlo candidate search
+- Monte Carlo + lightweight MCTS candidate search
 - MemoryBank from past high-match predictions
+- separated 5+ MemoryBank
+- CatBoost meta-classifier with deterministic fallback
+- hit-structure clustering with sklearn fallback
+- resumable backtest and progress-save hooks every N draws
+
+Important:
+    Loto7 is an independent lottery. This module does not guarantee wins.
+    Scores are ranking scores, not probabilities.
 """
 from __future__ import annotations
 
 import csv
 import itertools
 import json
+import math
 import os
 import random
 import re
-from collections import Counter
+import subprocess
+from collections import Counter, defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
-from loto7_logic_predictor import DEFAULT_PRIZE_TABLE, DEFAULT_UNIT_COST, Draw, PrizeResult, TicketScore, classify_loto7_prize, format_ticket, score_normalized_values
-from loto7_enhanced_predictor import DEFAULT_HIT_PATTERN_CSV, band_counts, build_number_scores, counter_norm, make_candidate_pool, max_consecutive_run, save_latest_txt, structure_penalty, weighted_combination_counts
+from loto7_logic_predictor import (
+    DEFAULT_PRIZE_TABLE,
+    DEFAULT_UNIT_COST,
+    Draw,
+    PrizeResult,
+    TicketScore,
+    classify_loto7_prize,
+    format_ticket,
+    score_normalized_values,
+)
+from loto7_enhanced_predictor import (
+    DEFAULT_HIT_PATTERN_CSV,
+    band_counts,
+    build_number_scores,
+    counter_norm,
+    make_candidate_pool,
+    max_consecutive_run,
+    save_latest_txt,
+    structure_penalty,
+    weighted_combination_counts,
+)
 
 NUM_MIN = 1
 NUM_MAX = 37
 PICK_SIZE = 7
+
 WEIGHTS_CACHE = "loto7_advanced_weights.json"
 MEMORYBANK_CSV = "loto7_memorybank.csv"
+MEMORYBANK_5PLUS_CSV = "loto7_memorybank_5plus.csv"
+META_CLASSIFIER_JSON = "loto7_meta_classifier.json"
+CLUSTER_CSV = "loto7_hit_structure_clusters.csv"
+RESUME_JSON = "loto7_backtest_resume.json"
+
 
 @dataclass(frozen=True)
 class AdvancedWeights:
@@ -40,8 +75,13 @@ class AdvancedWeights:
     grade6: float = 1.75
     structure: float = 1.00
     diversity: float = 0.25
+    memory5: float = 1.60
+    meta: float = 0.45
+    cluster: float = 0.25
+
     def to_dict(self) -> Dict[str, float]:
         return self.__dict__.copy()
+
     @classmethod
     def from_dict(cls, d: Dict[str, object]) -> "AdvancedWeights":
         base = cls().to_dict()
@@ -52,16 +92,20 @@ class AdvancedWeights:
                 pass
         return cls(**base)
 
+
 def _parse_ticket(v: object) -> Tuple[int, ...]:
     nums = tuple(sorted(int(x) for x in re.findall(r"\d+", str(v or ""))))
     nums = tuple(n for n in nums if NUM_MIN <= n <= NUM_MAX)
     return nums if len(nums) == PICK_SIZE and len(set(nums)) == PICK_SIZE else tuple()
 
+
 def _grade_label(g: Optional[int]) -> str:
     return "ハズレ" if g is None else f"{g}等"
 
+
 def _avg(values: Sequence[float]) -> float:
     return sum(values) / len(values) if values else 0.0
+
 
 def _load_weights(path: str = WEIGHTS_CACHE) -> Optional[AdvancedWeights]:
     p = Path(path)
@@ -73,83 +117,282 @@ def _load_weights(path: str = WEIGHTS_CACHE) -> Optional[AdvancedWeights]:
     except Exception:
         return None
 
+
 def _save_weights(w: AdvancedWeights, path: str = WEIGHTS_CACHE) -> None:
-    Path(path).write_text(json.dumps({"weights": w.to_dict()}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    Path(path).write_text(
+        json.dumps({"weights": w.to_dict()}, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
+def ticket_features(ticket: Sequence[int], draws: Sequence[Draw]) -> Dict[str, float]:
+    t = tuple(sorted(ticket))
+    low, mid, high = band_counts(t)
+    odd = sum(n % 2 for n in t)
+    total = sum(t)
+    run = max_consecutive_run(t)
+    last = set(draws[-1].main) if draws else set()
+    prev = set(draws[-2].main) if len(draws) >= 2 else set()
+    gaps = [b - a for a, b in zip(t, t[1:])]
+    last_digits = Counter(n % 10 for n in t)
+    decades = Counter(n // 10 for n in t)
+    return {
+        "sum": float(total),
+        "odd": float(odd),
+        "low": float(low),
+        "mid": float(mid),
+        "high": float(high),
+        "run": float(run),
+        "repeat_last": float(len(set(t) & last)),
+        "repeat_prev": float(len(set(t) & prev)),
+        "last_digit_max": float(max(last_digits.values()) if last_digits else 0),
+        "decade_count": float(len(decades)),
+        "gap_avg": float(sum(gaps) / len(gaps) if gaps else 0),
+        "gap_min": float(min(gaps) if gaps else 0),
+        "gap_max": float(max(gaps) if gaps else 0),
+    }
+
 
 class MemoryBank:
+    """General memory bank for 4+ matches."""
+
     def __init__(self) -> None:
         self.items: List[Tuple[Tuple[int, ...], float]] = []
         self.pairs: Counter = Counter()
         self.triples: Counter = Counter()
         self.sums: Counter = Counter()
+
     def add(self, ticket: Sequence[int], strength: float = 1.0) -> None:
         t = tuple(sorted(ticket))
         if len(t) != PICK_SIZE or len(set(t)) != PICK_SIZE:
             return
         self.items.append((t, float(strength)))
-        for p in itertools.combinations(t, 2): self.pairs[p] += strength
-        for tri in itertools.combinations(t, 3): self.triples[tri] += strength
-        self.sums[sum(t)//10*10] += strength
+        for p in itertools.combinations(t, 2):
+            self.pairs[p] += strength
+        for tri in itertools.combinations(t, 3):
+            self.triples[tri] += strength
+        self.sums[sum(t) // 10 * 10] += strength
+
     def load_detail(self, path: str, before_date: Optional[str] = None, min_matches: int = 4) -> None:
         p = Path(path)
-        if not p.exists(): return
+        if not p.exists():
+            return
         try:
             rows = list(csv.DictReader(p.open("r", encoding="utf-8-sig", newline="")))
         except Exception:
             return
         for row in rows:
             date = row.get("抽せん日", "")
-            if before_date and date >= before_date: continue
+            if before_date and date >= before_date:
+                continue
             for i in range(1, 101):
-                pk = f"予測{i}"; mk = f"予測{i}_本数字一致"
-                if pk not in row: break
-                try: m = int(row.get(mk, 0) or 0)
-                except Exception: m = 0
+                pk = f"予測{i}"
+                mk = f"予測{i}_本数字一致"
+                if pk not in row:
+                    break
+                try:
+                    m = int(row.get(mk, 0) or 0)
+                except Exception:
+                    m = 0
                 if m >= min_matches:
                     t = _parse_ticket(row.get(pk, ""))
-                    if t: self.add(t, 1.0 + max(0, m-4)*0.8)
+                    if t:
+                        self.add(t, 1.0 + max(0, m - 4) * 0.8)
+
     def load_memorybank(self, path: str = MEMORYBANK_CSV, before_date: Optional[str] = None) -> None:
         p = Path(path)
-        if not p.exists(): return
+        if not p.exists():
+            return
         try:
             for row in csv.DictReader(p.open("r", encoding="utf-8-sig", newline="")):
-                if before_date and row.get("抽せん日", "") >= before_date: continue
+                if before_date and row.get("抽せん日", "") >= before_date:
+                    continue
                 t = _parse_ticket(row.get("組合せ", ""))
-                if t: self.add(t, float(row.get("強度", 1) or 1))
+                if t:
+                    self.add(t, float(row.get("強度", 1) or 1))
         except Exception:
             return
+
     def save(self, path: str = MEMORYBANK_CSV) -> None:
         with Path(path).open("w", encoding="utf-8-sig", newline="") as f:
-            w = csv.DictWriter(f, fieldnames=["組合せ", "強度"]); w.writeheader()
-            for t, s in self.items[-1000:]: w.writerow({"組合せ": format_ticket(t), "強度": round(s, 6)})
+            w = csv.DictWriter(f, fieldnames=["組合せ", "強度"])
+            w.writeheader()
+            for t, s in self.items[-1000:]:
+                w.writerow({"組合せ": format_ticket(t), "強度": round(s, 6)})
+
     def score(self, ticket: Sequence[int]) -> float:
-        if not self.items: return 0.0
-        s = set(ticket); vals = []
+        if not self.items:
+            return 0.0
+        s = set(ticket)
+        vals = []
         for pat, strength in self.items[-300:]:
             o = len(s & set(pat))
-            vals.append(({6:0.3, 5:1.0, 4:0.55, 3:0.15}.get(o, 0.0)) * strength)
+            vals.append(({6: 0.3, 5: 1.0, 4: 0.55, 3: 0.15}.get(o, 0.0)) * strength)
         pair = sum(counter_norm(self.pairs, p) for p in itertools.combinations(sorted(ticket), 2)) / 21.0
         tri = sum(counter_norm(self.triples, t) for t in itertools.combinations(sorted(ticket), 3)) / 35.0
         return 0.60 * max(vals) + 0.20 * _avg(vals) + 0.12 * pair + 0.08 * tri
 
+
+class MemoryBank5Plus:
+    """Separated memory bank only for 5+ main-number matches."""
+
+    def __init__(self) -> None:
+        self.items: List[Tuple[Tuple[int, ...], int, float, str]] = []
+        self.pairs: Counter = Counter()
+        self.triples: Counter = Counter()
+        self.sums: Counter = Counter()
+
+    @staticmethod
+    def strength_for_matches(matches: int) -> float:
+        if matches >= 7:
+            return 8.0
+        if matches == 6:
+            return 3.5
+        if matches == 5:
+            return 1.0
+        return 0.0
+
+    def add(self, ticket: Sequence[int], matches: int, date: str = "") -> None:
+        t = tuple(sorted(ticket))
+        if len(t) != PICK_SIZE or len(set(t)) != PICK_SIZE or matches < 5:
+            return
+        strength = self.strength_for_matches(matches)
+        self.items.append((t, int(matches), strength, date))
+        for p in itertools.combinations(t, 2):
+            self.pairs[p] += strength
+        for tri in itertools.combinations(t, 3):
+            self.triples[tri] += strength
+        self.sums[sum(t) // 10 * 10] += strength
+
+    def load_detail(self, path: str, before_date: Optional[str] = None) -> None:
+        p = Path(path)
+        if not p.exists():
+            return
+        try:
+            rows = list(csv.DictReader(p.open("r", encoding="utf-8-sig", newline="")))
+        except Exception:
+            return
+        for row in rows:
+            date = row.get("抽せん日", "")
+            if before_date and date >= before_date:
+                continue
+            for i in range(1, 101):
+                pk = f"予測{i}"
+                mk = f"予測{i}_本数字一致"
+                if pk not in row:
+                    break
+                try:
+                    m = int(row.get(mk, 0) or 0)
+                except Exception:
+                    m = 0
+                if m >= 5:
+                    t = _parse_ticket(row.get(pk, ""))
+                    if t:
+                        self.add(t, m, date)
+
+    def load_memorybank(self, path: str = MEMORYBANK_5PLUS_CSV, before_date: Optional[str] = None) -> None:
+        p = Path(path)
+        if not p.exists():
+            return
+        try:
+            for row in csv.DictReader(p.open("r", encoding="utf-8-sig", newline="")):
+                date = row.get("抽せん日", "")
+                if before_date and date >= before_date:
+                    continue
+                t = _parse_ticket(row.get("組合せ", ""))
+                try:
+                    m = int(row.get("一致数", 5) or 5)
+                except Exception:
+                    m = 5
+                if t:
+                    self.add(t, m, date)
+        except Exception:
+            return
+
+    def save(self, path: str = MEMORYBANK_5PLUS_CSV) -> None:
+        with Path(path).open("w", encoding="utf-8-sig", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=["抽せん日", "組合せ", "一致数", "強度"])
+            w.writeheader()
+            for t, m, s, date in self.items[-1000:]:
+                w.writerow({"抽せん日": date, "組合せ": format_ticket(t), "一致数": m, "強度": round(s, 6)})
+
+    def score(self, ticket: Sequence[int]) -> float:
+        if not self.items:
+            return 0.0
+        s = set(ticket)
+        vals = []
+        for pat, _m, strength, _date in self.items[-300:]:
+            o = len(s & set(pat))
+            vals.append(({7: 0.10, 6: 0.35, 5: 1.15, 4: 0.55, 3: 0.15}.get(o, 0.0)) * strength)
+        pair_total = max(sum(self.pairs.values()), 1.0)
+        tri_total = max(sum(self.triples.values()), 1.0)
+        pair = sum(self.pairs.get(p, 0.0) for p in itertools.combinations(sorted(ticket), 2)) / pair_total
+        tri = sum(self.triples.get(t, 0.0) for t in itertools.combinations(sorted(ticket), 3)) / tri_total
+        return 0.70 * max(vals) + 0.18 * _avg(vals) + 0.07 * pair + 0.05 * tri
+
+
 def build_memory(before_date: Optional[str], detail_csv: str) -> MemoryBank:
-    b = MemoryBank(); b.load_detail(detail_csv, before_date); b.load_memorybank(MEMORYBANK_CSV, before_date); return b
+    b = MemoryBank()
+    b.load_detail(detail_csv, before_date)
+    b.load_memorybank(MEMORYBANK_CSV, before_date)
+    return b
+
+
+def build_memory5(before_date: Optional[str], detail_csv: str) -> MemoryBank5Plus:
+    b = MemoryBank5Plus()
+    b.load_detail(detail_csv, before_date)
+    b.load_memorybank(MEMORYBANK_5PLUS_CSV, before_date)
+    return b
+
 
 def grade_bonus(ticket: Sequence[int], draws: Sequence[Draw]) -> float:
-    t = tuple(sorted(ticket)); low, mid, high = band_counts(t)
-    odd = sum(n % 2 for n in t); total = sum(t); run = max_consecutive_run(t)
-    repeat = len(set(t) & set(draws[-1].main)); ldmax = max(Counter(n % 10 for n in t).values())
+    t = tuple(sorted(ticket))
+    low, mid, high = band_counts(t)
+    odd = sum(n % 2 for n in t)
+    total = sum(t)
+    run = max_consecutive_run(t)
+    repeat = len(set(t) & set(draws[-1].main))
+    ldmax = max(Counter(n % 10 for n in t).values())
     score = 0.0
-    if low in (2,3) and mid in (2,3) and high in (1,2,3): score += 0.30
-    if odd in (3,4): score += 0.22
-    if 125 <= total <= 165: score += 0.25
-    elif 115 <= total <= 175: score += 0.10
-    if 2 <= repeat <= 4: score += 0.20
-    if run <= 2: score += 0.15
-    elif run >= 4: score -= 0.55
-    if ldmax <= 2: score += 0.12
-    elif ldmax >= 4: score -= 0.40
+    if low in (2, 3) and mid in (2, 3) and high in (1, 2, 3):
+        score += 0.30
+    if odd in (3, 4):
+        score += 0.22
+    if 125 <= total <= 165:
+        score += 0.25
+    elif 115 <= total <= 175:
+        score += 0.10
+    if 2 <= repeat <= 4:
+        score += 0.20
+    if run <= 2:
+        score += 0.15
+    elif run >= 4:
+        score -= 0.55
+    if ldmax <= 2:
+        score += 0.12
+    elif ldmax >= 4:
+        score -= 0.40
     return score
+
+
+def third_prize_objective(matches: int, bonus_matches: int = 0) -> float:
+    """3rd-prize-focused objective.
+
+    Loto7 3rd prize corresponds to 6 main-number matches without bonus.
+    2nd prize is also 6 main-number matches with bonus, so both are heavily rewarded.
+    """
+    if matches >= 7:
+        return 250.0
+    if matches == 6:
+        return 120.0 + min(bonus_matches, 2) * 15.0
+    if matches == 5:
+        return 28.0
+    if matches == 4:
+        return 7.0
+    if matches == 3 and bonus_matches >= 1:
+        return 2.0
+    return max(0.0, matches - 1) * 0.25
+
 
 def context(draws: Sequence[Draw], before_date: Optional[str], detail_csv: str) -> Dict[str, object]:
     return {
@@ -160,96 +403,645 @@ def context(draws: Sequence[Draw], before_date: Optional[str], detail_csv: str) 
         "t1": weighted_combination_counts(draws, 3, 32.0, 220),
         "t2": weighted_combination_counts(draws, 3, 110.0, 0),
         "mem": build_memory(before_date, detail_csv),
+        "mem5": build_memory5(before_date, detail_csv),
+        "meta": load_meta_classifier(META_CLASSIFIER_JSON),
+        "clusters": load_cluster_profile(CLUSTER_CSV),
     }
 
+
+def cluster_key_from_features(f: Dict[str, float]) -> str:
+    return f"L{int(f['low'])}_M{int(f['mid'])}_H{int(f['high'])}_O{int(f['odd'])}_R{int(f['run'])}"
+
+
+def load_cluster_profile(path: str = CLUSTER_CSV) -> Dict[str, float]:
+    p = Path(path)
+    if not p.exists():
+        return {}
+    out: Dict[str, float] = {}
+    try:
+        for row in csv.DictReader(p.open("r", encoding="utf-8-sig", newline="")):
+            key = row.get("cluster_key") or row.get("cluster") or ""
+            if not key:
+                continue
+            out[key] = max(out.get(key, 0.0), float(row.get("score", 0) or 0))
+    except Exception:
+        return {}
+    return out
+
+
+def cluster_score(ticket: Sequence[int], draws: Sequence[Draw], profile: Dict[str, float]) -> float:
+    if not profile:
+        return 0.0
+    f = ticket_features(ticket, draws)
+    key = cluster_key_from_features(f)
+    return float(profile.get(key, 0.0))
+
+
+def build_hit_structure_clusters(detail_csv: str, output_csv: str = CLUSTER_CSV) -> Dict[str, float]:
+    """Build a simple cluster/profile table from historical high-hit predictions.
+
+    Uses sklearn KMeans if available only to annotate cluster ids. The scoring profile is stable
+    even without sklearn, based on structure keys and observed 4+/5+/6+ matches.
+    """
+    p = Path(detail_csv)
+    if not p.exists():
+        return {}
+    rows: List[Dict[str, object]] = []
+    try:
+        reader = csv.DictReader(p.open("r", encoding="utf-8-sig", newline=""))
+        for row in reader:
+            for i in range(1, 101):
+                pk = f"予測{i}"
+                mk = f"予測{i}_本数字一致"
+                if pk not in row:
+                    break
+                t = _parse_ticket(row.get(pk, ""))
+                if not t:
+                    continue
+                try:
+                    m = int(row.get(mk, 0) or 0)
+                except Exception:
+                    m = 0
+                if m < 4:
+                    continue
+                f = ticket_features(t, [])
+                rows.append({"抽せん日": row.get("抽せん日", ""), "組合せ": format_ticket(t), "一致数": m, **f})
+    except Exception:
+        return {}
+    if not rows:
+        return {}
+
+    keys = ["sum", "odd", "low", "mid", "high", "run", "last_digit_max", "decade_count", "gap_avg", "gap_min", "gap_max"]
+    labels: List[int]
+    try:
+        from sklearn.cluster import KMeans  # type: ignore
+
+        X = [[float(r[k]) for k in keys] for r in rows]
+        n_clusters = min(8, max(2, len(rows) // 20))
+        labels = list(KMeans(n_clusters=n_clusters, random_state=42, n_init="auto").fit_predict(X))
+    except Exception:
+        labels = [int(r["low"]) * 100 + int(r["mid"]) * 10 + int(r["high"]) for r in rows]
+
+    agg: Dict[str, List[float]] = defaultdict(list)
+    for row, label in zip(rows, labels):
+        ck = cluster_key_from_features({k: float(row[k]) for k in ticket_features((1, 2, 3, 4, 5, 6, 7), []).keys() if k in row})
+        m = int(row["一致数"])
+        agg[ck].append(third_prize_objective(m, 0) / 120.0)
+        row["cluster"] = label
+        row["cluster_key"] = ck
+        row["score"] = round(_avg(agg[ck]), 6)
+
+    profile = {k: round(_avg(v), 6) for k, v in agg.items()}
+    with Path(output_csv).open("w", encoding="utf-8-sig", newline="") as f:
+        fieldnames = ["cluster_key", "score", "count"]
+        w = csv.DictWriter(f, fieldnames=fieldnames)
+        w.writeheader()
+        for key, vals in sorted(agg.items(), key=lambda kv: (-_avg(kv[1]), kv[0])):
+            w.writerow({"cluster_key": key, "score": round(_avg(vals), 6), "count": len(vals)})
+    return profile
+
+
+def load_meta_classifier(path: str = META_CLASSIFIER_JSON) -> Dict[str, object]:
+    p = Path(path)
+    if not p.exists():
+        return {}
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def train_meta_classifier(detail_csv: str, output_json: str = META_CLASSIFIER_JSON) -> Dict[str, object]:
+    """Train a 5+ classifier.
+
+    CatBoost is used when installed. Because binary model files are inconvenient for a
+    lightweight repository workflow, this function always writes a portable JSON fallback
+    scorer too. The runtime scorer uses the JSON fallback deterministically.
+    """
+    p = Path(detail_csv)
+    if not p.exists():
+        return {}
+    data: List[Tuple[Dict[str, float], int]] = []
+    try:
+        for row in csv.DictReader(p.open("r", encoding="utf-8-sig", newline="")):
+            for i in range(1, 101):
+                pk = f"予測{i}"
+                mk = f"予測{i}_本数字一致"
+                if pk not in row:
+                    break
+                t = _parse_ticket(row.get(pk, ""))
+                if not t:
+                    continue
+                try:
+                    m = int(row.get(mk, 0) or 0)
+                except Exception:
+                    m = 0
+                data.append((ticket_features(t, []), 1 if m >= 5 else 0))
+    except Exception:
+        return {}
+    if not data:
+        return {}
+
+    keys = list(data[0][0].keys())
+    X = [[d[0][k] for k in keys] for d in data]
+    y = [d[1] for d in data]
+    pos = [X[i] for i, v in enumerate(y) if v]
+    neg = [X[i] for i, v in enumerate(y) if not v]
+    coefs = []
+    centers = []
+    for j in range(len(keys)):
+        pm = sum(r[j] for r in pos) / len(pos) if pos else 0.0
+        nm = sum(r[j] for r in neg) / len(neg) if neg else 0.0
+        coefs.append(pm - nm)
+        centers.append((pm + nm) / 2.0)
+
+    info: Dict[str, object] = {
+        "model": "linear_fallback",
+        "positive": int(sum(y)),
+        "total": int(len(y)),
+        "keys": keys,
+        "coefs": coefs,
+        "centers": centers,
+    }
+    try:
+        from catboost import CatBoostClassifier  # type: ignore
+
+        model = CatBoostClassifier(iterations=120, depth=4, learning_rate=0.06, verbose=False, random_seed=42)
+        model.fit(X, y)
+        info["catboost_available"] = True
+        info["model"] = "catboost_trained_json_fallback_runtime"
+    except Exception:
+        info["catboost_available"] = False
+
+    Path(output_json).write_text(json.dumps(info, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return info
+
+
+def meta_score(ticket: Sequence[int], draws: Sequence[Draw], meta: Dict[str, object]) -> float:
+    if not meta:
+        return 0.0
+    keys = meta.get("keys", [])
+    coefs = meta.get("coefs", [])
+    centers = meta.get("centers", [])
+    if not isinstance(keys, list) or not isinstance(coefs, list):
+        return 0.0
+    f = ticket_features(ticket, draws)
+    raw = 0.0
+    for i, key in enumerate(keys):
+        try:
+            center = float(centers[i]) if isinstance(centers, list) and i < len(centers) else 0.0
+            raw += (float(f.get(key, 0.0)) - center) * float(coefs[i])
+        except Exception:
+            continue
+    # bounded logistic-like score
+    return max(-0.6, min(0.6, raw / 120.0))
+
+
 def score_ticket(ticket: Sequence[int], draws: Sequence[Draw], ctx: Dict[str, object], w: AdvancedWeights, strategy: str) -> TicketScore:
-    t = tuple(sorted(ticket)); nums: Dict[int, float] = ctx["num"]  # type: ignore
+    t = tuple(sorted(ticket))
+    nums: Dict[int, float] = ctx["num"]  # type: ignore
     single = sum(nums.get(n, 0.0) for n in t)
-    pair = sum(0.40*counter_norm(ctx["p1"], p)+0.28*counter_norm(ctx["p2"], p)+0.10*counter_norm(ctx["p3"], p) for p in itertools.combinations(t, 2))  # type: ignore
-    triple = sum(0.52*counter_norm(ctx["t1"], tri)+0.18*counter_norm(ctx["t2"], tri) for tri in itertools.combinations(t, 3))  # type: ignore
+    pair = sum(
+        0.40 * counter_norm(ctx["p1"], p) + 0.28 * counter_norm(ctx["p2"], p) + 0.10 * counter_norm(ctx["p3"], p)
+        for p in itertools.combinations(t, 2)
+    )  # type: ignore
+    triple = sum(
+        0.52 * counter_norm(ctx["t1"], tri) + 0.18 * counter_norm(ctx["t2"], tri)
+        for tri in itertools.combinations(t, 3)
+    )  # type: ignore
     mem: MemoryBank = ctx["mem"]  # type: ignore
-    memory = mem.score(t); gb = grade_bonus(t, draws); penalty = structure_penalty(t, draws)
-    low, mid, high = band_counts(t); div = 0.10 if len(set(n//10 for n in t)) >= 4 else 0.0
-    bonus = 0.35 if strategy == "GRADE3" and memory > 0 else 0.08 if strategy == "MONTECARLO" else 0.0
-    total = w.single*single + w.pair*pair + w.triple*triple + w.memory*memory + w.grade6*gb + w.diversity*div + bonus - w.structure*penalty
-    return TicketScore(t, total, {"single":single,"pair":pair,"triple":triple,"memory":memory,"pattern":memory,"grade6":gb,"penalty":penalty,"sum":float(sum(t)),"odd":float(sum(n%2 for n in t)),"low":float(low),"mid":float(mid),"high":float(high),"repeat_last":float(len(set(t)&set(draws[-1].main)))}, strategy)
+    mem5: MemoryBank5Plus = ctx["mem5"]  # type: ignore
+    memory = mem.score(t)
+    memory5 = mem5.score(t)
+    gb = grade_bonus(t, draws)
+    penalty = structure_penalty(t, draws)
+    low, mid, high = band_counts(t)
+    div = 0.10 if len(set(n // 10 for n in t)) >= 4 else 0.0
+    ms = meta_score(t, draws, ctx.get("meta", {}))  # type: ignore[arg-type]
+    cs = cluster_score(t, draws, ctx.get("clusters", {}))  # type: ignore[arg-type]
+    bonus = 0.45 if strategy == "GRADE3" and (memory > 0 or memory5 > 0) else 0.15 if strategy == "MCTS" else 0.08 if strategy == "MONTECARLO" else 0.0
+    total = (
+        w.single * single
+        + w.pair * pair
+        + w.triple * triple
+        + w.memory * memory
+        + w.memory5 * memory5
+        + w.grade6 * gb
+        + w.diversity * div
+        + w.meta * ms
+        + w.cluster * cs
+        + bonus
+        - w.structure * penalty
+    )
+    return TicketScore(
+        t,
+        total,
+        {
+            "single": single,
+            "pair": pair,
+            "triple": triple,
+            "memory": memory,
+            "memory5": memory5,
+            "pattern": memory,
+            "grade6": gb,
+            "meta": ms,
+            "cluster": cs,
+            "penalty": penalty,
+            "sum": float(sum(t)),
+            "odd": float(sum(n % 2 for n in t)),
+            "low": float(low),
+            "mid": float(mid),
+            "high": float(high),
+            "repeat_last": float(len(set(t) & set(draws[-1].main))),
+        },
+        strategy,
+    )
+
 
 def sample_ticket(draws: Sequence[Draw], pool_size: int, rng: random.Random) -> Tuple[int, ...]:
-    ns = build_number_scores(draws); pool = make_candidate_pool(draws, max(pool_size, 16)); alln = list(range(1,38)); hot = sorted(alln, key=lambda n: ns.get(n,0), reverse=True)[:max(20,pool_size)]
-    s=set()
-    while len(s)<7: s.add(rng.choice(pool if rng.random()<0.7 else hot if rng.random()<0.9 else alln))
+    ns = build_number_scores(draws)
+    pool = make_candidate_pool(draws, max(pool_size, 16))
+    alln = list(range(1, 38))
+    hot = sorted(alln, key=lambda n: ns.get(n, 0), reverse=True)[: max(20, pool_size)]
+    s = set()
+    while len(s) < 7:
+        r = rng.random()
+        s.add(rng.choice(pool if r < 0.70 else hot if r < 0.90 else alln))
     return tuple(sorted(s))
 
-def optimize_weights(draws: Sequence[Draw], trials: int = 25) -> AdvancedWeights:
-    cached = _load_weights()
-    if cached: return cached
-    rng = random.Random(len(draws)*99991); best = AdvancedWeights(); best_score = -1.0
+
+def mcts_candidates(
+    draws: Sequence[Draw],
+    ctx: Dict[str, object],
+    weights: AdvancedWeights,
+    pool_size: int,
+    iterations: int,
+    seed: int,
+) -> List[TicketScore]:
+    """Lightweight UCB-style MCTS over number additions."""
+    if iterations <= 0:
+        return []
+    rng = random.Random(seed)
+    ns = build_number_scores(draws)
+    pool = make_candidate_pool(draws, max(pool_size, 18))
+    alln = list(range(1, 38))
+    visits: Counter = Counter()
+    reward: Counter = Counter()
+    best: Dict[Tuple[int, ...], TicketScore] = {}
+
+    def choose_number(current: set[int]) -> int:
+        choices = pool if rng.random() < 0.75 else alln
+        sample = [n for n in rng.sample(choices, min(len(choices), 14)) if n not in current]
+        if not sample:
+            sample = [n for n in alln if n not in current]
+        total_visits = sum(visits.values()) + 2
+        best_n = sample[0]
+        best_v = -10**9
+        for n in sample:
+            avg = reward[n] / (visits[n] + 1)
+            ucb = avg + 0.35 * math.sqrt(math.log(total_visits) / (visits[n] + 1)) + ns.get(n, 0.0) * 0.025
+            if ucb > best_v:
+                best_n, best_v = n, ucb
+        return best_n
+
+    for _ in range(iterations):
+        cur: set[int] = set()
+        while len(cur) < PICK_SIZE:
+            cur.add(choose_number(cur))
+        ticket = tuple(sorted(cur))
+        scored = score_ticket(ticket, draws, ctx, weights, "MCTS")
+        # MCTS backpropagation uses the ranking score plus 5+ memory/meta.
+        r = scored.score + scored.detail.get("memory5", 0.0) * 2.0 + scored.detail.get("meta", 0.0)
+        for n in ticket:
+            visits[n] += 1
+            reward[n] += r
+        old = best.get(ticket)
+        if old is None or scored.score > old.score:
+            best[ticket] = scored
+    return sorted(best.values(), key=lambda x: (-x.score, x.ticket))[: max(500, min(iterations, 2000))]
+
+
+def optimize_weights(draws: Sequence[Draw], trials: int = 25, force: bool = False) -> AdvancedWeights:
+    cached = None if force else _load_weights()
+    if cached:
+        return cached
+    rng = random.Random(len(draws) * 99991)
+    best = AdvancedWeights()
+    best_score = -1.0
+
     def eval_w(w: AdvancedWeights) -> float:
-        start = max(20, len(draws)-30); val=[]
+        start = max(20, len(draws) - 36)
+        val = []
         for i in range(start, len(draws)):
-            preds = advanced_predict(draws[:i], 5, 15, DEFAULT_HIT_PATTERN_CSV, draws[i].date, 250, w, False)
-            bh = max((len(set(p.ticket)&set(draws[i].main)) for p in preds), default=0)
-            val.append(45 if bh>=6 else 13 if bh==5 else 4 if bh==4 else 0.5*bh)
+            preds = advanced_predict(
+                draws[:i],
+                5,
+                15,
+                DEFAULT_HIT_PATTERN_CSV,
+                draws[i].date,
+                200,
+                300,
+                w,
+                False,
+            )
+            scores = []
+            for p in preds:
+                r = classify_loto7_prize(p.ticket, draws[i].main, draws[i].bonus, DEFAULT_PRIZE_TABLE)
+                scores.append(third_prize_objective(r.main_matches, r.bonus_matches))
+            val.append(max(scores) if scores else 0.0)
         return _avg(val)
+
     try:
         import optuna  # type: ignore
+
         def obj(trial):
-            w = AdvancedWeights(*(trial.suggest_float(k, a, b) for k,a,b in [("single",0.65,1.35),("pair",0.7,1.65),("triple",0.75,1.85),("memory",0.7,2.2),("grade6",0.9,2.6),("structure",0.6,1.55),("diversity",0.05,0.55)]))
+            w = AdvancedWeights(
+                single=trial.suggest_float("single", 0.55, 1.45),
+                pair=trial.suggest_float("pair", 0.65, 1.85),
+                triple=trial.suggest_float("triple", 0.75, 2.10),
+                memory=trial.suggest_float("memory", 0.60, 2.10),
+                grade6=trial.suggest_float("grade6", 1.00, 3.20),
+                structure=trial.suggest_float("structure", 0.55, 1.75),
+                diversity=trial.suggest_float("diversity", 0.02, 0.70),
+                memory5=trial.suggest_float("memory5", 0.90, 3.50),
+                meta=trial.suggest_float("meta", 0.05, 1.20),
+                cluster=trial.suggest_float("cluster", 0.00, 0.80),
+            )
             return eval_w(w)
-        st = optuna.create_study(direction="maximize"); st.optimize(obj, n_trials=int(os.getenv("LOTO7_OPTUNA_TRIALS", str(trials))), show_progress_bar=False)
+
+        st = optuna.create_study(direction="maximize")
+        st.optimize(obj, n_trials=int(os.getenv("LOTO7_OPTUNA_TRIALS", str(trials))), show_progress_bar=False)
         best = AdvancedWeights.from_dict(st.best_params)
+        best_score = float(st.best_value)
     except Exception:
         for _ in range(int(os.getenv("LOTO7_OPTUNA_TRIALS", str(trials)))):
-            w = AdvancedWeights(rng.uniform(.65,1.35),rng.uniform(.7,1.65),rng.uniform(.75,1.85),rng.uniform(.7,2.2),rng.uniform(.9,2.6),rng.uniform(.6,1.55),rng.uniform(.05,.55))
+            w = AdvancedWeights(
+                single=rng.uniform(0.55, 1.45),
+                pair=rng.uniform(0.65, 1.85),
+                triple=rng.uniform(0.75, 2.10),
+                memory=rng.uniform(0.60, 2.10),
+                grade6=rng.uniform(1.00, 3.20),
+                structure=rng.uniform(0.55, 1.75),
+                diversity=rng.uniform(0.02, 0.70),
+                memory5=rng.uniform(0.90, 3.50),
+                meta=rng.uniform(0.05, 1.20),
+                cluster=rng.uniform(0.00, 0.80),
+            )
             sc = eval_w(w)
-            if sc > best_score: best, best_score = w, sc
-    _save_weights(best); return best
+            if sc > best_score:
+                best, best_score = w, sc
+    _save_weights(best)
+    return best
 
-def advanced_predict(draws: Sequence[Draw], num_tickets: int = 10, pool_size: int = 24, hit_pattern_csv: str = DEFAULT_HIT_PATTERN_CSV, before_date: Optional[str] = None, monte_carlo_iterations: Optional[int] = None, weights: Optional[AdvancedWeights] = None, optimize: bool = True) -> List[TicketScore]:
-    if weights is None: weights = optimize_weights(draws) if optimize and len(draws)>=120 and os.getenv("LOTO7_DISABLE_OPTIMIZE","0")!="1" else (_load_weights() or AdvancedWeights())
+
+def advanced_predict(
+    draws: Sequence[Draw],
+    num_tickets: int = 10,
+    pool_size: int = 24,
+    hit_pattern_csv: str = DEFAULT_HIT_PATTERN_CSV,
+    before_date: Optional[str] = None,
+    monte_carlo_iterations: Optional[int] = None,
+    mcts_iterations: Optional[int] = None,
+    weights: Optional[AdvancedWeights] = None,
+    optimize: bool = True,
+) -> List[TicketScore]:
+    if weights is None:
+        weights = optimize_weights(draws) if optimize and len(draws) >= 120 and os.getenv("LOTO7_DISABLE_OPTIMIZE", "0") != "1" else (_load_weights() or AdvancedWeights())
     mc = int(os.getenv("LOTO7_MONTE_CARLO", str(monte_carlo_iterations if monte_carlo_iterations is not None else 12000)))
-    ctx = context(draws, before_date, hit_pattern_csv); ranked: Dict[Tuple[int,...], TicketScore] = {}
+    mcts = int(os.getenv("LOTO7_MCTS_ITERATIONS", str(mcts_iterations if mcts_iterations is not None else 5000)))
+    ctx = context(draws, before_date, hit_pattern_csv)
+    ranked: Dict[Tuple[int, ...], TicketScore] = {}
     pool = make_candidate_pool(draws, pool_size)
+
     for t in itertools.combinations(pool, 7):
-        item = score_ticket(t, draws, ctx, weights, "GRADE3"); ranked[item.ticket]=item
-    rng = random.Random(len(draws)*1009 + sum(ord(c) for c in draws[-1].date))
+        item = score_ticket(t, draws, ctx, weights, "GRADE3")
+        ranked[item.ticket] = item
+
+    rng = random.Random(len(draws) * 1009 + sum(ord(c) for c in draws[-1].date))
     for _ in range(max(0, mc)):
         item = score_ticket(sample_ticket(draws, pool_size, rng), draws, ctx, weights, "MONTECARLO")
         old = ranked.get(item.ticket)
-        if old is None or item.score > old.score: ranked[item.ticket]=item
-    selected=[]; use=Counter()
-    for item in sorted(ranked.values(), key=lambda x:(-x.score,x.ticket)):
-        if any(len(set(item.ticket)&set(s.ticket))>4 for s in selected): continue
-        if any(use[n]>=3 for n in item.ticket): continue
-        selected.append(item); use.update(item.ticket)
-        if len(selected)>=num_tickets: return selected
-    return sorted(ranked.values(), key=lambda x:(-x.score,x.ticket))[:num_tickets]
+        if old is None or item.score > old.score:
+            ranked[item.ticket] = item
+
+    for item in mcts_candidates(draws, ctx, weights, pool_size, max(0, mcts), seed=len(draws) * 777):
+        old = ranked.get(item.ticket)
+        if old is None or item.score > old.score:
+            ranked[item.ticket] = item
+
+    selected: List[TicketScore] = []
+    use: Counter = Counter()
+    for item in sorted(ranked.values(), key=lambda x: (-x.score, x.ticket)):
+        if any(len(set(item.ticket) & set(s.ticket)) > 4 for s in selected):
+            continue
+        if any(use[n] >= 3 for n in item.ticket):
+            continue
+        selected.append(item)
+        use.update(item.ticket)
+        if len(selected) >= num_tickets:
+            return selected
+    return sorted(ranked.values(), key=lambda x: (-x.score, x.ticket))[:num_tickets]
+
 
 def _write_csv(path: str, rows: Sequence[Dict[str, object]]) -> None:
-    if not rows: return
+    if not rows:
+        return
+    fieldnames: List[str] = []
+    for row in rows:
+        for key in row.keys():
+            if key not in fieldnames:
+                fieldnames.append(key)
     with Path(path).open("w", encoding="utf-8-sig", newline="") as f:
-        w=csv.DictWriter(f, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)
+        w = csv.DictWriter(f, fieldnames=fieldnames)
+        w.writeheader()
+        w.writerows(rows)
 
-def advanced_backtest(draws: Sequence[Draw], min_train: int, num_tickets: int, pool_size: int, hit_pattern_csv: str, max_backtest_draws: int, summary_csv: str, detail_csv: str) -> Dict[str, object]:
-    start = max(min_train, len(draws)-max_backtest_draws) if max_backtest_draws and max_backtest_draws>0 else min_train
-    weights = optimize_weights(draws[:start]) if start>=120 else (_load_weights() or AdvancedWeights())
-    rows=[]; top=[]; best=[]; gd=Counter(); bgd=Counter(); purchase=prize=0; bank=MemoryBank()
+
+def _load_existing_detail(detail_csv: str) -> Tuple[List[Dict[str, object]], set[str]]:
+    p = Path(detail_csv)
+    if not p.exists():
+        return [], set()
+    try:
+        rows = list(csv.DictReader(p.open("r", encoding="utf-8-sig", newline="")))
+        done = {str(r.get("抽せん日", "")) for r in rows if r.get("抽せん日")}
+        return rows, done
+    except Exception:
+        return [], set()
+
+
+def _save_resume(path: str, completed: int, last_date: str) -> None:
+    Path(path).write_text(json.dumps({"completed": completed, "last_date": last_date}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def _maybe_git_push(paths: Sequence[str], message: str) -> None:
+    """Optional progress push for GitHub Actions.
+
+    Disabled by default. Enable with LOTO7_ENABLE_AUTO_PUSH=1.
+    """
+    if os.getenv("LOTO7_ENABLE_AUTO_PUSH", "0") != "1":
+        return
+    try:
+        subprocess.run(["git", "config", "user.name", "github-actions"], check=False)
+        subprocess.run(["git", "config", "user.email", "github-actions@github.com"], check=False)
+        subprocess.run(["git", "add", *paths], check=False)
+        diff = subprocess.run(["git", "diff", "--cached", "--quiet"], check=False)
+        if diff.returncode != 0:
+            subprocess.run(["git", "commit", "-m", message], check=False)
+            subprocess.run(["git", "push"], check=False)
+    except Exception:
+        return
+
+
+def summarize_rows(rows: Sequence[Dict[str, object]], num_tickets: int, min_train: int, start_index: int, weights: AdvancedWeights) -> Dict[str, object]:
+    best = [int(r.get("最高本数字一致数", 0) or 0) for r in rows]
+    top = []
+    gd: Counter = Counter()
+    bgd: Counter = Counter()
+    for row in rows:
+        try:
+            top.append(int(row.get("予測1_本数字一致", 0) or 0))
+        except Exception:
+            top.append(0)
+        bgd[str(row.get("最高等級", "ハズレ"))] += 1
+        for k, v in row.items():
+            if k.endswith("_等級"):
+                gd[str(v)] += 1
+    purchase = sum(int(r.get("購入金額", 0) or 0) for r in rows)
+    prize = sum(int(r.get("当せん金額", 0) or 0) for r in rows)
+
+    def rate(v: Sequence[int], t: int) -> float:
+        return sum(1 for x in v if x >= t) / len(v) if v else 0.0
+
+    return {
+        "検証回数": len(rows),
+        "初期学習回数": min_train,
+        "検証開始回相当": start_index + 1,
+        "1回あたり口数": num_tickets,
+        "1口購入金額": DEFAULT_UNIT_COST,
+        "1口目平均一致数": round(_avg(top), 6),
+        "全口ベスト平均一致数": round(_avg(best), 6),
+        "1口目_3個以上率": round(rate(top, 3), 6),
+        "1口目_4個以上率": round(rate(top, 4), 6),
+        "1口目_5個以上率": round(rate(top, 5), 6),
+        "全口ベスト_3個以上率": round(rate(best, 3), 6),
+        "全口ベスト_4個以上率": round(rate(best, 4), 6),
+        "全口ベスト_5個以上率": round(rate(best, 5), 6),
+        "全口ベスト_6個以上率": round(rate(best, 6), 6),
+        "総購入金額": purchase,
+        "総当せん金額": prize,
+        "総収支": prize - purchase,
+        "総回収率": round(prize / purchase, 6) if purchase else 0,
+        "全予測口等級分布": dict(sorted(gd.items())),
+        "各回ベスト等級分布": dict(sorted(bgd.items())),
+        "1口目一致数分布": dict(sorted(Counter(top).items())),
+        "全口ベスト一致数分布": dict(sorted(Counter(best).items())),
+        "最適化重み": weights.to_dict(),
+    }
+
+
+def advanced_backtest(
+    draws: Sequence[Draw],
+    min_train: int,
+    num_tickets: int,
+    pool_size: int,
+    hit_pattern_csv: str,
+    max_backtest_draws: int,
+    summary_csv: str,
+    detail_csv: str,
+) -> Dict[str, object]:
+    start = max(min_train, len(draws) - max_backtest_draws) if max_backtest_draws and max_backtest_draws > 0 else min_train
+    weights = optimize_weights(draws[:start]) if start >= 120 else (_load_weights() or AdvancedWeights())
+    resume_enabled = os.getenv("LOTO7_BACKTEST_RESUME", "1") != "0"
+    push_every = int(os.getenv("LOTO7_PUSH_EVERY", "100"))
+    mcts_backtest = int(os.getenv("LOTO7_BACKTEST_MCTS", os.getenv("LOTO7_MCTS_ITERATIONS", "1500")))
+
+    rows, done = _load_existing_detail(detail_csv) if resume_enabled else ([], set())
+    bank = MemoryBank()
+    bank5 = MemoryBank5Plus()
+
+    processed_since_save = 0
     for i in range(start, len(draws)):
-        actual=draws[i]
-        preds=advanced_predict(draws[:i], num_tickets, pool_size, hit_pattern_csv, actual.date, int(os.getenv("LOTO7_BACKTEST_MONTE_CARLO","2500")), weights, False)
-        res=[classify_loto7_prize(p.ticket, actual.main, actual.bonus, DEFAULT_PRIZE_TABLE) for p in preds]
-        hits=[r.main_matches for r in res]; top.append(hits[0] if hits else 0); best.append(max(hits) if hits else 0)
-        dp=len(preds)*DEFAULT_UNIT_COST; dw=sum(r.prize for r in res); purchase+=dp; prize+=dw
-        grades=[r.grade for r in res if r.grade is not None]
-        for r in res: gd[_grade_label(r.grade)]+=1
-        bg=_grade_label(min(grades) if grades else None); bgd[bg]+=1
-        row={"抽せん日":actual.date,"回別":actual.draw_no or "","本数字":format_ticket(actual.main),"ボーナス数字":format_ticket(actual.bonus),"口数":len(preds),"購入金額":dp,"当せん金額":dw,"収支":dw-dp,"最高等級":bg,"最高本数字一致数":max(hits) if hits else 0,"当せん口数":sum(1 for r in res if r.grade is not None)}
-        for idx,(p,r) in enumerate(zip(preds,res),1):
-            row[f"予測{idx}"]=format_ticket(p.ticket); row[f"予測{idx}_戦略"]=p.strategy; row[f"予測{idx}_本数字一致"]=r.main_matches; row[f"予測{idx}_ボーナス一致"]=r.bonus_matches; row[f"予測{idx}_等級"]=_grade_label(r.grade); row[f"予測{idx}_当せん金額"]=r.prize
-            if r.main_matches>=4: bank.add(p.ticket, 1.0+max(0,r.main_matches-4)*0.8)
+        actual = draws[i]
+        if resume_enabled and actual.date in done:
+            continue
+        preds = advanced_predict(
+            draws[:i],
+            num_tickets,
+            pool_size,
+            hit_pattern_csv,
+            actual.date,
+            int(os.getenv("LOTO7_BACKTEST_MONTE_CARLO", "2500")),
+            mcts_backtest,
+            weights,
+            False,
+        )
+        res = [classify_loto7_prize(p.ticket, actual.main, actual.bonus, DEFAULT_PRIZE_TABLE) for p in preds]
+        hits = [r.main_matches for r in res]
+        dp = len(preds) * DEFAULT_UNIT_COST
+        dw = sum(r.prize for r in res)
+        grades = [r.grade for r in res if r.grade is not None]
+        best_grade = min(grades) if grades else None
+        row: Dict[str, object] = {
+            "抽せん日": actual.date,
+            "回別": actual.draw_no or "",
+            "本数字": format_ticket(actual.main),
+            "ボーナス数字": format_ticket(actual.bonus),
+            "口数": len(preds),
+            "購入金額": dp,
+            "当せん金額": dw,
+            "収支": dw - dp,
+            "最高等級": _grade_label(best_grade),
+            "最高本数字一致数": max(hits) if hits else 0,
+            "当せん口数": sum(1 for r in res if r.grade is not None),
+        }
+        for idx, (p, r) in enumerate(zip(preds, res), 1):
+            row[f"予測{idx}"] = format_ticket(p.ticket)
+            row[f"予測{idx}_戦略"] = p.strategy
+            row[f"予測{idx}_本数字一致"] = r.main_matches
+            row[f"予測{idx}_ボーナス一致"] = r.bonus_matches
+            row[f"予測{idx}_等級"] = _grade_label(r.grade)
+            row[f"予測{idx}_当せん金額"] = r.prize
+            if r.main_matches >= 4:
+                bank.add(p.ticket, 1.0 + max(0, r.main_matches - 4) * 0.8)
+            if r.main_matches >= 5:
+                bank5.add(p.ticket, r.main_matches, actual.date)
         rows.append(row)
-    def rate(v,t): return sum(1 for x in v if x>=t)/len(v) if v else 0.0
-    summary={"検証回数":len(top),"初期学習回数":min_train,"検証開始回相当":start+1,"要求バックテスト候補プール":pool_size,"実効バックテスト候補プール":pool_size,"直近検証回数指定":max_backtest_draws,"1回あたり口数":num_tickets,"1口購入金額":DEFAULT_UNIT_COST,"1口目平均一致数":round(_avg(top),6),"全口ベスト平均一致数":round(_avg(best),6),"1口目_2個以上率":round(rate(top,2),6),"1口目_3個以上率":round(rate(top,3),6),"1口目_4個以上率":round(rate(top,4),6),"全口ベスト_2個以上率":round(rate(best,2),6),"全口ベスト_3個以上率":round(rate(best,3),6),"全口ベスト_4個以上率":round(rate(best,4),6),"総購入金額":purchase,"総当せん金額":prize,"総収支":prize-purchase,"総回収率":round(prize/purchase,6) if purchase else 0,"総当せん口数":sum(1 for row in rows for k,v in row.items() if k.endswith("_等級") and v != "ハズレ"),"全予測口等級分布":dict(sorted(gd.items())),"各回ベスト等級分布":dict(sorted(bgd.items())),"1口目一致数分布":dict(sorted(Counter(top).items())),"全口ベスト一致数分布":dict(sorted(Counter(best).items())),"最適化重み":weights.to_dict(),"MemoryBank件数":len(bank.items)}
-    _write_csv(detail_csv, rows); _write_csv(summary_csv, [summary]); bank.save(MEMORYBANK_CSV); return summary
+        done.add(actual.date)
+        processed_since_save += 1
 
-__all__=["AdvancedWeights","MemoryBank","advanced_predict","advanced_backtest","optimize_weights","save_latest_txt"]
+        if push_every > 0 and processed_since_save >= push_every:
+            _write_csv(detail_csv, rows)
+            _save_resume(RESUME_JSON, len(done), actual.date)
+            bank.save(MEMORYBANK_CSV)
+            bank5.save(MEMORYBANK_5PLUS_CSV)
+            partial_summary = summarize_rows(rows, num_tickets, min_train, start, weights)
+            _write_csv(summary_csv, [partial_summary])
+            _maybe_git_push(
+                [detail_csv, summary_csv, MEMORYBANK_CSV, MEMORYBANK_5PLUS_CSV, RESUME_JSON],
+                f"checkpoint loto7 backtest {len(done)} draws",
+            )
+            processed_since_save = 0
+
+    _write_csv(detail_csv, rows)
+    summary = summarize_rows(rows, num_tickets, min_train, start, weights)
+    _write_csv(summary_csv, [summary])
+    bank.save(MEMORYBANK_CSV)
+    bank5.save(MEMORYBANK_5PLUS_CSV)
+    _save_resume(RESUME_JSON, len(done), rows[-1].get("抽せん日", "") if rows else "")
+    build_hit_structure_clusters(detail_csv, CLUSTER_CSV)
+    train_meta_classifier(detail_csv, META_CLASSIFIER_JSON)
+    return summary
+
+
+__all__ = [
+    "AdvancedWeights",
+    "MemoryBank",
+    "MemoryBank5Plus",
+    "advanced_predict",
+    "advanced_backtest",
+    "optimize_weights",
+    "third_prize_objective",
+    "train_meta_classifier",
+    "build_hit_structure_clusters",
+    "save_latest_txt",
+]
