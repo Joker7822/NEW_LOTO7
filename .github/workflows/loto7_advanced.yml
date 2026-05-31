@@ -14,7 +14,7 @@ on:
       chunk_size:
         description: 'Backtest draws per chunk before commit/push'
         required: true
-        default: '100'
+        default: '10'
       max_chunks:
         description: 'Max chunks per workflow run'
         required: true
