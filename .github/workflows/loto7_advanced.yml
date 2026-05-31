@@ -1,54 +1,45 @@
-name: NEW_LOTO7 Advanced
+name: NEW_LOTO7 Advanced Resume
 
 on:
   workflow_dispatch:
     inputs:
       run_backtest:
-        description: 'Run backtest after prediction'
-        required: false
-        default: 'false'
+        description: 'Run resumable backtest'
+        required: true
+        default: 'true'
         type: choice
         options:
-          - 'false'
           - 'true'
-      max_backtest_draws:
-        description: 'Backtest target draws. 0 = all draws'
-        required: false
-        default: '300'
-      monte_carlo:
-        description: 'Prediction MonteCarlo/MCTS iterations'
-        required: false
-        default: '30000'
-      backtest_monte_carlo:
-        description: 'Backtest MonteCarlo/MCTS iterations'
-        required: false
-        default: '2000'
-      optuna_trials:
-        description: 'Optuna trials'
-        required: false
-        default: '30'
+          - 'false'
+      chunk_size:
+        description: 'Backtest draws per chunk before commit/push'
+        required: true
+        default: '100'
+      max_chunks:
+        description: 'Max chunks per workflow run'
+        required: true
+        default: '20'
   schedule:
-    # JST 21:00 on Tuesday and Friday
     - cron: '0 12 * * 2,5'
 
 permissions:
   contents: write
+
+env:
+  PYTHONUNBUFFERED: '1'
+  LOTO7_MONTE_CARLO: '30000'
+  LOTO7_BACKTEST_MONTE_CARLO: '1200'
+  LOTO7_OPTUNA_TRIALS: '20'
+  LOTO7_DISABLE_OPTIMIZE: '0'
 
 concurrency:
   group: loto7-advanced-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  predict:
+  predict-and-backtest:
     runs-on: ubuntu-latest
     timeout-minutes: 360
-
-    env:
-      DEFAULT_MONTE_CARLO: '30000'
-      DEFAULT_BACKTEST_MONTE_CARLO: '2000'
-      DEFAULT_OPTUNA_TRIALS: '30'
-      DEFAULT_MAX_BACKTEST_DRAWS: '300'
-      PYTHONUNBUFFERED: '1'
 
     steps:
       - name: Checkout
@@ -57,125 +48,104 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
+      - name: Configure git
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git pull --rebase origin "${GITHUB_REF_NAME}" || true
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: Install dependencies
+      - name: Install
         run: |
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          else
-            pip install optuna scikit-learn
-          fi
-          # Optional libraries. Do not fail the workflow if wheels are unavailable.
-          pip install scikit-learn || true
-          pip install catboost || true
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          # Optional packages. If these fail, the Python code falls back automatically.
+          pip install optuna scikit-learn catboost || true
 
-      - name: Compile check
-        run: |
-          python -m py_compile loto7_logic_predictor.py
-          python -m py_compile loto7_enhanced_predictor.py || true
-          python -m py_compile loto7_advanced_optimizer.py || true
-          python -m py_compile loto7_advanced_v2.py || true
-
-      - name: Resolve runtime settings
-        id: settings
-        shell: bash
-        run: |
-          MC="${{ github.event.inputs.monte_carlo || '' }}"
-          BMC="${{ github.event.inputs.backtest_monte_carlo || '' }}"
-          TRIALS="${{ github.event.inputs.optuna_trials || '' }}"
-          MAXDRAWS="${{ github.event.inputs.max_backtest_draws || '' }}"
-
-          echo "monte_carlo=${MC:-$DEFAULT_MONTE_CARLO}" >> "$GITHUB_OUTPUT"
-          echo "backtest_monte_carlo=${BMC:-$DEFAULT_BACKTEST_MONTE_CARLO}" >> "$GITHUB_OUTPUT"
-          echo "optuna_trials=${TRIALS:-$DEFAULT_OPTUNA_TRIALS}" >> "$GITHUB_OUTPUT"
-          echo "max_backtest_draws=${MAXDRAWS:-$DEFAULT_MAX_BACKTEST_DRAWS}" >> "$GITHUB_OUTPUT"
-
-      - name: Run advanced prediction
-        env:
-          LOTO7_MONTE_CARLO: ${{ steps.settings.outputs.monte_carlo }}
-          LOTO7_BACKTEST_MONTE_CARLO: ${{ steps.settings.outputs.backtest_monte_carlo }}
-          LOTO7_OPTUNA_TRIALS: ${{ steps.settings.outputs.optuna_trials }}
-          LOTO7_MCTS_ITERATIONS: ${{ steps.settings.outputs.monte_carlo }}
+      - name: Run latest prediction
         run: |
           python loto7_logic_predictor.py \
             --tickets 10 \
             --pool-size 24 \
-            --save-count 10 \
-            --monte-carlo "${LOTO7_MONTE_CARLO}"
+            --save-count 10
 
-      - name: Run optional resumable backtest
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_backtest == 'true' }}
-        env:
-          LOTO7_MONTE_CARLO: ${{ steps.settings.outputs.monte_carlo }}
-          LOTO7_BACKTEST_MONTE_CARLO: ${{ steps.settings.outputs.backtest_monte_carlo }}
-          LOTO7_OPTUNA_TRIALS: ${{ steps.settings.outputs.optuna_trials }}
-          LOTO7_MCTS_ITERATIONS: ${{ steps.settings.outputs.backtest_monte_carlo }}
-          MAX_BACKTEST_DRAWS: ${{ steps.settings.outputs.max_backtest_draws }}
+      - name: Commit prediction files
         run: |
-          if [ -f loto7_advanced_v2.py ]; then
-            python - <<'PY'
-          import os
-          from loto7_logic_predictor import load_draws
-          from loto7_advanced_v2 import backtest_resume_v2, cluster_hit_structures, train_meta_classifier
-
-          draws = load_draws("loto7.csv")
-          max_draws = int(os.environ.get("MAX_BACKTEST_DRAWS", "300"))
-          min_train = max(1, len(draws) - max_draws) if max_draws > 0 else 1
-
-          summary = backtest_resume_v2(
-              draws=draws,
-              min_train=min_train,
-              num_tickets=10,
-              pool_size=16,
-              detail_csv="loto7_backtest_detail.csv",
-              summary_csv="loto7_backtest_summary.csv",
-              push_every=100,
-          )
-          cluster_hit_structures("loto7_backtest_detail.csv")
-          train_meta_classifier("loto7_backtest_detail.csv")
-          print(summary)
-          PY
-          else
-            python loto7_logic_predictor.py \
-              --backtest \
-              --min-train 1 \
-              --max-backtest-draws "${MAX_BACKTEST_DRAWS}" \
-              --tickets 10 \
-              --backtest-pool-size 16 \
-              --backtest-monte-carlo "${LOTO7_BACKTEST_MONTE_CARLO}"
-          fi
-
-      - name: Commit and push results
-        shell: bash
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-
           git add \
             loto7_predictions.csv \
             latest_loto7_prediction.txt \
-            loto7_backtest_summary.csv \
-            loto7_backtest_detail.csv \
-            loto7_backtest_report.txt \
-            loto7_backtest_resume.json \
             loto7_memorybank.csv \
             loto7_memorybank_5plus.csv \
             loto7_advanced_weights.json \
-            loto7_hit_structure_clusters.csv \
             loto7_meta_classifier.json \
+            loto7_hit_structure_clusters.csv \
             || true
+          git diff --cached --quiet || git commit -m "auto update loto7 prediction"
+          git pull --rebase origin "${GITHUB_REF_NAME}" || true
+          git push || true
 
-          if git diff --cached --quiet; then
-            echo "No changes to commit."
-            exit 0
-          fi
+      - name: Run resumable backtest in chunks
+        if: ${{ github.event_name == 'schedule' || github.event.inputs.run_backtest == 'true' }}
+        run: |
+          CHUNK_SIZE="${{ github.event.inputs.chunk_size || '100' }}"
+          MAX_CHUNKS="${{ github.event.inputs.max_chunks || '20' }}"
+          echo "CHUNK_SIZE=${CHUNK_SIZE} MAX_CHUNKS=${MAX_CHUNKS}"
 
-          git commit -m "auto update loto7 advanced results"
-          git pull --rebase origin "${GITHUB_REF_NAME}"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          for n in $(seq 1 "${MAX_CHUNKS}"); do
+            echo "===== resumable backtest chunk ${n}/${MAX_CHUNKS} ====="
+            python scripts/resumable_loto7_backtest.py \
+              --csv loto7.csv \
+              --min-train 1 \
+              --tickets 10 \
+              --pool-size 16 \
+              --chunk-size "${CHUNK_SIZE}" \
+              --detail-csv loto7_backtest_detail.csv \
+              --summary-csv loto7_backtest_summary.csv \
+              --report-txt loto7_backtest_report.txt \
+              --resume-json loto7_backtest_resume.json
+
+            git add \
+              loto7_backtest_detail.csv \
+              loto7_backtest_summary.csv \
+              loto7_backtest_report.txt \
+              loto7_backtest_resume.json \
+              loto7_memorybank.csv \
+              loto7_memorybank_5plus.csv \
+              loto7_advanced_weights.json \
+              loto7_meta_classifier.json \
+              loto7_hit_structure_clusters.csv \
+              || true
+            git diff --cached --quiet || git commit -m "resume loto7 backtest chunk ${n}"
+            git pull --rebase origin "${GITHUB_REF_NAME}" || true
+            git push || true
+
+            if grep -q '"completed": true' loto7_backtest_resume.json; then
+              echo "Backtest completed."
+              break
+            fi
+          done
+
+      - name: Upload result artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: loto7-advanced-results
+          if-no-files-found: ignore
+          retention-days: 30
+          path: |
+            loto7_predictions.csv
+            latest_loto7_prediction.txt
+            loto7_backtest_detail.csv
+            loto7_backtest_summary.csv
+            loto7_backtest_report.txt
+            loto7_backtest_resume.json
+            loto7_memorybank.csv
+            loto7_memorybank_5plus.csv
+            loto7_advanced_weights.json
+            loto7_meta_classifier.json
+            loto7_hit_structure_clusters.csv
