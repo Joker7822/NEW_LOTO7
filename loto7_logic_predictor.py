@@ -263,6 +263,9 @@ def print_predictions(tickets: Sequence[TicketScore]) -> None:
             f" | triple={d.get('triple', 0):.3f}"
             f" | memory={d.get('memory', d.get('pattern', 0)):.3f}"
             f" | grade6={d.get('grade6', 0):.3f}"
+            f" | cycle={d.get('cycle', 0):.3f}"
+            f" | meta6={d.get('meta6', 0):.3f}"
+            f" | shap={d.get('shap', 0):.3f}"
         )
     print()
 

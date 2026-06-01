@@ -64,6 +64,8 @@ MEMORYBANK_5PLUS_CSV = "loto7_memorybank_5plus.csv"
 META_CLASSIFIER_JSON = "loto7_meta_classifier.json"
 CLUSTER_CSV = "loto7_hit_structure_clusters.csv"
 RESUME_JSON = "loto7_backtest_resume.json"
+NEXTGEN_META6_JSON = "loto7_meta6_classifier.json"
+NEXTGEN_SHAP_JSON = "loto7_shap_feature_selection.json"
 
 
 @dataclass(frozen=True)
@@ -78,6 +80,11 @@ class AdvancedWeights:
     memory5: float = 1.60
     meta: float = 0.45
     cluster: float = 0.25
+    cycle: float = 0.55
+    diffusion: float = 0.35
+    ppo: float = 0.35
+    meta6: float = 0.85
+    shap: float = 0.25
 
     def to_dict(self) -> Dict[str, float]:
         return self.__dict__.copy()
@@ -406,7 +413,82 @@ def context(draws: Sequence[Draw], before_date: Optional[str], detail_csv: str) 
         "mem5": build_memory5(before_date, detail_csv),
         "meta": load_meta_classifier(META_CLASSIFIER_JSON),
         "clusters": load_cluster_profile(CLUSTER_CSV),
+        "nextgen": load_nextgen_context(),
+        "cycle_scores": build_cached_cycle_scores(draws),
+        "cycle_gaps": build_cached_cycle_gaps(draws),
     }
+
+
+def build_cached_cycle_scores(draws: Sequence[Draw]) -> Dict[int, float]:
+    try:
+        from loto7_nextgen_models import cycle_number_scores
+        return cycle_number_scores(draws)
+    except Exception:
+        return {}
+
+
+def build_cached_cycle_gaps(draws: Sequence[Draw]) -> Dict[int, int]:
+    try:
+        from loto7_nextgen_models import last_seen_gaps
+        return last_seen_gaps(draws)
+    except Exception:
+        return {}
+
+
+def load_nextgen_context() -> Dict[str, object]:
+    """Load optional next-generation JSON models.
+
+    Missing optional files are treated as empty models so prediction remains compatible
+    on a fresh repository checkout.
+    """
+    try:
+        from loto7_nextgen_models import load_meta6_classifier
+    except Exception:
+        load_meta6_classifier = None  # type: ignore
+    ctx: Dict[str, object] = {"meta6": {}, "shap": {}}
+    if load_meta6_classifier is not None:
+        try:
+            ctx["meta6"] = load_meta6_classifier(NEXTGEN_META6_JSON)
+        except Exception:
+            ctx["meta6"] = {}
+    try:
+        p = Path(NEXTGEN_SHAP_JSON)
+        if p.exists():
+            ctx["shap"] = json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        ctx["shap"] = {}
+    return ctx
+
+
+def nextgen_scores(ticket: Sequence[int], draws: Sequence[Draw], ctx: Dict[str, object]) -> Dict[str, float]:
+    try:
+        from loto7_nextgen_models import meta6_score, selected_feature_score
+    except Exception:
+        return {"cycle": 0.0, "meta6": 0.0, "shap": 0.0}
+    ng = ctx.get("nextgen", {}) if isinstance(ctx.get("nextgen", {}), dict) else {}
+    t = tuple(sorted(ticket))
+    # Cached cycle calculation: avoids recomputing per-number histories for each candidate.
+    cycle_scores = ctx.get("cycle_scores", {}) if isinstance(ctx.get("cycle_scores", {}), dict) else {}
+    cycle_gaps = ctx.get("cycle_gaps", {}) if isinstance(ctx.get("cycle_gaps", {}), dict) else {}
+    if cycle_scores:
+        base = sum(float(cycle_scores.get(n, 0.0)) for n in t) / max(len(t), 1)
+        compat = 0.0
+        pairs = 0
+        for a, b in itertools.combinations(t, 2):
+            compat += 1.0 / (1.0 + abs(float(cycle_gaps.get(a, 0)) - float(cycle_gaps.get(b, 0))) / 16.0)
+            pairs += 1
+        cycle = 0.72 * base + 0.28 * (compat / pairs if pairs else 0.0)
+    else:
+        cycle = 0.0
+    try:
+        meta6 = float(meta6_score(t, draws, ng.get("meta6", {})))  # type: ignore[union-attr]
+    except Exception:
+        meta6 = 0.0
+    try:
+        shap = float(selected_feature_score(t, draws, ng.get("shap", {})))  # type: ignore[union-attr]
+    except Exception:
+        shap = 0.0
+    return {"cycle": cycle, "meta6": meta6, "shap": shap}
 
 
 def cluster_key_from_features(f: Dict[str, float]) -> str:
@@ -619,7 +701,11 @@ def score_ticket(ticket: Sequence[int], draws: Sequence[Draw], ctx: Dict[str, ob
     div = 0.10 if len(set(n // 10 for n in t)) >= 4 else 0.0
     ms = meta_score(t, draws, ctx.get("meta", {}))  # type: ignore[arg-type]
     cs = cluster_score(t, draws, ctx.get("clusters", {}))  # type: ignore[arg-type]
-    bonus = 0.45 if strategy == "GRADE3" and (memory > 0 or memory5 > 0) else 0.15 if strategy == "MCTS" else 0.08 if strategy == "MONTECARLO" else 0.0
+    ngs = nextgen_scores(t, draws, ctx)
+    cycle = ngs.get("cycle", 0.0)
+    meta6 = ngs.get("meta6", 0.0)
+    shap = ngs.get("shap", 0.0)
+    bonus = 0.45 if strategy == "GRADE3" and (memory > 0 or memory5 > 0) else 0.22 if strategy == "DIFFUSION" else 0.20 if strategy == "MULTI_AGENT_PPO" else 0.15 if strategy == "MCTS" else 0.08 if strategy == "MONTECARLO" else 0.0
     total = (
         w.single * single
         + w.pair * pair
@@ -630,6 +716,9 @@ def score_ticket(ticket: Sequence[int], draws: Sequence[Draw], ctx: Dict[str, ob
         + w.diversity * div
         + w.meta * ms
         + w.cluster * cs
+        + w.cycle * cycle
+        + w.meta6 * meta6
+        + w.shap * shap
         + bonus
         - w.structure * penalty
     )
@@ -646,6 +735,9 @@ def score_ticket(ticket: Sequence[int], draws: Sequence[Draw], ctx: Dict[str, ob
             "grade6": gb,
             "meta": ms,
             "cluster": cs,
+            "cycle": cycle,
+            "meta6": meta6,
+            "shap": shap,
             "penalty": penalty,
             "sum": float(sum(t)),
             "odd": float(sum(n % 2 for n in t)),
@@ -766,6 +858,11 @@ def optimize_weights(draws: Sequence[Draw], trials: int = 25, force: bool = Fals
                 memory5=trial.suggest_float("memory5", 0.90, 3.50),
                 meta=trial.suggest_float("meta", 0.05, 1.20),
                 cluster=trial.suggest_float("cluster", 0.00, 0.80),
+                cycle=trial.suggest_float("cycle", 0.10, 1.20),
+                diffusion=trial.suggest_float("diffusion", 0.05, 0.90),
+                ppo=trial.suggest_float("ppo", 0.05, 0.90),
+                meta6=trial.suggest_float("meta6", 0.10, 1.80),
+                shap=trial.suggest_float("shap", 0.00, 0.80),
             )
             return eval_w(w)
 
@@ -786,6 +883,11 @@ def optimize_weights(draws: Sequence[Draw], trials: int = 25, force: bool = Fals
                 memory5=rng.uniform(0.90, 3.50),
                 meta=rng.uniform(0.05, 1.20),
                 cluster=rng.uniform(0.00, 0.80),
+                cycle=rng.uniform(0.10, 1.20),
+                diffusion=rng.uniform(0.05, 0.90),
+                ppo=rng.uniform(0.05, 0.90),
+                meta6=rng.uniform(0.10, 1.80),
+                shap=rng.uniform(0.00, 0.80),
             )
             sc = eval_w(w)
             if sc > best_score:
@@ -828,6 +930,27 @@ def advanced_predict(
         old = ranked.get(item.ticket)
         if old is None or item.score > old.score:
             ranked[item.ticket] = item
+
+    if os.getenv("LOTO7_DISABLE_NEXTGEN", "0") != "1":
+        try:
+            from loto7_nextgen_models import diffusion_candidates, multi_agent_ppo_candidates
+            diff_count = int(os.getenv("LOTO7_DIFFUSION_CANDIDATES", "1200"))
+            ppo_count = int(os.getenv("LOTO7_PPO_CANDIDATES", "1000"))
+            for t in diffusion_candidates(draws, diff_count, seed=len(draws) * 1777):
+                item = score_ticket(t, draws, ctx, weights, "DIFFUSION")
+                item.score += weights.diffusion * item.detail.get("cycle", 0.0)
+                old = ranked.get(item.ticket)
+                if old is None or item.score > old.score:
+                    ranked[item.ticket] = item
+            for t in multi_agent_ppo_candidates(draws, ppo_count, seed=len(draws) * 2777):
+                item = score_ticket(t, draws, ctx, weights, "MULTI_AGENT_PPO")
+                item.score += weights.ppo * (item.detail.get("cycle", 0.0) + item.detail.get("meta6", 0.0))
+                old = ranked.get(item.ticket)
+                if old is None or item.score > old.score:
+                    ranked[item.ticket] = item
+        except Exception as exc:
+            if os.getenv("LOTO7_DEBUG_NEXTGEN", "0") == "1":
+                print(f"[WARN] nextgen candidate generation skipped: {exc}")
 
     selected: List[TicketScore] = []
     use: Counter = Counter()
@@ -950,7 +1073,11 @@ def advanced_backtest(
     detail_csv: str,
 ) -> Dict[str, object]:
     start = max(min_train, len(draws) - max_backtest_draws) if max_backtest_draws and max_backtest_draws > 0 else min_train
-    weights = optimize_weights(draws[:start]) if start >= 120 else (_load_weights() or AdvancedWeights())
+    weights = (
+        optimize_weights(draws[:start])
+        if start >= 120 and os.getenv("LOTO7_DISABLE_OPTIMIZE", "0") != "1"
+        else (_load_weights() or AdvancedWeights())
+    )
     resume_enabled = os.getenv("LOTO7_BACKTEST_RESUME", "1") != "0"
     push_every = int(os.getenv("LOTO7_PUSH_EVERY", "100"))
     mcts_backtest = int(os.getenv("LOTO7_BACKTEST_MCTS", os.getenv("LOTO7_MCTS_ITERATIONS", "1500")))
@@ -1030,6 +1157,13 @@ def advanced_backtest(
     _save_resume(RESUME_JSON, len(done), rows[-1].get("抽せん日", "") if rows else "")
     build_hit_structure_clusters(detail_csv, CLUSTER_CSV)
     train_meta_classifier(detail_csv, META_CLASSIFIER_JSON)
+    try:
+        from loto7_nextgen_models import train_meta6_classifier, shap_feature_selection
+        train_meta6_classifier(detail_csv, NEXTGEN_META6_JSON)
+        shap_feature_selection(detail_csv, NEXTGEN_SHAP_JSON)
+    except Exception as exc:
+        if os.getenv("LOTO7_DEBUG_NEXTGEN", "0") == "1":
+            print(f"[WARN] nextgen training skipped: {exc}")
     return summary
 
 
@@ -1043,5 +1177,7 @@ __all__ = [
     "third_prize_objective",
     "train_meta_classifier",
     "build_hit_structure_clusters",
+    "load_nextgen_context",
+    "nextgen_scores",
     "save_latest_txt",
 ]
