@@ -6,7 +6,7 @@ on:
       tickets:
         description: 'Number of latest prediction tickets'
         required: true
-        default: '10'
+        default: '5'
       pool_size:
         description: 'Latest prediction pool size'
         required: true
@@ -28,7 +28,6 @@ on:
         required: true
         default: '10'
   schedule:
-    # JST 21:00 every Friday / UTC 12:00
     - cron: '0 12 * * 5'
 
 permissions:
@@ -45,145 +44,21 @@ jobs:
     timeout-minutes: 360
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          fi
-
-      - name: Syntax check
-        run: |
-          python -m py_compile \
-            loto7_logic_predictor.py \
-            loto7_advanced_optimizer.py \
-            loto7_enhanced_predictor.py \
-            loto7_nextgen_models.py \
-            loto7_chunked_backtest.py \
-            loto7_train_from_backtest.py
-
       - name: Advance leakage-safe chunked backtest
-        if: ${{ github.event_name == 'schedule' || github.event.inputs.run_backtest == 'true' }}
         env:
-          LOTO7_DISABLE_OPTIMIZE: '1'
-          LOTO7_BACKTEST_RESUME: '1'
-          LOTO7_BACKTEST_MONTE_CARLO: '100'
-          LOTO7_BACKTEST_MCTS: '50'
-          LOTO7_DIFFUSION_CANDIDATES: '50'
-          LOTO7_PPO_CANDIDATES: '50'
+          LOTO7_POOL_SIZE: ${{ github.event.inputs.pool_size || '24' }}
           LOTO7_BACKTEST_CHUNK_SIZE: ${{ github.event.inputs.chunk_size || '100' }}
           LOTO7_BACKTEST_MAX_CHUNKS: ${{ github.event.inputs.max_chunks || '10' }}
-          LOTO7_POOL_SIZE: ${{ github.event.inputs.pool_size || '24' }}
         run: |
-          python loto7_chunked_backtest.py \
-            --csv loto7.csv \
-            --min-train 1 \
-            --tickets 10 \
-            --pool-size "${LOTO7_POOL_SIZE}" \
-            --chunk-size "${LOTO7_BACKTEST_CHUNK_SIZE}" \
-            --max-chunks "${LOTO7_BACKTEST_MAX_CHUNKS}"
-
-      - name: Train models from completed historical backtest rows only
-        run: |
-          python loto7_train_from_backtest.py \
-            --detail-csv loto7_backtest_detail.csv \
-            --cluster-csv loto7_hit_structure_clusters.csv \
-            --meta-json loto7_meta_classifier.json \
-            --meta6-json loto7_meta6_classifier.json \
-            --shap-json loto7_shap_feature_selection.json
+          python loto7_chunked_backtest.py --csv loto7.csv --min-train 1 --tickets 5 --pool-size "${LOTO7_POOL_SIZE}" --chunk-size "${LOTO7_BACKTEST_CHUNK_SIZE}" --max-chunks "${LOTO7_BACKTEST_MAX_CHUNKS}"
 
       - name: Save latest prediction using trained artifacts
-        env:
-          LOTO7_DISABLE_OPTIMIZE: '1'
-          LOTO7_MONTE_CARLO: '3000'
-          LOTO7_DIFFUSION_CANDIDATES: '300'
-          LOTO7_PPO_CANDIDATES: '300'
-          LOTO7_MCTS_ITERATIONS: '300'
         run: |
-          TICKETS="${{ github.event.inputs.tickets || '10' }}"
+          TICKETS="${{ github.event.inputs.tickets || '5' }}"
           POOL_SIZE="${{ github.event.inputs.pool_size || '24' }}"
-          python loto7_logic_predictor.py \
-            --csv loto7.csv \
-            --tickets "$TICKETS" \
-            --pool-size "$POOL_SIZE" \
-            --save-count "$TICKETS" \
-            --disable-optimize
-
-      - name: Commit results
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add .
-          if git diff --cached --quiet; then
-            echo 'No changes to commit.'
-            exit 0
-          fi
-          git commit -m 'auto update NEW_LOTO7 backtest model prediction'
-          for i in 1 2 3; do
-            git pull --rebase origin main || true
-            if git push origin HEAD:main; then
-              exit 0
-            fi
-            sleep $((i * 5))
-          done
-          echo 'git push failed after retries.' >&2
-          exit 1
-
-      - name: Check remaining backtests
-        id: remain
-        shell: bash
-        run: |
-          python - << 'PY'
-          import csv
-          import os
-          from pathlib import Path
-
-          remain = 0
-          completed_all = "False"
-          p = Path("loto7_backtest_summary.csv")
-          if p.exists() and p.stat().st_size > 0:
-              with p.open("r", encoding="utf-8-sig", newline="") as f:
-                  rows = list(csv.DictReader(f))
-                  if rows:
-                      row = rows[-1]
-                      remain = int(float(row.get("未処理回数", 0) or 0))
-                      completed_all = str(row.get("完全完了", "False"))
-
-          print(f"remain={remain}")
-          print(f"completed_all={completed_all}")
-
-          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
-              out.write(f"remain={remain}\n")
-              out.write(f"completed_all={completed_all}\n")
-          PY
-
-      - name: Re-dispatch workflow if remaining backtests exist
-        if: ${{ steps.remain.outputs.remain != '0' && steps.remain.outputs.completed_all != 'True' }}
-        uses: actions/github-script@v7
-        with:
-          script: |
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: "loto7_advanced.yml",
-              ref: "main",
-              inputs: {
-                tickets: "10",
-                pool_size: "24",
-                run_backtest: "true",
-                chunk_size: "100",
-                max_chunks: "10"
-              }
-            });
+          python loto7_logic_predictor.py --csv loto7.csv --tickets "$TICKETS" --pool-size "$POOL_SIZE" --save-count "$TICKETS" --disable-optimize
