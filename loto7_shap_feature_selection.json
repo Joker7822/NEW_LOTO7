@@ -1,0 +1,33 @@
+{
+  "method": "shap_fallback_correlation_importance",
+  "target": "20*(6+) + 5*(5) + 1.2*(4)",
+  "total": 1000,
+  "importance": {
+    "last_digit_max": 0.09627746,
+    "gap_max": 0.08189317,
+    "gap_avg": 0.0790323,
+    "decade_count": 0.04652715,
+    "high": 0.03832885,
+    "gap_min": 0.03704659,
+    "sum": 0.03058739,
+    "low": 0.02337258,
+    "odd": 0.02213333,
+    "mid": 0.01765814,
+    "run": 0.01632928,
+    "repeat_last": 0.0,
+    "repeat_prev": 0.0,
+    "cycle": 0.0
+  },
+  "selected_features": [
+    "last_digit_max",
+    "gap_max",
+    "gap_avg",
+    "decade_count",
+    "high",
+    "gap_min",
+    "sum",
+    "low",
+    "odd",
+    "mid"
+  ]
+}
