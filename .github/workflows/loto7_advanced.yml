@@ -4,22 +4,31 @@ on:
   workflow_dispatch:
     inputs:
       tickets:
+        description: 'Number of latest prediction tickets'
         required: true
         default: '10'
       pool_size:
+        description: 'Latest prediction pool size'
         required: true
         default: '24'
       run_backtest:
+        description: 'Advance leakage-safe chunked backtest before training/prediction'
         required: true
-        default: 'false'
+        default: 'true'
         type: choice
         options:
-          - 'false'
           - 'true'
-      max_backtest_draws:
+          - 'false'
+      chunk_size:
+        description: 'Backtest target draws per checkpoint'
         required: true
-        default: '0'
+        default: '100'
+      max_chunks:
+        description: 'Backtest chunks per workflow run'
+        required: true
+        default: '1'
   schedule:
+    # JST 21:00 every Friday / UTC 12:00
     - cron: '0 12 * * 5'
 
 permissions:
@@ -30,29 +39,68 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  predict:
+  backtest_train_predict:
     runs-on: ubuntu-latest
     timeout-minutes: 360
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-python@v5
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - run: |
+      - name: Install dependencies
+        run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then
             pip install -r requirements.txt
           fi
 
-      - run: |
-          python -m py_compile loto7_logic_predictor.py loto7_advanced_optimizer.py loto7_enhanced_predictor.py loto7_nextgen_models.py
+      - name: Syntax check
+        run: |
+          python -m py_compile \
+            loto7_logic_predictor.py \
+            loto7_advanced_optimizer.py \
+            loto7_enhanced_predictor.py \
+            loto7_nextgen_models.py \
+            loto7_chunked_backtest.py \
+            loto7_train_from_backtest.py
 
-      - name: Prediction
+      - name: Advance leakage-safe chunked backtest
+        if: ${{ github.event_name == 'schedule' || github.event.inputs.run_backtest == 'true' }}
+        env:
+          LOTO7_DISABLE_OPTIMIZE: '1'
+          LOTO7_BACKTEST_RESUME: '1'
+          LOTO7_BACKTEST_MONTE_CARLO: '100'
+          LOTO7_BACKTEST_MCTS: '50'
+          LOTO7_DIFFUSION_CANDIDATES: '50'
+          LOTO7_PPO_CANDIDATES: '50'
+          LOTO7_BACKTEST_CHUNK_SIZE: ${{ github.event.inputs.chunk_size || '100' }}
+          LOTO7_BACKTEST_MAX_CHUNKS: ${{ github.event.inputs.max_chunks || '1' }}
+        run: |
+          python loto7_chunked_backtest.py \
+            --csv loto7.csv \
+            --min-train 1 \
+            --tickets 10 \
+            --pool-size 8 \
+            --chunk-size "${LOTO7_BACKTEST_CHUNK_SIZE}" \
+            --max-chunks "${LOTO7_BACKTEST_MAX_CHUNKS}"
+
+      - name: Train models from completed historical backtest rows only
+        run: |
+          python loto7_train_from_backtest.py \
+            --detail-csv loto7_backtest_detail.csv \
+            --cluster-csv loto7_hit_structure_clusters.csv \
+            --meta-json loto7_meta_classifier.json \
+            --meta6-json loto7_meta6_classifier.json \
+            --shap-json loto7_shap_feature_selection.json
+
+      - name: Save latest prediction using trained artifacts
         env:
           LOTO7_DISABLE_OPTIMIZE: '1'
           LOTO7_MONTE_CARLO: '3000'
@@ -60,40 +108,33 @@ jobs:
           LOTO7_PPO_CANDIDATES: '300'
           LOTO7_MCTS_ITERATIONS: '300'
         run: |
-          python loto7_logic_predictor.py --csv loto7.csv --tickets 10 --pool-size 24 --save-count 10 --disable-optimize
-
-      - name: Full resumable backtest
-        if: ${{ github.event.inputs.run_backtest == 'true' }}
-        env:
-          LOTO7_DISABLE_OPTIMIZE: '1'
-          LOTO7_BACKTEST_RESUME: '1'
-          LOTO7_PUSH_EVERY: '100'
-          LOTO7_BACKTEST_MONTE_CARLO: '100'
-          LOTO7_BACKTEST_MCTS: '50'
-          LOTO7_DIFFUSION_CANDIDATES: '50'
-          LOTO7_PPO_CANDIDATES: '50'
-        run: |
+          TICKETS="${{ github.event.inputs.tickets || '10' }}"
+          POOL_SIZE="${{ github.event.inputs.pool_size || '24' }}"
           python loto7_logic_predictor.py \
             --csv loto7.csv \
-            --backtest \
-            --min-train 1 \
-            --tickets 10 \
-            --pool-size 12 \
-            --backtest-pool-size 8 \
-            --backtest-pool-cap 8 \
-            --max-backtest-draws ${{ github.event.inputs.max_backtest_draws || '0' }} \
+            --tickets "$TICKETS" \
+            --pool-size "$POOL_SIZE" \
+            --save-count "$TICKETS" \
             --disable-optimize
 
       - name: Commit results
+        shell: bash
         run: |
+          set -euo pipefail
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add .
-          git diff --cached --quiet && exit 0 || true
-          git commit -m 'auto update NEW_LOTO7 prediction'
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git commit -m 'auto update NEW_LOTO7 backtest model prediction'
           for i in 1 2 3; do
             git pull --rebase origin main || true
-            git push origin HEAD:main && exit 0
-            sleep $((i*5))
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            sleep $((i * 5))
           done
+          echo 'git push failed after retries.' >&2
           exit 1
