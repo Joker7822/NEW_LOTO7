@@ -45,6 +45,9 @@ from loto7_advanced_optimizer import (
     train_meta_classifier,
 )
 
+DEFAULT_BACKTEST_POOL_SIZE = int(os.getenv("LOTO7_POOL_SIZE", os.getenv("LOTO7_DEFAULT_POOL_SIZE", "24")))
+MEMORYBANK_MAX_ITEMS = int(os.getenv("LOTO7_MEMORYBANK_MAX_ITEMS", "500"))
+
 
 def _read_rows(path: str) -> List[Dict[str, object]]:
     p = Path(path)
@@ -98,6 +101,22 @@ def _target_indices(draws_len: int, min_train: int, done_dates: set[str], draw_d
     return [i for i in range(start, draws_len) if draw_dates[i] not in done_dates]
 
 
+def _normalize_pool_size(pool_size: int) -> int:
+    """Keep backtest and latest prediction conditions aligned."""
+    if int(pool_size) == 8 and os.getenv("LOTO7_ALLOW_LEGACY_POOL8", "0") != "1":
+        return DEFAULT_BACKTEST_POOL_SIZE
+    return int(pool_size)
+
+
+def _trim_memorybanks(bank: MemoryBank, bank5: MemoryBank5Plus) -> None:
+    """Avoid unbounded MemoryBank growth during long chunked runs."""
+    limit = max(1, MEMORYBANK_MAX_ITEMS)
+    if len(bank.items) > limit:
+        bank.items = bank.items[-limit:]
+    if len(bank5.items) > limit:
+        bank5.items = bank5.items[-limit:]
+
+
 def _train_models(detail_csv: str) -> None:
     build_hit_structure_clusters(detail_csv, CLUSTER_CSV)
     train_meta_classifier(detail_csv, META_CLASSIFIER_JSON)
@@ -122,6 +141,7 @@ def run_chunked_backtest(
     summary_csv: str,
     report_txt: str,
 ) -> Dict[str, object]:
+    pool_size = _normalize_pool_size(pool_size)
     draws = load_draws(csv_path)
     if len(draws) <= min_train:
         raise RuntimeError("抽せんデータ数が不足しています。")
@@ -148,6 +168,7 @@ def run_chunked_backtest(
     print(f"未処理: {len(pending)}")
     print(f"今回処理上限: {limit}")
     print(f"今回処理: {len(targets)}")
+    print(f"候補プール: {pool_size}")
     print()
 
     for pos, i in enumerate(targets, start=1):
@@ -192,6 +213,7 @@ def run_chunked_backtest(
                 bank.add(pred.ticket, 1.0 + max(0, result.main_matches - 4) * 0.8)
             if result.main_matches >= 5:
                 bank5.add(pred.ticket, result.main_matches, actual.date)
+        _trim_memorybanks(bank, bank5)
 
         rows.append(row)
         done_dates.add(actual.date)
@@ -202,6 +224,7 @@ def run_chunked_backtest(
             _write_csv(detail_csv, rows)
             _write_csv(summary_csv, [summary])
             write_compat_report(summary, report_txt)
+            _trim_memorybanks(bank, bank5)
             bank.save(MEMORYBANK_CSV)
             bank5.save(MEMORYBANK_5PLUS_CSV)
             _save_resume(RESUME_JSON, len(done_dates), actual.date, False)
@@ -215,6 +238,7 @@ def run_chunked_backtest(
     _write_csv(detail_csv, rows)
     _write_csv(summary_csv, [summary])
     write_compat_report(summary, report_txt)
+    _trim_memorybanks(bank, bank5)
     bank.save(MEMORYBANK_CSV)
     bank5.save(MEMORYBANK_5PLUS_CSV)
     _save_resume(RESUME_JSON, len(done_dates), str(rows[-1].get("抽せん日", "")) if rows else "", completed_all)
@@ -230,7 +254,7 @@ def main() -> int:
     parser.add_argument("--csv", default="loto7.csv")
     parser.add_argument("--min-train", type=int, default=1)
     parser.add_argument("--tickets", type=int, default=10)
-    parser.add_argument("--pool-size", type=int, default=8)
+    parser.add_argument("--pool-size", type=int, default=DEFAULT_BACKTEST_POOL_SIZE)
     parser.add_argument("--chunk-size", type=int, default=int(os.getenv("LOTO7_BACKTEST_CHUNK_SIZE", "100")))
     parser.add_argument("--max-chunks", type=int, default=int(os.getenv("LOTO7_BACKTEST_MAX_CHUNKS", "1")))
     parser.add_argument("--detail-csv", default="loto7_backtest_detail.csv")

@@ -83,12 +83,13 @@ jobs:
           LOTO7_PPO_CANDIDATES: '50'
           LOTO7_BACKTEST_CHUNK_SIZE: ${{ github.event.inputs.chunk_size || '100' }}
           LOTO7_BACKTEST_MAX_CHUNKS: ${{ github.event.inputs.max_chunks || '10' }}
+          LOTO7_POOL_SIZE: ${{ github.event.inputs.pool_size || '24' }}
         run: |
           python loto7_chunked_backtest.py \
             --csv loto7.csv \
             --min-train 1 \
             --tickets 10 \
-            --pool-size 8 \
+            --pool-size "${LOTO7_POOL_SIZE}" \
             --chunk-size "${LOTO7_BACKTEST_CHUNK_SIZE}" \
             --max-chunks "${LOTO7_BACKTEST_MAX_CHUNKS}"
 
