@@ -1,0 +1,51 @@
+diff --git a/loto7_chunked_backtest.py b/loto7_chunked_backtest.py
+--- a/loto7_chunked_backtest.py
++++ b/loto7_chunked_backtest.py
+@@
+ from loto7_advanced_optimizer import (
+@@
+ )
++
++DEFAULT_BACKTEST_POOL_SIZE = int(os.getenv("LOTO7_POOL_SIZE", os.getenv("LOTO7_DEFAULT_POOL_SIZE", "24")))
++MEMORYBANK_MAX_ITEMS = int(os.getenv("LOTO7_MEMORYBANK_MAX_ITEMS", "500"))
+@@
+ def _target_indices(draws_len: int, min_train: int, done_dates: set[str], draw_dates: Sequence[str]) -> List[int]:
+@@
+     return [i for i in range(start, draws_len) if draw_dates[i] not in done_dates]
++
++
++def _normalize_pool_size(pool_size: int) -> int:
++    if int(pool_size) == 8 and os.getenv("LOTO7_ALLOW_LEGACY_POOL8", "0") != "1":
++        return DEFAULT_BACKTEST_POOL_SIZE
++    return int(pool_size)
++
++
++def _trim_memorybanks(bank: MemoryBank, bank5: MemoryBank5Plus) -> None:
++    limit = max(1, MEMORYBANK_MAX_ITEMS)
++    if len(bank.items) > limit:
++        bank.items = bank.items[-limit:]
++    if len(bank5.items) > limit:
++        bank5.items = bank5.items[-limit:]
+@@
+ ) -> Dict[str, object]:
++    pool_size = _normalize_pool_size(pool_size)
+     draws = load_draws(csv_path)
+@@
+     print(f"今回処理上限: {limit}")
+     print(f"今回処理: {len(targets)}")
++    print(f"候補プール: {pool_size}")
+@@
+             if result.main_matches >= 5:
+                 bank5.add(pred.ticket, result.main_matches, actual.date)
++        _trim_memorybanks(bank, bank5)
+@@
+             write_compat_report(summary, report_txt)
++            _trim_memorybanks(bank, bank5)
+             bank.save(MEMORYBANK_CSV)
+@@
+     write_compat_report(summary, report_txt)
++    _trim_memorybanks(bank, bank5)
+     bank.save(MEMORYBANK_CSV)
+@@
+-    parser.add_argument("--pool-size", type=int, default=8)
++    parser.add_argument("--pool-size", type=int, default=DEFAULT_BACKTEST_POOL_SIZE)
