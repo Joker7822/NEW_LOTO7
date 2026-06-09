@@ -4,15 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       tickets:
-        description: 'Number of prediction tickets'
         required: true
         default: '10'
       pool_size:
-        description: 'Prediction pool size'
         required: true
         default: '24'
       run_backtest:
-        description: 'Run lightweight backtest'
         required: true
         default: 'false'
         type: choice
@@ -20,12 +17,10 @@ on:
           - 'false'
           - 'true'
       max_backtest_draws:
-        description: 'Backtest draw count; 0 means all, but Actions should use a small value'
         required: true
-        default: '30'
+        default: '0'
   schedule:
-    # JST 21:00 on Tuesday and Friday / UTC 12:00
-    - cron: '0 12 * * 2,5'
+    - cron: '0 12 * * 5'
 
 permissions:
   contents: write
@@ -40,32 +35,24 @@ jobs:
     timeout-minutes: 360
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
-        run: |
+      - run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then
             pip install -r requirements.txt
           fi
 
-      - name: Syntax check
-        run: |
-          python -m py_compile \
-            loto7_logic_predictor.py \
-            loto7_advanced_optimizer.py \
-            loto7_enhanced_predictor.py \
-            loto7_nextgen_models.py
+      - run: |
+          python -m py_compile loto7_logic_predictor.py loto7_advanced_optimizer.py loto7_enhanced_predictor.py loto7_nextgen_models.py
 
-      - name: Run prediction
+      - name: Prediction
         env:
           LOTO7_DISABLE_OPTIMIZE: '1'
           LOTO7_MONTE_CARLO: '3000'
@@ -73,74 +60,40 @@ jobs:
           LOTO7_PPO_CANDIDATES: '300'
           LOTO7_MCTS_ITERATIONS: '300'
         run: |
-          TICKETS="${{ github.event.inputs.tickets || '10' }}"
-          POOL_SIZE="${{ github.event.inputs.pool_size || '24' }}"
-          python loto7_logic_predictor.py \
-            --csv loto7.csv \
-            --tickets "$TICKETS" \
-            --pool-size "$POOL_SIZE" \
-            --save-count "$TICKETS" \
-            --disable-optimize
+          python loto7_logic_predictor.py --csv loto7.csv --tickets 10 --pool-size 24 --save-count 10 --disable-optimize
 
-      - name: Run lightweight backtest
+      - name: Full resumable backtest
         if: ${{ github.event.inputs.run_backtest == 'true' }}
         env:
           LOTO7_DISABLE_OPTIMIZE: '1'
-          LOTO7_BACKTEST_MONTE_CARLO: '500'
-          LOTO7_BACKTEST_MCTS: '200'
-          LOTO7_DIFFUSION_CANDIDATES: '100'
-          LOTO7_PPO_CANDIDATES: '100'
-          LOTO7_PUSH_EVERY: '10'
+          LOTO7_BACKTEST_RESUME: '1'
+          LOTO7_PUSH_EVERY: '100'
+          LOTO7_BACKTEST_MONTE_CARLO: '100'
+          LOTO7_BACKTEST_MCTS: '50'
+          LOTO7_DIFFUSION_CANDIDATES: '50'
+          LOTO7_PPO_CANDIDATES: '50'
         run: |
-          TICKETS="${{ github.event.inputs.tickets || '10' }}"
-          POOL_SIZE="${{ github.event.inputs.pool_size || '16' }}"
-          MAX_DRAWS="${{ github.event.inputs.max_backtest_draws || '30' }}"
           python loto7_logic_predictor.py \
             --csv loto7.csv \
-            --tickets "$TICKETS" \
-            --pool-size "$POOL_SIZE" \
             --backtest \
-            --min-train 100 \
-            --backtest-pool-size 12 \
-            --backtest-pool-cap 12 \
-            --max-backtest-draws "$MAX_DRAWS" \
+            --min-train 1 \
+            --tickets 10 \
+            --pool-size 12 \
+            --backtest-pool-size 8 \
+            --backtest-pool-cap 8 \
+            --max-backtest-draws ${{ github.event.inputs.max_backtest_draws || '0' }} \
             --disable-optimize
 
       - name: Commit results
-        shell: bash
         run: |
-          set -euo pipefail
           git config user.name github-actions
           git config user.email github-actions@github.com
-
-          git add \
-            loto7_predictions.csv \
-            latest_loto7_prediction.txt \
-            loto7_backtest_summary.csv \
-            loto7_backtest_detail.csv \
-            loto7_backtest_report.txt \
-            loto7_memorybank.csv \
-            loto7_memorybank_5plus.csv \
-            loto7_advanced_weights.json \
-            loto7_meta_classifier.json \
-            loto7_meta6_classifier.json \
-            loto7_shap_feature_selection.json \
-            loto7_hit_structure_clusters.csv \
-            loto7_backtest_resume.json \
-            || true
-
-          if git diff --cached --quiet; then
-            echo 'No changes to commit.'
-            exit 0
-          fi
-
+          git add .
+          git diff --cached --quiet && exit 0 || true
           git commit -m 'auto update NEW_LOTO7 prediction'
           for i in 1 2 3; do
             git pull --rebase origin main || true
-            if git push origin HEAD:main; then
-              exit 0
-            fi
-            sleep $((i * 5))
+            git push origin HEAD:main && exit 0
+            sleep $((i*5))
           done
-          echo 'git push failed after retries.' >&2
           exit 1
