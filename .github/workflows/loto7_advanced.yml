@@ -33,6 +33,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: new-loto7-advanced-${{ github.ref }}
@@ -138,3 +139,50 @@ jobs:
           done
           echo 'git push failed after retries.' >&2
           exit 1
+
+      - name: Check remaining backtests
+        id: remain
+        shell: bash
+        run: |
+          python - << 'PY'
+          import csv
+          import os
+          from pathlib import Path
+
+          remain = 0
+          completed_all = "False"
+          p = Path("loto7_backtest_summary.csv")
+          if p.exists() and p.stat().st_size > 0:
+              with p.open("r", encoding="utf-8-sig", newline="") as f:
+                  rows = list(csv.DictReader(f))
+                  if rows:
+                      row = rows[-1]
+                      remain = int(float(row.get("未処理回数", 0) or 0))
+                      completed_all = str(row.get("完全完了", "False"))
+
+          print(f"remain={remain}")
+          print(f"completed_all={completed_all}")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
+              out.write(f"remain={remain}\n")
+              out.write(f"completed_all={completed_all}\n")
+          PY
+
+      - name: Re-dispatch workflow if remaining backtests exist
+        if: ${{ steps.remain.outputs.remain != '0' && steps.remain.outputs.completed_all != 'True' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: "loto7_advanced.yml",
+              ref: "main",
+              inputs: {
+                tickets: "10",
+                pool_size: "24",
+                run_backtest: "true",
+                chunk_size: "100",
+                max_chunks: "10"
+              }
+            });
