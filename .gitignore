@@ -1,0 +1,39 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Generated pipeline outputs
+outputs/
+*.log
+
+# ML / tuner / experiment outputs
+lightning_logs/
+keras_tuner_dir/
+cnn_tuner_dir/
+gru_tuner_dir/
+lstm_tuner_dir/
+checkpoints/
+models/
+*.pkl
+*.pickle
+*.joblib
+*.h5
+*.keras
+*.onnx
+
+# Local / OS files
+.DS_Store
+Thumbs.db
+
+# Browser drivers / binaries
+chromedriver.exe
+geckodriver.exe
