@@ -1,3 +1,4 @@
+MAX_MEMORYBANK_SIZE = 500
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Advanced Loto7 optimizer for NEW_LOTO7.

@@ -6,7 +6,6 @@ Purpose:
 - Run walk-forward validation from draw #2 to the latest draw.
 - Avoid GitHub Actions timeout by processing only a fixed chunk per invocation.
 - Resume from loto7_backtest_detail.csv / loto7_backtest_resume.json.
-- Save, commit and push progress frequently so a 6-hour timeout does not lose work.
 
 Important:
 Loto7 is an independent lottery. This script validates historical ranking behavior; it
@@ -18,9 +17,8 @@ import argparse
 import csv
 import json
 import os
-import subprocess
 from pathlib import Path
-from typing import Dict, List, Sequence
+from typing import Dict, List, Sequence, Tuple
 
 from loto7_logic_predictor import (
     DEFAULT_PRIZE_TABLE,
@@ -46,12 +44,6 @@ from loto7_advanced_optimizer import (
     summarize_rows,
     train_meta_classifier,
 )
-
-DEFAULT_BACKTEST_POOL_SIZE = int(os.getenv("LOTO7_POOL_SIZE", os.getenv("LOTO7_DEFAULT_POOL_SIZE", "24")))
-MEMORYBANK_MAX_ITEMS = int(os.getenv("LOTO7_MEMORYBANK_MAX_ITEMS", "500"))
-CHECKPOINT_EVERY = int(os.getenv("LOTO7_BACKTEST_CHECKPOINT_EVERY", "1"))
-PUSH_EVERY = int(os.getenv("LOTO7_BACKTEST_PUSH_EVERY", "1"))
-AUTO_PUSH = os.getenv("LOTO7_BACKTEST_AUTO_PUSH", "1") == "1"
 
 
 def _read_rows(path: str) -> List[Dict[str, object]]:
@@ -97,44 +89,6 @@ def _save_resume(path: str, completed: int, last_date: str, completed_all: bool)
     )
 
 
-def _run_git(args: Sequence[str], check: bool = False) -> subprocess.CompletedProcess:
-    return subprocess.run(
-        list(args),
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        check=check,
-    )
-
-
-def _git_checkpoint(message: str) -> None:
-    """Persist current progress to GitHub during a long backtest run.
-
-    GitHub Actions discards uncommitted workspace changes on timeout. This function
-    intentionally commits/pushes checkpoint files during the run so the next run can
-    resume from the latest completed draw.
-    """
-    if not AUTO_PUSH:
-        return
-    try:
-        _run_git(["git", "config", "user.name", "github-actions"])
-        _run_git(["git", "config", "user.email", "github-actions@github.com"])
-        _run_git(["git", "add", "."])
-        diff = _run_git(["git", "diff", "--cached", "--quiet"])
-        if diff.returncode == 0:
-            return
-        _run_git(["git", "commit", "-m", message], check=True)
-        for i in range(1, 4):
-            _run_git(["git", "pull", "--rebase", "origin", "main"])
-            pushed = _run_git(["git", "push", "origin", "HEAD:main"])
-            if pushed.returncode == 0:
-                print(f"[git-checkpoint] pushed: {message}")
-                return
-        print("[WARN] git checkpoint push failed after retries")
-    except Exception as exc:
-        print(f"[WARN] git checkpoint skipped: {exc}")
-
-
 def _grade_label(grade: int | None) -> str:
     return "ハズレ" if grade is None else f"{grade}等"
 
@@ -142,47 +96,6 @@ def _grade_label(grade: int | None) -> str:
 def _target_indices(draws_len: int, min_train: int, done_dates: set[str], draw_dates: Sequence[str]) -> List[int]:
     start = max(1, int(min_train))
     return [i for i in range(start, draws_len) if draw_dates[i] not in done_dates]
-
-
-def _normalize_pool_size(pool_size: int) -> int:
-    if int(pool_size) == 8 and os.getenv("LOTO7_ALLOW_LEGACY_POOL8", "0") != "1":
-        return DEFAULT_BACKTEST_POOL_SIZE
-    return int(pool_size)
-
-
-def _trim_memorybanks(bank: MemoryBank, bank5: MemoryBank5Plus) -> None:
-    limit = max(1, MEMORYBANK_MAX_ITEMS)
-    if len(bank.items) > limit:
-        bank.items = bank.items[-limit:]
-    if len(bank5.items) > limit:
-        bank5.items = bank5.items[-limit:]
-
-
-def _save_progress(
-    rows: Sequence[Dict[str, object]],
-    num_tickets: int,
-    min_train: int,
-    weights: AdvancedWeights,
-    detail_csv: str,
-    summary_csv: str,
-    report_txt: str,
-    bank: MemoryBank,
-    bank5: MemoryBank5Plus,
-    done_dates: set[str],
-    current_date: str,
-    completed_all: bool,
-    remaining: int,
-) -> None:
-    summary = summarize_rows(rows, num_tickets, min_train, min_train, weights)
-    summary["未処理回数"] = remaining
-    summary["完全完了"] = completed_all
-    _write_csv(detail_csv, rows)
-    _write_csv(summary_csv, [summary])
-    write_compat_report(summary, report_txt)
-    _trim_memorybanks(bank, bank5)
-    bank.save(MEMORYBANK_CSV)
-    bank5.save(MEMORYBANK_5PLUS_CSV)
-    _save_resume(RESUME_JSON, len(done_dates), current_date, completed_all)
 
 
 def _train_models(detail_csv: str) -> None:
@@ -209,7 +122,6 @@ def run_chunked_backtest(
     summary_csv: str,
     report_txt: str,
 ) -> Dict[str, object]:
-    pool_size = _normalize_pool_size(pool_size)
     draws = load_draws(csv_path)
     if len(draws) <= min_train:
         raise RuntimeError("抽せんデータ数が不足しています。")
@@ -236,9 +148,6 @@ def run_chunked_backtest(
     print(f"未処理: {len(pending)}")
     print(f"今回処理上限: {limit}")
     print(f"今回処理: {len(targets)}")
-    print(f"候補プール: {pool_size}")
-    print(f"checkpoint_every: {CHECKPOINT_EVERY}")
-    print(f"push_every: {PUSH_EVERY}")
     print()
 
     for pos, i in enumerate(targets, start=1):
@@ -283,60 +192,36 @@ def run_chunked_backtest(
                 bank.add(pred.ticket, 1.0 + max(0, result.main_matches - 4) * 0.8)
             if result.main_matches >= 5:
                 bank5.add(pred.ticket, result.main_matches, actual.date)
-        _trim_memorybanks(bank, bank5)
 
         rows.append(row)
         done_dates.add(actual.date)
         rows.sort(key=lambda r: str(r.get("抽せん日", "")))
 
-        remaining = len(_target_indices(len(draws), min_train, done_dates, draw_dates))
-        completed_all = remaining == 0
-        if pos % max(1, CHECKPOINT_EVERY) == 0:
-            _save_progress(
-                rows,
-                num_tickets,
-                min_train,
-                weights,
-                detail_csv,
-                summary_csv,
-                report_txt,
-                bank,
-                bank5,
-                done_dates,
-                actual.date,
-                completed_all,
-                remaining,
-            )
-            print(f"[checkpoint] {pos}/{len(targets)} saved: {actual.date} remaining={remaining}")
-            if pos % max(1, PUSH_EVERY) == 0:
-                _git_checkpoint(f"checkpoint NEW_LOTO7 backtest {actual.date}")
+        if pos % max(1, int(chunk_size)) == 0:
+            summary = summarize_rows(rows, num_tickets, min_train, min_train, weights)
+            _write_csv(detail_csv, rows)
+            _write_csv(summary_csv, [summary])
+            write_compat_report(summary, report_txt)
+            bank.save(MEMORYBANK_CSV)
+            bank5.save(MEMORYBANK_5PLUS_CSV)
+            _save_resume(RESUME_JSON, len(done_dates), actual.date, False)
+            print(f"[checkpoint] {pos}/{len(targets)} saved: {actual.date}")
 
     completed_all = len(_target_indices(len(draws), min_train, done_dates, draw_dates)) == 0
-    remaining = len(_target_indices(len(draws), min_train, done_dates, draw_dates))
-    last_date = str(rows[-1].get("抽せん日", "")) if rows else ""
-    _save_progress(
-        rows,
-        num_tickets,
-        min_train,
-        weights,
-        detail_csv,
-        summary_csv,
-        report_txt,
-        bank,
-        bank5,
-        done_dates,
-        last_date,
-        completed_all,
-        remaining,
-    )
-    _git_checkpoint(f"checkpoint NEW_LOTO7 backtest final remaining {remaining}")
+    summary = summarize_rows(rows, num_tickets, min_train, min_train, weights)
+    summary["未処理回数"] = len(_target_indices(len(draws), min_train, done_dates, draw_dates))
+    summary["完全完了"] = completed_all
+
+    _write_csv(detail_csv, rows)
+    _write_csv(summary_csv, [summary])
+    write_compat_report(summary, report_txt)
+    bank.save(MEMORYBANK_CSV)
+    bank5.save(MEMORYBANK_5PLUS_CSV)
+    _save_resume(RESUME_JSON, len(done_dates), str(rows[-1].get("抽せん日", "")) if rows else "", completed_all)
 
     if rows and (completed_all or os.getenv("LOTO7_TRAIN_MODELS_EACH_CHUNK", "0") == "1"):
         _train_models(detail_csv)
 
-    summary = summarize_rows(rows, num_tickets, min_train, min_train, weights)
-    summary["未処理回数"] = remaining
-    summary["完全完了"] = completed_all
     return summary
 
 
@@ -344,9 +229,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Run NEW_LOTO7 backtest in resumable chunks.")
     parser.add_argument("--csv", default="loto7.csv")
     parser.add_argument("--min-train", type=int, default=1)
-    parser.add_argument("--tickets", type=int, default=5)
-    parser.add_argument("--pool-size", type=int, default=DEFAULT_BACKTEST_POOL_SIZE)
-    parser.add_argument("--chunk-size", type=int, default=int(os.getenv("LOTO7_BACKTEST_CHUNK_SIZE", "10")))
+    parser.add_argument("--tickets", type=int, default=10)
+    parser.add_argument("--pool-size", type=int, default=8)
+    parser.add_argument("--chunk-size", type=int, default=int(os.getenv("LOTO7_BACKTEST_CHUNK_SIZE", "100")))
     parser.add_argument("--max-chunks", type=int, default=int(os.getenv("LOTO7_BACKTEST_MAX_CHUNKS", "1")))
     parser.add_argument("--detail-csv", default="loto7_backtest_detail.csv")
     parser.add_argument("--summary-csv", default="loto7_backtest_summary.csv")
