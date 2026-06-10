@@ -1,0 +1,15 @@
+metric,value,rate
+1等,0,0.000000%
+2等,0,0.000000%
+3等,0,0.000000%
+4等,6,0.193548%
+5等,57,1.838710%
+6等,94,3.032258%
+外れ,2943,94.935484%
+targets,620,
+tickets,3100,
+purchase_count,5,
+min_train_draws,60,
+processed_now,620,
+max_main_match,5,
+updated_at,2026-06-10T10:47:44.362470+00:00,
