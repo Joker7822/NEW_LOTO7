@@ -125,7 +125,6 @@ def score_numbers(train: Sequence[Draw]) -> Dict[int, float]:
     total = len(train)
 
     for idx, draw in enumerate(train):
-        # 新しい回ほど重くする指数減衰。最大でも軽量。
         age = total - idx - 1
         weight = 0.985 ** age
         for n in draw.main:
@@ -135,7 +134,6 @@ def score_numbers(train: Sequence[Draw]) -> Dict[int, float]:
     scores: Dict[int, float] = {}
     for n in NUMBERS:
         gap = total - last_seen[n] - 1 if last_seen[n] >= 0 else total
-        # 出すぎ過剰を抑え、休眠を少し加点。
         scores[n] = freq[n] + min(gap, 30) * 0.018
     return scores
 
@@ -160,7 +158,6 @@ def combo_score(combo: Sequence[int], num_score: Dict[int, float], aff: Dict[Tup
     low = sum(1 for n in combo if n <= 18)
     total = sum(combo)
 
-    # ロト7の一般的な分布から極端値を減点。
     if odd in (3, 4):
         score += 0.35
     else:
@@ -174,7 +171,6 @@ def combo_score(combo: Sequence[int], num_score: Dict[int, float], aff: Dict[Tup
     else:
         score -= 0.40
 
-    # 連番は1組程度まで許容。多すぎは減点。
     consecutive_pairs = sum(1 for a, b in zip(combo, combo[1:]) if b == a + 1)
     if consecutive_pairs <= 1:
         score += 0.15
@@ -198,13 +194,11 @@ def generate_candidates(train: Sequence[Draw], purchase_count: int = 5, pool_siz
 
     selected: List[Tuple[int, ...]] = []
     for _, combo in scored:
-        # 5口の分散確保。同じ数字の重なりすぎを抑制。
         if all(len(set(combo) & set(prev)) <= 5 for prev in selected):
             selected.append(combo)
         if len(selected) >= purchase_count:
             break
 
-    # 分散条件で足りない場合は上位から補完。
     if len(selected) < purchase_count:
         for _, combo in scored:
             if combo not in selected:
@@ -278,6 +272,41 @@ def run_scraping(csv_path: str, months: int) -> None:
     scrapingloto7.update_loto7_csv(csv_path=csv_path, months=months)
 
 
+def _safe_unlink(path: str) -> None:
+    p = Path(path)
+    if p.exists():
+        p.unlink()
+        print(f"[RESET] removed {path}")
+
+
+def infer_existing_purchase_count(result_csv: str) -> Optional[int]:
+    p = Path(result_csv)
+    if not p.exists() or p.stat().st_size == 0:
+        return None
+    try:
+        counts: Dict[str, int] = {}
+        with p.open("r", encoding="utf-8-sig", newline="") as f:
+            for row in csv.DictReader(f):
+                key = str(row.get("target_draw_no", ""))
+                if key:
+                    counts[key] = counts.get(key, 0) + 1
+                if len(counts) >= 5:
+                    break
+        if not counts:
+            return None
+        values = list(counts.values())
+        return max(set(values), key=values.count)
+    except Exception as exc:
+        print(f"[WARN] cannot infer existing purchase_count: {exc}")
+        return None
+
+
+def reset_backtest_outputs(result_csv: str, summary_csv: str, resume_state_path: str, reason: str) -> None:
+    print(f"[RESET] rebuilding backtest outputs: {reason}")
+    for path in [result_csv, summary_csv, resume_state_path]:
+        _safe_unlink(path)
+
+
 def run_backtest(
     draws: Sequence[Draw],
     output_dir: str,
@@ -286,6 +315,7 @@ def run_backtest(
     min_train_draws: int,
     max_targets: Optional[int],
     push_every: int,
+    force_rebuild: bool = False,
 ) -> Dict[str, object]:
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -293,6 +323,25 @@ def run_backtest(
     summary_csv = str(out / "loto7_backtest_summary.csv")
 
     state = load_json(resume_state_path)
+    existing_purchase_count = infer_existing_purchase_count(result_csv)
+
+    reset_reason = ""
+    if force_rebuild:
+        reset_reason = "--force-rebuild"
+    elif state:
+        state_purchase_count = state.get("purchase_count")
+        state_min_train = state.get("min_train_draws")
+        if state_purchase_count is not None and int(state_purchase_count) != int(purchase_count):
+            reset_reason = f"purchase_count changed: {state_purchase_count} -> {purchase_count}"
+        elif state_min_train is not None and int(state_min_train) != int(min_train_draws):
+            reset_reason = f"min_train_draws changed: {state_min_train} -> {min_train_draws}"
+    elif existing_purchase_count is not None and int(existing_purchase_count) != int(purchase_count):
+        reset_reason = f"existing result ticket count changed: {existing_purchase_count} -> {purchase_count}"
+
+    if reset_reason:
+        reset_backtest_outputs(result_csv, summary_csv, resume_state_path, reset_reason)
+        state = {}
+
     last_completed = int(state.get("last_completed_draw_no", 0) or 0)
     processed_now = 0
     prize_counts: Dict[str, int] = {}
@@ -352,13 +401,12 @@ def run_backtest(
                 [result_csv, summary_csv, resume_state_path],
             )
 
-    # 既存CSVから最終サマリーを再集計。
     total_rows = 0
     total_targets = set()
     prize_counts = {}
     max_main_match = 0
     if Path(result_csv).exists():
-        with Path(result_csv).open("r", encoding="utf-8", newline="") as f:
+        with Path(result_csv).open("r", encoding="utf-8-sig", newline="") as f:
             reader = csv.DictReader(f)
             for row in reader:
                 total_rows += 1
@@ -384,6 +432,9 @@ def run_backtest(
         [
             {"metric": "targets", "value": len(total_targets), "rate": ""},
             {"metric": "tickets", "value": total_rows, "rate": ""},
+            {"metric": "purchase_count", "value": purchase_count, "rate": ""},
+            {"metric": "min_train_draws", "value": min_train_draws, "rate": ""},
+            {"metric": "processed_now", "value": processed_now, "rate": ""},
             {"metric": "max_main_match", "value": max_main_match, "rate": ""},
             {"metric": "updated_at", "value": dt.datetime.now(dt.timezone.utc).isoformat(), "rate": ""},
         ]
@@ -397,6 +448,7 @@ def run_backtest(
         "max_main_match": max_main_match,
         "result_csv": result_csv,
         "summary_csv": summary_csv,
+        "force_rebuild": force_rebuild,
     }
 
 
@@ -438,6 +490,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--max-targets", default=None, help="検証対象数。all/Noneなら全件")
     parser.add_argument("--push-every", type=int, default=100, help="N抽せんごとにcommit/push。0で無効")
     parser.add_argument("--push-final", action="store_true")
+    parser.add_argument("--force-rebuild", action="store_true", help="既存バックテスト結果とresumeを削除して最初から再生成する")
     parser.add_argument("--skip-backtest", action="store_true")
     args = parser.parse_args(argv)
 
@@ -467,6 +520,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             min_train_draws=args.min_train_draws,
             max_targets=max_targets,
             push_every=args.push_every,
+            force_rebuild=args.force_rebuild,
         )
         print(f"[SUMMARY] {json.dumps(result, ensure_ascii=False)}")
 
