@@ -73,6 +73,24 @@ jobs:
             --push-every 100 \
             --push-final
 
+          python loto7_evaluate_backtest.py \
+            --result-csv outputs/loto7_backtest_result.csv \
+            --latest-prediction-csv outputs/loto7_latest_prediction.csv \
+            --output outputs/loto7_backtest_evaluation.txt
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f outputs/loto7_backtest_result.csv \
+            outputs/loto7_backtest_summary.csv \
+            outputs/loto7_latest_prediction.csv \
+            outputs/resume_state.json \
+            outputs/loto7_backtest_evaluation.txt
+          if ! git diff --cached --quiet; then
+            git commit -m "Update LOTO7 backtest outputs and evaluation report"
+            git pull --rebase --autostash || true
+            git push
+          fi
+
           echo '===== outputs ====='
           find outputs -type f | sort || true
 
