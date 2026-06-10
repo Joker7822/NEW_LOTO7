@@ -66,3 +66,51 @@ python loto7_pipeline.py --run-scraping --purchase-count 5
 ## 注意
 
 宝くじの抽せんはランダム性が高く、予測は的中を保証しません。バックテストは未来データを使わない検証形式に固定しています。
+
+
+## 2026-06-10 直接改善内容
+
+`loto7_advanced_optimizer.py` に以下をコードレベルで組み込み済みです。
+
+- 直近240回モデル
+- 直近120回モデル
+- 直近60回モデル
+- 直近モデルEnsemble候補生成
+- 相性ペア安定性スコア
+- 相性ペア直近性スコア
+- 奇偶・合計値・低高バランス制約スコア
+- MetaClassifier用特徴量の拡張
+- `loto7_memorybank_4plus.csv` 出力
+- `loto7_memorybank_6hit.csv` 出力
+
+実行例:
+
+```bash
+LOTO7_DISABLE_OPTIMIZE=1 \
+LOTO7_BACKTEST_MONTE_CARLO=100 \
+LOTO7_BACKTEST_MCTS=50 \
+LOTO7_RECENT_POOL_SIZE=17 \
+python loto7_chunked_backtest.py \
+  --csv loto7.csv \
+  --min-train 60 \
+  --tickets 5 \
+  --pool-size 17 \
+  --chunk-size 10 \
+  --max-chunks 1
+```
+
+軽量動作確認:
+
+```bash
+LOTO7_DISABLE_OPTIMIZE=1 \
+LOTO7_BACKTEST_MONTE_CARLO=0 \
+LOTO7_BACKTEST_MCTS=0 \
+LOTO7_RECENT_POOL_SIZE=12 \
+python loto7_chunked_backtest.py \
+  --csv loto7.csv \
+  --min-train 60 \
+  --tickets 5 \
+  --pool-size 12 \
+  --chunk-size 2 \
+  --max-chunks 1
+```

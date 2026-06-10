@@ -1,4 +1,3 @@
-MAX_MEMORYBANK_SIZE = 500
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Advanced Loto7 optimizer for NEW_LOTO7.
@@ -58,10 +57,13 @@ from loto7_enhanced_predictor import (
 NUM_MIN = 1
 NUM_MAX = 37
 PICK_SIZE = 7
+MAX_MEMORYBANK_SIZE = 500
 
 WEIGHTS_CACHE = "loto7_advanced_weights.json"
 MEMORYBANK_CSV = "loto7_memorybank.csv"
 MEMORYBANK_5PLUS_CSV = "loto7_memorybank_5plus.csv"
+MEMORYBANK_4PLUS_CSV = "loto7_memorybank_4plus.csv"
+MEMORYBANK_6HIT_CSV = "loto7_memorybank_6hit.csv"
 META_CLASSIFIER_JSON = "loto7_meta_classifier.json"
 CLUSTER_CSV = "loto7_hit_structure_clusters.csv"
 RESUME_JSON = "loto7_backtest_resume.json"
@@ -86,6 +88,11 @@ class AdvancedWeights:
     ppo: float = 0.35
     meta6: float = 0.85
     shap: float = 0.25
+    recent: float = 0.85
+    pair_stability: float = 0.65
+    pair_recency: float = 0.70
+    constraint: float = 0.95
+    ensemble: float = 0.45
 
     def to_dict(self) -> Dict[str, float]:
         return self.__dict__.copy()
@@ -144,6 +151,10 @@ def ticket_features(ticket: Sequence[int], draws: Sequence[Draw]) -> Dict[str, f
     gaps = [b - a for a, b in zip(t, t[1:])]
     last_digits = Counter(n % 10 for n in t)
     decades = Counter(n // 10 for n in t)
+    sum_center = 135.0
+    sum_band_score = max(0.0, 1.0 - abs(float(total) - sum_center) / 55.0)
+    odd_balance_score = 1.0 if odd in (3, 4) else 0.45 if odd in (2, 5) else 0.0
+    low_balance_score = 1.0 if low in (3, 4) else 0.50 if low in (2, 5) else 0.0
     return {
         "sum": float(total),
         "odd": float(odd),
@@ -158,6 +169,10 @@ def ticket_features(ticket: Sequence[int], draws: Sequence[Draw]) -> Dict[str, f
         "gap_avg": float(sum(gaps) / len(gaps) if gaps else 0),
         "gap_min": float(min(gaps) if gaps else 0),
         "gap_max": float(max(gaps) if gaps else 0),
+        "sum_band_score": float(sum_band_score),
+        "odd_balance_score": float(odd_balance_score),
+        "low_balance_score": float(low_balance_score),
+        "constraint_score": float(0.45 * sum_band_score + 0.35 * odd_balance_score + 0.20 * low_balance_score),
     }
 
 
@@ -402,6 +417,101 @@ def third_prize_objective(matches: int, bonus_matches: int = 0) -> float:
     return max(0.0, matches - 1) * 0.25
 
 
+
+def _recent_slice(draws: Sequence[Draw], window: int) -> Sequence[Draw]:
+    return draws[-window:] if len(draws) > window else draws
+
+
+def build_recent_context(draws: Sequence[Draw]) -> Dict[str, object]:
+    """Build independent recent-window models.
+
+    Windows are intentionally nested (240/120/60).  The scorer uses only the
+    historical slice passed by walk-forward, so future leakage is avoided.
+    """
+    ctx: Dict[str, object] = {}
+    for window in (240, 120, 60):
+        ds = list(_recent_slice(draws, window))
+        ctx[f"num{window}"] = build_number_scores(ds)
+        ctx[f"pair{window}"] = weighted_combination_counts(ds, 2, 55.0, 0)
+        ctx[f"triple{window}"] = weighted_combination_counts(ds, 3, 45.0, 0)
+    return ctx
+
+
+def _norm_counter_value(counter: object, key: Tuple[int, ...]) -> float:
+    try:
+        return counter_norm(counter, key)  # type: ignore[arg-type]
+    except Exception:
+        return 0.0
+
+
+def recent_window_score(ticket: Sequence[int], ctx: Dict[str, object]) -> float:
+    t = tuple(sorted(ticket))
+    vals: List[float] = []
+    for window, weight in ((240, 0.45), (120, 0.35), (60, 0.20)):
+        nums = ctx.get(f"num{window}", {})
+        pairs = ctx.get(f"pair{window}", {})
+        triples = ctx.get(f"triple{window}", {})
+        if not isinstance(nums, dict):
+            continue
+        single = sum(float(nums.get(n, 0.0)) for n in t) / max(len(t), 1)
+        pair = sum(_norm_counter_value(pairs, p) for p in itertools.combinations(t, 2)) / 21.0
+        triple = sum(_norm_counter_value(triples, tri) for tri in itertools.combinations(t, 3)) / 35.0
+        vals.append(weight * (0.58 * single + 0.30 * pair + 0.12 * triple))
+    return sum(vals)
+
+
+def pair_stability_score(ticket: Sequence[int], ctx: Dict[str, object]) -> float:
+    """Prefer pairs that remain useful across 240/120/60 instead of only one spike."""
+    vals = []
+    for p in itertools.combinations(tuple(sorted(ticket)), 2):
+        v240 = _norm_counter_value(ctx.get("pair240", {}), p)
+        v120 = _norm_counter_value(ctx.get("pair120", {}), p)
+        v60 = _norm_counter_value(ctx.get("pair60", {}), p)
+        mean = (v240 + v120 + v60) / 3.0
+        spread = max(v240, v120, v60) - min(v240, v120, v60)
+        vals.append(max(0.0, mean - 0.35 * spread))
+    return _avg(vals)
+
+
+def pair_recency_score(ticket: Sequence[int], ctx: Dict[str, object]) -> float:
+    """Recent pair momentum with 60/120-window emphasis."""
+    vals = []
+    for p in itertools.combinations(tuple(sorted(ticket)), 2):
+        v240 = _norm_counter_value(ctx.get("pair240", {}), p)
+        v120 = _norm_counter_value(ctx.get("pair120", {}), p)
+        v60 = _norm_counter_value(ctx.get("pair60", {}), p)
+        vals.append(0.55 * v60 + 0.30 * v120 + 0.15 * v240)
+    return _avg(vals)
+
+
+def constraint_score(ticket: Sequence[int], draws: Sequence[Draw]) -> float:
+    f = ticket_features(ticket, draws)
+    base = float(f.get("constraint_score", 0.0))
+    run = float(f.get("run", 0.0))
+    digit_max = float(f.get("last_digit_max", 0.0))
+    repeat_last = float(f.get("repeat_last", 0.0))
+    penalty = 0.0
+    if run >= 4:
+        penalty += 0.30
+    if digit_max >= 3:
+        penalty += 0.18
+    if repeat_last >= 4:
+        penalty += 0.22
+    return max(-0.5, base - penalty)
+
+
+def ensemble_seed_score(ticket: Sequence[int], ctx: Dict[str, object]) -> float:
+    """Score if the same ticket is liked by full/recent sub-models."""
+    t = tuple(sorted(ticket))
+    score = 0.0
+    for window in (240, 120, 60):
+        pairs = ctx.get(f"pair{window}", {})
+        nums = ctx.get(f"num{window}", {})
+        if isinstance(nums, dict):
+            score += sum(float(nums.get(n, 0.0)) for n in t) / max(len(t), 1) * (0.12 if window == 240 else 0.10)
+        score += sum(_norm_counter_value(pairs, p) for p in itertools.combinations(t, 2)) / 21.0 * (0.18 if window == 60 else 0.12)
+    return score
+
 def context(draws: Sequence[Draw], before_date: Optional[str], detail_csv: str) -> Dict[str, object]:
     return {
         "num": build_number_scores(draws),
@@ -417,6 +527,7 @@ def context(draws: Sequence[Draw], before_date: Optional[str], detail_csv: str) 
         "nextgen": load_nextgen_context(),
         "cycle_scores": build_cached_cycle_scores(draws),
         "cycle_gaps": build_cached_cycle_gaps(draws),
+        **build_recent_context(draws),
     }
 
 
@@ -706,7 +817,12 @@ def score_ticket(ticket: Sequence[int], draws: Sequence[Draw], ctx: Dict[str, ob
     cycle = ngs.get("cycle", 0.0)
     meta6 = ngs.get("meta6", 0.0)
     shap = ngs.get("shap", 0.0)
-    bonus = 0.45 if strategy == "GRADE3" and (memory > 0 or memory5 > 0) else 0.22 if strategy == "DIFFUSION" else 0.20 if strategy == "MULTI_AGENT_PPO" else 0.15 if strategy == "MCTS" else 0.08 if strategy == "MONTECARLO" else 0.0
+    recent = recent_window_score(t, ctx)
+    stability = pair_stability_score(t, ctx)
+    recency = pair_recency_score(t, ctx)
+    constraint = constraint_score(t, draws)
+    ensemble = ensemble_seed_score(t, ctx)
+    bonus = 0.45 if strategy == "GRADE3" and (memory > 0 or memory5 > 0) else 0.22 if strategy == "DIFFUSION" else 0.20 if strategy == "MULTI_AGENT_PPO" else 0.18 if strategy.startswith("RECENT") else 0.15 if strategy == "MCTS" else 0.08 if strategy == "MONTECARLO" else 0.0
     total = (
         w.single * single
         + w.pair * pair
@@ -720,6 +836,11 @@ def score_ticket(ticket: Sequence[int], draws: Sequence[Draw], ctx: Dict[str, ob
         + w.cycle * cycle
         + w.meta6 * meta6
         + w.shap * shap
+        + w.recent * recent
+        + w.pair_stability * stability
+        + w.pair_recency * recency
+        + w.constraint * constraint
+        + w.ensemble * ensemble
         + bonus
         - w.structure * penalty
     )
@@ -739,6 +860,11 @@ def score_ticket(ticket: Sequence[int], draws: Sequence[Draw], ctx: Dict[str, ob
             "cycle": cycle,
             "meta6": meta6,
             "shap": shap,
+            "recent": recent,
+            "pair_stability": stability,
+            "pair_recency": recency,
+            "constraint": constraint,
+            "ensemble": ensemble,
             "penalty": penalty,
             "sum": float(sum(t)),
             "odd": float(sum(n % 2 for n in t)),
@@ -864,6 +990,11 @@ def optimize_weights(draws: Sequence[Draw], trials: int = 25, force: bool = Fals
                 ppo=trial.suggest_float("ppo", 0.05, 0.90),
                 meta6=trial.suggest_float("meta6", 0.10, 1.80),
                 shap=trial.suggest_float("shap", 0.00, 0.80),
+                recent=trial.suggest_float("recent", 0.20, 1.60),
+                pair_stability=trial.suggest_float("pair_stability", 0.10, 1.30),
+                pair_recency=trial.suggest_float("pair_recency", 0.10, 1.40),
+                constraint=trial.suggest_float("constraint", 0.25, 1.70),
+                ensemble=trial.suggest_float("ensemble", 0.05, 1.20),
             )
             return eval_w(w)
 
@@ -889,6 +1020,11 @@ def optimize_weights(draws: Sequence[Draw], trials: int = 25, force: bool = Fals
                 ppo=rng.uniform(0.05, 0.90),
                 meta6=rng.uniform(0.10, 1.80),
                 shap=rng.uniform(0.00, 0.80),
+                recent=rng.uniform(0.20, 1.60),
+                pair_stability=rng.uniform(0.10, 1.30),
+                pair_recency=rng.uniform(0.10, 1.40),
+                constraint=rng.uniform(0.25, 1.70),
+                ensemble=rng.uniform(0.05, 1.20),
             )
             sc = eval_w(w)
             if sc > best_score:
@@ -919,6 +1055,22 @@ def advanced_predict(
     for t in itertools.combinations(pool, 7):
         item = score_ticket(t, draws, ctx, weights, "GRADE3")
         ranked[item.ticket] = item
+
+    # Ensemble candidate generation from recent-window sub-models.
+    # Each sub-model sees only the training slice supplied by walk-forward.
+    for window in (240, 120, 60):
+        if len(draws) < max(30, window // 2):
+            continue
+        recent_draws = list(_recent_slice(draws, window))
+        recent_pool_cap = int(os.getenv("LOTO7_RECENT_POOL_SIZE", "17"))
+        default_recent_pool = 18 if window == 240 else 17 if window == 120 else 16
+        recent_pool = make_candidate_pool(recent_draws, min(37, max(pool_size, min(default_recent_pool, recent_pool_cap))))
+        for t in itertools.combinations(recent_pool, 7):
+            item = score_ticket(t, draws, ctx, weights, f"RECENT{window}")
+            item.score += weights.ensemble * (0.18 if window == 60 else 0.12)
+            old = ranked.get(item.ticket)
+            if old is None or item.score > old.score:
+                ranked[item.ticket] = item
 
     rng = random.Random(len(draws) * 1009 + sum(ord(c) for c in draws[-1].date))
     for _ in range(max(0, mc)):
@@ -1085,6 +1237,8 @@ def advanced_backtest(
 
     rows, done = _load_existing_detail(detail_csv) if resume_enabled else ([], set())
     bank = MemoryBank()
+    bank4 = MemoryBank()
+    bank6 = MemoryBank5Plus()
     bank5 = MemoryBank5Plus()
 
     processed_since_save = 0
@@ -1131,8 +1285,11 @@ def advanced_backtest(
             row[f"予測{idx}_当せん金額"] = r.prize
             if r.main_matches >= 4:
                 bank.add(p.ticket, 1.0 + max(0, r.main_matches - 4) * 0.8)
+                bank4.add(p.ticket, 1.0 + max(0, r.main_matches - 4) * 0.8)
             if r.main_matches >= 5:
                 bank5.add(p.ticket, r.main_matches, actual.date)
+            if r.main_matches >= 6:
+                bank6.add(p.ticket, r.main_matches, actual.date)
         rows.append(row)
         done.add(actual.date)
         processed_since_save += 1
@@ -1141,11 +1298,13 @@ def advanced_backtest(
             _write_csv(detail_csv, rows)
             _save_resume(RESUME_JSON, len(done), actual.date)
             bank.save(MEMORYBANK_CSV)
+            bank4.save(MEMORYBANK_4PLUS_CSV)
             bank5.save(MEMORYBANK_5PLUS_CSV)
+            bank6.save(MEMORYBANK_6HIT_CSV)
             partial_summary = summarize_rows(rows, num_tickets, min_train, start, weights)
             _write_csv(summary_csv, [partial_summary])
             _maybe_git_push(
-                [detail_csv, summary_csv, MEMORYBANK_CSV, MEMORYBANK_5PLUS_CSV, RESUME_JSON],
+                [detail_csv, summary_csv, MEMORYBANK_CSV, MEMORYBANK_4PLUS_CSV, MEMORYBANK_5PLUS_CSV, MEMORYBANK_6HIT_CSV, RESUME_JSON],
                 f"checkpoint loto7 backtest {len(done)} draws",
             )
             processed_since_save = 0
@@ -1154,7 +1313,9 @@ def advanced_backtest(
     summary = summarize_rows(rows, num_tickets, min_train, start, weights)
     _write_csv(summary_csv, [summary])
     bank.save(MEMORYBANK_CSV)
+    bank4.save(MEMORYBANK_4PLUS_CSV)
     bank5.save(MEMORYBANK_5PLUS_CSV)
+    bank6.save(MEMORYBANK_6HIT_CSV)
     _save_resume(RESUME_JSON, len(done), rows[-1].get("抽せん日", "") if rows else "")
     build_hit_structure_clusters(detail_csv, CLUSTER_CSV)
     train_meta_classifier(detail_csv, META_CLASSIFIER_JSON)
@@ -1172,6 +1333,12 @@ __all__ = [
     "AdvancedWeights",
     "MemoryBank",
     "MemoryBank5Plus",
+    "MEMORYBANK_4PLUS_CSV",
+    "MEMORYBANK_6HIT_CSV",
+    "build_recent_context",
+    "recent_window_score",
+    "pair_stability_score",
+    "pair_recency_score",
     "advanced_predict",
     "advanced_backtest",
     "optimize_weights",

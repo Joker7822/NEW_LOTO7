@@ -20,7 +20,9 @@ PROGRESS_FILES = [
     "loto7_backtest_report.txt",
     "loto7_backtest_resume.json",
     "loto7_memorybank.csv",
+    "loto7_memorybank_4plus.csv",
     "loto7_memorybank_5plus.csv",
+    "loto7_memorybank_6hit.csv",
 ]
 
 
