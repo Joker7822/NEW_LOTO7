@@ -247,19 +247,19 @@ def git_commit_push(message: str, paths: Sequence[str], retries: int = 3) -> boo
     try:
         subprocess.run(["git", "config", "user.name", "github-actions[bot]"], check=False)
         subprocess.run(["git", "config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com"], check=False)
-        subprocess.run(["git", "add", *existing_paths], check=True)
+        subprocess.run(["git", "add", "-f", *existing_paths], check=True)
         diff = subprocess.run(["git", "diff", "--cached", "--quiet"], check=False)
         if diff.returncode == 0:
             print("[GIT] no changes to commit.")
             return False
         subprocess.run(["git", "commit", "-m", message], check=True)
         for attempt in range(1, retries + 1):
-            pull = subprocess.run(["git", "pull", "--rebase", "--autostash"], check=False)
+            subprocess.run(["git", "pull", "--rebase", "--autostash"], check=False)
             push = subprocess.run(["git", "push"], check=False)
             if push.returncode == 0:
                 print("[GIT] push ok.")
                 return True
-            print(f"[GIT] push failed attempt={attempt}. pull={pull.returncode} push={push.returncode}")
+            print(f"[GIT] push failed attempt={attempt}. push={push.returncode}")
             time.sleep(2 * attempt)
     except Exception as exc:
         print(f"[GIT] commit/push failed: {exc}", file=sys.stderr)
