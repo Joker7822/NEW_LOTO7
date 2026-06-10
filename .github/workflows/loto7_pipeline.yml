@@ -11,6 +11,10 @@ on:
         description: "Update loto7.csv before running."
         required: false
         default: "true"
+      force_rebuild:
+        description: "Delete existing backtest outputs and rebuild from the first target."
+        required: false
+        default: "false"
   schedule:
     # JST Friday 20:15 = UTC Friday 11:15
     - cron: "15 11 * * 5"
@@ -45,14 +49,21 @@ jobs:
           set -euo pipefail
           MAX_TARGETS="${{ github.event.inputs.max_targets || 'all' }}"
           RUN_SCRAPING="${{ github.event.inputs.run_scraping || 'true' }}"
+          FORCE_REBUILD="${{ github.event.inputs.force_rebuild || 'false' }}"
 
           SCRAPE_FLAG=""
           if [ "$RUN_SCRAPING" = "true" ]; then
             SCRAPE_FLAG="--run-scraping"
           fi
 
+          REBUILD_FLAG=""
+          if [ "$FORCE_REBUILD" = "true" ]; then
+            REBUILD_FLAG="--force-rebuild"
+          fi
+
           python loto7_pipeline.py \
             $SCRAPE_FLAG \
+            $REBUILD_FLAG \
             --csv loto7.csv \
             --output-dir outputs \
             --resume-state outputs/resume_state.json \
