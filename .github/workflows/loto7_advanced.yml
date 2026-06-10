@@ -20,13 +20,13 @@ on:
           - 'true'
           - 'false'
       chunk_size:
-        description: 'Backtest target draws per checkpoint'
-        required: true
-        default: '100'
-      max_chunks:
-        description: 'Backtest chunks per workflow run; default 10 means up to 1000 draws'
+        description: 'Backtest target draws per workflow run'
         required: true
         default: '10'
+      max_chunks:
+        description: 'Backtest chunks per workflow run'
+        required: true
+        default: '1'
       scrape_months:
         description: 'Recent months to fetch with scrapingloto7.py'
         required: true
@@ -92,8 +92,11 @@ jobs:
           LOTO7_BACKTEST_MCTS: '50'
           LOTO7_DIFFUSION_CANDIDATES: '50'
           LOTO7_PPO_CANDIDATES: '50'
-          LOTO7_BACKTEST_CHUNK_SIZE: ${{ github.event.inputs.chunk_size || '100' }}
-          LOTO7_BACKTEST_MAX_CHUNKS: ${{ github.event.inputs.max_chunks || '10' }}
+          LOTO7_BACKTEST_CHUNK_SIZE: ${{ github.event.inputs.chunk_size || '10' }}
+          LOTO7_BACKTEST_MAX_CHUNKS: ${{ github.event.inputs.max_chunks || '1' }}
+          LOTO7_BACKTEST_CHECKPOINT_EVERY: '1'
+          LOTO7_BACKTEST_PUSH_EVERY: '1'
+          LOTO7_BACKTEST_AUTO_PUSH: '1'
           LOTO7_POOL_SIZE: ${{ github.event.inputs.pool_size || '24' }}
         run: |
           python loto7_chunked_backtest.py \
@@ -106,6 +109,7 @@ jobs:
 
       - name: Train models from completed historical backtest rows only
         run: |
+          git pull --rebase origin main || true
           python loto7_train_from_backtest.py \
             --detail-csv loto7_backtest_detail.csv \
             --cluster-csv loto7_hit_structure_clusters.csv \
@@ -136,6 +140,7 @@ jobs:
           set -euo pipefail
           git config user.name github-actions
           git config user.email github-actions@github.com
+          git pull --rebase origin main || true
           git add .
           if git diff --cached --quiet; then
             echo 'No changes to commit.'
@@ -156,6 +161,7 @@ jobs:
         id: remain
         shell: bash
         run: |
+          git pull --rebase origin main || true
           python - << 'PY'
           import csv
           import os
@@ -194,8 +200,8 @@ jobs:
                 tickets: "5",
                 pool_size: "24",
                 run_backtest: "true",
-                chunk_size: "100",
-                max_chunks: "10",
+                chunk_size: "10",
+                max_chunks: "1",
                 scrape_months: "3"
               }
             });
