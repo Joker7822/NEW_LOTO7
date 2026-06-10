@@ -1,0 +1,74 @@
+name: LOTO7 Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_targets:
+        description: "Backtest target count. Use all for full resume run."
+        required: false
+        default: "all"
+      run_scraping:
+        description: "Update loto7.csv before running."
+        required: false
+        default: "true"
+  schedule:
+    # JST Friday 20:15 = UTC Friday 11:15
+    - cron: "15 11 * * 5"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: loto7-pipeline
+  cancel-in-progress: false
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run LOTO7 pipeline
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: |
+          set -euo pipefail
+          MAX_TARGETS="${{ github.event.inputs.max_targets || 'all' }}"
+          RUN_SCRAPING="${{ github.event.inputs.run_scraping || 'true' }}"
+
+          SCRAPE_FLAG=""
+          if [ "$RUN_SCRAPING" = "true" ]; then
+            SCRAPE_FLAG="--run-scraping"
+          fi
+
+          python loto7_pipeline.py \
+            $SCRAPE_FLAG \
+            --csv loto7.csv \
+            --output-dir outputs \
+            --resume-state outputs/resume_state.json \
+            --purchase-count 5 \
+            --min-train-draws 60 \
+            --max-targets "$MAX_TARGETS" \
+            --push-every 100 \
+            --push-final
+
+      - name: Upload outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: loto7-outputs
+          path: |
+            loto7.csv
+            outputs/*.csv
+            outputs/*.json
+          if-no-files-found: ignore
