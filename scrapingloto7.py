@@ -12,7 +12,7 @@ NEW_LOTO7 リポジトリ内の loto7.csv を最新化する。
     - 列順は predictor が読む形式に固定
 
 CSV形式:
-    抽せん日,本数字,ボーナス数字,回別
+    抽せん日,本数字,ボーナス数字,回別,1等口数,1等当選金額,...,6等口数,6等当選金額,キャリーオーバー
 
 使い方:
     python scrapingloto7.py
@@ -34,7 +34,25 @@ from urllib.parse import urljoin
 
 
 RAKUTEN_PAST_INDEX = "https://takarakuji.rakuten.co.jp/backnumber/loto7_past/"
-FIELDNAMES = ["抽せん日", "本数字", "ボーナス数字", "回別"]
+FIELDNAMES = [
+    "抽せん日",
+    "本数字",
+    "ボーナス数字",
+    "回別",
+    "1等口数",
+    "1等当選金額",
+    "2等口数",
+    "2等当選金額",
+    "3等口数",
+    "3等当選金額",
+    "4等口数",
+    "4等当選金額",
+    "5等口数",
+    "5等当選金額",
+    "6等口数",
+    "6等当選金額",
+    "キャリーオーバー",
+]
 
 
 def http_get(url: str, timeout: int = 30) -> str:
@@ -106,6 +124,42 @@ def normalize_date(value: object) -> str:
     return text
 
 
+
+
+def normalize_money(value: object) -> str:
+    """金額表記を CSV 保存向けに正規化する。例: 6,861,400円 / 該当なし。"""
+    text = str(value or "").strip()
+    if not text or text == "該当なし":
+        return text
+    m = re.search(r"([0-9,]+)\s*円", text)
+    return f"{m.group(1)}円" if m else text
+
+
+def normalize_unit_count(value: object) -> str:
+    """口数表記を CSV 保存向けに正規化する。例: 7口 / 該当なし。"""
+    text = str(value or "").strip()
+    if not text or text == "該当なし":
+        return text
+    m = re.search(r"([0-9,]+)\s*口", text)
+    return f"{m.group(1)}口" if m else text
+
+
+def parse_prize_rank(seg: str, rank: int) -> tuple[str, str]:
+    """月別ページの1抽せんブロックから、指定等級の口数・当選金額を抽出する。"""
+    # 例: "2等 7口 6,861,400円" / "1等 該当なし 該当なし"
+    m = re.search(
+        rf"{rank}等\s+(該当なし|[0-9,]+\s*口)\s+(該当なし|[0-9,]+\s*円)",
+        seg,
+    )
+    if not m:
+        return "", ""
+    return normalize_unit_count(m.group(1)), normalize_money(m.group(2))
+
+
+def parse_carryover(seg: str) -> str:
+    m = re.search(r"キャリーオーバー\s+([0-9,]+\s*円|該当なし)", seg)
+    return normalize_money(m.group(1)) if m else ""
+
 def parse_draws_from_month_page(month_html: str) -> List[Dict[str, str]]:
     text = strip_html(month_html)
     parts = re.split(r"回号\s*第", text)
@@ -139,14 +193,18 @@ def parse_draws_from_month_page(month_html: str) -> List[Dict[str, str]]:
         if any(n < 1 or n > 37 for n in main_nums + bonus_nums):
             continue
 
-        rows.append(
-            {
-                "抽せん日": draw_date,
-                "本数字": fmt_num_list(main_nums),
-                "ボーナス数字": fmt_num_list(bonus_nums),
-                "回別": f"第{draw_no}回",
-            }
-        )
+        row = {
+            "抽せん日": draw_date,
+            "本数字": fmt_num_list(main_nums),
+            "ボーナス数字": fmt_num_list(bonus_nums),
+            "回別": f"第{draw_no}回",
+        }
+        for rank in range(1, 7):
+            count, amount = parse_prize_rank(seg, rank)
+            row[f"{rank}等口数"] = count
+            row[f"{rank}等当選金額"] = amount
+        row["キャリーオーバー"] = parse_carryover(seg)
+        rows.append(row)
 
     return rows
 
@@ -179,12 +237,9 @@ def read_existing_csv(csv_path: str) -> List[Dict[str, str]]:
         for row in reader:
             if not row:
                 continue
-            normalized = {
-                "抽せん日": normalize_date(row.get("抽せん日", "")),
-                "本数字": str(row.get("本数字", "")).strip(),
-                "ボーナス数字": str(row.get("ボーナス数字", "")).strip(),
-                "回別": normalize_draw_no(row.get("回別", "")),
-            }
+            normalized = {key: str(row.get(key, "")).strip() for key in FIELDNAMES}
+            normalized["抽せん日"] = normalize_date(normalized.get("抽せん日", ""))
+            normalized["回別"] = normalize_draw_no(normalized.get("回別", ""))
             if normalized["抽せん日"] and normalized["本数字"]:
                 rows.append(normalized)
         return rows
@@ -242,13 +297,13 @@ def update_loto7_csv(csv_path: str = "loto7.csv", months: int = 2) -> List[Dict[
     if added_or_updated:
         print(f"[OK] {len(added_or_updated)}件の新規候補を取得しました。")
         for row in sorted(added_or_updated, key=sort_key, reverse=True):
-            print(f"  {row['回別']} {row['抽せん日']} 本: {row['本数字']} B: {row['ボーナス数字']}")
+            print(f"  {row['回別']} {row['抽せん日']} 本: {row['本数字']} B: {row['ボーナス数字']} 1等: {row.get('1等口数', '')} {row.get('1等当選金額', '')} CO: {row.get('キャリーオーバー', '')}")
     else:
         print("[OK] 追加対象はありません。既に最新の可能性があります。")
 
     if merged:
         last = merged[-1]
-        print(f"[LATEST] {last['回別']} {last['抽せん日']} 本: {last['本数字']} B: {last['ボーナス数字']}")
+        print(f"[LATEST] {last['回別']} {last['抽せん日']} 本: {last['本数字']} B: {last['ボーナス数字']} 1等: {last.get('1等口数', '')} {last.get('1等当選金額', '')} CO: {last.get('キャリーオーバー', '')}")
 
     return merged
 
