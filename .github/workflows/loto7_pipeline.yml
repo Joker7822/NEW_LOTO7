@@ -61,7 +61,7 @@ jobs:
           REBUILD_FLAG=""
           [ "$FORCE_REBUILD" = "true" ] && REBUILD_FLAG="--force-rebuild"
 
-          python loto7_pipeline.py \
+          python loto7_pipeline_enhanced.py \
             $SCRAPE_FLAG \
             $REBUILD_FLAG \
             --csv loto7.csv \
