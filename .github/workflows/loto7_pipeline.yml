@@ -16,7 +16,6 @@ on:
         required: false
         default: "false"
   schedule:
-    # JST Friday 20:15 = UTC Friday 11:15
     - cron: "15 11 * * 5"
 
 permissions:
@@ -32,34 +31,35 @@ jobs:
     timeout-minutes: 355
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.11'
+
+      - name: Prepare outputs directory
+        run: |
+          mkdir -p outputs
+          touch outputs/.keep
+          ls -la outputs
 
       - name: Run LOTO7 pipeline
         env:
-          PYTHONUNBUFFERED: "1"
+          PYTHONUNBUFFERED: '1'
         run: |
-          set -euo pipefail
+          set -euxo pipefail
+
           MAX_TARGETS="${{ github.event.inputs.max_targets || 'all' }}"
           RUN_SCRAPING="${{ github.event.inputs.run_scraping || 'true' }}"
           FORCE_REBUILD="${{ github.event.inputs.force_rebuild || 'false' }}"
 
           SCRAPE_FLAG=""
-          if [ "$RUN_SCRAPING" = "true" ]; then
-            SCRAPE_FLAG="--run-scraping"
-          fi
+          [ "$RUN_SCRAPING" = "true" ] && SCRAPE_FLAG="--run-scraping"
 
           REBUILD_FLAG=""
-          if [ "$FORCE_REBUILD" = "true" ]; then
-            REBUILD_FLAG="--force-rebuild"
-          fi
+          [ "$FORCE_REBUILD" = "true" ] && REBUILD_FLAG="--force-rebuild"
 
           python loto7_pipeline.py \
             $SCRAPE_FLAG \
@@ -73,6 +73,9 @@ jobs:
             --push-every 100 \
             --push-final
 
+          echo '===== outputs ====='
+          find outputs -type f | sort || true
+
       - name: Upload outputs
         if: always()
         uses: actions/upload-artifact@v4
@@ -80,6 +83,5 @@ jobs:
           name: loto7-outputs
           path: |
             loto7.csv
-            outputs/*.csv
-            outputs/*.json
-          if-no-files-found: ignore
+            outputs/**
+          if-no-files-found: warn
