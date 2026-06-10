@@ -32,7 +32,6 @@ on:
         required: true
         default: '3'
   schedule:
-    # JST 21:00 every Friday / UTC 12:00
     - cron: '0 12 * * 5'
 
 permissions:
@@ -75,6 +74,7 @@ jobs:
             loto7_enhanced_predictor.py \
             loto7_nextgen_models.py \
             loto7_chunked_backtest.py \
+            loto7_resumable_backtest.py \
             loto7_train_from_backtest.py
 
       - name: Update loto7.csv by scraping
@@ -83,7 +83,7 @@ jobs:
         run: |
           python scrapingloto7.py --csv loto7.csv --months "${SCRAPE_MONTHS}"
 
-      - name: Advance leakage-safe chunked backtest
+      - name: Advance leakage-safe resumable backtest
         if: ${{ github.event_name == 'schedule' || github.event.inputs.run_backtest == 'true' }}
         env:
           LOTO7_DISABLE_OPTIMIZE: '1'
@@ -92,14 +92,13 @@ jobs:
           LOTO7_BACKTEST_MCTS: '50'
           LOTO7_DIFFUSION_CANDIDATES: '50'
           LOTO7_PPO_CANDIDATES: '50'
+          LOTO7_BACKTEST_AUTO_PUSH: '1'
+          LOTO7_BACKTEST_PUSH_EVERY: '1'
+          LOTO7_POOL_SIZE: ${{ github.event.inputs.pool_size || '24' }}
           LOTO7_BACKTEST_CHUNK_SIZE: ${{ github.event.inputs.chunk_size || '10' }}
           LOTO7_BACKTEST_MAX_CHUNKS: ${{ github.event.inputs.max_chunks || '1' }}
-          LOTO7_BACKTEST_CHECKPOINT_EVERY: '1'
-          LOTO7_BACKTEST_PUSH_EVERY: '1'
-          LOTO7_BACKTEST_AUTO_PUSH: '1'
-          LOTO7_POOL_SIZE: ${{ github.event.inputs.pool_size || '24' }}
         run: |
-          python loto7_chunked_backtest.py \
+          python loto7_resumable_backtest.py \
             --csv loto7.csv \
             --min-train 1 \
             --tickets 5 \
@@ -154,7 +153,6 @@ jobs:
             fi
             sleep $((i * 5))
           done
-          echo 'git push failed after retries.' >&2
           exit 1
 
       - name: Check remaining backtests
@@ -163,24 +161,17 @@ jobs:
         run: |
           git pull --rebase origin main || true
           python - << 'PY'
-          import csv
-          import os
+          import csv, os
           from pathlib import Path
-
           remain = 0
           completed_all = "False"
           p = Path("loto7_backtest_summary.csv")
           if p.exists() and p.stat().st_size > 0:
-              with p.open("r", encoding="utf-8-sig", newline="") as f:
-                  rows = list(csv.DictReader(f))
-                  if rows:
-                      row = rows[-1]
-                      remain = int(float(row.get("未処理回数", 0) or 0))
-                      completed_all = str(row.get("完全完了", "False"))
-
-          print(f"remain={remain}")
-          print(f"completed_all={completed_all}")
-
+              rows = list(csv.DictReader(p.open("r", encoding="utf-8-sig", newline="")))
+              if rows:
+                  row = rows[-1]
+                  remain = int(float(row.get("未処理回数", 0) or 0))
+                  completed_all = str(row.get("完全完了", "False"))
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
               out.write(f"remain={remain}\n")
               out.write(f"completed_all={completed_all}\n")
