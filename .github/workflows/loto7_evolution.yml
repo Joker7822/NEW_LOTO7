@@ -6,21 +6,20 @@ on:
       generations:
         description: "Number of evolution generations"
         required: false
-        default: "20"
+        default: "100"
       population:
         description: "Population size per generation"
         required: false
-        default: "30"
+        default: "100"
       max_targets:
         description: "Backtest target count used per genome"
         required: false
-        default: "240"
+        default: "all"
       target_stride:
         description: "1 = every draw, 2 = every other draw"
         required: false
         default: "1"
   schedule:
-    # JST Saturday 03:30 = UTC Friday 18:30
     - cron: "30 18 * * 5"
 
 permissions:
@@ -36,17 +35,15 @@ jobs:
     timeout-minutes: 355
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Run evolutionary trainer
+      - name: Run FULL evolution mode
         env:
           PYTHONUNBUFFERED: "1"
         run: |
@@ -55,19 +52,18 @@ jobs:
             --csv loto7.csv \
             --output-dir outputs \
             --best-model loto7_best_model.json \
-            --generations "${{ github.event.inputs.generations || '20' }}" \
-            --population "${{ github.event.inputs.population || '30' }}" \
-            --elite-count 6 \
+            --generations "${{ github.event.inputs.generations || '100' }}" \
+            --population "${{ github.event.inputs.population || '100' }}" \
+            --elite-count 10 \
             --purchase-count 5 \
             --min-train-draws 60 \
-            --max-targets "${{ github.event.inputs.max_targets || '240' }}" \
+            --max-targets 999999 \
             --target-stride "${{ github.event.inputs.target_stride || '1' }}" \
-            --push-every-generation 5 \
+            --push-every-generation 1 \
             --push-final
 
-      - name: Upload evolution outputs
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
           name: loto7-evolution-outputs
           path: |
