@@ -48,19 +48,7 @@ jobs:
           PYTHONUNBUFFERED: "1"
         run: |
           set -euo pipefail
-          python loto7_evolution_trainer.py \
-            --csv loto7.csv \
-            --output-dir outputs \
-            --best-model loto7_best_model.json \
-            --generations "${{ github.event.inputs.generations || '100' }}" \
-            --population "${{ github.event.inputs.population || '100' }}" \
-            --elite-count 10 \
-            --purchase-count 5 \
-            --min-train-draws 60 \
-            --max-targets 999999 \
-            --target-stride "${{ github.event.inputs.target_stride || '1' }}" \
-            --push-every-generation 1 \
-            --push-final
+          python loto7_evolution_trainer.py             --csv loto7.csv             --output-dir outputs             --best-model loto7_best_model.json             --generations "${{ github.event.inputs.generations || '100' }}"             --population "${{ github.event.inputs.population || '100' }}"             --elite-count 10             --purchase-count 5             --min-train-draws 60             --max-targets 999999             --target-stride "${{ github.event.inputs.target_stride || '1' }}"             --push-every-generation 1             --push-final
 
       - uses: actions/upload-artifact@v4
         if: always()
