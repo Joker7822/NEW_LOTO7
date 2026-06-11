@@ -6,7 +6,7 @@ on:
       generations:
         description: "Number of evolution generations"
         required: false
-        default: "100"
+        default: "200"
       population:
         description: "Population size per generation"
         required: false
@@ -62,8 +62,8 @@ jobs:
             --csv loto7.csv \
             --output-dir outputs \
             --best-model loto7_best_model.json \
-            --generations "${{ github.event.inputs.generations || '100' }}" \
-            --population "${{ github.event.inputs.population || '100' }}" \
+            --generations "${{ github.event.inputs.generations || '200' }}" \
+            --population "${{ github.event.inputs.population || '200' }}" \
             --elite-count 10 \
             --purchase-count 5 \
             --min-train-draws 60 \
