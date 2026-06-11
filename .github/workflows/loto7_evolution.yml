@@ -22,7 +22,7 @@ on:
       workers:
         description: "Workers inside each shard"
         required: false
-        default: "2"
+        default: "4"
 
 permissions:
   contents: write
