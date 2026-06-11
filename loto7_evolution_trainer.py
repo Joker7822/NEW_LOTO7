@@ -514,7 +514,7 @@ def git_commit_push(message: str, paths: Sequence[str], retries: int = 3) -> boo
     try:
         subprocess.run(["git", "config", "user.name", "github-actions[bot]"], check=False)
         subprocess.run(["git", "config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com"], check=False)
-        subprocess.run(["git", "add", *existing], check=True)
+        subprocess.run(["git", "add", "-f", *existing], check=True)
         diff = subprocess.run(["git", "diff", "--cached", "--quiet"], check=False)
         if diff.returncode == 0:
             print("[GIT] no changes.")
@@ -572,6 +572,140 @@ def predict_with_best(draws: Sequence[Draw], genome: Genome, purchase_count: int
     write_csv(output_path, ["base_latest_draw_no", "base_latest_date", "prediction_draw_no", "combo_index", "numbers", "model_id", "model_score", "created_at"], rows)
 
 
+
+def genome_to_dict(genome: Genome) -> Dict[str, object]:
+    return asdict(genome)
+
+
+def genome_from_dict(data: Dict[str, object]) -> Genome:
+    fields = Genome.__dataclass_fields__.keys()
+    return Genome(**{k: data[k] for k in fields if k in data})
+
+
+def parse_max_targets(value: object) -> Optional[int]:
+    text = str(value or "").strip().lower()
+    if text in {"", "none", "all", "null", "999999", "-1"}:
+        return None
+    return int(text)
+
+
+def append_one_csv(path: str, fieldnames: Sequence[str], row: Dict[str, object]) -> None:
+    write_csv(path, fieldnames, [row], append=True)
+
+
+def load_json(path: str, default: object) -> object:
+    p = Path(path)
+    if not p.exists():
+        return default
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return default
+
+
+def atomic_save_json(path: str, payload: Dict[str, object]) -> None:
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    tmp = p.with_suffix(p.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    tmp.replace(p)
+
+
+def evaluate_genome_worker(payload: Tuple[Genome, List[Draw], int, int, Optional[int], int]) -> Tuple[Genome, Dict[str, object]]:
+    genome, draws, purchase_count, min_train_draws, max_targets, target_stride = payload
+    return evaluate_genome(
+        genome,
+        draws=draws,
+        purchase_count=purchase_count,
+        min_train_draws=min_train_draws,
+        max_targets=max_targets,
+        target_stride=target_stride,
+    )
+
+
+def evaluate_generation_parallel(
+    pending: List[Genome],
+    draws: Sequence[Draw],
+    args: argparse.Namespace,
+) -> Iterable[Tuple[Genome, Dict[str, object]]]:
+    max_targets = parse_max_targets(args.max_targets)
+    if args.workers <= 1:
+        for genome in pending:
+            yield evaluate_genome(
+                genome,
+                draws=draws,
+                purchase_count=args.purchase_count,
+                min_train_draws=args.min_train_draws,
+                max_targets=max_targets,
+                target_stride=args.target_stride,
+            )
+        return
+
+    from concurrent.futures import ProcessPoolExecutor, as_completed
+
+    payloads = [
+        (genome, list(draws), args.purchase_count, args.min_train_draws, max_targets, args.target_stride)
+        for genome in pending
+    ]
+    with ProcessPoolExecutor(max_workers=args.workers) as ex:
+        futures = [ex.submit(evaluate_genome_worker, payload) for payload in payloads]
+        for fut in as_completed(futures):
+            yield fut.result()
+
+
+def build_initial_population(args: argparse.Namespace, rng: random.Random) -> List[Genome]:
+    population = [random_genome(0, i, rng) for i in range(args.population)]
+    previous_best = load_best_model(args.best_model)
+    if previous_best is not None:
+        previous_best.id = "g000_previous_best"
+        previous_best.generation = 0
+        population[0] = previous_best
+    return population
+
+
+def save_state(
+    state_path: str,
+    generation: int,
+    population: List[Genome],
+    evaluated: List[Genome],
+    completed_ids: Sequence[str],
+    best: Optional[Genome],
+    args: argparse.Namespace,
+) -> None:
+    atomic_save_json(
+        state_path,
+        {
+            "updated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+            "generation": generation,
+            "population": [genome_to_dict(g) for g in population],
+            "evaluated": [genome_to_dict(g) for g in evaluated],
+            "completed_ids": list(completed_ids),
+            "best": genome_to_dict(best) if best else None,
+            "args": {
+                "generations": args.generations,
+                "population": args.population,
+                "elite_count": args.elite_count,
+                "purchase_count": args.purchase_count,
+                "min_train_draws": args.min_train_draws,
+                "max_targets": args.max_targets,
+                "target_stride": args.target_stride,
+                "seed": args.seed,
+                "shard_id": args.shard_id,
+                "num_shards": args.num_shards,
+            },
+        },
+    )
+
+
+def load_resume_state(state_path: str) -> Optional[Dict[str, object]]:
+    state = load_json(state_path, None)
+    if not isinstance(state, dict):
+        return None
+    if "generation" not in state or "population" not in state:
+        return None
+    return state
+
+
 def run_evolution(args: argparse.Namespace) -> int:
     rng = random.Random(args.seed)
     draws = load_draws(args.csv)
@@ -580,20 +714,13 @@ def run_evolution(args: argparse.Namespace) -> int:
 
     out_dir = Path(args.output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    history_csv = str(out_dir / "evolution_history.csv")
-    best_summary_csv = str(out_dir / "evolution_best_summary.csv")
-    best_model_json = args.best_model
-    best_prediction_csv = str(out_dir / "evolution_best_prediction.csv")
 
-    population = [random_genome(0, i, rng) for i in range(args.population)]
-    previous_best = load_best_model(best_model_json)
-    if previous_best is not None:
-        previous_best.id = "g000_previous_best"
-        previous_best.generation = 0
-        population[0] = previous_best
-
-    best: Optional[Genome] = None
-    all_history_rows: List[Dict[str, object]] = []
+    shard_suffix = f"shard{args.shard_id:02d}_of_{args.num_shards:02d}"
+    history_csv = str(out_dir / f"evolution_history_{shard_suffix}.csv")
+    best_summary_csv = str(out_dir / f"evolution_best_summary_{shard_suffix}.csv")
+    state_path = args.state_path or str(out_dir / f"evolution_state_{shard_suffix}.json")
+    best_model_json = args.best_model if args.num_shards == 1 else str(Path(args.best_model).with_name(f"{Path(args.best_model).stem}_{shard_suffix}.json"))
+    best_prediction_csv = str(out_dir / f"evolution_best_prediction_{shard_suffix}.csv")
 
     fieldnames = [
         "generation", "genome_id", "score", "targets", "tickets", "max_main_match",
@@ -601,86 +728,144 @@ def run_evolution(args: argparse.Namespace) -> int:
         "full_weight", "recent240_weight", "recent120_weight", "recent60_weight", "pair_weight", "pair_recency_weight", "pair_stability_weight",
         "triple_weight", "dormancy_weight", "odd_bonus", "sum_bonus", "low_high_bonus", "consecutive_penalty",
         "overlap_limit", "pool_size", "target_sum_min", "target_sum_max", "max_consecutive_pairs",
+        "shard_id", "num_shards", "completed_at",
     ]
 
-    for generation in range(args.generations):
-        evaluated: List[Genome] = []
-        generation_rows: List[Dict[str, object]] = []
-        print(f"[EVOLVE] generation={generation} population={len(population)}")
-        for genome in population:
-            evaluated_genome, stats = evaluate_genome(
-                genome,
-                draws=draws,
-                purchase_count=args.purchase_count,
-                min_train_draws=args.min_train_draws,
-                max_targets=args.max_targets,
-                target_stride=args.target_stride,
-            )
-            evaluated.append(evaluated_genome)
+    state = load_resume_state(state_path) if args.resume else None
+    if state:
+        start_generation = int(state.get("generation", 0))
+        population = [genome_from_dict(x) for x in state.get("population", [])]
+        evaluated = [genome_from_dict(x) for x in state.get("evaluated", [])]
+        completed_ids = set(str(x) for x in state.get("completed_ids", []))
+        best_data = state.get("best")
+        best = genome_from_dict(best_data) if isinstance(best_data, dict) else None
+        print(f"[RESUME] generation={start_generation} completed={len(completed_ids)} shard={args.shard_id}/{args.num_shards}")
+    else:
+        start_generation = 0
+        population = build_initial_population(args, rng)
+        evaluated = []
+        completed_ids = set()
+        best = None
+        save_state(state_path, start_generation, population, evaluated, completed_ids, best, args)
+
+    for generation in range(start_generation, args.generations):
+        if generation != start_generation or not state:
+            evaluated = []
+            completed_ids = set()
+            save_state(state_path, generation, population, evaluated, completed_ids, best, args)
+
+        shard_population = [g for idx, g in enumerate(population) if idx % args.num_shards == args.shard_id]
+        pending = [g for g in shard_population if g.id not in completed_ids]
+        print(
+            f"[EVOLVE] generation={generation} shard={args.shard_id}/{args.num_shards} "
+            f"population_total={len(population)} shard_population={len(shard_population)} pending={len(pending)} workers={args.workers}"
+        )
+
+        for evaluated_genome, stats in evaluate_generation_parallel(pending, draws, args):
             row = dict(stats)
             row.update({k: v for k, v in asdict(evaluated_genome).items() if k not in {"id", "generation", "score", "max_main_match", "best_rank_count"}})
-            generation_rows.append(row)
+            row.update({"shard_id": args.shard_id, "num_shards": args.num_shards, "completed_at": dt.datetime.now(dt.timezone.utc).isoformat()})
+            append_one_csv(history_csv, fieldnames, row)
 
-        evaluated.sort(key=lambda g: g.score, reverse=True)
-        gen_best = evaluated[0]
-        if best is None or gen_best.score > best.score:
-            best = gen_best
-            save_json(
-                best_model_json,
-                {
-                    "updated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
-                    "csv": args.csv,
-                    "purchase_count": args.purchase_count,
-                    "min_train_draws": args.min_train_draws,
-                    "max_targets": args.max_targets,
-                    "target_stride": args.target_stride,
-                    "genome": asdict(best),
-                },
-            )
-            predict_with_best(draws, best, args.purchase_count, best_prediction_csv)
-            print(f"[BEST] generation={generation} score={best.score:.3f} id={best.id}")
+            evaluated.append(evaluated_genome)
+            completed_ids.add(evaluated_genome.id)
 
-        write_csv(history_csv, fieldnames, generation_rows, append=Path(history_csv).exists())
-        all_history_rows.extend(generation_rows)
+            if best is None or evaluated_genome.score > best.score:
+                best = evaluated_genome
+                save_json(
+                    best_model_json,
+                    {
+                        "updated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+                        "csv": args.csv,
+                        "purchase_count": args.purchase_count,
+                        "min_train_draws": args.min_train_draws,
+                        "max_targets": args.max_targets,
+                        "target_stride": args.target_stride,
+                        "shard_id": args.shard_id,
+                        "num_shards": args.num_shards,
+                        "genome": asdict(best),
+                    },
+                )
+                predict_with_best(draws, best, args.purchase_count, best_prediction_csv)
+                print(f"[BEST] generation={generation} shard={args.shard_id} score={best.score:.3f} id={best.id}")
 
+            save_state(state_path, generation, population, evaluated, completed_ids, best, args)
+
+            if args.push_every_genome > 0 and len(completed_ids) % args.push_every_genome == 0:
+                git_commit_push(
+                    f"Update LOTO7 evolution shard {args.shard_id} generation {generation} genome {len(completed_ids)}",
+                    [history_csv, best_summary_csv, best_model_json, best_prediction_csv, state_path],
+                )
+
+        evaluated_sorted = sorted(evaluated, key=lambda g: g.score, reverse=True)
         summary_rows = []
-        for rank, genome in enumerate(evaluated[: args.elite_count], start=1):
-            summary_rows.append({"rank": rank, "generation": generation, "genome_id": genome.id, "score": round(genome.score, 6), "max_main_match": genome.max_main_match, "best_rank_count": genome.best_rank_count})
-        write_csv(best_summary_csv, ["rank", "generation", "genome_id", "score", "max_main_match", "best_rank_count"], summary_rows)
+        for rank, genome in enumerate(evaluated_sorted[: args.elite_count], start=1):
+            summary_rows.append(
+                {
+                    "rank": rank,
+                    "generation": generation,
+                    "genome_id": genome.id,
+                    "score": round(genome.score, 6),
+                    "max_main_match": genome.max_main_match,
+                    "best_rank_count": genome.best_rank_count,
+                    "shard_id": args.shard_id,
+                    "num_shards": args.num_shards,
+                    "updated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+                }
+            )
+        write_csv(
+            best_summary_csv,
+            ["rank", "generation", "genome_id", "score", "max_main_match", "best_rank_count", "shard_id", "num_shards", "updated_at"],
+            summary_rows,
+        )
 
         if args.push_every_generation > 0 and (generation + 1) % args.push_every_generation == 0:
             git_commit_push(
-                f"Update LOTO7 evolution generation {generation + 1}",
-                [history_csv, best_summary_csv, best_model_json, best_prediction_csv],
+                f"Update LOTO7 evolution shard {args.shard_id} generation {generation + 1}",
+                [history_csv, best_summary_csv, best_model_json, best_prediction_csv, state_path],
             )
 
         if generation + 1 < args.generations:
-            population = make_next_generation(evaluated, generation + 1, args.population, args.elite_count, rng)
+            # Each shard evolves from its own evaluated subset. This is intentionally shard-local
+            # so matrix jobs can run independently without cross-job synchronization.
+            if evaluated_sorted:
+                population = make_next_generation(evaluated_sorted, generation + 1, args.population, min(args.elite_count, len(evaluated_sorted)), rng)
+            else:
+                population = [random_genome(generation + 1, i, rng) for i in range(args.population)]
+            evaluated = []
+            completed_ids = set()
+            save_state(state_path, generation + 1, population, evaluated, completed_ids, best, args)
 
     if best is not None:
-        print(f"[FINAL BEST] score={best.score:.3f} id={best.id}")
+        print(f"[FINAL BEST] shard={args.shard_id}/{args.num_shards} score={best.score:.3f} id={best.id}")
         print(json.dumps(asdict(best), ensure_ascii=False, indent=2))
 
     if args.push_final:
-        git_commit_push("Update LOTO7 evolutionary best model", [history_csv, best_summary_csv, best_model_json, best_prediction_csv])
+        git_commit_push("Update LOTO7 evolutionary best model", [history_csv, best_summary_csv, best_model_json, best_prediction_csv, state_path])
 
     return 0
 
 
 def main(argv: Optional[List[str]] = None) -> int:
-    parser = argparse.ArgumentParser(description="LOTO7 evolutionary walk-forward trainer")
+    parser = argparse.ArgumentParser(description="LOTO7 evolutionary walk-forward trainer with resume/shards/workers")
     parser.add_argument("--csv", default="loto7.csv")
     parser.add_argument("--output-dir", default="outputs")
     parser.add_argument("--best-model", default="loto7_best_model.json")
-    parser.add_argument("--generations", type=int, default=20)
-    parser.add_argument("--population", type=int, default=30)
-    parser.add_argument("--elite-count", type=int, default=6)
+    parser.add_argument("--state-path", default=None)
+    parser.add_argument("--generations", type=int, default=100)
+    parser.add_argument("--population", type=int, default=100)
+    parser.add_argument("--elite-count", type=int, default=10)
     parser.add_argument("--purchase-count", type=int, default=5)
     parser.add_argument("--min-train-draws", type=int, default=60)
-    parser.add_argument("--max-targets", type=int, default=240, help="評価対象回数。大きいほど厳密だが遅い。")
+    parser.add_argument("--max-targets", default="all", help="評価対象回数。allなら全対象。")
     parser.add_argument("--target-stride", type=int, default=1, help="1なら全対象、2なら1回おきに評価。")
     parser.add_argument("--seed", type=int, default=777)
-    parser.add_argument("--push-every-generation", type=int, default=5)
+    parser.add_argument("--shard-id", type=int, default=0)
+    parser.add_argument("--num-shards", type=int, default=1)
+    parser.add_argument("--workers", type=int, default=max(1, min(2, os.cpu_count() or 1)))
+    parser.add_argument("--resume", action="store_true", help="outputs/evolution_state_*.json から再開")
+    parser.add_argument("--push-every-generation", type=int, default=1)
+    parser.add_argument("--push-every-genome", type=int, default=0, help="N個体ごとにcommit/push。0で無効")
     parser.add_argument("--push-final", action="store_true")
     args = parser.parse_args(argv)
 
@@ -690,6 +875,12 @@ def main(argv: Optional[List[str]] = None) -> int:
         raise SystemExit("--elite-count must be >=1 and < population")
     if args.purchase_count <= 0:
         raise SystemExit("--purchase-count must be positive")
+    if args.num_shards < 1:
+        raise SystemExit("--num-shards must be >= 1")
+    if args.shard_id < 0 or args.shard_id >= args.num_shards:
+        raise SystemExit("--shard-id must satisfy 0 <= shard_id < num_shards")
+    if args.workers < 1:
+        raise SystemExit("--workers must be >= 1")
     return run_evolution(args)
 
 
