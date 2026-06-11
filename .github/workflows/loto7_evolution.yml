@@ -10,7 +10,7 @@ on:
       population:
         description: "Population size per generation"
         required: false
-        default: "100"
+        default: "200"
       max_targets:
         description: "Backtest target count used per genome. Use all for full walk-forward."
         required: false
