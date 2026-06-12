@@ -36,7 +36,7 @@ on:
           - "false"
           - "true"
   schedule:
-    - cron: '0 12 * * 5'
+    - cron: "0 12 * * 5"
 
 permissions:
   contents: write
@@ -46,11 +46,70 @@ defaults:
     shell: bash
 
 concurrency:
-  group: loto7-evolution
+  group: loto7-evolution-${{ github.ref_name }}
   cancel-in-progress: false
 
 jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve branch
+        id: br
+        run: |
+          set -euo pipefail
+          echo "branch=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            python -m pip install -r requirements.txt
+          fi
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+
+      - name: Run scraping script
+        run: xvfb-run -a python scrapingloto7.py
+
+      - name: Commit and push loto7.csv if changed
+        run: |
+          set -euo pipefail
+          BRANCH="${{ steps.br.outputs.branch }}"
+          git fetch origin "${BRANCH}"
+          git pull --rebase --autostash origin "${BRANCH}"
+
+          if [ -f loto7.csv ]; then
+            git add loto7.csv
+          fi
+
+          if git diff --cached --quiet; then
+            echo "No changes to loto7.csv"
+            exit 0
+          fi
+
+          git commit -m "Auto update loto7.csv [skip ci]"
+          git push --force-with-lease origin HEAD:"${BRANCH}"
+
   evolve:
+    needs: scrape
     runs-on: ubuntu-latest
     timeout-minutes: 355
     strategy:
@@ -59,33 +118,31 @@ jobs:
         shard: [0, 1, 2, 3]
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-python@v5
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          
-      - name: Run scraping script
-        run: xvfb-run -a python scrapingloto7.py
 
-      - name: Commit and push loto7.csv if changed
+      - name: Install dependencies
         run: |
-          set -e
-          BRANCH="${{ steps.br.outputs.branch }}"
-          git fetch origin
-          git checkout "${BRANCH}"
-          if [ -f loto7.csv ]; then git add loto7.csv; fi
-          if git diff --cached --quiet; then
-            echo "No changes to loto7.csv"
-            exit 0
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            python -m pip install -r requirements.txt
           fi
-          git commit -m "Auto update loto7.csv [skip ci]" || true
-          git push --force-with-lease origin HEAD:"${BRANCH}" || true
 
       - name: Reset state if requested
-        if: ${{ github.event.inputs.reset_state == 'true' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.reset_state == 'true' }}
         run: |
           rm -f outputs/evolution_state_*.json || true
           rm -f outputs/evolution_history_*.csv || true
@@ -117,7 +174,8 @@ jobs:
             --push-every-genome 0 \
             --push-final
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload shard artifacts
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: loto7-evolution-outputs-shard-${{ matrix.shard }}
