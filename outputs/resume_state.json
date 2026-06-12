@@ -1,10 +1,10 @@
 {
-  "last_completed_date": "2026-06-05",
-  "last_completed_draw_no": 680,
+  "last_completed_date": "2026-06-12",
+  "last_completed_draw_no": 681,
   "min_train_draws": 60,
   "model": "enhanced_v1",
   "pool_size": 24,
-  "processed_now": 220,
+  "processed_now": 1,
   "purchase_count": 5,
-  "updated_at": "2026-06-11T00:12:49.890985+00:00"
+  "updated_at": "2026-06-12T14:16:53.935758+00:00"
 }
