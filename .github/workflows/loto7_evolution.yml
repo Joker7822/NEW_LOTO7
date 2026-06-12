@@ -16,9 +16,13 @@ on:
         required: false
         default: "all"
       target_stride:
-        description: "1 = every draw, 2 = every other draw"
-        required: false
+        description: "Backtest target stride"
+        required: true
+        type: choice
         default: "1"
+        options:
+          - "1"
+          - "2"
       workers:
         description: "Workers inside each shard"
         required: false
@@ -71,7 +75,7 @@ jobs:
             --target-stride "${{ github.event.inputs.target_stride || '1' }}" \
             --shard-id "${{ matrix.shard }}" \
             --num-shards 4 \
-            --workers "${{ github.event.inputs.workers || '2' }}" \
+            --workers "${{ github.event.inputs.workers || '4' }}" \
             --resume \
             --push-every-generation 1 \
             --push-every-genome 0 \
