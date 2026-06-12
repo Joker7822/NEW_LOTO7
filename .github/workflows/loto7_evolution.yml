@@ -35,6 +35,12 @@ on:
         options:
           - "false"
           - "true"
+      scrape_months:
+        description: 'Recent months to fetch with scrapingloto7.py'
+        required: true
+        default: '3'
+  schedule:
+    - cron: '0 12 * * 5'
 
 permissions:
   contents: write
