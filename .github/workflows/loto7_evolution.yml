@@ -64,6 +64,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          
+      - name: Update loto7.csv by scraping
+        env:
+          SCRAPE_MONTHS: ${{ github.event.inputs.scrape_months || '3' }}
+        run: |
+          python scrapingloto7.py --csv loto7.csv --months "${SCRAPE_MONTHS}"
 
       - name: Reset state if requested
         if: ${{ github.event.inputs.reset_state == 'true' }}
