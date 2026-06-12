@@ -35,10 +35,6 @@ on:
         options:
           - "false"
           - "true"
-      scrape_months:
-        description: 'Recent months to fetch with scrapingloto7.py'
-        required: true
-        default: '3'
   schedule:
     - cron: '0 12 * * 5'
 
@@ -71,11 +67,22 @@ jobs:
         with:
           python-version: "3.11"
           
-      - name: Update loto7.csv by scraping
-        env:
-          SCRAPE_MONTHS: ${{ github.event.inputs.scrape_months || '3' }}
+      - name: Run scraping script
+        run: xvfb-run -a python scrapingloto7.py
+
+      - name: Commit and push loto7.csv if changed
         run: |
-          python scrapingloto7.py --csv loto7.csv --months "${SCRAPE_MONTHS}"
+          set -e
+          BRANCH="${{ steps.br.outputs.branch }}"
+          git fetch origin
+          git checkout "${BRANCH}"
+          if [ -f loto7.csv ]; then git add loto7.csv; fi
+          if git diff --cached --quiet; then
+            echo "No changes to loto7.csv"
+            exit 0
+          fi
+          git commit -m "Auto update loto7.csv [skip ci]" || true
+          git push --force-with-lease origin HEAD:"${BRANCH}" || true
 
       - name: Reset state if requested
         if: ${{ github.event.inputs.reset_state == 'true' }}
