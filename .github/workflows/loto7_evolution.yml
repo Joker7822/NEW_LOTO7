@@ -3,23 +3,32 @@ name: LOTO7 Evolution Trainer
 on:
   workflow_dispatch:
     inputs:
+      evolution_mode:
+        description: "Execution mode"
+        required: true
+        type: choice
+        default: "recommended"
+        options:
+          - "recommended"
+          - "full_power"
+          - "custom"
       generations:
-        description: "Number of evolution generations"
+        description: "Custom generations. Used only when evolution_mode=custom."
         required: false
-        default: "200"
+        default: "100"
       population:
-        description: "Population size per generation"
+        description: "Custom population. Used only when evolution_mode=custom."
         required: false
         default: "200"
       max_targets:
-        description: "Backtest target count used per genome. Use all for full walk-forward."
+        description: "Custom max targets. Used only when evolution_mode=custom. Use all for full walk-forward."
         required: false
-        default: "all"
+        default: "240"
       target_stride:
-        description: "Backtest target stride"
+        description: "Custom target stride. Used only when evolution_mode=custom."
         required: true
         type: choice
-        default: "1"
+        default: "2"
         options:
           - "1"
           - "2"
@@ -150,7 +159,39 @@ jobs:
           rm -f outputs/evolution_best_prediction_*.csv || true
           rm -f loto7_best_model*.json || true
 
-      - name: Run FULL evolution mode with resume, shard, and workers
+      - name: Resolve evolution mode
+        id: mode
+        run: |
+          set -euo pipefail
+          MODE="${{ github.event.inputs.evolution_mode || 'recommended' }}"
+
+          if [ "$MODE" = "full_power" ]; then
+            GENERATIONS="200"
+            POPULATION="400"
+            MAX_TARGETS="all"
+            TARGET_STRIDE="2"
+          elif [ "$MODE" = "custom" ]; then
+            GENERATIONS="${{ github.event.inputs.generations || '100' }}"
+            POPULATION="${{ github.event.inputs.population || '200' }}"
+            MAX_TARGETS="${{ github.event.inputs.max_targets || '240' }}"
+            TARGET_STRIDE="${{ github.event.inputs.target_stride || '2' }}"
+          else
+            MODE="recommended"
+            GENERATIONS="100"
+            POPULATION="200"
+            MAX_TARGETS="240"
+            TARGET_STRIDE="2"
+          fi
+
+          echo "mode=${MODE}" >> "$GITHUB_OUTPUT"
+          echo "generations=${GENERATIONS}" >> "$GITHUB_OUTPUT"
+          echo "population=${POPULATION}" >> "$GITHUB_OUTPUT"
+          echo "max_targets=${MAX_TARGETS}" >> "$GITHUB_OUTPUT"
+          echo "target_stride=${TARGET_STRIDE}" >> "$GITHUB_OUTPUT"
+
+          echo "[MODE] mode=${MODE} generations=${GENERATIONS} population=${POPULATION} max_targets=${MAX_TARGETS} target_stride=${TARGET_STRIDE} shards=8 workers=${{ github.event.inputs.workers || '4' }}"
+
+      - name: Run evolution mode with resume, shard, and workers
         env:
           PYTHONUNBUFFERED: "1"
         run: |
@@ -159,13 +200,13 @@ jobs:
             --csv loto7.csv \
             --output-dir outputs \
             --best-model loto7_best_model.json \
-            --generations "${{ github.event.inputs.generations || '200' }}" \
-            --population "${{ github.event.inputs.population || '200' }}" \
+            --generations "${{ steps.mode.outputs.generations }}" \
+            --population "${{ steps.mode.outputs.population }}" \
             --elite-count 10 \
             --purchase-count 5 \
             --min-train-draws 60 \
-            --max-targets "${{ github.event.inputs.max_targets || 'all' }}" \
-            --target-stride "${{ github.event.inputs.target_stride || '1' }}" \
+            --max-targets "${{ steps.mode.outputs.max_targets }}" \
+            --target-stride "${{ steps.mode.outputs.target_stride }}" \
             --shard-id "${{ matrix.shard }}" \
             --num-shards 8 \
             --workers "${{ github.event.inputs.workers || '4' }}" \
