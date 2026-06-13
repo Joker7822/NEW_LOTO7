@@ -1,6 +1,6 @@
 # NEW_LOTO7
 
-LOTO7 のCSV更新、walk-forwardバックテスト、最新予測、進化型モデル探索を実行するリポジトリです。
+LOTO7 のCSV更新、walk-forwardバックテスト、最新予測、進化型モデル探索、ML拡張スタックを実行するリポジトリです。
 
 ## 追加済みパイプライン
 
@@ -107,6 +107,55 @@ DISABLE_GIT_PUSH=1 python loto7_evolution_trainer.py \
 - 定期実行: 毎週土曜 03:30 JST
 - 世代途中: 5世代ごとにcommit/push
 - 出力artifact: `loto7-evolution-outputs`
+
+## ML拡張スタック
+
+以下を追加しました。
+
+- `requirements-ml.txt`
+- `loto7_ml_stack.py`
+- `.github/workflows/loto7_ml_stack.yml`
+
+実装内容:
+
+- MemoryBank
+- MetaClassifier
+- LightGBM
+- CatBoost
+- XGBoost
+- Optuna
+- SHAP
+
+手動実行:
+
+```bash
+pip install -r requirements-ml.txt
+python loto7_ml_stack.py \
+  --csv loto7.csv \
+  --output-dir outputs/ml_stack \
+  --min-train 60 \
+  --max-targets 240 \
+  --candidates-per-draw 80 \
+  --label label_4plus \
+  --optuna-trials 50
+```
+
+GitHub Actions:
+
+- Actions > LOTO7 ML Stack > Run workflow
+
+出力:
+
+|ファイル|内容|
+|---|---|
+|`outputs/ml_stack/ml_training_frame.csv`|MetaClassifier用教師データ|
+|`outputs/ml_stack/ml_model_report.csv`|LightGBM/CatBoost/XGBoost等の評価|
+|`outputs/ml_stack/optuna_best_params.json`|Optuna最良パラメータ|
+|`outputs/ml_stack/shap_feature_importance.csv`|SHAP特徴量重要度|
+|`outputs/ml_stack/loto7_memorybank_mb4.csv`|4個構造MemoryBank|
+|`outputs/ml_stack/loto7_memorybank_mb5.csv`|5個構造MemoryBank|
+|`outputs/ml_stack/loto7_memorybank_mb6.csv`|6個構造MemoryBank|
+|`outputs/ml_stack/ml_stack_status.json`|実行結果・エラー情報|
 
 ## 出力ファイル
 
