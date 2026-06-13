@@ -115,7 +115,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [0, 1, 2, 3]
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
 
     steps:
       - name: Checkout repository
@@ -167,7 +167,7 @@ jobs:
             --max-targets "${{ github.event.inputs.max_targets || 'all' }}" \
             --target-stride "${{ github.event.inputs.target_stride || '1' }}" \
             --shard-id "${{ matrix.shard }}" \
-            --num-shards 4 \
+            --num-shards 8 \
             --workers "${{ github.event.inputs.workers || '4' }}" \
             --resume \
             --push-every-generation 1 \
