@@ -44,6 +44,14 @@ on:
         options:
           - "false"
           - "true"
+      run_ml_stack:
+        description: "Run MemoryBank/MetaClassifier/LightGBM/CatBoost/XGBoost/Optuna/SHAP after evolution"
+        required: true
+        type: choice
+        default: "true"
+        options:
+          - "true"
+          - "false"
   schedule:
     - cron: "0 12 * * 5"
 
@@ -226,4 +234,119 @@ jobs:
             outputs/evolution_history_*.csv
             outputs/evolution_best_summary_*.csv
             outputs/evolution_best_prediction_*.csv
+          if-no-files-found: ignore
+
+  ml-stack:
+    needs: evolve
+    if: ${{ always() && (github.event_name != 'workflow_dispatch' || github.event.inputs.run_ml_stack != 'false') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ML dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          if [ -f requirements-ml.txt ]; then
+            python -m pip install -r requirements-ml.txt
+          fi
+
+      - name: Run ML stack
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: |
+          set -euo pipefail
+          python loto7_ml_stack.py \
+            --csv loto7.csv \
+            --output-dir outputs/ml_stack \
+            --min-train 60 \
+            --max-targets 240 \
+            --candidates-per-draw 80 \
+            --label label_4plus \
+            --optuna-trials 50
+
+      - name: Commit ML outputs
+        if: always()
+        run: |
+          set -euo pipefail
+          git add -f outputs/ml_stack/*.csv outputs/ml_stack/*.json || true
+          if git diff --cached --quiet; then
+            echo "No ML output changes"
+            exit 0
+          fi
+          git commit -m "Update LOTO7 ML stack outputs [skip ci]"
+          git pull --rebase --autostash || true
+          git push || true
+
+      - name: Upload ML artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: loto7-ml-stack-outputs
+          path: |
+            outputs/ml_stack/*.csv
+            outputs/ml_stack/*.json
+          if-no-files-found: ignore
+
+  monitor:
+    needs: [evolve, ml-stack]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run progress monitor
+        run: python loto7_progress_monitor.py
+
+      - name: Commit monitor outputs
+        if: always()
+        run: |
+          set -euo pipefail
+          git add -f outputs/loto7_progress_summary.json outputs/loto7_progress_summary.md || true
+          if git diff --cached --quiet; then
+            echo "No monitor output changes"
+            exit 0
+          fi
+          git commit -m "Update LOTO7 progress summary [skip ci]"
+          git pull --rebase --autostash || true
+          git push || true
+
+      - name: Upload progress summary
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: loto7-progress-summary
+          path: |
+            outputs/loto7_progress_summary.json
+            outputs/loto7_progress_summary.md
           if-no-files-found: ignore
