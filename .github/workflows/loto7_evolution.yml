@@ -3,47 +3,212 @@ name: LOTO7 Evolution Trainer
 on:
   workflow_dispatch:
     inputs:
+      evolution_mode:
+        description: "Execution mode"
+        required: true
+        type: choice
+        default: "recommended"
+        options:
+          - "recommended"
+          - "full_power"
+          - "custom"
       generations:
-        description: "Number of evolution generations"
+        description: "Custom generations. Used only when evolution_mode=custom."
         required: false
         default: "100"
       population:
-        description: "Population size per generation"
+        description: "Custom population. Used only when evolution_mode=custom."
         required: false
-        default: "100"
+        default: "200"
       max_targets:
-        description: "Backtest target count used per genome"
+        description: "Custom max targets. Used only when evolution_mode=custom. Use all for full walk-forward."
         required: false
-        default: "all"
+        default: "240"
       target_stride:
-        description: "1 = every draw, 2 = every other draw"
+        description: "Custom target stride. Used only when evolution_mode=custom."
+        required: true
+        type: choice
+        default: "2"
+        options:
+          - "1"
+          - "2"
+      workers:
+        description: "Workers inside each shard"
         required: false
-        default: "1"
+        default: "4"
+      reset_state:
+        description: "Start from scratch instead of resume"
+        required: true
+        type: choice
+        default: "false"
+        options:
+          - "false"
+          - "true"
+      run_ml_stack:
+        description: "Run MemoryBank/MetaClassifier/LightGBM/CatBoost/XGBoost/Optuna/SHAP after evolution"
+        required: true
+        type: choice
+        default: "true"
+        options:
+          - "true"
+          - "false"
+      run_complete_ai:
+        description: "Run complete AI: Meta Ensemble, Master Champion, ROI, Bayesian, Monte Carlo, MCTS, Dashboard"
+        required: true
+        type: choice
+        default: "true"
+        options:
+          - "true"
+          - "false"
   schedule:
-    - cron: "30 18 * * 5"
+    # JST 00:00 / 08:00 / 16:00 = UTC 15:00 / 23:00 / 07:00
+    - cron: "0 15,23,7 * * *"
 
 permissions:
   contents: write
 
+defaults:
+  run:
+    shell: bash
+
 concurrency:
-  group: loto7-evolution
+  group: loto7-evolution-${{ github.ref_name }}
   cancel-in-progress: false
 
 jobs:
-  evolve:
+  scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 355
+    timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-python@v5
+      - name: Resolve branch
+        id: br
+        run: |
+          set -euo pipefail
+          echo "branch=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Run FULL evolution mode
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            python -m pip install -r requirements.txt
+          fi
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+
+      - name: Run scraping script
+        run: xvfb-run -a python scrapingloto7.py
+
+      - name: Commit and push loto7.csv if changed
+        run: |
+          set -euo pipefail
+          BRANCH="${{ steps.br.outputs.branch }}"
+          git fetch origin "${BRANCH}"
+          git pull --rebase --autostash origin "${BRANCH}"
+
+          if [ -f loto7.csv ]; then
+            git add loto7.csv
+          fi
+
+          if git diff --cached --quiet; then
+            echo "No changes to loto7.csv"
+            exit 0
+          fi
+
+          git commit -m "Auto update loto7.csv [skip ci]"
+          git push --force-with-lease origin HEAD:"${BRANCH}"
+
+  evolve:
+    needs: scrape
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            python -m pip install -r requirements.txt
+          fi
+
+      - name: Reset state if requested
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.reset_state == 'true' }}
+        run: |
+          rm -f outputs/evolution_state_*.json || true
+          rm -f outputs/evolution_history_*.csv || true
+          rm -f outputs/evolution_best_summary_*.csv || true
+          rm -f outputs/evolution_best_prediction_*.csv || true
+          rm -f loto7_best_model*.json || true
+
+      - name: Resolve evolution mode
+        id: mode
+        run: |
+          set -euo pipefail
+          MODE="${{ github.event.inputs.evolution_mode || 'recommended' }}"
+
+          if [ "$MODE" = "full_power" ]; then
+            GENERATIONS="200"
+            POPULATION="400"
+            MAX_TARGETS="all"
+            TARGET_STRIDE="2"
+          elif [ "$MODE" = "custom" ]; then
+            GENERATIONS="${{ github.event.inputs.generations || '100' }}"
+            POPULATION="${{ github.event.inputs.population || '200' }}"
+            MAX_TARGETS="${{ github.event.inputs.max_targets || '240' }}"
+            TARGET_STRIDE="${{ github.event.inputs.target_stride || '2' }}"
+          else
+            MODE="recommended"
+            GENERATIONS="100"
+            POPULATION="200"
+            MAX_TARGETS="240"
+            TARGET_STRIDE="2"
+          fi
+
+          echo "mode=${MODE}" >> "$GITHUB_OUTPUT"
+          echo "generations=${GENERATIONS}" >> "$GITHUB_OUTPUT"
+          echo "population=${POPULATION}" >> "$GITHUB_OUTPUT"
+          echo "max_targets=${MAX_TARGETS}" >> "$GITHUB_OUTPUT"
+          echo "target_stride=${TARGET_STRIDE}" >> "$GITHUB_OUTPUT"
+
+          echo "[MODE] mode=${MODE} generations=${GENERATIONS} population=${POPULATION} max_targets=${MAX_TARGETS} target_stride=${TARGET_STRIDE} shards=8 workers=${{ github.event.inputs.workers || '4' }}"
+
+      - name: Run evolution mode with resume, shard, and workers
         env:
           PYTHONUNBUFFERED: "1"
         run: |
@@ -52,23 +217,202 @@ jobs:
             --csv loto7.csv \
             --output-dir outputs \
             --best-model loto7_best_model.json \
-            --generations "${{ github.event.inputs.generations || '100' }}" \
-            --population "${{ github.event.inputs.population || '100' }}" \
+            --generations "${{ steps.mode.outputs.generations }}" \
+            --population "${{ steps.mode.outputs.population }}" \
             --elite-count 10 \
             --purchase-count 5 \
             --min-train-draws 60 \
-            --max-targets 999999 \
-            --target-stride "${{ github.event.inputs.target_stride || '1' }}" \
+            --max-targets "${{ steps.mode.outputs.max_targets }}" \
+            --target-stride "${{ steps.mode.outputs.target_stride }}" \
+            --shard-id "${{ matrix.shard }}" \
+            --num-shards 8 \
+            --workers "${{ github.event.inputs.workers || '4' }}" \
+            --resume \
             --push-every-generation 1 \
+            --push-every-genome 0 \
             --push-final
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload shard artifacts
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: loto7-evolution-outputs
+          name: loto7-evolution-outputs-shard-${{ matrix.shard }}
           path: |
-            loto7_best_model.json
-            outputs/evolution_history.csv
-            outputs/evolution_best_summary.csv
-            outputs/evolution_best_prediction.csv
+            loto7_best_model*.json
+            outputs/evolution_state_*.json
+            outputs/evolution_history_*.csv
+            outputs/evolution_best_summary_*.csv
+            outputs/evolution_best_prediction_*.csv
+          if-no-files-found: ignore
+
+  ml-stack:
+    needs: evolve
+    if: ${{ always() && (github.event_name != 'workflow_dispatch' || github.event.inputs.run_ml_stack != 'false') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ML dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          if [ -f requirements-ml.txt ]; then
+            python -m pip install -r requirements-ml.txt
+          fi
+
+      - name: Run ML stack
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: |
+          set -euo pipefail
+          python loto7_ml_stack.py \
+            --csv loto7.csv \
+            --output-dir outputs/ml_stack \
+            --min-train 60 \
+            --max-targets 240 \
+            --candidates-per-draw 80 \
+            --label label_4plus \
+            --optuna-trials 50
+
+      - name: Commit ML outputs
+        if: always()
+        run: |
+          set -euo pipefail
+          git add -f outputs/ml_stack/*.csv outputs/ml_stack/*.json || true
+          if git diff --cached --quiet; then
+            echo "No ML output changes"
+            exit 0
+          fi
+          git commit -m "Update LOTO7 ML stack outputs [skip ci]"
+          git pull --rebase --autostash || true
+          git push || true
+
+      - name: Upload ML artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: loto7-ml-stack-outputs
+          path: |
+            outputs/ml_stack/*.csv
+            outputs/ml_stack/*.json
+          if-no-files-found: ignore
+
+  complete-ai:
+    needs: [evolve, ml-stack]
+    if: ${{ always() && (github.event_name != 'workflow_dispatch' || github.event.inputs.run_complete_ai != 'false') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run complete AI system
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: |
+          set -euo pipefail
+          python loto7_complete_ai_system.py \
+            --csv loto7.csv \
+            --output-dir outputs/complete_ai \
+            --monte-carlo-sims 20000 \
+            --roi-window 100
+
+      - name: Commit complete AI outputs
+        if: always()
+        run: |
+          set -euo pipefail
+          git add -f outputs/complete_ai/*.csv outputs/complete_ai/*.json outputs/complete_ai/*.md || true
+          if git diff --cached --quiet; then
+            echo "No complete AI output changes"
+            exit 0
+          fi
+          git commit -m "Update LOTO7 complete AI outputs [skip ci]"
+          git pull --rebase --autostash || true
+          git push || true
+
+      - name: Upload complete AI artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: loto7-complete-ai-outputs
+          path: |
+            outputs/complete_ai/*.csv
+            outputs/complete_ai/*.json
+            outputs/complete_ai/*.md
+          if-no-files-found: ignore
+
+  monitor:
+    needs: [evolve, ml-stack, complete-ai]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run progress monitor
+        run: python loto7_progress_monitor.py
+
+      - name: Commit monitor outputs
+        if: always()
+        run: |
+          set -euo pipefail
+          git add -f outputs/loto7_progress_summary.json outputs/loto7_progress_summary.md || true
+          if git diff --cached --quiet; then
+            echo "No monitor output changes"
+            exit 0
+          fi
+          git commit -m "Update LOTO7 progress summary [skip ci]"
+          git pull --rebase --autostash || true
+          git push || true
+
+      - name: Upload progress summary
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: loto7-progress-summary
+          path: |
+            outputs/loto7_progress_summary.json
+            outputs/loto7_progress_summary.md
           if-no-files-found: ignore
