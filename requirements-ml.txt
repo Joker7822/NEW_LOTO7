@@ -6,3 +6,4 @@ lightgbm>=4.3
 catboost>=1.2
 optuna>=3.6
 shap>=0.45
+torch>=2.2
