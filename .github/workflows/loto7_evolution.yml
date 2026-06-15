@@ -52,6 +52,14 @@ on:
         options:
           - "true"
           - "false"
+      run_complete_ai:
+        description: "Run complete AI: Meta Ensemble, Master Champion, ROI, Bayesian, Monte Carlo, MCTS, Dashboard"
+        required: true
+        type: choice
+        default: "true"
+        options:
+          - "true"
+          - "false"
   schedule:
     # JST 00:00 / 08:00 / 16:00 = UTC 15:00 / 23:00 / 07:00
     - cron: "0 15,23,7 * * *"
@@ -304,8 +312,65 @@ jobs:
             outputs/ml_stack/*.json
           if-no-files-found: ignore
 
-  monitor:
+  complete-ai:
     needs: [evolve, ml-stack]
+    if: ${{ always() && (github.event_name != 'workflow_dispatch' || github.event.inputs.run_complete_ai != 'false') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run complete AI system
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: |
+          set -euo pipefail
+          python loto7_complete_ai_system.py \
+            --csv loto7.csv \
+            --output-dir outputs/complete_ai \
+            --monte-carlo-sims 20000 \
+            --roi-window 100
+
+      - name: Commit complete AI outputs
+        if: always()
+        run: |
+          set -euo pipefail
+          git add -f outputs/complete_ai/*.csv outputs/complete_ai/*.json outputs/complete_ai/*.md || true
+          if git diff --cached --quiet; then
+            echo "No complete AI output changes"
+            exit 0
+          fi
+          git commit -m "Update LOTO7 complete AI outputs [skip ci]"
+          git pull --rebase --autostash || true
+          git push || true
+
+      - name: Upload complete AI artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: loto7-complete-ai-outputs
+          path: |
+            outputs/complete_ai/*.csv
+            outputs/complete_ai/*.json
+            outputs/complete_ai/*.md
+          if-no-files-found: ignore
+
+  monitor:
+    needs: [evolve, ml-stack, complete-ai]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 30
