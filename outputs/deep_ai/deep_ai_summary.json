@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-15T20:27:23.608851+00:00",
+  "generated_at": "2026-06-15T21:22:58.561973+00:00",
   "device": "cpu",
   "transformer": {
     "seq_len": 24,
@@ -44,75 +44,75 @@
     "top_numbers": [
       {
         "number": 27,
-        "transformer_prob": 0.5393229126930237,
-        "ppo_prob": 0.4712956249713897,
-        "deep_score": 0.5087106332182885
+        "transformer_prob": 0.5393232107162476,
+        "ppo_prob": 0.4712958037853241,
+        "deep_score": 0.508710877597332
       },
       {
         "number": 16,
-        "transformer_prob": 0.3888857066631317,
-        "ppo_prob": 0.6232114434242249,
-        "deep_score": 0.4943322882056237
+        "transformer_prob": 0.3888854682445526,
+        "ppo_prob": 0.6232113242149353,
+        "deep_score": 0.49433210343122486
       },
       {
         "number": 3,
-        "transformer_prob": 0.3078825175762176,
-        "ppo_prob": 0.6879984736442566,
-        "deep_score": 0.4789346978068352
+        "transformer_prob": 0.3078824281692505,
+        "ppo_prob": 0.6879984140396118,
+        "deep_score": 0.4789346218109131
       },
       {
         "number": 25,
         "transformer_prob": 0.3373983502388,
-        "ppo_prob": 0.6089839935302734,
-        "deep_score": 0.45961188971996303
+        "ppo_prob": 0.608984112739563,
+        "deep_score": 0.45961194336414335
       },
       {
         "number": 28,
-        "transformer_prob": 0.2296103686094284,
-        "ppo_prob": 0.7154389023780823,
-        "deep_score": 0.4482332088053227
+        "transformer_prob": 0.2296104580163955,
+        "ppo_prob": 0.715438961982727,
+        "deep_score": 0.4482332848012447
       },
       {
         "number": 8,
-        "transformer_prob": 0.2387529611587524,
-        "ppo_prob": 0.6142128109931946,
-        "deep_score": 0.4077098935842514
+        "transformer_prob": 0.238753393292427,
+        "ppo_prob": 0.6142129898071289,
+        "deep_score": 0.40771021172404287
       },
       {
         "number": 37,
-        "transformer_prob": 0.2679157853126526,
-        "ppo_prob": 0.5065166354179382,
-        "deep_score": 0.37528616786003116
+        "transformer_prob": 0.2679160535335541,
+        "ppo_prob": 0.5065167546272278,
+        "deep_score": 0.3752863690257073
       },
       {
         "number": 10,
-        "transformer_prob": 0.2517932951450348,
-        "ppo_prob": 0.4937316179275512,
-        "deep_score": 0.3606655403971672
+        "transformer_prob": 0.2517932057380676,
+        "ppo_prob": 0.4937318563461303,
+        "deep_score": 0.3606655985116959
       },
       {
         "number": 20,
-        "transformer_prob": 0.2406473308801651,
-        "ppo_prob": 0.4818793535232544,
-        "deep_score": 0.3492017410695553
+        "transformer_prob": 0.2406472563743591,
+        "ppo_prob": 0.4818795919418335,
+        "deep_score": 0.3492018073797226
       },
       {
         "number": 17,
-        "transformer_prob": 0.2163179218769073,
-        "ppo_prob": 0.4930403232574463,
-        "deep_score": 0.34084300249814986
+        "transformer_prob": 0.2163180708885193,
+        "ppo_prob": 0.4930404424667358,
+        "deep_score": 0.34084313809871675
       },
       {
         "number": 6,
-        "transformer_prob": 0.1579711288213729,
-        "ppo_prob": 0.5643521547317505,
-        "deep_score": 0.3408425904810429
+        "transformer_prob": 0.1579711884260177,
+        "ppo_prob": 0.5643524527549744,
+        "deep_score": 0.34084275737404823
       },
       {
         "number": 32,
-        "transformer_prob": 0.1637634038925171,
-        "ppo_prob": 0.5495119690895081,
-        "deep_score": 0.33735025823116305
+        "transformer_prob": 0.1637634336948394,
+        "ppo_prob": 0.5495122671127319,
+        "deep_score": 0.33735040873289107
       }
     ]
   },
