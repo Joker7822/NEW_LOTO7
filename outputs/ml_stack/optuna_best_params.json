@@ -1,0 +1,6 @@
+{
+  "best_value": 0.9872815827792494,
+  "model": "rf",
+  "n_estimators": 206,
+  "max_depth": 6
+}
