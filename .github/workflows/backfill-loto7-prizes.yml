@@ -1,0 +1,66 @@
+name: Backfill LOTO7 prize amounts
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/backfill-loto7-prizes.yml"
+      - "scrapingloto7.py"
+
+permissions:
+  contents: write
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Backfill historical prize amounts
+        run: |
+          python scrapingloto7.py --csv loto7.csv --months 999
+
+      - name: Verify prize columns
+        run: |
+          python - <<'PY'
+          import csv
+          from pathlib import Path
+
+          path = Path("loto7.csv")
+          rows = list(csv.DictReader(path.open(encoding="utf-8-sig")))
+          prize_cols = [
+              "1等当選金額", "2等当選金額", "3等当選金額",
+              "4等当選金額", "5等当選金額", "6等当選金額",
+          ]
+          filled = sum(1 for row in rows if any((row.get(col) or "").strip() for col in prize_cols))
+          missing = len(rows) - filled
+          print(f"rows={len(rows)} prize_filled={filled} missing={missing}")
+
+          if len(rows) < 600:
+              raise SystemExit("loto7.csv rows are unexpectedly small")
+          if filled < 600:
+              raise SystemExit("historical prize amount backfill looks incomplete")
+          PY
+
+      - name: Commit updated loto7.csv
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add loto7.csv
+          if git diff --cached --quiet; then
+            echo "No loto7.csv changes to commit."
+          else
+            git commit -m "Backfill LOTO7 historical prize amounts"
+            git pull --rebase --autostash
+            git push
+          fi
