@@ -31,8 +31,9 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional
 
+# generations は「何世代まで進めるか」の上限なので、resume時に増やす運用を許可する。
+# 以下の検証条件が変わると過去評価と新規評価が混ざるため停止する。
 CHECK_KEYS = [
-    "generations",
     "population",
     "elite_count",
     "purchase_count",
@@ -71,6 +72,13 @@ def validate_resume_args(state: Dict[str, object], args: argparse.Namespace) -> 
         current = getattr(args, key)
         if str(previous) != str(current):
             mismatches.append((key, previous, current))
+
+    saved_generation = int(state.get("generation", 0))
+    if args.generations <= saved_generation:
+        raise SystemExit(
+            f"--generations must be greater than saved generation when resuming: "
+            f"saved_generation={saved_generation}, generations={args.generations}"
+        )
 
     if mismatches:
         lines = ["Resume条件が前回と一致しません。安全のため停止します。"]
