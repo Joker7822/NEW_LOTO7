@@ -9,11 +9,11 @@
   "reward": {
     "match_reward": 0.7142857142857143,
     "max_match": 5.0,
-    "roi": -0.48733333333333334,
-    "roi_reward": -0.48733333333333334,
+    "roi": -0.682,
+    "roi_reward": -0.682,
     "score_reward": 0.7891139888170506,
     "top_score": 26726.975523,
-    "total_reward": 0.3912141372656682
+    "total_reward": 0.3328141372656682
   },
   "seed_genome_file": "outputs/self_evolution/breeder_seed_genomes.json",
   "target_stride": 2
