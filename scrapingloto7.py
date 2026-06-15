@@ -10,6 +10,8 @@ NEW_LOTO7 リポジトリ内の loto7.csv を最新化する。
     - pandas など外部ライブラリは使わない
     - 既存の loto7.csv とマージ
     - 列順は predictor が読む形式に固定
+    - --all-history では 2013年4月から最新月までの月別URLを自前生成して、
+      過去の口数・当せん金額・キャリーオーバーも可能な限り埋める
 
 CSV形式:
     抽せん日,本数字,ボーナス数字,回別,1等口数,1等当選金額,...,6等口数,6等当選金額,キャリーオーバー
@@ -17,6 +19,7 @@ CSV形式:
 使い方:
     python scrapingloto7.py
     python scrapingloto7.py --csv loto7.csv --months 3
+    python scrapingloto7.py --csv loto7.csv --all-history
 """
 
 from __future__ import annotations
@@ -27,6 +30,8 @@ import datetime as dt
 import html as html_lib
 import re
 import sys
+import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional
@@ -34,6 +39,8 @@ from urllib.parse import urljoin
 
 
 RAKUTEN_PAST_INDEX = "https://takarakuji.rakuten.co.jp/backnumber/loto7_past/"
+RAKUTEN_MONTH_BASE = "https://takarakuji.rakuten.co.jp/backnumber/loto7/"
+LOTO7_FIRST_MONTH = "201304"
 FIELDNAMES = [
     "抽せん日",
     "本数字",
@@ -94,6 +101,37 @@ def parse_month_urls_from_past_index(past_index_html: str) -> List[str]:
     return [urljoin(RAKUTEN_PAST_INDEX, f"/backnumber/loto7/{key}/") for key in month_keys]
 
 
+def month_key_to_date(month_key: str) -> dt.date:
+    return dt.date(int(month_key[:4]), int(month_key[4:6]), 1)
+
+
+def date_to_month_key(value: dt.date) -> str:
+    return f"{value.year:04d}{value.month:02d}"
+
+
+def add_month(value: dt.date, months: int = 1) -> dt.date:
+    month_index = (value.year * 12 + value.month - 1) + months
+    year = month_index // 12
+    month = month_index % 12 + 1
+    return dt.date(year, month, 1)
+
+
+def build_month_urls(start_month: str = LOTO7_FIRST_MONTH, end_month: Optional[str] = None) -> List[str]:
+    """201304から最新月までの楽天月別バックナンバーURLを生成する。"""
+    start = month_key_to_date(start_month)
+    end = month_key_to_date(end_month) if end_month else dt.date.today().replace(day=1)
+    if end < start:
+        raise ValueError(f"end_month must be >= start_month: {start_month}..{end_month}")
+
+    keys: List[str] = []
+    cur = start
+    while cur <= end:
+        keys.append(date_to_month_key(cur))
+        cur = add_month(cur, 1)
+    keys = sorted(set(keys), reverse=True)
+    return [urljoin(RAKUTEN_MONTH_BASE, f"/backnumber/loto7/{key}/") for key in keys]
+
+
 def fmt_num_list(nums: Iterable[int]) -> str:
     return " ".join(f"{n:02d}" for n in nums)
 
@@ -122,8 +160,6 @@ def normalize_date(value: object) -> str:
             pass
 
     return text
-
-
 
 
 def normalize_money(value: object) -> str:
@@ -159,6 +195,7 @@ def parse_prize_rank(seg: str, rank: int) -> tuple[str, str]:
 def parse_carryover(seg: str) -> str:
     m = re.search(r"キャリーオーバー\s+([0-9,]+\s*円|該当なし)", seg)
     return normalize_money(m.group(1)) if m else ""
+
 
 def parse_draws_from_month_page(month_html: str) -> List[Dict[str, str]]:
     text = strip_html(month_html)
@@ -209,20 +246,67 @@ def parse_draws_from_month_page(month_html: str) -> List[Dict[str, str]]:
     return rows
 
 
-def fetch_latest_draws(months: int = 2) -> List[Dict[str, str]]:
+def dedupe_urls(urls: Iterable[str]) -> List[str]:
+    seen = set()
+    out = []
+    for url in urls:
+        if url in seen:
+            continue
+        seen.add(url)
+        out.append(url)
+    return out
+
+
+def fetch_latest_draws(
+    months: int = 2,
+    *,
+    all_history: bool = False,
+    from_month: str = LOTO7_FIRST_MONTH,
+    to_month: Optional[str] = None,
+    sleep_seconds: float = 0.15,
+) -> List[Dict[str, str]]:
     index_html = http_get(RAKUTEN_PAST_INDEX)
-    month_urls = parse_month_urls_from_past_index(index_html)
+    indexed_urls = parse_month_urls_from_past_index(index_html)
+    if not indexed_urls:
+        print("[WARN] 月別ページURLを一覧から抽出できません。生成URLで続行します。", file=sys.stderr)
+
+    if all_history or months >= 120:
+        # 楽天の過去一覧ページは直近月だけに絞られる場合があるため、
+        # 全期間バックフィルでは 201304 から最新月までのURLを自前生成する。
+        generated_urls = build_month_urls(from_month, to_month)
+        month_urls = dedupe_urls(generated_urls + indexed_urls)
+    else:
+        month_urls = indexed_urls[: max(1, months)]
+
     if not month_urls:
         raise RuntimeError("月別ページURLの抽出に失敗しました。")
 
     rows: List[Dict[str, str]] = []
-    for url in month_urls[: max(1, months)]:
-        html = http_get(url)
-        rows.extend(parse_draws_from_month_page(html))
+    ok_pages = 0
+    failed_pages = 0
+    empty_pages = 0
+    for idx, url in enumerate(month_urls, start=1):
+        try:
+            html = http_get(url)
+            parsed = parse_draws_from_month_page(html)
+            if parsed:
+                ok_pages += 1
+                rows.extend(parsed)
+            else:
+                empty_pages += 1
+                print(f"[WARN] no draws parsed: {url}", file=sys.stderr)
+        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError) as exc:
+            failed_pages += 1
+            print(f"[WARN] fetch failed: {url} ({exc})", file=sys.stderr)
+        if sleep_seconds > 0 and idx < len(month_urls):
+            time.sleep(sleep_seconds)
 
     if not rows:
         raise RuntimeError("当せん番号の抽出に失敗しました（0件）。")
 
+    print(
+        f"[FETCH] pages={len(month_urls)} ok={ok_pages} empty={empty_pages} failed={failed_pages} rows={len(rows)}"
+    )
     return rows
 
 
@@ -265,7 +349,15 @@ def merge_rows(existing: List[Dict[str, str]], latest: List[Dict[str, str]]) -> 
         merged[row_key(row)] = {key: row.get(key, "") for key in FIELDNAMES}
 
     for row in latest:
-        merged[row_key(row)] = {key: row.get(key, "") for key in FIELDNAMES}
+        key = row_key(row)
+        current = merged.get(key, {})
+        # 新規取得値を優先。ただし抽出できなかった空欄で既存の金額を消さない。
+        updated = {field: current.get(field, "") for field in FIELDNAMES}
+        for field in FIELDNAMES:
+            value = str(row.get(field, "")).strip()
+            if value:
+                updated[field] = value
+        merged[key] = updated
 
     # 同日重複が残るケースも日付で最終排除
     by_date: Dict[str, Dict[str, str]] = {}
@@ -284,26 +376,55 @@ def write_csv(csv_path: str, rows: List[Dict[str, str]]) -> None:
         writer.writerows(rows)
 
 
-def update_loto7_csv(csv_path: str = "loto7.csv", months: int = 2) -> List[Dict[str, str]]:
+def prize_filled_count(rows: List[Dict[str, str]]) -> int:
+    prize_cols = [f"{rank}等当選金額" for rank in range(1, 7)]
+    return sum(1 for row in rows if any(str(row.get(col, "")).strip() for col in prize_cols))
+
+
+def update_loto7_csv(
+    csv_path: str = "loto7.csv",
+    months: int = 2,
+    *,
+    all_history: bool = False,
+    from_month: str = LOTO7_FIRST_MONTH,
+    to_month: Optional[str] = None,
+    sleep_seconds: float = 0.15,
+) -> List[Dict[str, str]]:
     existing = read_existing_csv(csv_path)
-    latest = fetch_latest_draws(months=months)
+    latest = fetch_latest_draws(
+        months=months,
+        all_history=all_history,
+        from_month=from_month,
+        to_month=to_month,
+        sleep_seconds=sleep_seconds,
+    )
     merged = merge_rows(existing, latest)
     write_csv(csv_path, merged)
 
     existing_keys = {row_key(row) for row in existing}
     added_or_updated = [row for row in latest if row_key(row) not in existing_keys]
 
-    print(f"[OK] {csv_path}: existing={len(existing)} latest_fetch={len(latest)} merged={len(merged)}")
+    filled = prize_filled_count(merged)
+    print(
+        f"[OK] {csv_path}: existing={len(existing)} latest_fetch={len(latest)} "
+        f"merged={len(merged)} prize_filled={filled} missing_prize={len(merged) - filled}"
+    )
     if added_or_updated:
         print(f"[OK] {len(added_or_updated)}件の新規候補を取得しました。")
-        for row in sorted(added_or_updated, key=sort_key, reverse=True):
-            print(f"  {row['回別']} {row['抽せん日']} 本: {row['本数字']} B: {row['ボーナス数字']} 1等: {row.get('1等口数', '')} {row.get('1等当選金額', '')} CO: {row.get('キャリーオーバー', '')}")
+        for row in sorted(added_or_updated, key=sort_key, reverse=True)[:20]:
+            print(
+                f"  {row['回別']} {row['抽せん日']} 本: {row['本数字']} B: {row['ボーナス数字']} "
+                f"1等: {row.get('1等口数', '')} {row.get('1等当選金額', '')} CO: {row.get('キャリーオーバー', '')}"
+            )
     else:
-        print("[OK] 追加対象はありません。既に最新の可能性があります。")
+        print("[OK] 追加対象はありません。既存行の金額補完を行った可能性があります。")
 
     if merged:
         last = merged[-1]
-        print(f"[LATEST] {last['回別']} {last['抽せん日']} 本: {last['本数字']} B: {last['ボーナス数字']} 1等: {last.get('1等口数', '')} {last.get('1等当選金額', '')} CO: {last.get('キャリーオーバー', '')}")
+        print(
+            f"[LATEST] {last['回別']} {last['抽せん日']} 本: {last['本数字']} B: {last['ボーナス数字']} "
+            f"1等: {last.get('1等口数', '')} {last.get('1等当選金額', '')} CO: {last.get('キャリーオーバー', '')}"
+        )
 
     return merged
 
@@ -311,11 +432,22 @@ def update_loto7_csv(csv_path: str = "loto7.csv", months: int = 2) -> List[Dict[
 def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="loto7.csv を楽天バックナンバーから更新します。")
     parser.add_argument("--csv", default="loto7.csv", help="更新するCSVパス")
-    parser.add_argument("--months", type=int, default=3, help="取得する直近月数")
+    parser.add_argument("--months", type=int, default=3, help="取得する直近月数。120以上なら全期間生成URLを使用")
+    parser.add_argument("--all-history", action="store_true", help="2013年4月から最新月まで全期間を取得")
+    parser.add_argument("--from-month", default=LOTO7_FIRST_MONTH, help="全期間取得の開始月 YYYYMM")
+    parser.add_argument("--to-month", default=None, help="全期間取得の終了月 YYYYMM。省略時は今月")
+    parser.add_argument("--sleep", type=float, default=0.15, help="月別ページ取得間隔（秒）")
     args = parser.parse_args(argv)
 
     try:
-        update_loto7_csv(args.csv, months=max(1, args.months))
+        update_loto7_csv(
+            args.csv,
+            months=max(1, args.months),
+            all_history=args.all_history,
+            from_month=args.from_month,
+            to_month=args.to_month,
+            sleep_seconds=max(0.0, args.sleep),
+        )
     except Exception as exc:
         print(f"[ERROR] scraping failed: {exc}", file=sys.stderr)
         return 1
