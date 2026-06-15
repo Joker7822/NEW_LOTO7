@@ -1,0 +1,44 @@
+name: LOTO7 Smoke Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "*.py"
+      - ".github/workflows/loto7-smoke.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Compile Python files
+        run: |
+          python -m py_compile *.py
+
+      - name: Run minimal evolution smoke test
+        env:
+          DISABLE_GIT_PUSH: "1"
+        run: |
+          python loto7_evolution_trainer.py \
+            --population 4 \
+            --elite-count 1 \
+            --generations 1 \
+            --purchase-count 2 \
+            --min-train-draws 60 \
+            --max-targets 5 \
+            --push-every-generation 0 \
+            --max-runtime-minutes 10 \
+            --safe-exit-minutes 1
