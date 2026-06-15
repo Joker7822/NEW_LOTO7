@@ -76,6 +76,7 @@ jobs:
           python loto7_evaluate_backtest.py \
             --result-csv outputs/loto7_backtest_result.csv \
             --latest-prediction-csv outputs/loto7_latest_prediction.csv \
+            --draws-csv loto7.csv \
             --output outputs/loto7_backtest_evaluation.txt
 
           git config user.name "github-actions[bot]"
