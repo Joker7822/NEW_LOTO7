@@ -1,6 +1,6 @@
 # LOTO7 Self Evolution Report
 
-generated_at: 2026-06-15T20:25:43.206385+00:00
+generated_at: 2026-06-15T21:00:13.748782+00:00
 
 ## Distributed Integration
 - history rows: 3625
@@ -14,7 +14,7 @@ generated_at: 2026-06-15T20:25:43.206385+00:00
 
 ## Reinforcement Policy
 - last action: diversity
-- probabilities: `{"explore": 0.24403250715541022, "exploit": 0.24403250715541022, "diversity": 0.26790247853376925, "roi": 0.24403250715541022}`
+- probabilities: `{"explore": 0.24100819801268594, "exploit": 0.24100819801268594, "diversity": 0.27697540596194214, "roi": 0.24100819801268594}`
 - reward: `{"total_reward": 0.3912141372656682, "score_reward": 0.7891139888170506, "roi_reward": -0.48733333333333334, "match_reward": 0.7142857142857143, "top_score": 26726.975523, "roi": -0.48733333333333334, "max_match": 5.0}`
 
 ## Next Config
