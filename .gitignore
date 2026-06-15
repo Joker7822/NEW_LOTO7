@@ -15,6 +15,15 @@ env/
 outputs/
 *.log
 
+# Deprecated root generated LOTO7 outputs
+latest_loto7_prediction.txt
+loto7_predictions.csv
+loto7_backtest_summary.csv
+loto7_backtest_detail.csv
+loto7_backtest_report.txt
+loto7_backtest_resume.json
+loto7_memorybank*.csv
+
 # ML / tuner / experiment outputs
 lightning_logs/
 keras_tuner_dir/
