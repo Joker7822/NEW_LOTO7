@@ -1,0 +1,246 @@
+{
+  "breeding": {
+    "child_count": 64,
+    "parent_count": 12,
+    "top_parent_score": 26726.97552347337
+  },
+  "distributed": {
+    "generation_stats": [
+      {
+        "count": 50,
+        "generation": 15,
+        "max_match": 6,
+        "score_avg": 10131.794496839995,
+        "score_max": 16913.294277
+      },
+      {
+        "count": 50,
+        "generation": 16,
+        "max_match": 6,
+        "score_avg": 10047.464249980003,
+        "score_max": 16060.381673
+      },
+      {
+        "count": 50,
+        "generation": 17,
+        "max_match": 6,
+        "score_avg": 9486.864778220002,
+        "score_max": 16250.857662
+      },
+      {
+        "count": 50,
+        "generation": 18,
+        "max_match": 6,
+        "score_avg": 9415.3051332,
+        "score_max": 16719.050082
+      },
+      {
+        "count": 50,
+        "generation": 19,
+        "max_match": 6,
+        "score_avg": 9244.109043279997,
+        "score_max": 12498.569176
+      },
+      {
+        "count": 50,
+        "generation": 20,
+        "max_match": 6,
+        "score_avg": 10304.851645260002,
+        "score_max": 17119.440688
+      },
+      {
+        "count": 50,
+        "generation": 21,
+        "max_match": 6,
+        "score_avg": 10390.413092739998,
+        "score_max": 17080.361684
+      },
+      {
+        "count": 50,
+        "generation": 22,
+        "max_match": 6,
+        "score_avg": 9829.229688679998,
+        "score_max": 16482.534065
+      },
+      {
+        "count": 25,
+        "generation": 23,
+        "max_match": 6,
+        "score_avg": 9983.376105919999,
+        "score_max": 16059.78352
+      },
+      {
+        "count": 25,
+        "generation": 24,
+        "max_match": 6,
+        "score_avg": 9305.45086464,
+        "score_max": 15539.146276
+      },
+      {
+        "count": 25,
+        "generation": 25,
+        "max_match": 5,
+        "score_avg": 8841.187595959998,
+        "score_max": 11789.953366
+      },
+      {
+        "count": 25,
+        "generation": 26,
+        "max_match": 6,
+        "score_avg": 9679.75704292,
+        "score_max": 16684.827562
+      },
+      {
+        "count": 25,
+        "generation": 27,
+        "max_match": 6,
+        "score_avg": 9731.56612804,
+        "score_max": 15555.772
+      },
+      {
+        "count": 25,
+        "generation": 28,
+        "max_match": 6,
+        "score_avg": 9522.551881919999,
+        "score_max": 16719.479528
+      },
+      {
+        "count": 25,
+        "generation": 29,
+        "max_match": 6,
+        "score_avg": 10046.7428192,
+        "score_max": 16153.338948
+      },
+      {
+        "count": 25,
+        "generation": 30,
+        "max_match": 6,
+        "score_avg": 9770.90670736,
+        "score_max": 16160.285396
+      },
+      {
+        "count": 25,
+        "generation": 31,
+        "max_match": 6,
+        "score_avg": 9652.211261679999,
+        "score_max": 13241.877759
+      },
+      {
+        "count": 25,
+        "generation": 32,
+        "max_match": 6,
+        "score_avg": 9631.57592648,
+        "score_max": 13322.752479
+      },
+      {
+        "count": 25,
+        "generation": 33,
+        "max_match": 6,
+        "score_avg": 9204.31379912,
+        "score_max": 12498.998002
+      },
+      {
+        "count": 25,
+        "generation": 34,
+        "max_match": 6,
+        "score_avg": 9150.903966679998,
+        "score_max": 12073.270023
+      }
+    ],
+    "history_files": [
+      "outputs/evolution_history_shard00_of_04.csv",
+      "outputs/evolution_history_shard00_of_08.csv",
+      "outputs/evolution_history_shard01_of_04.csv",
+      "outputs/evolution_history_shard01_of_08.csv",
+      "outputs/evolution_history_shard02_of_04.csv",
+      "outputs/evolution_history_shard02_of_08.csv",
+      "outputs/evolution_history_shard03_of_04.csv",
+      "outputs/evolution_history_shard03_of_08.csv",
+      "outputs/evolution_history_shard04_of_08.csv",
+      "outputs/evolution_history_shard05_of_08.csv",
+      "outputs/evolution_history_shard06_of_08.csv",
+      "outputs/evolution_history_shard07_of_08.csv"
+    ],
+    "max_generation": 34,
+    "row_count": 3525,
+    "top_score": 26726.975523
+  },
+  "next_config": {
+    "bred_child_count": 64,
+    "evolution_mode": "recommended",
+    "generations": 100,
+    "max_targets": 240,
+    "mutation_mode": "diversity",
+    "policy_action": "diversity",
+    "population": 240,
+    "reward": {
+      "match_reward": 0.7142857142857143,
+      "max_match": 5.0,
+      "roi": -0.48733333333333334,
+      "roi_reward": -0.48733333333333334,
+      "score_reward": 0.7891139888170506,
+      "top_score": 26726.975523,
+      "total_reward": 0.3912141372656682
+    },
+    "seed_genome_file": "outputs/self_evolution/breeder_seed_genomes.json",
+    "target_stride": 2
+  },
+  "policy": {
+    "counts": {
+      "diversity": 1,
+      "exploit": 0,
+      "explore": 0,
+      "roi": 0
+    },
+    "history": [
+      {
+        "action": "diversity",
+        "match_reward": 0.7142857142857143,
+        "max_match": 5.0,
+        "probs_before": {
+          "diversity": 0.25,
+          "exploit": 0.25,
+          "explore": 0.25,
+          "roi": 0.25
+        },
+        "roi": -0.48733333333333334,
+        "roi_reward": -0.48733333333333334,
+        "score_reward": 0.7891139888170506,
+        "time": "2026-06-15T14:23:45.383938+00:00",
+        "top_score": 26726.975523,
+        "total_reward": 0.3912141372656682
+      }
+    ],
+    "last_action": "diversity",
+    "last_reward": {
+      "match_reward": 0.7142857142857143,
+      "max_match": 5.0,
+      "roi": -0.48733333333333334,
+      "roi_reward": -0.48733333333333334,
+      "score_reward": 0.7891139888170506,
+      "top_score": 26726.975523,
+      "total_reward": 0.3912141372656682
+    },
+    "probs": {
+      "diversity": 0.2589051978143389,
+      "exploit": 0.24703160072855368,
+      "explore": 0.24703160072855368,
+      "roi": 0.24703160072855368
+    },
+    "weights": {
+      "diversity": 0.03520927235391014,
+      "exploit": -0.011736424117970046,
+      "explore": -0.011736424117970046,
+      "roi": -0.011736424117970046
+    }
+  },
+  "reward": {
+    "match_reward": 0.7142857142857143,
+    "max_match": 5.0,
+    "roi": -0.48733333333333334,
+    "roi_reward": -0.48733333333333334,
+    "score_reward": 0.7891139888170506,
+    "top_score": 26726.975523,
+    "total_reward": 0.3912141372656682
+  }
+}

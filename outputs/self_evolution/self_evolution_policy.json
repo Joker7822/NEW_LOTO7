@@ -1,0 +1,49 @@
+{
+  "counts": {
+    "diversity": 1,
+    "exploit": 0,
+    "explore": 0,
+    "roi": 0
+  },
+  "history": [
+    {
+      "action": "diversity",
+      "match_reward": 0.7142857142857143,
+      "max_match": 5.0,
+      "probs_before": {
+        "diversity": 0.25,
+        "exploit": 0.25,
+        "explore": 0.25,
+        "roi": 0.25
+      },
+      "roi": -0.48733333333333334,
+      "roi_reward": -0.48733333333333334,
+      "score_reward": 0.7891139888170506,
+      "time": "2026-06-15T14:23:45.383938+00:00",
+      "top_score": 26726.975523,
+      "total_reward": 0.3912141372656682
+    }
+  ],
+  "last_action": "diversity",
+  "last_reward": {
+    "match_reward": 0.7142857142857143,
+    "max_match": 5.0,
+    "roi": -0.48733333333333334,
+    "roi_reward": -0.48733333333333334,
+    "score_reward": 0.7891139888170506,
+    "top_score": 26726.975523,
+    "total_reward": 0.3912141372656682
+  },
+  "probs": {
+    "diversity": 0.2589051978143389,
+    "exploit": 0.24703160072855368,
+    "explore": 0.24703160072855368,
+    "roi": 0.24703160072855368
+  },
+  "weights": {
+    "diversity": 0.03520927235391014,
+    "exploit": -0.011736424117970046,
+    "explore": -0.011736424117970046,
+    "roi": -0.011736424117970046
+  }
+}
