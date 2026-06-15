@@ -63,25 +63,25 @@
         "score_max": 16482.534065
       },
       {
-        "count": 25,
+        "count": 50,
         "generation": 23,
         "max_match": 6,
-        "score_avg": 9983.376105919999,
-        "score_max": 16059.78352
+        "score_avg": 9936.094989239997,
+        "score_max": 19281.300103
       },
       {
-        "count": 25,
+        "count": 50,
         "generation": 24,
         "max_match": 6,
-        "score_avg": 9305.45086464,
-        "score_max": 15539.146276
+        "score_avg": 9651.133163339997,
+        "score_max": 16190.452396
       },
       {
-        "count": 25,
+        "count": 50,
         "generation": 25,
-        "max_match": 5,
-        "score_avg": 8841.187595959998,
-        "score_max": 11789.953366
+        "max_match": 6,
+        "score_avg": 9809.3154029,
+        "score_max": 20226.079173
       },
       {
         "count": 25,
@@ -162,7 +162,7 @@
       "outputs/evolution_history_shard07_of_08.csv"
     ],
     "max_generation": 34,
-    "row_count": 3525,
+    "row_count": 3625,
     "top_score": 26726.975523
   },
   "next_config": {
@@ -187,7 +187,7 @@
   },
   "policy": {
     "counts": {
-      "diversity": 1,
+      "diversity": 2,
       "exploit": 0,
       "explore": 0,
       "roi": 0
@@ -209,6 +209,23 @@
         "time": "2026-06-15T14:23:45.383938+00:00",
         "top_score": 26726.975523,
         "total_reward": 0.3912141372656682
+      },
+      {
+        "action": "diversity",
+        "match_reward": 0.7142857142857143,
+        "max_match": 5.0,
+        "probs_before": {
+          "diversity": 0.2589051978143389,
+          "exploit": 0.24703160072855368,
+          "explore": 0.24703160072855368,
+          "roi": 0.24703160072855368
+        },
+        "roi": -0.48733333333333334,
+        "roi_reward": -0.48733333333333334,
+        "score_reward": 0.7891139888170506,
+        "time": "2026-06-15T20:25:43.206029+00:00",
+        "top_score": 26726.975523,
+        "total_reward": 0.3912141372656682
       }
     ],
     "last_action": "diversity",
@@ -222,16 +239,16 @@
       "total_reward": 0.3912141372656682
     },
     "probs": {
-      "diversity": 0.2589051978143389,
-      "exploit": 0.24703160072855368,
-      "explore": 0.24703160072855368,
-      "roi": 0.24703160072855368
+      "diversity": 0.26790247853376925,
+      "exploit": 0.24403250715541022,
+      "explore": 0.24403250715541022,
+      "roi": 0.24403250715541022
     },
     "weights": {
-      "diversity": 0.03520927235391014,
-      "exploit": -0.011736424117970046,
-      "explore": -0.011736424117970046,
-      "roi": -0.011736424117970046
+      "diversity": 0.06999118931555055,
+      "exploit": -0.02333039643851685,
+      "explore": -0.02333039643851685,
+      "roi": -0.02333039643851685
     }
   },
   "reward": {
