@@ -1,0 +1,15 @@
+{
+  "best_id": "g025_0043_5739",
+  "best_score": 20226.07917265184,
+  "elapsed_minutes": 250.23,
+  "elapsed_seconds": 15013.784,
+  "generation": 28,
+  "max_runtime_minutes": 285,
+  "num_shards": 8,
+  "reason": "safe_timeout_exit_during_generation",
+  "resume": true,
+  "safe_exit_minutes": 45,
+  "shard_id": 3,
+  "state_path": "outputs/evolution_state_shard03_of_08.json",
+  "updated_at": "2026-06-16T12:41:14.134982+00:00"
+}
