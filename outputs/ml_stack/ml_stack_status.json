@@ -1,5 +1,9 @@
 {
-  "started_at": "2026-06-16T03:24:51.794479+00:00",
+  "started_at": "2026-06-16T08:26:55.099548+00:00",
+  "label_definitions": {
+    "label_4plus": "1 when main_match >= 4",
+    "label_5plus": "1 when main_match >= 5"
+  },
   "imports": {
     "sklearn": null,
     "xgboost": null,
@@ -11,45 +15,44 @@
   "reports": [
     {
       "model": "meta_logistic",
-      "auc": 0.9725456570937353,
+      "auc": 0.8849713181762944,
       "test_rows": 5266,
-      "positive_rate": 0.09039118875807065
+      "positive_rate": 0.11849601215343715
     },
     {
       "model": "meta_rf",
-      "auc": 0.9863381782775741,
+      "auc": 0.8320281860714325,
       "test_rows": 5266,
-      "positive_rate": 0.09039118875807065
+      "positive_rate": 0.11849601215343715
     },
     {
       "model": "xgboost",
-      "auc": 0.9831187172154876,
+      "auc": 0.8415529474474973,
       "test_rows": 5266,
-      "positive_rate": 0.09039118875807065
+      "positive_rate": 0.11849601215343715
     },
     {
       "model": "lightgbm",
-      "auc": 0.9771951369274223,
+      "auc": 0.8619858123708835,
       "test_rows": 5266,
-      "positive_rate": 0.09039118875807065
+      "positive_rate": 0.11849601215343715
     },
     {
       "model": "catboost",
-      "auc": 0.979424922369783,
+      "auc": 0.8529338453805279,
       "test_rows": 5266,
-      "positive_rate": 0.09039118875807065
+      "positive_rate": 0.11849601215343715
     }
   ],
   "optuna": {
-    "best_value": 0.9880304731495939,
-    "model": "rf",
-    "n_estimators": 81,
-    "max_depth": 6
+    "best_value": 0.8891351539455805,
+    "model": "logistic",
+    "C": 0.053019514232505116
   },
   "shap": {
     "model": "lightgbm",
     "rows": 17
   },
-  "finished_at": "2026-06-16T03:26:53.753568+00:00",
+  "finished_at": "2026-06-16T08:27:54.283872+00:00",
   "ok": true
 }
