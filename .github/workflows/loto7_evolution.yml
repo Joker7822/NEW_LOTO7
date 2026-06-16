@@ -315,6 +315,7 @@ jobs:
             --purchase-count 5 \
             --output outputs/holdout/holdout_result.csv \
             --summary outputs/holdout/holdout_summary.json \
+            --report outputs/holdout/holdout_report.txt \
             --fail-on-missing-prize
 
       - name: Commit holdout outputs
@@ -327,7 +328,8 @@ jobs:
             outputs/evolution_merged_summary.json \
             outputs/run_manifest.json \
             outputs/holdout/*.csv \
-            outputs/holdout/*.json || true
+            outputs/holdout/*.json \
+            outputs/holdout/*.txt || true
           if git diff --cached --quiet; then
             echo "No holdout output changes"
             exit 0
@@ -348,6 +350,7 @@ jobs:
             outputs/run_manifest.json
             outputs/holdout/*.csv
             outputs/holdout/*.json
+            outputs/holdout/*.txt
           if-no-files-found: ignore
 
   ml-stack:
