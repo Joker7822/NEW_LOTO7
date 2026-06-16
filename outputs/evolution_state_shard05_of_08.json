@@ -39,19 +39,21 @@
     "triple_weight": 0.021940740112660506
   },
   "completed_ids": [
-    "g015_0045_7659",
-    "g015_0061_7150",
-    "g015_0029_3033",
-    "g015_0013_1473",
-    "g015_0093_1218",
+    "g015_elite_0005",
+    "g015_0085_7950",
     "g015_0053_9724",
+    "g015_0109_3952",
+    "g015_0045_7659",
+    "g015_0069_2790",
+    "g015_0021_6103",
+    "g015_0029_3033",
+    "g015_0101_6280",
+    "g015_0117_1402",
+    "g015_0093_1218",
+    "g015_0061_7150",
     "g015_0077_7637",
     "g015_0037_8032",
-    "g015_0101_6280",
-    "g015_0085_7950",
-    "g015_0021_6103",
-    "g015_0069_2790",
-    "g015_elite_0005"
+    "g015_0013_1473"
   ],
   "evaluated": [
     {
@@ -378,6 +380,56 @@
       "target_sum_max": 164,
       "target_sum_min": 93,
       "triple_weight": 0.06653916262607487
+    },
+    {
+      "best_rank_count": 2,
+      "consecutive_penalty": 0.11768008282206545,
+      "dormancy_weight": 0.025690785225939174,
+      "full_weight": 0.33518931253625706,
+      "generation": 15,
+      "id": "g015_0109_3952",
+      "low_high_bonus": 0.17656783419381003,
+      "max_consecutive_pairs": 1,
+      "max_main_match": 5,
+      "odd_bonus": 0.18433632667235783,
+      "overlap_limit": 4,
+      "pair_recency_weight": 0.12547878288986056,
+      "pair_stability_weight": 0.03928687699212771,
+      "pair_weight": 0.1359581637123585,
+      "pool_size": 21,
+      "recent120_weight": 0.02095684788152621,
+      "recent240_weight": 0.6332891649737713,
+      "recent60_weight": 0.010564674608445502,
+      "score": 4456.225750724145,
+      "sum_bonus": 0.6314060196099178,
+      "target_sum_max": 185,
+      "target_sum_min": 102,
+      "triple_weight": 0.026238371738848076
+    },
+    {
+      "best_rank_count": 1,
+      "consecutive_penalty": 0.4126088428681198,
+      "dormancy_weight": 0.027719535252764767,
+      "full_weight": 0.49077016509087235,
+      "generation": 15,
+      "id": "g015_0117_1402",
+      "low_high_bonus": 0.2888757978148529,
+      "max_consecutive_pairs": 3,
+      "max_main_match": 5,
+      "odd_bonus": 0.4598608865680223,
+      "overlap_limit": 5,
+      "pair_recency_weight": 0.20700440846679719,
+      "pair_stability_weight": 0.0,
+      "pair_weight": 0.2243526280049826,
+      "pool_size": 18,
+      "recent120_weight": 0.009353507655983596,
+      "recent240_weight": 0.4905228195971604,
+      "recent60_weight": 0.009353507655983596,
+      "score": 3882.36216668513,
+      "sum_bonus": 0.1444284083771385,
+      "target_sum_max": 189,
+      "target_sum_min": 90,
+      "triple_weight": 0.11284727127369636
     }
   ],
   "generation": 15,
@@ -3108,7 +3160,7 @@
       "triple_weight": 0.0
     },
     {
-      "best_rank_count": 0,
+      "best_rank_count": 2,
       "consecutive_penalty": 0.11768008282206545,
       "dormancy_weight": 0.025690785225939174,
       "full_weight": 0.33518931253625706,
@@ -3116,7 +3168,7 @@
       "id": "g015_0109_3952",
       "low_high_bonus": 0.17656783419381003,
       "max_consecutive_pairs": 1,
-      "max_main_match": 0,
+      "max_main_match": 5,
       "odd_bonus": 0.18433632667235783,
       "overlap_limit": 4,
       "pair_recency_weight": 0.12547878288986056,
@@ -3126,7 +3178,7 @@
       "recent120_weight": 0.02095684788152621,
       "recent240_weight": 0.6332891649737713,
       "recent60_weight": 0.010564674608445502,
-      "score": 0.0,
+      "score": 4456.225750724145,
       "sum_bonus": 0.6314060196099178,
       "target_sum_max": 185,
       "target_sum_min": 102,
@@ -3308,7 +3360,7 @@
       "triple_weight": 0.00861412013742369
     },
     {
-      "best_rank_count": 0,
+      "best_rank_count": 1,
       "consecutive_penalty": 0.4126088428681198,
       "dormancy_weight": 0.027719535252764767,
       "full_weight": 0.49077016509087235,
@@ -3316,7 +3368,7 @@
       "id": "g015_0117_1402",
       "low_high_bonus": 0.2888757978148529,
       "max_consecutive_pairs": 3,
-      "max_main_match": 0,
+      "max_main_match": 5,
       "odd_bonus": 0.4598608865680223,
       "overlap_limit": 5,
       "pair_recency_weight": 0.20700440846679719,
@@ -3326,7 +3378,7 @@
       "recent120_weight": 0.009353507655983596,
       "recent240_weight": 0.4905228195971604,
       "recent60_weight": 0.009353507655983596,
-      "score": 0.0,
+      "score": 3882.36216668513,
       "sum_bonus": 0.1444284083771385,
       "target_sum_max": 189,
       "target_sum_min": 90,
@@ -3383,5 +3435,5 @@
       "triple_weight": 0.0760574981978387
     }
   ],
-  "updated_at": "2026-06-16T17:16:26.626988+00:00"
+  "updated_at": "2026-06-16T19:06:31.172570+00:00"
 }
