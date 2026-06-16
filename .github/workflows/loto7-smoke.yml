@@ -1,0 +1,114 @@
+name: LOTO7 Smoke Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "*.py"
+      - "loto7.csv"
+      - ".github/workflows/loto7-smoke.yml"
+      - ".github/workflows/loto7_evolution.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: loto7-smoke-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DISABLE_GIT_PUSH: "1"
+      PYTHONUNBUFFERED: "1"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Compile Python files
+        run: |
+          set -euo pipefail
+          python -m py_compile *.py
+
+      - name: Validate loto7.csv can be loaded
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from loto7_evolution_trainer import load_draws
+          draws = load_draws("loto7.csv")
+          print(f"draw_count={len(draws)} latest_draw={draws[-1].draw_no if draws else 'none'}")
+          if len(draws) < 600:
+              raise SystemExit("loto7.csv draw count is unexpectedly small")
+          PY
+
+      - name: Run minimal safe evolution
+        run: |
+          set -euo pipefail
+          python loto7_safe_evolution_runner.py \
+            --csv loto7.csv \
+            --output-dir outputs/smoke \
+            --best-model outputs/smoke/loto7_best_model.json \
+            --generations 1 \
+            --population 4 \
+            --elite-count 1 \
+            --purchase-count 5 \
+            --min-train-draws 60 \
+            --max-targets 5 \
+            --target-stride 1 \
+            --max-runtime-minutes 10 \
+            --safe-exit-minutes 1 \
+            --push-every-generation 0 \
+            --push-every-genome 0
+
+      - name: Run holdout evaluator smoke
+        run: |
+          set -euo pipefail
+          python holdout_evaluator.py \
+            --csv loto7.csv \
+            --best-model outputs/smoke/loto7_best_model.json \
+            --holdout-start-draw 675 \
+            --holdout-end-draw 681 \
+            --purchase-count 5 \
+            --output outputs/smoke/holdout_result.csv \
+            --summary outputs/smoke/holdout_summary.json
+
+      - name: Validate generated smoke outputs
+        run: |
+          set -euo pipefail
+          test -s outputs/smoke/loto7_best_model.json
+          test -s outputs/smoke/holdout_result.csv
+          test -s outputs/smoke/holdout_summary.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          summary = json.loads(Path("outputs/smoke/holdout_summary.json").read_text(encoding="utf-8"))
+          print(json.dumps({
+              "target_draws": summary.get("target_draws"),
+              "total_tickets": summary.get("total_tickets"),
+              "roi_percent": summary.get("roi_percent"),
+              "missing_prize_draw_count": summary.get("missing_prize_draw_count"),
+          }, ensure_ascii=False, indent=2))
+          if summary.get("target_draws", 0) <= 0:
+              raise SystemExit("holdout smoke produced no targets")
+          PY
+
+      - name: Upload smoke artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: loto7-smoke-outputs
+          path: |
+            outputs/smoke/loto7_best_model.json
+            outputs/smoke/holdout_result.csv
+            outputs/smoke/holdout_summary.json
+          if-no-files-found: ignore
