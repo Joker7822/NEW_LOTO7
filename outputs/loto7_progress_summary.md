@@ -1,7 +1,7 @@
 # LOTO7 Progress Summary
 
-- evaluated_genomes_rows: 3625
-- max_generation_seen: 34
+- evaluated_genomes_rows: 3865
+- max_generation_seen: 37
 - best_score: 26726.975523
 - history_files: 12
 - state_files: 12
@@ -10,11 +10,11 @@
 ## Rank counts
 - rank_1等: 0
 - rank_2等: 97
-- rank_3等: 317
-- rank_4等: 15425
-- rank_5等: 103956
-- rank_6等: 153380
-- rank_外れ: 4789575
+- rank_3等: 318
+- rank_4等: 15635
+- rank_5等: 106215
+- rank_6等: 157917
+- rank_外れ: 4974568
 
 ## Best row
 ```json
@@ -58,8 +58,8 @@
 ```
 
 ## ML reports
-- {'model': 'meta_logistic', 'auc': '0.9725456570937353', 'test_rows': '5266', 'positive_rate': '0.09039118875807065'}
-- {'model': 'meta_rf', 'auc': '0.9863381782775741', 'test_rows': '5266', 'positive_rate': '0.09039118875807065'}
-- {'model': 'xgboost', 'auc': '0.9831187172154876', 'test_rows': '5266', 'positive_rate': '0.09039118875807065'}
-- {'model': 'lightgbm', 'auc': '0.9771951369274223', 'test_rows': '5266', 'positive_rate': '0.09039118875807065'}
-- {'model': 'catboost', 'auc': '0.979424922369783', 'test_rows': '5266', 'positive_rate': '0.09039118875807065'}
+- {'model': 'meta_logistic', 'auc': '0.8849713181762944', 'test_rows': '5266', 'positive_rate': '0.11849601215343715'}
+- {'model': 'meta_rf', 'auc': '0.8320281860714325', 'test_rows': '5266', 'positive_rate': '0.11849601215343715'}
+- {'model': 'xgboost', 'auc': '0.8415529474474973', 'test_rows': '5266', 'positive_rate': '0.11849601215343715'}
+- {'model': 'lightgbm', 'auc': '0.8619858123708835', 'test_rows': '5266', 'positive_rate': '0.11849601215343715'}
+- {'model': 'catboost', 'auc': '0.8529338453805279', 'test_rows': '5266', 'positive_rate': '0.11849601215343715'}
