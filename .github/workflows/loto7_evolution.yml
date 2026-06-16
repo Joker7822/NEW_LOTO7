@@ -13,17 +13,17 @@ on:
           - "full_power"
           - "custom"
       generations:
-        description: "Custom generations. Used only when evolution_mode=custom."
+        description: "Custom generations. Used only when evolution_mode=custom. Increase gradually on resume runs."
         required: false
-        default: "100"
+        default: "60"
       population:
         description: "Custom population. Used only when evolution_mode=custom."
         required: false
-        default: "200"
+        default: "120"
       max_targets:
-        description: "Custom max targets. Used only when evolution_mode=custom. Use all for full walk-forward."
+        description: "Custom max targets. Used only when evolution_mode=custom. Use all only for local/full verification."
         required: false
-        default: "240"
+        default: "160"
       target_stride:
         description: "Custom target stride. Used only when evolution_mode=custom."
         required: true
@@ -35,7 +35,7 @@ on:
       workers:
         description: "Workers inside each shard"
         required: false
-        default: "4"
+        default: "2"
       reset_state:
         description: "Start from scratch instead of resume"
         required: true
@@ -137,7 +137,8 @@ jobs:
   evolve:
     needs: scrape
     runs-on: ubuntu-latest
-    timeout-minutes: 355
+    # GitHub hosted runner hard limit is 6h. Keep this below that and make the trainer exit earlier.
+    timeout-minutes: 340
     strategy:
       fail-fast: false
       matrix:
@@ -183,30 +184,44 @@ jobs:
           MODE="${{ github.event.inputs.evolution_mode || 'recommended' }}"
 
           if [ "$MODE" = "full_power" ]; then
-            GENERATIONS="200"
-            POPULATION="400"
-            MAX_TARGETS="all"
+            # Actionsで完走しやすい範囲に抑え、複数回のresumeで伸ばす。
+            GENERATIONS="120"
+            POPULATION="240"
+            MAX_TARGETS="240"
             TARGET_STRIDE="2"
           elif [ "$MODE" = "custom" ]; then
-            GENERATIONS="${{ github.event.inputs.generations || '100' }}"
-            POPULATION="${{ github.event.inputs.population || '200' }}"
-            MAX_TARGETS="${{ github.event.inputs.max_targets || '240' }}"
+            GENERATIONS="${{ github.event.inputs.generations || '60' }}"
+            POPULATION="${{ github.event.inputs.population || '120' }}"
+            MAX_TARGETS="${{ github.event.inputs.max_targets || '160' }}"
             TARGET_STRIDE="${{ github.event.inputs.target_stride || '2' }}"
           else
             MODE="recommended"
-            GENERATIONS="100"
-            POPULATION="200"
-            MAX_TARGETS="240"
+            GENERATIONS="60"
+            POPULATION="120"
+            MAX_TARGETS="160"
             TARGET_STRIDE="2"
+          fi
+
+          # populationに応じてelite_countを自動調整。小さすぎても大きすぎても探索が不安定になるため。
+          ELITE_COUNT=$(( POPULATION / 20 ))
+          if [ "$ELITE_COUNT" -lt 4 ]; then
+            ELITE_COUNT="4"
+          fi
+          if [ "$ELITE_COUNT" -gt 10 ]; then
+            ELITE_COUNT="10"
+          fi
+          if [ "$ELITE_COUNT" -ge "$POPULATION" ]; then
+            ELITE_COUNT=$(( POPULATION - 1 ))
           fi
 
           echo "mode=${MODE}" >> "$GITHUB_OUTPUT"
           echo "generations=${GENERATIONS}" >> "$GITHUB_OUTPUT"
           echo "population=${POPULATION}" >> "$GITHUB_OUTPUT"
+          echo "elite_count=${ELITE_COUNT}" >> "$GITHUB_OUTPUT"
           echo "max_targets=${MAX_TARGETS}" >> "$GITHUB_OUTPUT"
           echo "target_stride=${TARGET_STRIDE}" >> "$GITHUB_OUTPUT"
 
-          echo "[MODE] mode=${MODE} generations=${GENERATIONS} population=${POPULATION} max_targets=${MAX_TARGETS} target_stride=${TARGET_STRIDE} shards=8 workers=${{ github.event.inputs.workers || '4' }}"
+          echo "[MODE] mode=${MODE} generations=${GENERATIONS} population=${POPULATION} elite_count=${ELITE_COUNT} max_targets=${MAX_TARGETS} target_stride=${TARGET_STRIDE} shards=8 workers=${{ github.event.inputs.workers || '2' }}"
 
       - name: Run evolution mode with resume, shard, and workers
         env:
@@ -219,17 +234,19 @@ jobs:
             --best-model loto7_best_model.json \
             --generations "${{ steps.mode.outputs.generations }}" \
             --population "${{ steps.mode.outputs.population }}" \
-            --elite-count 10 \
+            --elite-count "${{ steps.mode.outputs.elite_count }}" \
             --purchase-count 5 \
             --min-train-draws 60 \
             --max-targets "${{ steps.mode.outputs.max_targets }}" \
             --target-stride "${{ steps.mode.outputs.target_stride }}" \
             --shard-id "${{ matrix.shard }}" \
             --num-shards 8 \
-            --workers "${{ github.event.inputs.workers || '4' }}" \
+            --workers "${{ github.event.inputs.workers || '2' }}" \
             --resume \
-            --push-every-generation 1 \
+            --push-every-generation 5 \
             --push-every-genome 0 \
+            --max-runtime-minutes 285 \
+            --safe-exit-minutes 45 \
             --push-final
 
       - name: Upload shard artifacts
