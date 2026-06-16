@@ -39,20 +39,21 @@
     "triple_weight": 0.0
   },
   "completed_ids": [
-    "g042_0098_4139",
-    "g042_0050_9317",
-    "g042_0058_8292",
-    "g042_0026_8770",
-    "g042_0066_6286",
-    "g042_0090_1756",
-    "g042_0042_4648",
-    "g042_0106_7782",
-    "g042_0074_2033",
     "g042_0082_2852",
+    "g042_0042_4648",
+    "g042_0026_8770",
+    "g042_0050_9317",
+    "g042_0106_7782",
+    "g042_0114_5280",
+    "g042_0066_6286",
     "g042_0034_6115",
+    "g042_0058_8292",
+    "g042_0010_5656",
+    "g042_0098_4139",
+    "g042_0090_1756",
     "g042_0018_3749",
-    "g042_elite_0002",
-    "g042_0010_5656"
+    "g042_0074_2033",
+    "g042_elite_0002"
   ],
   "evaluated": [
     {
@@ -404,6 +405,31 @@
       "target_sum_max": 167,
       "target_sum_min": 89,
       "triple_weight": 0.0705982792078518
+    },
+    {
+      "best_rank_count": 2,
+      "consecutive_penalty": 0.5600886554917963,
+      "dormancy_weight": 0.04391857583233275,
+      "full_weight": 0.46185483584409076,
+      "generation": 42,
+      "id": "g042_0114_5280",
+      "low_high_bonus": 0.23650189785741826,
+      "max_consecutive_pairs": 1,
+      "max_main_match": 5,
+      "odd_bonus": 0.309536682994872,
+      "overlap_limit": 5,
+      "pair_recency_weight": 0.07841236174353694,
+      "pair_stability_weight": 0.170280439183819,
+      "pair_weight": 0.17449390948787732,
+      "pool_size": 17,
+      "recent120_weight": 0.2610946261340184,
+      "recent240_weight": 0.13532512105686217,
+      "recent60_weight": 0.1417254169650287,
+      "score": 4236.672241162242,
+      "sum_bonus": 0.6439206286094237,
+      "target_sum_max": 166,
+      "target_sum_min": 101,
+      "triple_weight": 0.019665180963245002
     }
   ],
   "generation": 42,
@@ -3259,7 +3285,7 @@
       "triple_weight": 0.06469464482929098
     },
     {
-      "best_rank_count": 0,
+      "best_rank_count": 2,
       "consecutive_penalty": 0.5600886554917963,
       "dormancy_weight": 0.04391857583233275,
       "full_weight": 0.46185483584409076,
@@ -3267,7 +3293,7 @@
       "id": "g042_0114_5280",
       "low_high_bonus": 0.23650189785741826,
       "max_consecutive_pairs": 1,
-      "max_main_match": 0,
+      "max_main_match": 5,
       "odd_bonus": 0.309536682994872,
       "overlap_limit": 5,
       "pair_recency_weight": 0.07841236174353694,
@@ -3277,7 +3303,7 @@
       "recent120_weight": 0.2610946261340184,
       "recent240_weight": 0.13532512105686217,
       "recent60_weight": 0.1417254169650287,
-      "score": 0.0,
+      "score": 4236.672241162242,
       "sum_bonus": 0.6439206286094237,
       "target_sum_max": 166,
       "target_sum_min": 101,
@@ -3409,5 +3435,5 @@
       "triple_weight": 0.09664035867312983
     }
   ],
-  "updated_at": "2026-06-16T17:13:38.604773+00:00"
+  "updated_at": "2026-06-16T18:57:31.110020+00:00"
 }
