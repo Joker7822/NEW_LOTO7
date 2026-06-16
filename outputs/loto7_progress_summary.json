@@ -67993,7 +67993,7 @@
     }
   ],
   "ml_status": {
-    "started_at": "2026-06-15T14:19:15.464093+00:00",
+    "started_at": "2026-06-15T21:17:27.736750+00:00",
     "imports": {
       "sklearn": null,
       "xgboost": null,
@@ -68044,7 +68044,7 @@
       "model": "lightgbm",
       "rows": 17
     },
-    "finished_at": "2026-06-15T14:21:31.300660+00:00",
+    "finished_at": "2026-06-15T21:19:36.424043+00:00",
     "ok": true
   },
   "ml_reports": [
