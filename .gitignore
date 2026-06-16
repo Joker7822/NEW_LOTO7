@@ -16,6 +16,9 @@ outputs/*
 !outputs/
 !outputs/evolution_*.csv
 !outputs/evolution_*.json
+!outputs/holdout/
+!outputs/holdout/*.csv
+!outputs/holdout/*.json
 *.log
 
 # Deprecated root generated LOTO7 outputs
