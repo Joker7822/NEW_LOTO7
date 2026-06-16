@@ -87,6 +87,13 @@ def draw_year(draw: Draw) -> str:
     return text[:4] if re.match(r"^\d{4}", text) else "unknown"
 
 
+def format_yen(value: object) -> str:
+    try:
+        return f"{int(value):,}円"
+    except Exception:
+        return f"{value}円"
+
+
 def empty_year_stats() -> Dict[str, object]:
     return {
         "target_draws": 0,
@@ -115,6 +122,76 @@ def update_year_stats(stats: Dict[str, object], *, cost: int, payout: int, rank:
     roi = (total_payout / total_cost) if total_cost else 0.0
     stats["roi"] = round(roi, 6)
     stats["roi_percent"] = round(roi * 100.0, 3)
+
+
+def write_text_report(summary: Dict[str, object], report_path: str) -> None:
+    p = Path(report_path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+
+    rank_counts = summary.get("rank_counts", {})
+    if not isinstance(rank_counts, dict):
+        rank_counts = {}
+    year_summary = summary.get("year_summary", {})
+    if not isinstance(year_summary, dict):
+        year_summary = {}
+
+    lines: List[str] = []
+    lines.append("LOTO7 Holdout Backtest Report")
+    lines.append("=" * 32)
+    lines.append("")
+    lines.append(f"作成日時(UTC): {summary.get('created_at')}")
+    lines.append(f"CSV: {summary.get('csv')}")
+    lines.append(f"モデル: {summary.get('best_model')}")
+    lines.append(f"モデルID: {summary.get('model_id')}")
+    lines.append(f"モデルスコア: {summary.get('model_score')}")
+    lines.append("")
+    lines.append("[検証条件]")
+    lines.append(f"対象開始回: {summary.get('holdout_start_draw')}")
+    lines.append(f"対象終了回: {summary.get('holdout_end_draw')}")
+    lines.append(f"検証対象回数: {summary.get('target_draws')}")
+    lines.append(f"1回あたり購入口数: {summary.get('purchase_count')}")
+    lines.append(f"1口単価: {format_yen(summary.get('unit_cost'))}")
+    lines.append("")
+    lines.append("[総合成績]")
+    lines.append(f"総購入口数: {summary.get('total_tickets')}")
+    lines.append(f"総購入額: {format_yen(summary.get('total_cost'))}")
+    lines.append(f"総払戻額: {format_yen(summary.get('total_payout'))}")
+    lines.append(f"総収支: {format_yen(summary.get('profit'))}")
+    lines.append(f"回収率ROI: {summary.get('roi_percent')}%")
+    lines.append(f"最大本数字一致数: {summary.get('max_main_match')}")
+    lines.append("")
+    lines.append("[等級別件数]")
+    for rank in RANK_ORDER:
+        lines.append(f"{rank}: {rank_counts.get(rank, 0)}")
+    lines.append("")
+    lines.append("[年別成績]")
+    if year_summary:
+        for year, item in sorted(year_summary.items()):
+            if not isinstance(item, dict):
+                continue
+            lines.append(
+                f"{year}: 対象回={item.get('target_draws')} / "
+                f"購入={format_yen(item.get('total_cost'))} / "
+                f"払戻={format_yen(item.get('total_payout'))} / "
+                f"収支={format_yen(item.get('profit'))} / "
+                f"ROI={item.get('roi_percent')}% / "
+                f"最大一致={item.get('max_main_match')}"
+            )
+    else:
+        lines.append("年別成績なし")
+    lines.append("")
+    lines.append("[当せん金額データ欠損]")
+    lines.append(f"欠損回数: {summary.get('missing_prize_draw_count')}")
+    lines.append(f"欠損回: {summary.get('missing_prize_draws')}")
+    lines.append("")
+    lines.append("[出力ファイル]")
+    lines.append(f"詳細CSV: {summary.get('detail_csv')}")
+    lines.append(f"サマリーJSON: {summary.get('summary_json')}")
+    lines.append(f"テキストレポート: {report_path}")
+    lines.append("")
+    lines.append("注意: 宝くじはランダム性が高く、過去検証の成績は将来の当せんや利益を保証しません。")
+
+    p.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def evaluate_holdout(args: argparse.Namespace) -> int:
@@ -202,6 +279,8 @@ def evaluate_holdout(args: argparse.Namespace) -> int:
 
     profit = total_payout - total_cost
     roi = (total_payout / total_cost) if total_cost else 0.0
+    summary_json = Path(args.summary)
+    report_txt = Path(args.report) if args.report else None
     summary = {
         "created_at": dt.datetime.now(dt.timezone.utc).isoformat(),
         "csv": args.csv,
@@ -225,11 +304,15 @@ def evaluate_holdout(args: argparse.Namespace) -> int:
         "missing_prize_draws": sorted(set(missing_prize_draws)),
         "year_summary": dict(sorted(year_summary.items())),
         "detail_csv": str(output_csv),
+        "summary_json": str(summary_json),
+        "report_txt": str(report_txt) if report_txt else None,
     }
 
-    summary_json = Path(args.summary)
     summary_json.parent.mkdir(parents=True, exist_ok=True)
     summary_json.write_text(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    if report_txt is not None:
+        write_text_report(summary, str(report_txt))
 
     print(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True))
 
@@ -249,6 +332,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--min-train-draws", type=int, default=60)
     parser.add_argument("--output", default="outputs/holdout_result.csv")
     parser.add_argument("--summary", default="outputs/holdout_summary.json")
+    parser.add_argument("--report", default="outputs/holdout_report.txt")
     parser.add_argument("--fail-on-missing-prize", action="store_true", help="当せん金額が未取得のholdout回があれば失敗扱いにする")
     args = parser.parse_args(argv)
 
