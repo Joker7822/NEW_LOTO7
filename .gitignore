@@ -12,7 +12,10 @@ venv/
 env/
 
 # Generated pipeline outputs
-outputs/
+outputs/*
+!outputs/
+!outputs/evolution_*.csv
+!outputs/evolution_*.json
 *.log
 
 # Deprecated root generated LOTO7 outputs
