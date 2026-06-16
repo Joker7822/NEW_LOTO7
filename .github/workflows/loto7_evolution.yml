@@ -243,8 +243,8 @@ jobs:
             --num-shards 8 \
             --workers "${{ github.event.inputs.workers || '2' }}" \
             --resume \
-            --push-every-generation 5 \
-            --push-every-genome 0 \
+            --push-every-generation 1 \
+            --push-every-genome 25 \
             --max-runtime-minutes 285 \
             --safe-exit-minutes 45 \
             --push-final
