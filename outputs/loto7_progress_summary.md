@@ -1,20 +1,20 @@
 # LOTO7 Progress Summary
 
-- evaluated_genomes_rows: 4623
-- max_generation_seen: 44
+- evaluated_genomes_rows: 5036
+- max_generation_seen: 46
 - best_score: 26726.975523
 - history_files: 12
 - state_files: 12
-- best_model_files: 12
+- best_model_files: 13
 
 ## Rank counts
 - rank_1等: 0
 - rank_2等: 97
 - rank_3等: 320
-- rank_4等: 16327
-- rank_5等: 113031
-- rank_6等: 172370
-- rank_外れ: 5559005
+- rank_4等: 16691
+- rank_5等: 116740
+- rank_6等: 180270
+- rank_外れ: 5877432
 
 ## Best row
 ```json
