@@ -3,12 +3,12 @@
 """
 merge_evolution_shards.py
 
-複数shardで出力された loto7_best_model_shardXX_of_YY.json を統合し、
+複数shardで出力された loto7_best_model_shardXX_of_08.json を統合し、
 候補モデルをholdout成績で再ランキングして最終採用モデルを決める。
 
 目的:
-    - shard別に独立探索した最良モデルを候補として集める
-    - 全候補をholdoutで検証し、ROI・最大一致数・等級件数で再ランキングする
+    - 現行8 shardの最良モデルだけを標準候補として集める
+    - 全候補をholdoutで検証し、最大一致数・ROI・等級件数で再ランキングする
     - 最終採用モデルから最新予測5口を信頼度順にCSV/TXT出力する
     - 採用モデル、最新予測、統合サマリー、run manifestを出力する
     - モデル数不足や不正JSONを検出し、誤った採用を防ぐ
@@ -32,6 +32,7 @@ from loto7_evolution_trainer import Draw, Genome, evaluate_ticket, generate_tick
 
 RANK_ORDER = ["1等", "2等", "3等", "4等", "5等", "6等", "外れ"]
 PRIZE_RANKS = ["1等", "2等", "3等", "4等", "5等", "6等"]
+CURRENT_8_SHARD_PATTERNS = ["loto7_best_model_shard*_of_08.json", "outputs/loto7_best_model_shard*_of_08.json"]
 
 
 def load_model(path: Path) -> Optional[Dict[str, object]]:
@@ -189,13 +190,19 @@ def evaluate_model_on_holdout(
     }
 
 
-def holdout_sort_key(item: Dict[str, object]) -> tuple:
+def _metrics(item: Dict[str, object]) -> Dict[str, object]:
     metrics = item.get("holdout", {})
-    if not isinstance(metrics, dict):
-        metrics = {}
+    return metrics if isinstance(metrics, dict) else {}
+
+
+def _rank_counts(metrics: Dict[str, object]) -> Dict[str, object]:
     rank_counts = metrics.get("rank_counts", {})
-    if not isinstance(rank_counts, dict):
-        rank_counts = {}
+    return rank_counts if isinstance(rank_counts, dict) else {}
+
+
+def holdout_roi_sort_key(item: Dict[str, object]) -> tuple:
+    metrics = _metrics(item)
+    rank_counts = _rank_counts(metrics)
     genome = item.get("genome")
     evo_score = getattr(genome, "score", 0.0)
     return (
@@ -211,6 +218,33 @@ def holdout_sort_key(item: Dict[str, object]) -> tuple:
     )
 
 
+def holdout_balanced_sort_key(item: Dict[str, object]) -> tuple:
+    metrics = _metrics(item)
+    rank_counts = _rank_counts(metrics)
+    genome = item.get("genome")
+    evo_score = getattr(genome, "score", 0.0)
+    return (
+        int(metrics.get("max_main_match", 0)),
+        int(metrics.get("high_grade_hit_count", 0)),
+        int(rank_counts.get("1等", 0)),
+        int(rank_counts.get("2等", 0)),
+        int(rank_counts.get("3等", 0)),
+        int(rank_counts.get("4等", 0)),
+        float(metrics.get("roi", 0.0)),
+        int(rank_counts.get("5等", 0)),
+        int(rank_counts.get("6等", 0)),
+        float(evo_score),
+    )
+
+
+def selection_sort_description(selection_mode: str) -> str:
+    if selection_mode in {"holdout", "holdout_roi"}:
+        return "ROI → 最大本数字一致数 → 1等→2等→3等→4等→5等→6等 → Evolutionスコア"
+    if selection_mode == "holdout_balanced":
+        return "最大本数字一致数 → 4等以上件数 → 1等→2等→3等→4等 → ROI → 5等→6等 → Evolutionスコア"
+    return "Evolutionスコア"
+
+
 def rerank_models_by_holdout(
     models: List[Dict[str, object]],
     *,
@@ -219,6 +253,7 @@ def rerank_models_by_holdout(
     target_indices: Sequence[int],
     purchase_count: int,
     unit_cost: int,
+    selection_mode: str,
 ) -> List[Dict[str, object]]:
     enriched: List[Dict[str, object]] = []
     for item in models:
@@ -236,7 +271,11 @@ def rerank_models_by_holdout(
         copied = dict(item)
         copied["holdout"] = metrics
         enriched.append(copied)
-    enriched.sort(key=holdout_sort_key, reverse=True)
+
+    if selection_mode == "holdout_balanced":
+        enriched.sort(key=holdout_balanced_sort_key, reverse=True)
+    else:
+        enriched.sort(key=holdout_roi_sort_key, reverse=True)
     return enriched
 
 
@@ -256,10 +295,7 @@ def write_model_selection_report(report_path: str, ranked_models: Sequence[Dict[
     lines.append(f"候補モデル数: {summary.get('model_count')}")
     lines.append("")
     lines.append("[並び替え基準]")
-    lines.append("1. ROIが高い順")
-    lines.append("2. 最大本数字一致数が高い順")
-    lines.append("3. 1等→2等→3等→4等→5等→6等の件数が多い順")
-    lines.append("4. Evolutionスコアが高い順")
+    lines.append(str(summary.get("selection_sort_description")))
     lines.append("")
     lines.append("[最終採用モデル]")
     lines.append(f"採用モデル: {summary.get('selected_model')}")
@@ -269,17 +305,14 @@ def write_model_selection_report(report_path: str, ranked_models: Sequence[Dict[
     lines.append("")
     lines.append("[候補モデルランキング]")
     for rank, item in enumerate(ranked_models, start=1):
-        metrics = item.get("holdout", {})
-        if not isinstance(metrics, dict):
-            metrics = {}
-        rank_counts = metrics.get("rank_counts", {})
-        if not isinstance(rank_counts, dict):
-            rank_counts = {}
+        metrics = _metrics(item)
+        rank_counts = _rank_counts(metrics)
         lines.append(
             f"{rank}位: {item.get('path')} / "
             f"ROI={metrics.get('roi_percent')}% / "
             f"収支={format_yen(metrics.get('profit'))} / "
             f"最大一致={metrics.get('max_main_match')} / "
+            f"4等以上={metrics.get('high_grade_hit_count')} / "
             f"1等={rank_counts.get('1等', 0)}, 2等={rank_counts.get('2等', 0)}, 3等={rank_counts.get('3等', 0)}, "
             f"4等={rank_counts.get('4等', 0)}, 5等={rank_counts.get('5等', 0)}, 6等={rank_counts.get('6等', 0)} / "
             f"EvolutionScore={metrics.get('evolution_score')}"
@@ -368,7 +401,7 @@ def write_prediction_report(report_path: str, rows: List[Dict[str, object]], bes
 def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Merge and rerank LOTO7 evolution shard best models.")
     parser.add_argument("--csv", default="loto7.csv")
-    parser.add_argument("--patterns", nargs="*", default=["loto7_best_model_shard*_of_*.json", "outputs/loto7_best_model_shard*_of_*.json"])
+    parser.add_argument("--patterns", nargs="*", default=CURRENT_8_SHARD_PATTERNS)
     parser.add_argument("--best-model", default="loto7_best_model.json")
     parser.add_argument("--prediction", default="outputs/evolution_best_prediction.csv")
     parser.add_argument("--prediction-report", default="outputs/holdout/latest_prediction_report.txt")
@@ -377,8 +410,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--model-selection-summary", default="outputs/holdout/model_selection_summary.json")
     parser.add_argument("--model-selection-report", default="outputs/holdout/model_selection_report.txt")
     parser.add_argument("--purchase-count", type=int, default=5)
-    parser.add_argument("--min-models", type=int, default=1, help="統合に必要な最小モデル数。shard数と同じ値にすると欠損を検出できる。")
-    parser.add_argument("--selection-mode", choices=["holdout", "evolution_score"], default="holdout")
+    parser.add_argument("--min-models", type=int, default=1, help="統合に必要な最小モデル数。8を指定すると現行8 shardの欠損を検出できる。")
+    parser.add_argument("--selection-mode", choices=["holdout", "holdout_roi", "holdout_balanced", "evolution_score"], default="holdout_balanced")
     parser.add_argument("--selection-holdout-start-draw", type=int, default=641)
     parser.add_argument("--selection-holdout-end-draw", type=int, default=None)
     parser.add_argument("--selection-min-train-draws", type=int, default=60)
@@ -400,6 +433,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     if len(models) < args.min_models:
         raise SystemExit(f"not enough shard models: found={len(models)} required={args.min_models}")
 
+    normalized_selection_mode = "holdout_roi" if args.selection_mode == "holdout" else args.selection_mode
+    sort_description = selection_sort_description(normalized_selection_mode)
+
     draws = load_draws(args.csv)
     prize_rows = load_prize_rows(args.csv)
     target_indices = select_target_indices(
@@ -408,10 +444,10 @@ def main(argv: Optional[List[str]] = None) -> int:
         holdout_start_draw=args.selection_holdout_start_draw,
         holdout_end_draw=args.selection_holdout_end_draw,
     )
-    if args.selection_mode == "holdout" and not target_indices:
+    if normalized_selection_mode in {"holdout_roi", "holdout_balanced"} and not target_indices:
         raise SystemExit("no holdout targets selected for model selection")
 
-    if args.selection_mode == "holdout":
+    if normalized_selection_mode in {"holdout_roi", "holdout_balanced"}:
         ranked_models = rerank_models_by_holdout(
             models,
             draws=draws,
@@ -419,8 +455,9 @@ def main(argv: Optional[List[str]] = None) -> int:
             target_indices=target_indices,
             purchase_count=args.purchase_count,
             unit_cost=args.selection_unit_cost,
+            selection_mode=normalized_selection_mode,
         )
-        selection_reason = "holdout再ランキング: ROI → 最大本数字一致数 → 等級件数 → Evolutionスコア"
+        selection_reason = f"holdout再ランキング: {sort_description}"
     else:
         ranked_models = sorted(models, key=lambda item: item["genome"].score, reverse=True)  # type: ignore[index, union-attr]
         for item in ranked_models:
@@ -434,6 +471,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                 "roi": 0.0,
                 "roi_percent": 0.0,
                 "max_main_match": 0,
+                "high_grade_hit_count": 0,
             }
         selection_reason = "Evolutionスコア最大"
 
@@ -445,8 +483,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     updated_at = dt.datetime.now(dt.timezone.utc).isoformat()
     payload = {
         "updated_at": updated_at,
-        "selection_mode": args.selection_mode,
+        "selection_mode": normalized_selection_mode,
         "selection_reason": selection_reason,
+        "selection_sort_description": sort_description,
         "source_model": source_model,
         "selected_holdout": selected_holdout,
         "merged_from": [str(item["path"]) for item in ranked_models],
@@ -474,8 +513,9 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     summary = {
         "updated_at": updated_at,
-        "selection_mode": args.selection_mode,
+        "selection_mode": normalized_selection_mode,
         "selection_reason": selection_reason,
+        "selection_sort_description": sort_description,
         "selection_holdout_start_draw": args.selection_holdout_start_draw,
         "selection_holdout_end_draw": args.selection_holdout_end_draw,
         "selection_min_train_draws": args.selection_min_train_draws,
@@ -487,6 +527,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         "selected_holdout": selected_holdout,
         "model_count": len(ranked_models),
         "min_models": args.min_models,
+        "model_patterns": args.patterns,
         "csv": args.csv,
         "latest_draw_no": draws[-1].draw_no if draws else None,
         "latest_draw_date": draws[-1].date if draws else None,
@@ -513,14 +554,16 @@ def main(argv: Optional[List[str]] = None) -> int:
         "summary": args.summary,
         "model_selection_summary": args.model_selection_summary,
         "model_selection_report": args.model_selection_report,
-        "selection_mode": args.selection_mode,
+        "selection_mode": normalized_selection_mode,
         "selection_reason": selection_reason,
+        "selection_sort_description": sort_description,
         "selected_model": source_model,
         "selected_genome_id": best.id,
         "selected_score": best.score,
         "selected_holdout": selected_holdout,
         "purchase_count": args.purchase_count,
         "model_count": len(ranked_models),
+        "model_patterns": args.patterns,
     }
     write_json(args.manifest, manifest)
 
