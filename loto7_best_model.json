@@ -27,16 +27,12 @@
   "merged_from": [
     "loto7_best_model_shard00_of_08.json",
     "loto7_best_model_shard04_of_08.json",
-    "loto7_best_model_shard01_of_04.json",
     "loto7_best_model_shard03_of_08.json",
     "loto7_best_model_shard02_of_08.json",
     "loto7_best_model_shard07_of_08.json",
     "loto7_best_model_shard06_of_08.json",
     "loto7_best_model_shard01_of_08.json",
-    "loto7_best_model_shard02_of_04.json",
-    "loto7_best_model_shard03_of_04.json",
-    "loto7_best_model_shard05_of_08.json",
-    "loto7_best_model_shard00_of_04.json"
+    "loto7_best_model_shard05_of_08.json"
   ],
   "purchase_count": 5,
   "selected_holdout": {
@@ -68,8 +64,9 @@
     "total_tickets": 205,
     "unit_cost": 300
   },
-  "selection_mode": "holdout",
-  "selection_reason": "holdout再ランキング: ROI → 最大本数字一致数 → 等級件数 → Evolutionスコア",
+  "selection_mode": "holdout_balanced",
+  "selection_reason": "holdout再ランキング: 最大本数字一致数 → 4等以上件数 → 1等→2等→3等→4等 → ROI → 5等→6等 → Evolutionスコア",
+  "selection_sort_description": "最大本数字一致数 → 4等以上件数 → 1等→2等→3等→4等 → ROI → 5等→6等 → Evolutionスコア",
   "source_model": "loto7_best_model_shard00_of_08.json",
-  "updated_at": "2026-06-17T13:11:28.217968+00:00"
+  "updated_at": "2026-06-17T18:14:00.015293+00:00"
 }
