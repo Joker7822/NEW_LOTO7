@@ -1,0 +1,73 @@
+{
+  "best_model": "loto7_best_model.json",
+  "created_at": "2026-06-17T05:13:36.375885+00:00",
+  "csv": "loto7.csv",
+  "detail_csv": "outputs/holdout/holdout_result.csv",
+  "holdout_end_draw": null,
+  "holdout_start_draw": 641,
+  "max_main_match": 4,
+  "missing_prize_draw_count": 0,
+  "missing_prize_draws": [],
+  "model_id": "g011_0072_6961",
+  "model_score": 16263.297355586015,
+  "profit": -50800,
+  "purchase_count": 5,
+  "rank_counts": {
+    "1等": 0,
+    "2等": 0,
+    "3等": 0,
+    "4等": 0,
+    "5等": 4,
+    "6等": 6,
+    "外れ": 195
+  },
+  "report_txt": "outputs/holdout/holdout_report.txt",
+  "roi": 0.173984,
+  "roi_percent": 17.398,
+  "summary_json": "outputs/holdout/holdout_summary.json",
+  "target_draws": 41,
+  "total_cost": 61500,
+  "total_payout": 10700,
+  "total_tickets": 205,
+  "unit_cost": 300,
+  "year_summary": {
+    "2025": {
+      "max_main_match": 4,
+      "profit": -23400,
+      "rank_counts": {
+        "1等": 0,
+        "2等": 0,
+        "3等": 0,
+        "4等": 0,
+        "5等": 1,
+        "6等": 2,
+        "外れ": 87
+      },
+      "roi": 0.133333,
+      "roi_percent": 13.333,
+      "target_draws": 18,
+      "total_cost": 27000,
+      "total_payout": 3600,
+      "total_tickets": 90
+    },
+    "2026": {
+      "max_main_match": 4,
+      "profit": -27400,
+      "rank_counts": {
+        "1等": 0,
+        "2等": 0,
+        "3等": 0,
+        "4等": 0,
+        "5等": 3,
+        "6等": 4,
+        "外れ": 108
+      },
+      "roi": 0.205797,
+      "roi_percent": 20.58,
+      "target_draws": 23,
+      "total_cost": 34500,
+      "total_payout": 7100,
+      "total_tickets": 115
+    }
+  }
+}
