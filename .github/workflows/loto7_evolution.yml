@@ -298,6 +298,8 @@ jobs:
             --csv loto7.csv \
             --purchase-count 5 \
             --min-models 1 \
+            --selection-holdout-start-draw 2 \
+            --selection-min-train-draws 1 \
             --best-model loto7_best_model.json \
             --prediction outputs/evolution_best_prediction.csv \
             --summary outputs/evolution_merged_summary.json \
@@ -311,7 +313,8 @@ jobs:
           python holdout_evaluator.py \
             --csv loto7.csv \
             --best-model loto7_best_model.json \
-            --holdout-start-draw 641 \
+            --holdout-start-draw 2 \
+            --min-train-draws 1 \
             --purchase-count 5 \
             --output outputs/holdout/holdout_result.csv \
             --summary outputs/holdout/holdout_summary.json \
