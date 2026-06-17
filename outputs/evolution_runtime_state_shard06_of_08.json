@@ -1,9 +1,9 @@
 {
   "best_id": "g003_0174_4267",
   "best_score": 16250.896733968422,
-  "elapsed_minutes": 272.19,
-  "elapsed_seconds": 16331.386,
-  "generation": 17,
+  "elapsed_minutes": 250.127,
+  "elapsed_seconds": 15007.645,
+  "generation": 18,
   "max_runtime_minutes": 285,
   "num_shards": 8,
   "reason": "safe_timeout_exit_during_generation",
@@ -11,5 +11,5 @@
   "safe_exit_minutes": 45,
   "shard_id": 6,
   "state_path": "outputs/evolution_state_shard06_of_08.json",
-  "updated_at": "2026-06-17T12:49:52.159776+00:00"
+  "updated_at": "2026-06-17T22:33:25.313514+00:00"
 }
