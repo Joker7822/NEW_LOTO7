@@ -1,72 +1,304 @@
 {
   "best_model": "loto7_best_model.json",
-  "created_at": "2026-06-17T23:07:51.342165+00:00",
+  "complete": true,
+  "created_at": "2026-06-18T16:19:02.245624+00:00",
   "csv": "loto7.csv",
   "detail_csv": "outputs/holdout/holdout_result.csv",
   "holdout_end_draw": null,
-  "holdout_start_draw": 641,
-  "max_main_match": 4,
+  "holdout_start_draw": 2,
+  "max_main_match": 6,
   "missing_prize_draw_count": 0,
   "missing_prize_draws": [],
-  "model_id": "g011_0072_6961",
-  "model_score": 16263.297355586015,
-  "profit": -50800,
+  "model_id": "g025_0043_5739",
+  "model_score": 20226.07917265184,
+  "profit": -686000,
   "purchase_count": 5,
   "rank_counts": {
     "1等": 0,
-    "2等": 0,
+    "2等": 1,
     "3等": 0,
-    "4等": 0,
-    "5等": 4,
-    "6等": 6,
-    "外れ": 195
+    "4等": 5,
+    "5等": 56,
+    "6等": 83,
+    "外れ": 3255
   },
+  "remaining_target_draws": 0,
   "report_txt": "outputs/holdout/holdout_report.txt",
-  "roi": 0.173984,
-  "roi_percent": 17.398,
+  "roi": 0.327451,
+  "roi_percent": 32.745,
+  "state_json": "outputs/holdout/holdout_state.json",
   "summary_json": "outputs/holdout/holdout_summary.json",
-  "target_draws": 41,
-  "total_cost": 61500,
-  "total_payout": 10700,
-  "total_tickets": 205,
+  "target_draws": 680,
+  "total_cost": 1020000,
+  "total_payout": 334000,
+  "total_target_draws": 680,
+  "total_tickets": 3400,
   "unit_cost": 300,
   "year_summary": {
-    "2025": {
+    "2013": {
+      "max_main_match": 5,
+      "profit": -43800,
+      "rank_counts": {
+        "1等": 0,
+        "2等": 0,
+        "3等": 0,
+        "4等": 1,
+        "5等": 1,
+        "6等": 1,
+        "外れ": 187
+      },
+      "roi": 0.231579,
+      "roi_percent": 23.158,
+      "target_draws": 0,
+      "total_cost": 57000,
+      "total_payout": 13200,
+      "total_tickets": 190
+    },
+    "2014": {
       "max_main_match": 4,
-      "profit": -23400,
+      "profit": -60100,
       "rank_counts": {
         "1等": 0,
         "2等": 0,
         "3等": 0,
         "4等": 0,
-        "5等": 1,
-        "6等": 2,
-        "外れ": 87
+        "5等": 7,
+        "6等": 6,
+        "外れ": 242
       },
-      "roi": 0.133333,
-      "roi_percent": 13.333,
-      "target_draws": 18,
-      "total_cost": 27000,
-      "total_payout": 3600,
-      "total_tickets": 90
+      "roi": 0.214379,
+      "roi_percent": 21.438,
+      "target_draws": 0,
+      "total_cost": 76500,
+      "total_payout": 16400,
+      "total_tickets": 255
     },
-    "2026": {
+    "2015": {
+      "max_main_match": 5,
+      "profit": -59600,
+      "rank_counts": {
+        "1等": 0,
+        "2等": 0,
+        "3等": 0,
+        "4等": 1,
+        "5等": 2,
+        "6等": 6,
+        "外れ": 246
+      },
+      "roi": 0.220915,
+      "roi_percent": 22.092,
+      "target_draws": 0,
+      "total_cost": 76500,
+      "total_payout": 16900,
+      "total_tickets": 255
+    },
+    "2016": {
       "max_main_match": 4,
-      "profit": -27400,
+      "profit": -67000,
       "rank_counts": {
         "1等": 0,
         "2等": 0,
         "3等": 0,
         "4等": 0,
         "5等": 3,
-        "6等": 4,
-        "外れ": 108
+        "6等": 6,
+        "外れ": 251
       },
-      "roi": 0.205797,
-      "roi_percent": 20.58,
-      "target_draws": 23,
+      "roi": 0.141026,
+      "roi_percent": 14.103,
+      "target_draws": 0,
+      "total_cost": 78000,
+      "total_payout": 11000,
+      "total_tickets": 260
+    },
+    "2017": {
+      "max_main_match": 5,
+      "profit": -51600,
+      "rank_counts": {
+        "1等": 0,
+        "2等": 0,
+        "3等": 0,
+        "4等": 1,
+        "5等": 4,
+        "6等": 9,
+        "外れ": 246
+      },
+      "roi": 0.338462,
+      "roi_percent": 33.846,
+      "target_draws": 0,
+      "total_cost": 78000,
+      "total_payout": 26400,
+      "total_tickets": 260
+    },
+    "2018": {
+      "max_main_match": 6,
+      "profit": 79600,
+      "rank_counts": {
+        "1等": 0,
+        "2等": 1,
+        "3等": 0,
+        "4等": 0,
+        "5等": 11,
+        "6等": 12,
+        "外れ": 236
+      },
+      "roi": 2.020513,
+      "roi_percent": 202.051,
+      "target_draws": 0,
+      "total_cost": 78000,
+      "total_payout": 157600,
+      "total_tickets": 260
+    },
+    "2019": {
+      "max_main_match": 5,
+      "profit": -53900,
+      "rank_counts": {
+        "1等": 0,
+        "2等": 0,
+        "3等": 0,
+        "4等": 1,
+        "5等": 6,
+        "6等": 8,
+        "外れ": 245
+      },
+      "roi": 0.308974,
+      "roi_percent": 30.897,
+      "target_draws": 0,
+      "total_cost": 78000,
+      "total_payout": 24100,
+      "total_tickets": 260
+    },
+    "2020": {
+      "max_main_match": 4,
+      "profit": -70600,
+      "rank_counts": {
+        "1等": 0,
+        "2等": 0,
+        "3等": 0,
+        "4等": 0,
+        "5等": 3,
+        "6等": 2,
+        "外れ": 250
+      },
+      "roi": 0.077124,
+      "roi_percent": 7.712,
+      "target_draws": 0,
+      "total_cost": 76500,
+      "total_payout": 5900,
+      "total_tickets": 255
+    },
+    "2021": {
+      "max_main_match": 4,
+      "profit": -70100,
+      "rank_counts": {
+        "1等": 0,
+        "2等": 0,
+        "3等": 0,
+        "4等": 0,
+        "5等": 1,
+        "6等": 5,
+        "外れ": 249
+      },
+      "roi": 0.08366,
+      "roi_percent": 8.366,
+      "target_draws": 0,
+      "total_cost": 76500,
+      "total_payout": 6400,
+      "total_tickets": 255
+    },
+    "2022": {
+      "max_main_match": 4,
+      "profit": -64300,
+      "rank_counts": {
+        "1等": 0,
+        "2等": 0,
+        "3等": 0,
+        "4等": 0,
+        "5等": 7,
+        "6等": 5,
+        "外れ": 248
+      },
+      "roi": 0.175641,
+      "roi_percent": 17.564,
+      "target_draws": 0,
+      "total_cost": 78000,
+      "total_payout": 13700,
+      "total_tickets": 260
+    },
+    "2023": {
+      "max_main_match": 3,
+      "profit": -69400,
+      "rank_counts": {
+        "1等": 0,
+        "2等": 0,
+        "3等": 0,
+        "4等": 0,
+        "5等": 0,
+        "6等": 9,
+        "外れ": 251
+      },
+      "roi": 0.110256,
+      "roi_percent": 11.026,
+      "target_draws": 0,
+      "total_cost": 78000,
+      "total_payout": 8600,
+      "total_tickets": 260
+    },
+    "2024": {
+      "max_main_match": 5,
+      "profit": -63400,
+      "rank_counts": {
+        "1等": 0,
+        "2等": 0,
+        "3等": 0,
+        "4等": 1,
+        "5等": 3,
+        "6等": 3,
+        "外れ": 253
+      },
+      "roi": 0.187179,
+      "roi_percent": 18.718,
+      "target_draws": 0,
+      "total_cost": 78000,
+      "total_payout": 14600,
+      "total_tickets": 260
+    },
+    "2025": {
+      "max_main_match": 4,
+      "profit": -66100,
+      "rank_counts": {
+        "1等": 0,
+        "2等": 0,
+        "3等": 0,
+        "4等": 0,
+        "5等": 2,
+        "6等": 9,
+        "外れ": 244
+      },
+      "roi": 0.135948,
+      "roi_percent": 13.595,
+      "target_draws": 0,
+      "total_cost": 76500,
+      "total_payout": 10400,
+      "total_tickets": 255
+    },
+    "2026": {
+      "max_main_match": 4,
+      "profit": -25700,
+      "rank_counts": {
+        "1等": 0,
+        "2等": 0,
+        "3等": 0,
+        "4等": 0,
+        "5等": 6,
+        "6等": 2,
+        "外れ": 107
+      },
+      "roi": 0.255072,
+      "roi_percent": 25.507,
+      "target_draws": 0,
       "total_cost": 34500,
-      "total_payout": 7100,
+      "total_payout": 8800,
       "total_tickets": 115
     }
   }
