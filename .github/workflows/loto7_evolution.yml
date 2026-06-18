@@ -137,7 +137,6 @@ jobs:
   evolve:
     needs: scrape
     runs-on: ubuntu-latest
-    # GitHub hosted runner hard limit is 6h. Keep this below that and make the trainer exit earlier.
     timeout-minutes: 340
     strategy:
       fail-fast: false
@@ -176,6 +175,8 @@ jobs:
           rm -f outputs/evolution_best_summary_*.csv || true
           rm -f outputs/evolution_best_prediction_*.csv || true
           rm -f loto7_best_model*.json || true
+          rm -f outputs/holdout/holdout_state.json || true
+          rm -f outputs/holdout/holdout_result.csv || true
 
       - name: Resolve evolution mode
         id: mode
@@ -184,7 +185,6 @@ jobs:
           MODE="${{ github.event.inputs.evolution_mode || 'recommended' }}"
 
           if [ "$MODE" = "full_power" ]; then
-            # Actionsで完走しやすい範囲に抑え、複数回のresumeで伸ばす。
             GENERATIONS="120"
             POPULATION="240"
             MAX_TARGETS="240"
@@ -202,7 +202,6 @@ jobs:
             TARGET_STRIDE="2"
           fi
 
-          # populationに応じてelite_countを自動調整。小さすぎても大きすぎても探索が不安定になるため。
           ELITE_COUNT=$(( POPULATION / 20 ))
           if [ "$ELITE_COUNT" -lt 4 ]; then
             ELITE_COUNT="4"
@@ -266,7 +265,7 @@ jobs:
     needs: evolve
     if: always()
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 355
 
     steps:
       - name: Checkout repository
@@ -305,7 +304,7 @@ jobs:
             --summary outputs/evolution_merged_summary.json \
             --manifest outputs/run_manifest.json
 
-      - name: Run holdout backtest with real prize amounts
+      - name: Run resumable full-period holdout backtest
         env:
           PYTHONUNBUFFERED: "1"
         run: |
@@ -319,6 +318,11 @@ jobs:
             --output outputs/holdout/holdout_result.csv \
             --summary outputs/holdout/holdout_summary.json \
             --report outputs/holdout/holdout_report.txt \
+            --state outputs/holdout/holdout_state.json \
+            --resume \
+            --progress-every 25 \
+            --max-runtime-minutes 330 \
+            --safe-exit-minutes 20 \
             --fail-on-missing-prize
 
       - name: Commit holdout outputs
