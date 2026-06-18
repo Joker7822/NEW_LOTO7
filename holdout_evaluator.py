@@ -11,6 +11,7 @@ holdout_evaluator.py
     - 実当せん金額、購入金額、収支、回収率、年別回収率を出力する
     - 途中中断しても outputs/holdout/holdout_state.json と detail CSV から再開する
     - GitHub Actionsのtimeout前に安全終了し、次回実行で続きから処理できる
+    - holdout_report.txt に当選した回別の詳細を出力する
 """
 
 from __future__ import annotations
@@ -204,6 +205,8 @@ def summarize_detail_csv(path: Path) -> Dict[str, object]:
     total_tickets = 0
     missing_prize_draws: Set[int] = set()
     target_draws: Set[int] = set()
+    winning_draws: Set[int] = set()
+    winning_ticket_count = 0
 
     if not path.exists():
         return {
@@ -218,6 +221,8 @@ def summarize_detail_csv(path: Path) -> Dict[str, object]:
             "rank_counts": rank_counts,
             "missing_prize_draw_count": 0,
             "missing_prize_draws": [],
+            "winning_draw_count": 0,
+            "winning_ticket_count": 0,
             "year_summary": {},
         }
 
@@ -240,6 +245,10 @@ def summarize_detail_csv(path: Path) -> Dict[str, object]:
             rank_counts[rank] = int(rank_counts.get(rank, 0)) + 1
             max_main_match = max(max_main_match, main_match)
             update_year_stats(year_summary[year], cost=cost, payout=payout, rank=rank, main_match=main_match)
+            if rank != "外れ":
+                winning_ticket_count += 1
+                if draw_no is not None:
+                    winning_draws.add(draw_no)
             if str(row.get("prize_data_missing") or "0") == "1" and draw_no is not None:
                 missing_prize_draws.add(draw_no)
 
@@ -257,8 +266,42 @@ def summarize_detail_csv(path: Path) -> Dict[str, object]:
         "rank_counts": rank_counts,
         "missing_prize_draw_count": len(missing_prize_draws),
         "missing_prize_draws": sorted(missing_prize_draws),
+        "winning_draw_count": len(winning_draws),
+        "winning_ticket_count": winning_ticket_count,
         "year_summary": dict(sorted(year_summary.items())),
     }
+
+
+def winning_detail_rows(path: Path) -> List[Dict[str, object]]:
+    rows: List[Dict[str, object]] = []
+    if not path.exists():
+        return rows
+    with path.open("r", encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            rank = str(row.get("rank") or "外れ")
+            if rank == "外れ":
+                continue
+            draw_no = draw_no_int(row.get("draw_no"))
+            rows.append(
+                {
+                    "draw_no": draw_no if draw_no is not None else 0,
+                    "date": row.get("date", ""),
+                    "year": row.get("year", ""),
+                    "combo_index": int(row.get("combo_index") or 0),
+                    "ticket": row.get("ticket", ""),
+                    "actual_main": row.get("actual_main", ""),
+                    "actual_bonus": row.get("actual_bonus", ""),
+                    "main_match": int(row.get("main_match") or 0),
+                    "bonus_match": int(row.get("bonus_match") or 0),
+                    "rank": rank,
+                    "purchase_cost": int(row.get("purchase_cost") or 0),
+                    "prize_amount": int(row.get("prize_amount") or 0),
+                    "profit": int(row.get("profit") or 0),
+                }
+            )
+    rows.sort(key=lambda x: (int(x["draw_no"]), int(x["combo_index"])))
+    return rows
 
 
 def should_safe_exit(start_monotonic: float, max_runtime_minutes: float, safe_exit_minutes: float) -> bool:
@@ -308,6 +351,8 @@ def build_summary(args: argparse.Namespace, *, genome, output_csv: Path, summary
         "rank_counts": stats["rank_counts"],
         "missing_prize_draw_count": stats["missing_prize_draw_count"],
         "missing_prize_draws": stats["missing_prize_draws"],
+        "winning_draw_count": stats["winning_draw_count"],
+        "winning_ticket_count": stats["winning_ticket_count"],
         "year_summary": stats["year_summary"],
         "detail_csv": str(output_csv),
         "summary_json": str(summary_json),
@@ -327,6 +372,8 @@ def write_text_report(summary: Dict[str, object], report_path: str) -> None:
     year_summary = summary.get("year_summary", {})
     if not isinstance(year_summary, dict):
         year_summary = {}
+    detail_csv = Path(str(summary.get("detail_csv") or ""))
+    wins = winning_detail_rows(detail_csv)
 
     lines: List[str] = []
     lines.append("LOTO7 Holdout Backtest Report")
@@ -355,10 +402,32 @@ def write_text_report(summary: Dict[str, object], report_path: str) -> None:
     lines.append(f"総収支: {format_yen(summary.get('profit'))}")
     lines.append(f"回収率ROI: {summary.get('roi_percent')}%")
     lines.append(f"最大本数字一致数: {summary.get('max_main_match')}")
+    lines.append(f"当選回数: {summary.get('winning_draw_count')}")
+    lines.append(f"当選口数: {summary.get('winning_ticket_count')}")
     lines.append("")
     lines.append("[等級別件数]")
     for rank in RANK_ORDER:
         lines.append(f"{rank}: {rank_counts.get(rank, 0)}")
+    lines.append("")
+    lines.append("[当選した回別の詳細]")
+    lines.append("対象: 6等以上、つまり rank が 外れ 以外の予測口")
+    if wins:
+        current_draw = None
+        for item in wins:
+            if item["draw_no"] != current_draw:
+                current_draw = item["draw_no"]
+                lines.append("")
+                lines.append(f"第{item['draw_no']}回 / {item['date']}")
+                lines.append(f"実本数字: {item['actual_main']} / ボーナス: {item['actual_bonus']}")
+            lines.append(
+                f"  - {item['rank']} / {item['combo_index']}口目 / "
+                f"予測: {item['ticket']} / "
+                f"一致: 本数字{item['main_match']}個 + ボーナス{item['bonus_match']}個 / "
+                f"払戻: {format_yen(item['prize_amount'])} / "
+                f"収支: {format_yen(item['profit'])}"
+            )
+    else:
+        lines.append("当選した回はまだありません。")
     lines.append("")
     lines.append("[年別成績]")
     if year_summary:
