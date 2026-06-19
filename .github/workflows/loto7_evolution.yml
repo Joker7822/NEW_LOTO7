@@ -222,12 +222,12 @@ jobs:
 
           echo "[MODE] mode=${MODE} generations=${GENERATIONS} population=${POPULATION} elite_count=${ELITE_COUNT} max_targets=${MAX_TARGETS} target_stride=${TARGET_STRIDE} shards=8 workers=${{ github.event.inputs.workers || '2' }}"
 
-      - name: Run evolution mode with resume, shard, and workers
+      - name: Run precision evolution mode with resume, shard, and workers
         env:
           PYTHONUNBUFFERED: "1"
         run: |
           set -euo pipefail
-          python loto7_evolution_trainer.py \
+          python loto7_precision_evolution_trainer.py \
             --csv loto7.csv \
             --output-dir outputs \
             --best-model loto7_best_model.json \
@@ -299,6 +299,9 @@ jobs:
             --min-models 1 \
             --selection-holdout-start-draw 2 \
             --selection-min-train-draws 1 \
+            --prediction-mode ensemble \
+            --ensemble-candidates-per-model 10 \
+            --ensemble-overlap-limit 4 \
             --best-model loto7_best_model.json \
             --prediction outputs/evolution_best_prediction.csv \
             --summary outputs/evolution_merged_summary.json \
