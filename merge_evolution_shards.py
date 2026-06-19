@@ -9,7 +9,7 @@ merge_evolution_shards.py
 目的:
     - 現行8 shardの最良モデルだけを標準候補として集める
     - 全候補をholdoutで検証し、最大一致数・ROI・等級件数で再ランキングする
-    - 最終採用モデルから最新予測5口を信頼度順にCSV/TXT出力する
+    - 最終採用モデル、または8 shard合議制で最新予測5口を信頼度順にCSV/TXT出力する
     - 採用モデル、最新予測、統合サマリー、run manifestを出力する
     - モデル数不足や不正JSONを検出し、誤った採用を防ぐ
 
@@ -26,7 +26,7 @@ import glob
 import json
 import re
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, Tuple
 
 from loto7_evolution_trainer import Draw, Genome, evaluate_ticket, generate_tickets, genome_from_dict, load_draws
 
@@ -62,6 +62,10 @@ def find_models(patterns: List[str]) -> List[Dict[str, object]]:
 
 def fmt_ticket(ticket: Sequence[int]) -> str:
     return " ".join(f"{n:02d}" for n in ticket)
+
+
+def ticket_key(ticket: Sequence[int]) -> Tuple[int, ...]:
+    return tuple(sorted(int(n) for n in ticket))
 
 
 def parse_money_yen(text: object) -> int:
@@ -322,6 +326,18 @@ def write_model_selection_report(report_path: str, ranked_models: Sequence[Dict[
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def model_weight_for_ensemble(item: Dict[str, object], rank_index: int) -> float:
+    metrics = _metrics(item)
+    rank_counts = _rank_counts(metrics)
+    base = 1.0 / float(rank_index + 1)
+    roi = max(0.0, float(metrics.get("roi", 0.0)))
+    max_match = float(metrics.get("max_main_match", 0.0))
+    high_grade = float(metrics.get("high_grade_hit_count", 0.0))
+    fifth = float(rank_counts.get("5等", 0))
+    sixth = float(rank_counts.get("6等", 0))
+    return base + roi * 2.0 + max_match * 0.15 + high_grade * 0.08 + fifth * 0.004 + sixth * 0.002
+
+
 def make_prediction_rows(best: Genome, source_model: str, draws, purchase_count: int) -> List[Dict[str, object]]:
     latest = draws[-1]
     tickets = generate_tickets(draws, best, purchase_count)
@@ -339,6 +355,88 @@ def make_prediction_rows(best: Genome, source_model: str, draws, purchase_count:
                 "model_id": best.id,
                 "model_score": round(best.score, 6),
                 "source_model": source_model,
+                "prediction_method": "best_model",
+                "ensemble_score": "",
+                "support_models": "",
+                "created_at": created_at,
+            }
+        )
+    return rows
+
+
+def make_ensemble_prediction_rows(
+    ranked_models: Sequence[Dict[str, object]],
+    *,
+    draws: Sequence[Draw],
+    purchase_count: int,
+    candidates_per_model: int,
+    overlap_limit: int,
+    fallback_best: Genome,
+    fallback_source: str,
+) -> List[Dict[str, object]]:
+    latest = draws[-1]
+    created_at = dt.datetime.now(dt.timezone.utc).isoformat()
+    candidate_scores: Dict[Tuple[int, ...], float] = {}
+    support: Dict[Tuple[int, ...], List[str]] = {}
+    number_votes = {n: 0.0 for n in range(1, 38)}
+
+    candidate_count = max(purchase_count, candidates_per_model)
+    for model_rank, item in enumerate(ranked_models):
+        genome: Genome = item["genome"]  # type: ignore[assignment]
+        source = str(item.get("path"))
+        weight = model_weight_for_ensemble(item, model_rank)
+        try:
+            tickets = generate_tickets(draws, genome, candidate_count)
+        except Exception as exc:
+            print(f"[WARN] ensemble skip model={source}: {exc}")
+            continue
+        for ticket_rank, ticket in enumerate(tickets, start=1):
+            key = ticket_key(ticket)
+            rank_weight = 1.0 / float(ticket_rank)
+            score = weight * rank_weight
+            candidate_scores[key] = candidate_scores.get(key, 0.0) + score
+            support.setdefault(key, []).append(f"{source}#{ticket_rank}")
+            for n in key:
+                number_votes[n] += weight * rank_weight
+
+    for key in list(candidate_scores.keys()):
+        consensus_bonus = sum(number_votes.get(n, 0.0) for n in key) * 0.012
+        diversity_bonus = len(set(support.get(key, []))) * 0.03
+        candidate_scores[key] += consensus_bonus + diversity_bonus
+
+    ranked_tickets = sorted(candidate_scores.items(), key=lambda kv: kv[1], reverse=True)
+    selected: List[Tuple[Tuple[int, ...], float]] = []
+    for key, score in ranked_tickets:
+        if all(len(set(key) & set(prev_key)) <= overlap_limit for prev_key, _ in selected):
+            selected.append((key, score))
+        if len(selected) >= purchase_count:
+            break
+    if len(selected) < purchase_count:
+        for key, score in ranked_tickets:
+            if key not in [prev_key for prev_key, _ in selected]:
+                selected.append((key, score))
+            if len(selected) >= purchase_count:
+                break
+
+    if not selected:
+        return make_prediction_rows(fallback_best, fallback_source, draws, purchase_count)
+
+    rows: List[Dict[str, object]] = []
+    for idx, (ticket, score) in enumerate(selected[:purchase_count], start=1):
+        rows.append(
+            {
+                "confidence_rank": idx,
+                "base_latest_draw_no": latest.draw_no,
+                "base_latest_date": latest.date,
+                "prediction_draw_no": latest.draw_no + 1,
+                "combo_index": idx,
+                "numbers": fmt_ticket(ticket),
+                "model_id": "ensemble_v1",
+                "model_score": round(score, 6),
+                "source_model": "ensemble_of_ranked_shards",
+                "prediction_method": "ensemble",
+                "ensemble_score": round(score, 6),
+                "support_models": ";".join(support.get(ticket, [])[:8]),
                 "created_at": created_at,
             }
         )
@@ -353,14 +451,14 @@ def write_prediction(csv_path: str, rows: List[Dict[str, object]]) -> None:
             f,
             fieldnames=[
                 "confidence_rank", "base_latest_draw_no", "base_latest_date", "prediction_draw_no", "combo_index",
-                "numbers", "model_id", "model_score", "source_model", "created_at",
+                "numbers", "model_id", "model_score", "source_model", "prediction_method", "ensemble_score", "support_models", "created_at",
             ],
         )
         writer.writeheader()
         writer.writerows(rows)
 
 
-def write_prediction_report(report_path: str, rows: List[Dict[str, object]], best: Genome, source_model: str, model_count: int, min_models: int, selection_reason: str) -> None:
+def write_prediction_report(report_path: str, rows: List[Dict[str, object]], best: Genome, source_model: str, model_count: int, min_models: int, selection_reason: str, prediction_mode: str) -> None:
     out = Path(report_path)
     out.parent.mkdir(parents=True, exist_ok=True)
     first = rows[0] if rows else {}
@@ -381,14 +479,22 @@ def write_prediction_report(report_path: str, rows: List[Dict[str, object]], bes
     lines.append(f"統合対象モデル数: {model_count}")
     lines.append(f"必要最小モデル数: {min_models}")
     lines.append(f"採用基準: {selection_reason}")
+    lines.append(f"予測方式: {prediction_mode}")
     lines.append("")
     lines.append("[最新予測 5口: 信頼度の高い順]")
     for row in rows:
-        lines.append(f"{int(row['confidence_rank'])}位 / {int(row['combo_index'])}口目: {row['numbers']}")
+        extra = ""
+        if row.get("prediction_method") == "ensemble":
+            extra = f" / ensemble_score={row.get('ensemble_score')}"
+        lines.append(f"{int(row['confidence_rank'])}位 / {int(row['combo_index'])}口目: {row['numbers']}{extra}")
     lines.append("")
     lines.append("[読み方]")
-    lines.append("1位がこのモデル内で最も信頼度が高い組み合わせです。")
-    lines.append("信頼度順位は、採用Genomeが生成した候補のスコア順を保持しています。")
+    if prediction_mode == "ensemble":
+        lines.append("8 shard候補モデルの合議制で、複数モデルが推す組み合わせとholdout実績を再スコアリングしています。")
+        lines.append("1位が合議制スコアで最も高い組み合わせです。")
+    else:
+        lines.append("1位がこのモデル内で最も信頼度が高い組み合わせです。")
+        lines.append("信頼度順位は、採用Genomeが生成した候補のスコア順を保持しています。")
     lines.append("")
     lines.append("[出力ファイル]")
     lines.append("CSV: outputs/evolution_best_prediction.csv")
@@ -412,6 +518,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--purchase-count", type=int, default=5)
     parser.add_argument("--min-models", type=int, default=1, help="統合に必要な最小モデル数。8を指定すると現行8 shardの欠損を検出できる。")
     parser.add_argument("--selection-mode", choices=["holdout", "holdout_roi", "holdout_balanced", "evolution_score"], default="holdout_balanced")
+    parser.add_argument("--prediction-mode", choices=["ensemble", "best_model"], default="ensemble")
+    parser.add_argument("--ensemble-candidates-per-model", type=int, default=10)
+    parser.add_argument("--ensemble-overlap-limit", type=int, default=4)
     parser.add_argument("--selection-holdout-start-draw", type=int, default=641)
     parser.add_argument("--selection-holdout-end-draw", type=int, default=None)
     parser.add_argument("--selection-min-train-draws", type=int, default=60)
@@ -424,6 +533,10 @@ def main(argv: Optional[List[str]] = None) -> int:
         raise SystemExit("--min-models must be positive")
     if args.selection_unit_cost <= 0:
         raise SystemExit("--selection-unit-cost must be positive")
+    if args.ensemble_candidates_per_model < args.purchase_count:
+        raise SystemExit("--ensemble-candidates-per-model must be >= --purchase-count")
+    if args.ensemble_overlap_limit < 0 or args.ensemble_overlap_limit > 7:
+        raise SystemExit("--ensemble-overlap-limit must be between 0 and 7")
     if args.selection_holdout_end_draw is not None and args.selection_holdout_end_draw < args.selection_holdout_start_draw:
         raise SystemExit("--selection-holdout-end-draw must be >= --selection-holdout-start-draw")
 
@@ -486,6 +599,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         "selection_mode": normalized_selection_mode,
         "selection_reason": selection_reason,
         "selection_sort_description": sort_description,
+        "prediction_mode": args.prediction_mode,
         "source_model": source_model,
         "selected_holdout": selected_holdout,
         "merged_from": [str(item["path"]) for item in ranked_models],
@@ -494,9 +608,20 @@ def main(argv: Optional[List[str]] = None) -> int:
     }
     write_json(args.best_model, payload)
 
-    prediction_rows = make_prediction_rows(best, source_model, draws, args.purchase_count)
+    if args.prediction_mode == "ensemble" and len(ranked_models) >= 2:
+        prediction_rows = make_ensemble_prediction_rows(
+            ranked_models,
+            draws=draws,
+            purchase_count=args.purchase_count,
+            candidates_per_model=args.ensemble_candidates_per_model,
+            overlap_limit=args.ensemble_overlap_limit,
+            fallback_best=best,
+            fallback_source=source_model,
+        )
+    else:
+        prediction_rows = make_prediction_rows(best, source_model, draws, args.purchase_count)
     write_prediction(args.prediction, prediction_rows)
-    write_prediction_report(args.prediction_report, prediction_rows, best, source_model, len(ranked_models), args.min_models, selection_reason)
+    write_prediction_report(args.prediction_report, prediction_rows, best, source_model, len(ranked_models), args.min_models, selection_reason, args.prediction_mode)
 
     candidates = []
     for i, item in enumerate(ranked_models):
@@ -507,6 +632,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                 "path": str(item["path"]),
                 "genome_id": genome.id,
                 "score": genome.score,
+                "ensemble_weight": round(model_weight_for_ensemble(item, i), 6),
                 "holdout": item.get("holdout"),
             }
         )
@@ -516,6 +642,9 @@ def main(argv: Optional[List[str]] = None) -> int:
         "selection_mode": normalized_selection_mode,
         "selection_reason": selection_reason,
         "selection_sort_description": sort_description,
+        "prediction_mode": args.prediction_mode,
+        "ensemble_candidates_per_model": args.ensemble_candidates_per_model,
+        "ensemble_overlap_limit": args.ensemble_overlap_limit,
         "selection_holdout_start_draw": args.selection_holdout_start_draw,
         "selection_holdout_end_draw": args.selection_holdout_end_draw,
         "selection_min_train_draws": args.selection_min_train_draws,
@@ -544,7 +673,7 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     manifest = {
         "created_at": updated_at,
-        "kind": "loto7_evolution_merge_holdout_rerank",
+        "kind": "loto7_evolution_merge_holdout_rerank_ensemble",
         "csv": args.csv,
         "latest_draw_no": draws[-1].draw_no if draws else None,
         "latest_draw_date": draws[-1].date if draws else None,
@@ -557,6 +686,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         "selection_mode": normalized_selection_mode,
         "selection_reason": selection_reason,
         "selection_sort_description": sort_description,
+        "prediction_mode": args.prediction_mode,
         "selected_model": source_model,
         "selected_genome_id": best.id,
         "selected_score": best.score,
