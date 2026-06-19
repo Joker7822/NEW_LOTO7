@@ -10,6 +10,7 @@ loto7_precision_evolution_trainer.py
   - 最終採用基準 holdout_balanced と学習時の評価基準を近づける
   - 本数字6個一致、5個一致、4個一致をより強く評価する
   - 5口全体の高一致を増やす方向へ進化させる
+  - 旧スコアのresume stateと混ざらないよう、precision専用stateを使う
 
 注意:
   宝くじはランダム性が高く、将来の当せんや利益を保証するものではありません。
@@ -59,10 +60,31 @@ def install_precision_scoring() -> None:
     base.rank_score = high_grade_rank_score
 
 
+def arg_value(argv: List[str], name: str, default: str) -> str:
+    if name not in argv:
+        return default
+    idx = argv.index(name)
+    if idx + 1 >= len(argv):
+        return default
+    return argv[idx + 1]
+
+
+def inject_precision_state_path(argv: Optional[List[str]]) -> List[str]:
+    args = list(argv or [])
+    if "--state-path" in args:
+        return args
+    shard_id = int(arg_value(args, "--shard-id", "0"))
+    num_shards = int(arg_value(args, "--num-shards", "1"))
+    state_path = f"outputs/evolution_state_precision_shard{shard_id:02d}_of_{num_shards:02d}.json"
+    return args + ["--state-path", state_path]
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     install_precision_scoring()
+    patched_argv = inject_precision_state_path(argv)
     print("[PRECISION] high-grade focused rank_score enabled", flush=True)
-    return base.main(argv)
+    print("[PRECISION] isolated precision resume state enabled", flush=True)
+    return base.main(patched_argv)
 
 
 if __name__ == "__main__":
