@@ -2,6 +2,7 @@
   "best_model": "loto7_best_model.json",
   "candidates": [
     {
+      "ensemble_weight": 3.424902,
       "genome_id": "g025_0043_5739",
       "holdout": {
         "evolution_score": 20226.07917265184,
@@ -37,6 +38,7 @@
       "score": 20226.07917265184
     },
     {
+      "ensemble_weight": 2.921726,
       "genome_id": "g001_0095_2659",
       "holdout": {
         "evolution_score": 16586.16740085462,
@@ -72,6 +74,7 @@
       "score": 16586.16740085462
     },
     {
+      "ensemble_weight": 2.667883,
       "genome_id": "g001_0121_3591",
       "holdout": {
         "evolution_score": 19056.320338016052,
@@ -107,6 +110,7 @@
       "score": 19056.320338016052
     },
     {
+      "ensemble_weight": 2.340666,
       "genome_id": "g007_0157_9681",
       "holdout": {
         "evolution_score": 17066.89604884983,
@@ -142,6 +146,7 @@
       "score": 17066.89604884983
     },
     {
+      "ensemble_weight": 2.216628,
       "genome_id": "g006_0036_6682",
       "holdout": {
         "evolution_score": 19843.361280624966,
@@ -177,6 +182,7 @@
       "score": 19843.361280624966
     },
     {
+      "ensemble_weight": 2.131725,
       "genome_id": "g003_0174_4267",
       "holdout": {
         "evolution_score": 16250.896733968422,
@@ -212,6 +218,7 @@
       "score": 16250.896733968422
     },
     {
+      "ensemble_weight": 2.020817,
       "genome_id": "g011_0072_6961",
       "holdout": {
         "evolution_score": 16263.297355586015,
@@ -247,6 +254,7 @@
       "score": 16263.297355586015
     },
     {
+      "ensemble_weight": 1.969118,
       "genome_id": "g005_0026_7697",
       "holdout": {
         "evolution_score": 18970.4629010128,
@@ -283,6 +291,8 @@
     }
   ],
   "csv": "loto7.csv",
+  "ensemble_candidates_per_model": 10,
+  "ensemble_overlap_limit": 4,
   "latest_draw_date": "2026-06-12",
   "latest_draw_no": 681,
   "min_models": 1,
@@ -294,6 +304,7 @@
   "model_selection_report": "outputs/holdout/model_selection_report.txt",
   "model_selection_summary": "outputs/holdout/model_selection_summary.json",
   "prediction": "outputs/evolution_best_prediction.csv",
+  "prediction_mode": "ensemble",
   "prediction_report": "outputs/holdout/latest_prediction_report.txt",
   "selected_genome_id": "g025_0043_5739",
   "selected_holdout": {
@@ -335,5 +346,5 @@
   "selection_sort_description": "最大本数字一致数 → 4等以上件数 → 1等→2等→3等→4等 → ROI → 5等→6等 → Evolutionスコア",
   "selection_target_draws": 680,
   "selection_unit_cost": 300,
-  "updated_at": "2026-06-19T01:06:40.844315+00:00"
+  "updated_at": "2026-06-19T10:05:09.753572+00:00"
 }

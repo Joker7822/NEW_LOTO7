@@ -1,7 +1,7 @@
 {
   "best_model": "loto7_best_model.json",
   "complete": true,
-  "created_at": "2026-06-19T01:06:41.540883+00:00",
+  "created_at": "2026-06-19T10:05:33.496831+00:00",
   "csv": "loto7.csv",
   "detail_csv": "outputs/holdout/holdout_result.csv",
   "holdout_end_draw": null,
@@ -34,6 +34,8 @@
   "total_target_draws": 680,
   "total_tickets": 3400,
   "unit_cost": 300,
+  "winning_draw_count": 91,
+  "winning_ticket_count": 145,
   "year_summary": {
     "2013": {
       "max_main_match": 5,
