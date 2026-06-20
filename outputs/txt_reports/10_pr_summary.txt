@@ -1,0 +1,46 @@
+LOTO7 Self-Evolution PR Summary
+================================
+
+作成日: 2026-06-20
+用途: 自己進化AIがPRを作成した場合に、採用判断を分かりやすく確認するための要約。
+
+[現在の採用状態]
+- mainには自己進化設定 version 2 / profile self_evolved_precision が採用済み。
+- candidates_per_model: 12
+- 4等スコア: 9350.0
+- near_miss_main4: 388.8
+- prediction_mode: ensemble
+
+[直近の自己進化判断]
+- decision: propose_pr
+- ready_for_branch: true
+- ready_for_pull_request: true
+- auto_main_push_allowed: false
+
+[主要指標]
+- holdout完了: True
+- 検証回数: 681 / 681
+- ROI: 58.385%
+- 収支: -425,100円
+- 最大本数字一致: 6
+- 4等以上件数: 7
+- 6等以上件数: 149
+- 予測方式: ensemble
+
+[検出課題]
+- 4等以上 7口 が目標 8口 を下回っています。
+
+[改善案]
+- 4等以上件数を増やすため4等スコアを上げる
+- 本数字4個一致近辺の候補を強める
+- 合議制候補数を増やして4等以上候補の探索幅を広げる
+
+[PR確認時に見る場所]
+- outputs/txt_reports/00_index.txt
+- outputs/txt_reports/all_reports.txt
+- outputs/self_evolution/proposal.json
+- outputs/self_evolution/adoption_decision.json
+- loto7_self_evolution_config.json
+
+[注意]
+このPR Summaryは確認補助です。将来の当せんや利益を保証しません。
