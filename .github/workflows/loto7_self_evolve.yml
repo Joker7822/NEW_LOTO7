@@ -151,11 +151,23 @@ jobs:
           git checkout -b "$BRANCH"
           git commit -m "Propose LOTO7 self-evolution config update"
           git push origin "$BRANCH"
+
+          PR_URL="https://github.com/${GITHUB_REPOSITORY}/pull/new/${BRANCH}"
+          set +e
           gh pr create \
             --base "${GITHUB_REF_NAME}" \
             --head "$BRANCH" \
             --title "LOTO7 self-evolution proposal" \
             --body-file "${{ steps.body.outputs.body_file }}"
+          PR_STATUS=$?
+          set -e
+
+          if [ "$PR_STATUS" -ne 0 ]; then
+            echo "::warning::GitHub Actions could not create the pull request. This usually means repository workflow permissions do not allow Actions to create PRs."
+            echo "::warning::Manual PR URL: ${PR_URL}"
+            echo "To enable automatic PR creation, open Settings > Actions > General > Workflow permissions and enable 'Allow GitHub Actions to create and approve pull requests'."
+            exit 0
+          fi
 
       - name: Keep artifacts when PR disabled
         if: ${{ steps.changes.outputs.changed == 'true' && github.event_name == 'workflow_dispatch' && github.event.inputs.create_pr == 'false' }}
