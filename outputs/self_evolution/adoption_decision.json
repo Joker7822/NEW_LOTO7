@@ -1,0 +1,13 @@
+{
+  "auto_main_push_allowed": false,
+  "blocking_issues": [],
+  "created_at": "2026-06-20T01:09:54.898090+00:00",
+  "decision": "propose_pr",
+  "notes": [
+    "この判定は安全な候補生成用です。mainへの直接反映は行いません。",
+    "宝くじの将来当せんや利益を保証しません。"
+  ],
+  "proposal_reason_count": 3,
+  "ready_for_branch": true,
+  "ready_for_pull_request": true
+}

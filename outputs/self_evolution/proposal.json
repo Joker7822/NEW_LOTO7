@@ -1,0 +1,118 @@
+{
+  "base_config": {
+    "adoption_rules": {
+      "allow_roi_drop_if_high_grade_improves": false,
+      "min_high_grade_delta": 0,
+      "min_max_main_match_delta": 0,
+      "min_roi_delta_percent": 3.0
+    },
+    "ensemble": {
+      "candidates_per_model": 10,
+      "consensus_bonus": 0.012,
+      "diversity_bonus": 0.03,
+      "fifth_weight": 0.004,
+      "high_grade_weight": 0.08,
+      "max_match_weight": 0.15,
+      "overlap_limit": 4,
+      "prediction_mode": "ensemble",
+      "roi_weight": 2.0,
+      "sixth_weight": 0.002
+    },
+    "precision_scoring": {
+      "1等": 100000.0,
+      "2等": 60000.0,
+      "3等": 38000.0,
+      "4等": 8500.0,
+      "5等": 850.0,
+      "6等": 420.0,
+      "fallback_bonus": 0.75,
+      "fallback_main": 1.5,
+      "near_miss_main2": 8.0,
+      "near_miss_main2_bonus": 4.0,
+      "near_miss_main3": 55.0,
+      "near_miss_main3_bonus": 45.0,
+      "near_miss_main4": 360.0,
+      "near_miss_main4_bonus": 80.0,
+      "near_miss_main5": 4200.0,
+      "near_miss_main5_bonus": 250.0
+    },
+    "profile": "precision_high_grade_v1",
+    "safety": {
+      "allow_main_direct_push": false,
+      "auto_create_pull_request": true,
+      "max_config_change_ratio": 0.25,
+      "require_positive_or_neutral_regression_check": true,
+      "require_smoke_test": true
+    },
+    "targets": {
+      "grade_hit_count": 155,
+      "high_grade_hit_count": 8,
+      "max_main_match": 6,
+      "min_total_target_draws": 600,
+      "roi_percent": 40.0
+    },
+    "version": 1
+  },
+  "changed": true,
+  "created_at": "2026-06-20T01:09:54.898122+00:00",
+  "proposed_config": {
+    "adoption_rules": {
+      "allow_roi_drop_if_high_grade_improves": false,
+      "min_high_grade_delta": 0,
+      "min_max_main_match_delta": 0,
+      "min_roi_delta_percent": 3.0
+    },
+    "ensemble": {
+      "candidates_per_model": 12,
+      "consensus_bonus": 0.012,
+      "diversity_bonus": 0.03,
+      "fifth_weight": 0.004,
+      "high_grade_weight": 0.08,
+      "max_match_weight": 0.15,
+      "overlap_limit": 4,
+      "prediction_mode": "ensemble",
+      "roi_weight": 2.0,
+      "sixth_weight": 0.002
+    },
+    "last_self_evolved_at": "2026-06-20T01:09:54.898085+00:00",
+    "precision_scoring": {
+      "1等": 100000.0,
+      "2等": 60000.0,
+      "3等": 38000.0,
+      "4等": 9350.0,
+      "5等": 850.0,
+      "6等": 420.0,
+      "fallback_bonus": 0.75,
+      "fallback_main": 1.5,
+      "near_miss_main2": 8.0,
+      "near_miss_main2_bonus": 4.0,
+      "near_miss_main3": 55.0,
+      "near_miss_main3_bonus": 45.0,
+      "near_miss_main4": 388.8,
+      "near_miss_main4_bonus": 80.0,
+      "near_miss_main5": 4200.0,
+      "near_miss_main5_bonus": 250.0
+    },
+    "profile": "self_evolved_precision",
+    "safety": {
+      "allow_main_direct_push": false,
+      "auto_create_pull_request": true,
+      "max_config_change_ratio": 0.25,
+      "require_positive_or_neutral_regression_check": true,
+      "require_smoke_test": true
+    },
+    "targets": {
+      "grade_hit_count": 155,
+      "high_grade_hit_count": 8,
+      "max_main_match": 6,
+      "min_total_target_draws": 600,
+      "roi_percent": 40.0
+    },
+    "version": 2
+  },
+  "reasons": [
+    "4等以上件数を増やすため4等スコアを上げる",
+    "本数字4個一致近辺の候補を強める",
+    "合議制候補数を増やして4等以上候補の探索幅を広げる"
+  ]
+}
