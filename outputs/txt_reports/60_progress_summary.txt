@@ -1,0 +1,48 @@
+LOTO7 Progress Summary
+======================
+
+- evaluated_genomes_rows: 7641
+- max_generation_seen: 59
+- best_score: 67991.782386
+- history_files: 8
+- state_files: 8
+- best_model_files: 13
+
+[Rank counts]
+- rank_1等: 0
+- rank_2等: 89
+- rank_3等: 212
+- rank_4等: 16983
+- rank_5等: 124732
+- rank_6等: 208561
+- rank_外れ: 7062223
+
+[Best row]
+{
+  "generation": "2",
+  "genome_id": "g002_0013_8486",
+  "score": "67991.782386",
+  "targets": "160",
+  "tickets": "800",
+  "max_main_match": "6",
+  "rank_1等": "0",
+  "rank_2等": "0",
+  "rank_3等": "1",
+  "rank_4等": "1",
+  "rank_5等": "9",
+  "rank_6等": "21",
+  "rank_外れ": "768",
+  "shard_id": "5",
+  "num_shards": "8",
+  "completed_at": "2026-06-19T13:38:41.345971+00:00",
+  "source_file": "outputs/evolution_history_shard05_of_08.csv"
+}
+
+[ML reports]
+- meta_logistic AUC: 0.8849713181762944
+- meta_rf AUC: 0.8320281860714325
+- xgboost AUC: 0.8415529474474973
+- lightgbm AUC: 0.8619858123708835
+- catboost AUC: 0.8529338453805279
+
+注意: 進捗サマリーは学習・検証状況の確認用です。将来の当せんや利益を保証しません。
