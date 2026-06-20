@@ -1,223 +1,351 @@
 # NEW_LOTO7
 
-LOTO7 のCSV更新、walk-forwardバックテスト、最新予測、進化型モデル探索、ML拡張スタックを実行するリポジトリです。
+LOTO7 のデータ更新、進化型モデル探索、walk-forward holdout検証、合議制予測、ML拡張、完全AI分析、管理付き自己進化AIをまとめて実行するリポジトリです。
 
-## 追加済みパイプライン
+> 注意: 宝くじはランダム性が高く、このリポジトリの予測・バックテスト・自己進化結果は、将来の当せんや利益を保証するものではありません。
 
-`loto7_pipeline.py` を追加しました。
+---
 
-主な機能:
+## 現在の全体像
 
-- `scrapingloto7.py` を先に実行して `loto7.csv` を最新化
-- 未来リークなしの walk-forward バックテスト
-- `outputs/resume_state.json` による途中再開
-- `outputs/loto7_backtest_result.csv` に検証結果を追記保存
-- `outputs/loto7_backtest_summary.csv` にサマリー出力
-- `outputs/loto7_latest_prediction.csv` に次回予測5口を出力
-- GitHub Actions 実行中に100抽せんごと commit/push
-- 購入口数デフォルト5口
+このリポジトリは、現在以下の流れで動きます。
 
-## 通常パイプライン手動実行
-
-```bash
-python loto7_pipeline.py \
-  --run-scraping \
-  --csv loto7.csv \
-  --output-dir outputs \
-  --resume-state outputs/resume_state.json \
-  --purchase-count 5 \
-  --min-train-draws 60 \
-  --max-targets all \
-  --push-every 100 \
-  --push-final
+```text
+scrape
+  ↓
+evolve
+  ↓
+holdout
+  ↓
+ml-stack
+  ↓
+complete-ai
+  ↓
+monitor
+  ↓
+self-evolve
 ```
 
-ローカルでGitHubへpushしたくない場合:
+中心となるGitHub Actionsは次の1本です。
 
-```bash
-DISABLE_GIT_PUSH=1 python loto7_pipeline.py --run-scraping --purchase-count 5
+```text
+.github/workflows/loto7_evolution.yml
 ```
 
-Windows PowerShell:
+以前は自己進化やTXTレポート集約を別workflowに分けていましたが、現在は `LOTO7 Evolution Trainer` に統合済みです。
 
-```powershell
-$env:DISABLE_GIT_PUSH="1"
-python loto7_pipeline.py --run-scraping --purchase-count 5
-```
+---
+
+## 主要機能
+
+| 機能 | 内容 |
+|---|---|
+| CSV更新 | `scrapingloto7.py` で `loto7.csv` を更新 |
+| 進化型モデル探索 | 8 shard 並列でモデル候補を世代交代・交叉・突然変異 |
+| precision学習 | 高等級・近似一致を重視する `loto7_precision_evolution_trainer.py` |
+| holdout再ランキング | 第2回から最新回まで未来リークなしで検証 |
+| 合議制予測 | 8 shard の候補モデルを再スコアリングして5口を出力 |
+| ML拡張 | MemoryBank / MetaClassifier / LightGBM / CatBoost / XGBoost / Optuna / SHAP |
+| complete-ai | Meta Ensemble / Master Champion / ROI / Bayesian / Monte Carlo / MCTS / Dashboard |
+| monitor | 進捗サマリーを `outputs/loto7_progress_summary.*` に出力 |
+| self-evolve | 診断・改善案生成・安全判定・PR作成まで実施 |
+| TXT集約 | `outputs/txt_reports/` に主要 `.txt/.md` を一括コピー |
+
+---
 
 ## GitHub Actions
 
-`.github/workflows/loto7_pipeline.yml` を追加済みです。
+### LOTO7 Evolution Trainer
 
-- 手動実行: Actions > LOTO7 Pipeline > Run workflow
-- 定期実行: 毎週金曜 20:15 JST
-- タイムアウト対策: `resume_state.json` により中断箇所から再開
-- 保存対策: 100抽せんごとに途中commit/push
+```text
+Actions > LOTO7 Evolution Trainer > Run workflow
+```
 
-## 進化型モデル探索
+このworkflowが現在のメインです。
 
-`loto7_evolution_trainer.py` を追加しました。
+### 手動実行オプション
 
-固定モデルではなく、以下のパラメータを世代ごとに変異・交叉し、walk-forwardバックテストで最良モデルを選抜します。
+| 入力 | 内容 | 既定値 |
+|---|---|---|
+| `evolution_mode` | `recommended` / `full_power` / `custom` | `recommended` |
+| `generations` | custom時の世代数 | `60` |
+| `population` | custom時の個体数 | `120` |
+| `max_targets` | custom時の検証対象数 | `160` |
+| `target_stride` | 検証間隔 | `2` |
+| `workers` | shard内worker数 | `2` |
+| `reset_state` | stateを削除して最初から実行 | `false` |
+| `run_ml_stack` | ML拡張を実行 | `true` |
+| `run_complete_ai` | complete-aiを実行 | `true` |
+| `run_self_evolve` | 自己進化AIを実行 | `true` |
+| `create_self_evolution_pr` | 改善案がある場合にPR作成 | `true` |
 
-- Full / 直近240 / 直近120 / 直近60 の重み
-- 相性ペア重み
-- ペア直近性重み
-- ペア安定性重み
-- トリプル相関重み
-- 休眠数字重み
-- 奇偶制約
-- 合計値制約
-- 低高制約
-- 連番ペナルティ
-- 口同士の重複上限
-- 候補数字プールサイズ
+### 定期実行
 
-実行例:
+```text
+UTC 15:00 / 23:00 / 07:00
+JST 00:00 / 08:00 / 16:00
+```
+
+自己進化PRの乱発防止のため、schedule実行では UTC 23:00 の回だけ self-evolve を実行します。
+
+---
+
+## 自己進化AI
+
+自己進化AIは以下のファイルで管理します。
+
+```text
+loto7_self_evolver.py
+loto7_self_evolution_config.json
+```
+
+### 自己進化の段階
+
+| Lv | 内容 | 状態 |
+|---:|---|---|
+| Lv1 | 進化型モデル学習結果を読む | 実装済み |
+| Lv2 | 評価基準・precision scoringを調整 | 実装済み |
+| Lv3 | 弱点診断と改善案生成 | 実装済み |
+| Lv4 | 安全な設定変更として候補適用 | 実装済み |
+| Lv5 | smoke testで検証 | 実装済み |
+| Lv6 | 改善ブランチ・PR作成 | 実装済み |
+
+### 安全設計
+
+- mainへ直接pushしない
+- 任意コード生成はしない
+- 変更対象は安全なJSON設定に限定
+- 実質差分がない場合は `decision: no_op`
+- 時刻差分だけの重複PRは作成しない
+- `ready_for_pull_request=true` の時だけPR作成対象
+
+### 自己進化出力
+
+```text
+outputs/self_evolution/diagnosis.json
+outputs/self_evolution/proposal.json
+outputs/self_evolution/adoption_decision.json
+outputs/self_evolution/comparison_report.txt
+outputs/self_evolution/applied_config.json
+outputs/self_evolution/pr_body.md
+outputs/self_evolution/pr_summary.txt
+```
+
+---
+
+## TXTレポート一括確認
+
+主要な `.txt` / `.md` レポートは、以下の専用フォルダに集約します。
+
+```text
+outputs/txt_reports/
+```
+
+### 主なファイル
+
+| ファイル | 内容 |
+|---|---|
+| `outputs/txt_reports/00_index.txt` | 一覧・おすすめ確認順 |
+| `outputs/txt_reports/10_pr_summary.txt` | 自己進化PR/採用判断の要約 |
+| `outputs/txt_reports/20_self_evolution_report.txt` | 自己進化AIの診断・改善案 |
+| `outputs/txt_reports/30_latest_prediction_report.txt` | 最新予測5口 |
+| `outputs/txt_reports/40_model_selection_report.txt` | 採用モデルと候補ランキング |
+| `outputs/txt_reports/50_holdout_report.txt` | holdoutバックテスト概要 |
+| `outputs/txt_reports/60_progress_summary.txt` | 学習進捗サマリー |
+| `outputs/txt_reports/all_reports.txt` | 主要TXTの一括結合版 |
+| `outputs/txt_reports/README.txt` | フォルダ説明 |
+
+### 手動生成
 
 ```bash
-python loto7_evolution_trainer.py \
+bash scripts/collect_txt_reports.sh outputs/txt_reports
+```
+
+PRが作成される場合は、self-evolve job内で自動的に `outputs/txt_reports/` が作成され、PRブランチにも含まれます。
+
+---
+
+## 現在の代表的な成績
+
+直近のholdout再ランキングでは、以下のような結果が出ています。
+
+| 項目 | 値 |
+|---|---:|
+| 検証対象 | 第2回〜第682回相当 |
+| 処理済み対象回数 | 681 |
+| 総購入口数 | 3405 |
+| 総購入額 | 1,021,500円 |
+| 総払戻額 | 596,400円 |
+| 総収支 | -425,100円 |
+| ROI | 58.385% |
+| 最大本数字一致 | 6 |
+| 当選回数 | 99 |
+| 当選口数 | 149 |
+| 3等 | 1 |
+| 4等 | 6 |
+| 5等 | 55 |
+| 6等 | 87 |
+
+詳細は以下を確認してください。
+
+```text
+outputs/holdout/holdout_report.txt
+outputs/txt_reports/50_holdout_report.txt
+```
+
+---
+
+## 最新予測レポート
+
+最新予測は以下に出力されます。
+
+```text
+outputs/holdout/latest_prediction_report.txt
+outputs/evolution_best_prediction.csv
+outputs/txt_reports/30_latest_prediction_report.txt
+```
+
+例:
+
+```text
+1位: 06 07 09 12 22 33 35
+2位: 01 06 09 12 22 26 29
+3位: 06 08 09 12 18 22 34
+4位: 01 09 10 12 18 22 35
+5位: 07 09 10 12 22 29 34
+```
+
+---
+
+## 重要ファイル
+
+| ファイル | 内容 |
+|---|---|
+| `loto7.csv` | LOTO7抽せんデータ |
+| `scrapingloto7.py` | CSV更新 |
+| `loto7_evolution_trainer.py` | 進化型モデル探索本体 |
+| `loto7_precision_evolution_trainer.py` | precision scoring強化版 |
+| `merge_evolution_shards.py` | shard統合・holdout再ランキング・合議制予測 |
+| `holdout_evaluator.py` | full-period holdout検証 |
+| `loto7_ml_stack.py` | ML拡張スタック |
+| `loto7_complete_ai_system.py` | complete-ai統合分析 |
+| `loto7_progress_monitor.py` | 進捗サマリー作成 |
+| `loto7_self_evolver.py` | 自己進化AI制御 |
+| `loto7_self_evolution_config.json` | 自己進化設定 |
+| `scripts/collect_txt_reports.sh` | TXTレポート集約 |
+| `.github/workflows/loto7_evolution.yml` | 統合workflow |
+
+---
+
+## 主要出力
+
+| 出力 | 内容 |
+|---|---|
+| `loto7_best_model.json` | 採用モデル |
+| `loto7_best_model_shardXX_of_08.json` | shard別ベストモデル |
+| `outputs/evolution_history_shardXX_of_08.csv` | shard別進化履歴 |
+| `outputs/evolution_best_summary_shardXX_of_08.csv` | shard別上位サマリー |
+| `outputs/evolution_best_prediction.csv` | 最新予測CSV |
+| `outputs/evolution_merged_summary.json` | 統合結果サマリー |
+| `outputs/run_manifest.json` | 実行manifest |
+| `outputs/holdout/holdout_result.csv` | holdout詳細CSV |
+| `outputs/holdout/holdout_summary.json` | holdout集計JSON |
+| `outputs/holdout/holdout_report.txt` | holdoutテキストレポート |
+| `outputs/holdout/latest_prediction_report.txt` | 最新予測TXT |
+| `outputs/holdout/model_selection_report.txt` | モデル選定TXT |
+| `outputs/loto7_progress_summary.json` | 進捗JSON |
+| `outputs/loto7_progress_summary.md` | 進捗Markdown |
+| `outputs/txt_reports/` | TXT一括確認フォルダ |
+
+---
+
+## ローカル実行例
+
+### precision進化学習の軽量実行
+
+```bash
+DISABLE_GIT_PUSH=1 python loto7_precision_evolution_trainer.py \
   --csv loto7.csv \
-  --output-dir outputs \
-  --best-model loto7_best_model.json \
-  --generations 20 \
-  --population 30 \
-  --elite-count 6 \
+  --output-dir outputs/local_test \
+  --best-model outputs/local_test/loto7_best_model.json \
+  --generations 2 \
+  --population 12 \
+  --elite-count 3 \
   --purchase-count 5 \
   --min-train-draws 60 \
-  --max-targets 240 \
-  --target-stride 1 \
-  --push-final
-```
-
-軽量テスト:
-
-```bash
-DISABLE_GIT_PUSH=1 python loto7_evolution_trainer.py \
-  --generations 2 \
-  --population 6 \
-  --elite-count 2 \
   --max-targets 20 \
-  --target-stride 2
+  --target-stride 5 \
+  --shard-id 0 \
+  --num-shards 1 \
+  --workers 1
 ```
 
-専用Workflow:
-
-- Actions > LOTO7 Evolution Trainer > Run workflow
-- 定期実行: 毎週土曜 03:30 JST
-- 世代途中: 5世代ごとにcommit/push
-- 出力artifact: `loto7-evolution-outputs`
-
-## ML拡張スタック
-
-以下を追加しました。
-
-- `requirements-ml.txt`
-- `loto7_ml_stack.py`
-- `.github/workflows/loto7_ml_stack.yml`
-
-実装内容:
-
-- MemoryBank
-- MetaClassifier
-- LightGBM
-- CatBoost
-- XGBoost
-- Optuna
-- SHAP
-
-手動実行:
+### holdout検証
 
 ```bash
-pip install -r requirements-ml.txt
-python loto7_ml_stack.py \
+python holdout_evaluator.py \
   --csv loto7.csv \
-  --output-dir outputs/ml_stack \
-  --min-train 60 \
-  --max-targets 240 \
-  --candidates-per-draw 80 \
-  --label label_4plus \
-  --optuna-trials 50
+  --best-model loto7_best_model.json \
+  --holdout-start-draw 2 \
+  --min-train-draws 1 \
+  --purchase-count 5 \
+  --output outputs/holdout/holdout_result.csv \
+  --summary outputs/holdout/holdout_summary.json \
+  --report outputs/holdout/holdout_report.txt \
+  --state outputs/holdout/holdout_state.json \
+  --resume \
+  --fail-on-missing-prize
 ```
 
-GitHub Actions:
-
-- Actions > LOTO7 ML Stack > Run workflow
-
-出力:
-
-|ファイル|内容|
-|---|---|
-|`outputs/ml_stack/ml_training_frame.csv`|MetaClassifier用教師データ|
-|`outputs/ml_stack/ml_model_report.csv`|LightGBM/CatBoost/XGBoost等の評価|
-|`outputs/ml_stack/optuna_best_params.json`|Optuna最良パラメータ|
-|`outputs/ml_stack/shap_feature_importance.csv`|SHAP特徴量重要度|
-|`outputs/ml_stack/loto7_memorybank_mb4.csv`|4個構造MemoryBank|
-|`outputs/ml_stack/loto7_memorybank_mb5.csv`|5個構造MemoryBank|
-|`outputs/ml_stack/loto7_memorybank_mb6.csv`|6個構造MemoryBank|
-|`outputs/ml_stack/ml_stack_status.json`|実行結果・エラー情報|
-
-## 出力ファイル
-
-|ファイル|内容|
-|---|---|
-|`outputs/resume_state.json`|通常バックテストの最後に完了した抽せん回|
-|`outputs/loto7_backtest_result.csv`|通常バックテストの各回・各5口の一致数と等級|
-|`outputs/loto7_backtest_summary.csv`|通常バックテストの等級別件数・最大一致数|
-|`outputs/loto7_latest_prediction.csv`|通常パイプラインの次回5口|
-|`loto7_best_model.json`|進化型探索で最も良かったモデル|
-|`outputs/evolution_history.csv`|進化型探索の全候補評価履歴|
-|`outputs/evolution_best_summary.csv`|各世代の上位モデル|
-|`outputs/evolution_best_prediction.csv`|最良モデルによる次回5口|
-
-## 注意
-
-宝くじの抽せんはランダム性が高く、予測は的中を保証しません。バックテストは未来データを使わない検証形式に固定しています。
-
-
-## 2026-06-10 直接改善内容
-
-`loto7_advanced_optimizer.py` に以下をコードレベルで組み込み済みです。
-
-- 直近240回モデル
-- 直近120回モデル
-- 直近60回モデル
-- 直近モデルEnsemble候補生成
-- 相性ペア安定性スコア
-- 相性ペア直近性スコア
-- 奇偶・合計値・低高バランス制約スコア
-- MetaClassifier用特徴量の拡張
-- `loto7_memorybank_4plus.csv` 出力
-- `loto7_memorybank_6hit.csv` 出力
-
-実行例:
+### TXTレポート集約
 
 ```bash
-LOTO7_DISABLE_OPTIMIZE=1 \
-LOTO7_BACKTEST_MONTE_CARLO=100 \
-LOTO7_BACKTEST_MCTS=50 \
-LOTO7_RECENT_POOL_SIZE=17 \
-python loto7_chunked_backtest.py \
-  --csv loto7.csv \
-  --min-train 60 \
-  --tickets 5 \
-  --pool-size 17 \
-  --chunk-size 10 \
-  --max-chunks 1
+bash scripts/collect_txt_reports.sh outputs/txt_reports
 ```
 
-軽量動作確認:
+---
 
-```bash
-LOTO7_DISABLE_OPTIMIZE=1 \
-LOTO7_BACKTEST_MONTE_CARLO=0 \
-LOTO7_BACKTEST_MCTS=0 \
-LOTO7_RECENT_POOL_SIZE=12 \
-python loto7_chunked_backtest.py \
-  --csv loto7.csv \
-  --min-train 60 \
-  --tickets 5 \
-  --pool-size 12 \
-  --chunk-size 2 \
-  --max-chunks 1
+## 運用メモ
+
+### PRが作成された場合
+
+まず以下を確認してください。
+
+```text
+outputs/txt_reports/00_index.txt
+outputs/txt_reports/all_reports.txt
+outputs/self_evolution/adoption_decision.json
+outputs/self_evolution/proposal.json
+loto7_self_evolution_config.json
 ```
+
+### 不要PRの判断
+
+以下の場合は採用しない方針です。
+
+- `decision: no_op`
+- 実質差分が時刻のみ
+- `ready_for_pull_request: false`
+- `outputs/self_evolution` の不要な履歴削除だけが含まれる
+- `mergeable=false` かつ設定改善が重複している
+
+### 採用PRの判断
+
+以下の場合は採用候補です。
+
+- `decision: propose_pr`
+- `ready_for_pull_request: true`
+- `loto7_self_evolution_config.json` に実質的な改善差分がある
+- smoke testが通っている
+- `outputs/txt_reports/10_pr_summary.txt` で改善理由が確認できる
+
+---
+
+## 免責
+
+このリポジトリは、LOTO7の過去データ分析・バックテスト・予測補助・自己進化実験を目的としています。
+
+- 当せんを保証しません
+- 利益を保証しません
+- バックテスト結果は将来成績を保証しません
+- 購入判断は自己責任で行ってください
