@@ -613,6 +613,35 @@ jobs:
             --output-dir outputs/self_evolution \
             --apply
 
+      - name: Read self-evolution decision
+        if: ${{ steps.gate.outputs.should_run == 'true' }}
+        id: decision
+        run: |
+          set -euo pipefail
+          READY="false"
+          DECISION="missing"
+          if [ -f outputs/self_evolution/adoption_decision.json ]; then
+            READY="$(python - <<'PY'
+import json
+from pathlib import Path
+p = Path('outputs/self_evolution/adoption_decision.json')
+data = json.loads(p.read_text(encoding='utf-8'))
+print(str(bool(data.get('ready_for_pull_request'))).lower())
+PY
+)"
+            DECISION="$(python - <<'PY'
+import json
+from pathlib import Path
+p = Path('outputs/self_evolution/adoption_decision.json')
+data = json.loads(p.read_text(encoding='utf-8'))
+print(data.get('decision', 'missing'))
+PY
+)"
+          fi
+          echo "ready_for_pull_request=${READY}" >> "$GITHUB_OUTPUT"
+          echo "decision=${DECISION}" >> "$GITHUB_OUTPUT"
+          echo "[SELF-EVOLVE] decision=${DECISION} ready_for_pull_request=${READY}"
+
       - name: Syntax check
         if: ${{ steps.gate.outputs.should_run == 'true' }}
         run: |
@@ -623,9 +652,10 @@ jobs:
             merge_evolution_shards.py \
             holdout_evaluator.py \
             loto7_self_evolver.py
+          bash -n scripts/collect_txt_reports.sh
 
       - name: Smoke test precision trainer with proposed config
-        if: ${{ steps.gate.outputs.should_run == 'true' }}
+        if: ${{ steps.gate.outputs.should_run == 'true' && steps.decision.outputs.ready_for_pull_request == 'true' }}
         env:
           PYTHONUNBUFFERED: "1"
           DISABLE_GIT_PUSH: "1"
@@ -650,8 +680,14 @@ jobs:
             --max-runtime-minutes 20 \
             --safe-exit-minutes 5
 
+      - name: Collect TXT reports
+        if: ${{ steps.gate.outputs.should_run == 'true' && steps.decision.outputs.ready_for_pull_request == 'true' }}
+        run: |
+          set -euo pipefail
+          bash scripts/collect_txt_reports.sh outputs/txt_reports
+
       - name: Build PR body
-        if: ${{ steps.gate.outputs.should_run == 'true' }}
+        if: ${{ steps.gate.outputs.should_run == 'true' && steps.decision.outputs.ready_for_pull_request == 'true' }}
         id: body
         run: |
           set -euo pipefail
@@ -666,20 +702,26 @@ jobs:
             echo "- Config-only self modification"
             echo "- Python syntax check passed"
             echo "- Precision trainer smoke test passed"
+            echo "- TXT reports collected under outputs/txt_reports/"
             echo ""
-            echo "### Report"
+            echo "### PR Summary"
             echo "\`\`\`text"
-            if [ -f outputs/self_evolution/comparison_report.txt ]; then
+            if [ -f outputs/txt_reports/10_pr_summary.txt ]; then
+              cat outputs/txt_reports/10_pr_summary.txt
+            elif [ -f outputs/self_evolution/comparison_report.txt ]; then
               cat outputs/self_evolution/comparison_report.txt
             else
-              echo "comparison_report.txt was not generated."
+              echo "No summary report was generated."
             fi
             echo "\`\`\`"
+            echo ""
+            echo "### TXT Reports"
+            echo "See: \`outputs/txt_reports/00_index.txt\` and \`outputs/txt_reports/all_reports.txt\`."
           } > "$BODY_FILE"
           echo "body_file=$BODY_FILE" >> "$GITHUB_OUTPUT"
 
       - name: Detect changes
-        if: ${{ steps.gate.outputs.should_run == 'true' }}
+        if: ${{ steps.gate.outputs.should_run == 'true' && steps.decision.outputs.ready_for_pull_request == 'true' }}
         id: changes
         run: |
           set -euo pipefail
@@ -690,7 +732,9 @@ jobs:
             outputs/self_evolution/adoption_decision.json \
             outputs/self_evolution/comparison_report.txt \
             outputs/self_evolution/applied_config.json \
-            outputs/self_evolution/pr_body.md || true
+            outputs/self_evolution/pr_body.md \
+            outputs/self_evolution/pr_summary.txt \
+            outputs/txt_reports/*.txt || true
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
@@ -698,7 +742,7 @@ jobs:
           fi
 
       - name: Create self-evolution branch and PR
-        if: ${{ steps.gate.outputs.should_run == 'true' && steps.changes.outputs.changed == 'true' && (github.event_name != 'workflow_dispatch' || github.event.inputs.create_self_evolution_pr != 'false') }}
+        if: ${{ steps.gate.outputs.should_run == 'true' && steps.decision.outputs.ready_for_pull_request == 'true' && steps.changes.outputs.changed == 'true' && (github.event_name != 'workflow_dispatch' || github.event.inputs.create_self_evolution_pr != 'false') }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -726,7 +770,7 @@ jobs:
           fi
 
       - name: Keep artifacts when PR disabled
-        if: ${{ steps.gate.outputs.should_run == 'true' && steps.changes.outputs.changed == 'true' && github.event_name == 'workflow_dispatch' && github.event.inputs.create_self_evolution_pr == 'false' }}
+        if: ${{ steps.gate.outputs.should_run == 'true' && steps.decision.outputs.ready_for_pull_request == 'true' && steps.changes.outputs.changed == 'true' && github.event_name == 'workflow_dispatch' && github.event.inputs.create_self_evolution_pr == 'false' }}
         run: |
           set -euo pipefail
           git commit -m "Generate LOTO7 self-evolution proposal [skip ci]" || true
@@ -744,5 +788,7 @@ jobs:
             outputs/self_evolution/comparison_report.txt
             outputs/self_evolution/applied_config.json
             outputs/self_evolution/pr_body.md
+            outputs/self_evolution/pr_summary.txt
             outputs/self_evolution/smoke_best_model.json
+            outputs/txt_reports/*.txt
           if-no-files-found: ignore
