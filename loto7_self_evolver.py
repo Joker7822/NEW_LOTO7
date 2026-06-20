@@ -84,6 +84,13 @@ DEFAULT_CONFIG: Dict[str, Any] = {
 }
 
 VOLATILE_CONFIG_KEYS = {"last_self_evolved_at"}
+REPORT_FILES = [
+    "diagnosis.json",
+    "proposal.json",
+    "adoption_decision.json",
+    "comparison_report.txt",
+    "applied_config.json",
+]
 
 
 def utc_now() -> str:
@@ -347,6 +354,12 @@ def report_text(metrics: Dict[str, Any], issues: List[Dict[str, Any]], reasons: 
     return "\n".join(lines) + "\n"
 
 
+def should_write_reports(out_dir: Path, decision: Dict[str, Any]) -> bool:
+    if decision.get("decision") != "no_op":
+        return True
+    return not all((out_dir / name).exists() for name in REPORT_FILES)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="LOTO7 self-evolving AI controller")
     parser.add_argument("--config", default="loto7_self_evolution_config.json")
@@ -385,16 +398,19 @@ def main() -> int:
         "changed_config_paths": decision.get("changed_config_paths", []),
     }
 
-    write_json(out_dir / "diagnosis.json", diagnosis)
-    write_json(out_dir / "proposal.json", proposal)
-    write_json(out_dir / "adoption_decision.json", decision)
-    (out_dir / "comparison_report.txt").write_text(report_text(metrics, issues, proposal_reasons, decision), encoding="utf-8")
+    if should_write_reports(out_dir, decision):
+        write_json(out_dir / "diagnosis.json", diagnosis)
+        write_json(out_dir / "proposal.json", proposal)
+        write_json(out_dir / "adoption_decision.json", decision)
+        (out_dir / "comparison_report.txt").write_text(report_text(metrics, issues, proposal_reasons, decision), encoding="utf-8")
 
-    if args.apply and decision.get("substantive_config_change"):
-        write_json(config_path, proposed_config)
-        write_json(out_dir / "applied_config.json", proposed_config)
-    elif args.apply:
-        write_json(out_dir / "applied_config.json", config)
+        if args.apply and decision.get("substantive_config_change"):
+            write_json(config_path, proposed_config)
+            write_json(out_dir / "applied_config.json", proposed_config)
+        elif args.apply:
+            write_json(out_dir / "applied_config.json", config)
+    else:
+        print("[SELF-EVOLVER] no substantive config change; keeping existing self-evolution reports", flush=True)
 
     print(json.dumps({"metrics": metrics, "issues": issues, "proposal_reasons": proposal_reasons, "decision": decision}, ensure_ascii=False, indent=2, sort_keys=True))
     return 0
