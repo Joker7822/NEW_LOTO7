@@ -16,6 +16,7 @@ Lv6: workflow側で改善ブランチ/PR化できるレポートを作る
   - このスクリプトはmainへ直接pushしない
   - 任意コード生成はしない。変更対象は安全なJSON設定に限定する
   - 宝くじの当せんや利益を保証しない
+  - 実質差分がない重複PRを作らない
 """
 
 from __future__ import annotations
@@ -24,7 +25,6 @@ import argparse
 import copy
 import datetime as dt
 import json
-import math
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
@@ -83,6 +83,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     },
 }
 
+VOLATILE_CONFIG_KEYS = {"last_self_evolved_at"}
+
 
 def utc_now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat()
@@ -110,6 +112,27 @@ def deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]
         else:
             out[key] = value
     return out
+
+
+def normalize_config_for_diff(config: Dict[str, Any]) -> Dict[str, Any]:
+    out = copy.deepcopy(config)
+    for key in VOLATILE_CONFIG_KEYS:
+        out.pop(key, None)
+    return out
+
+
+def has_substantive_config_change(base_config: Dict[str, Any], proposed_config: Dict[str, Any]) -> bool:
+    return normalize_config_for_diff(base_config) != normalize_config_for_diff(proposed_config)
+
+
+def changed_config_paths(base_config: Dict[str, Any], proposed_config: Dict[str, Any]) -> List[str]:
+    changes: List[str] = []
+    for key in sorted(set(base_config.keys()) | set(proposed_config.keys())):
+        if key in VOLATILE_CONFIG_KEYS:
+            continue
+        if normalize_config_for_diff({key: base_config.get(key)}).get(key) != normalize_config_for_diff({key: proposed_config.get(key)}).get(key):
+            changes.append(key)
+    return changes
 
 
 def numeric(value: Any, default: float = 0.0) -> float:
@@ -228,11 +251,15 @@ def propose_config(metrics: Dict[str, Any], config: Dict[str, Any], issues: List
         bump("near_miss_main5_bonus", 0.08, "5個一致+ボーナス候補を強める")
 
     if "high_grade_below_target" in issue_codes:
-        bump("4等", 0.10, "4等以上件数を増やすため4等スコアを上げる")
-        bump("near_miss_main4", 0.08, "本数字4個一致近辺の候補を強める")
+        target_high = int_numeric(config.get("targets", {}).get("high_grade_hit_count", 8))
+        current_high = int_numeric(metrics.get("high_grade_hit_count"))
+        if target_high - current_high >= 2:
+            bump("4等", 0.10, "4等以上件数を増やすため4等スコアを上げる")
+            bump("near_miss_main4", 0.08, "本数字4個一致近辺の候補を強める")
         old_candidates = int_numeric(ensemble.get("candidates_per_model"), 10)
-        ensemble["candidates_per_model"] = min(18, max(old_candidates + 2, old_candidates))
-        reasons.append("合議制候補数を増やして4等以上候補の探索幅を広げる")
+        if old_candidates < 12:
+            ensemble["candidates_per_model"] = min(18, old_candidates + 2)
+            reasons.append("合議制候補数を増やして4等以上候補の探索幅を広げる")
 
     if "roi_below_target" in issue_codes:
         bump("5等", 0.04, "ROI底上げのため5等スコアを少し上げる")
@@ -240,30 +267,43 @@ def propose_config(metrics: Dict[str, Any], config: Dict[str, Any], issues: List
         ensemble["roi_weight"] = round(clamp_change(numeric(ensemble.get("roi_weight"), 2.0), numeric(ensemble.get("roi_weight"), 2.0) * 1.06, max_ratio), 6)
         reasons.append("合議制でROI実績の高いモデル重みを強める")
 
-    # 5口が似すぎるリスク対策。高一致が少ない場合は重なり制限をやや厳しくする。
     if int_numeric(metrics.get("high_grade_hit_count")) < int_numeric(config.get("targets", {}).get("high_grade_hit_count", 8)):
         old_overlap = int_numeric(ensemble.get("overlap_limit"), 4)
         ensemble["overlap_limit"] = max(3, min(5, old_overlap))
 
-    proposed["version"] = int_numeric(proposed.get("version"), 1) + 1
-    proposed["profile"] = "self_evolved_precision"
-    proposed["last_self_evolved_at"] = utc_now()
+    if has_substantive_config_change(config, proposed):
+        proposed["version"] = int_numeric(proposed.get("version"), 1) + 1
+        proposed["profile"] = "self_evolved_precision"
+        proposed["last_self_evolved_at"] = utc_now()
+    else:
+        proposed = copy.deepcopy(config)
+        reasons = []
     return proposed, reasons
 
 
-def adoption_decision(metrics: Dict[str, Any], config: Dict[str, Any], issues: List[Dict[str, Any]], proposal_reasons: List[str]) -> Dict[str, Any]:
+def adoption_decision(metrics: Dict[str, Any], config: Dict[str, Any], proposed_config: Dict[str, Any], issues: List[Dict[str, Any]], proposal_reasons: List[str]) -> Dict[str, Any]:
     high_severity = [i for i in issues if i.get("severity") == "high"]
-    ready_for_pr = len(proposal_reasons) > 0 and not high_severity
+    substantive_change = has_substantive_config_change(config, proposed_config)
+    ready_for_pr = substantive_change and len(proposal_reasons) > 0 and not high_severity
+    if not substantive_change:
+        decision = "no_op"
+    elif ready_for_pr:
+        decision = "propose_pr"
+    else:
+        decision = "diagnose_only"
     return {
         "created_at": utc_now(),
-        "ready_for_branch": len(proposal_reasons) > 0,
+        "ready_for_branch": substantive_change,
         "ready_for_pull_request": ready_for_pr,
         "auto_main_push_allowed": bool(config.get("safety", {}).get("allow_main_direct_push", False)),
-        "decision": "propose_pr" if ready_for_pr else "diagnose_only",
+        "decision": decision,
         "blocking_issues": high_severity,
         "proposal_reason_count": len(proposal_reasons),
+        "substantive_config_change": substantive_change,
+        "changed_config_paths": changed_config_paths(config, proposed_config),
         "notes": [
             "この判定は安全な候補生成用です。mainへの直接反映は行いません。",
+            "実質差分がない場合は重複PRを作りません。",
             "宝くじの将来当せんや利益を保証しません。",
         ],
     }
@@ -298,7 +338,7 @@ def report_text(metrics: Dict[str, Any], issues: List[Dict[str, Any]], reasons: 
         for reason in reasons:
             lines.append(f"- {reason}")
     else:
-        lines.append("- 現状維持。")
+        lines.append("- 実質差分なし。重複PRは作成しません。")
     lines.append("")
     lines.append("[採用判定]")
     lines.append(json.dumps(decision, ensure_ascii=False, indent=2, sort_keys=True))
@@ -326,7 +366,7 @@ def main() -> int:
     metrics = extract_metrics(holdout_summary, model_selection_summary, progress_summary)
     issues = diagnose(metrics, config)
     proposed_config, proposal_reasons = propose_config(metrics, config, issues)
-    decision = adoption_decision(metrics, config, issues, proposal_reasons)
+    decision = adoption_decision(metrics, config, proposed_config, issues, proposal_reasons)
 
     out_dir = Path(args.output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -341,7 +381,8 @@ def main() -> int:
         "base_config": config,
         "proposed_config": proposed_config,
         "reasons": proposal_reasons,
-        "changed": proposed_config != config,
+        "changed": bool(decision.get("substantive_config_change")),
+        "changed_config_paths": decision.get("changed_config_paths", []),
     }
 
     write_json(out_dir / "diagnosis.json", diagnosis)
@@ -349,9 +390,11 @@ def main() -> int:
     write_json(out_dir / "adoption_decision.json", decision)
     (out_dir / "comparison_report.txt").write_text(report_text(metrics, issues, proposal_reasons, decision), encoding="utf-8")
 
-    if args.apply and proposed_config != config:
+    if args.apply and decision.get("substantive_config_change"):
         write_json(config_path, proposed_config)
         write_json(out_dir / "applied_config.json", proposed_config)
+    elif args.apply:
+        write_json(out_dir / "applied_config.json", config)
 
     print(json.dumps({"metrics": metrics, "issues": issues, "proposal_reasons": proposal_reasons, "decision": decision}, ensure_ascii=False, indent=2, sort_keys=True))
     return 0
