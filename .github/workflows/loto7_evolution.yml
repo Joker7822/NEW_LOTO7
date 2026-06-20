@@ -566,7 +566,6 @@ jobs:
           SHOULD_RUN="true"
           if [ "${{ github.event_name }}" = "schedule" ]; then
             HOUR_UTC="$(date -u +%H)"
-            # The main workflow runs 3 times/day. Run self-evolution only on the UTC 23 run to avoid PR spam.
             if [ "$HOUR_UTC" != "23" ]; then
               SHOULD_RUN="false"
             fi
@@ -621,22 +620,8 @@ jobs:
           READY="false"
           DECISION="missing"
           if [ -f outputs/self_evolution/adoption_decision.json ]; then
-            READY="$(python - <<'PY'
-import json
-from pathlib import Path
-p = Path('outputs/self_evolution/adoption_decision.json')
-data = json.loads(p.read_text(encoding='utf-8'))
-print(str(bool(data.get('ready_for_pull_request'))).lower())
-PY
-)"
-            DECISION="$(python - <<'PY'
-import json
-from pathlib import Path
-p = Path('outputs/self_evolution/adoption_decision.json')
-data = json.loads(p.read_text(encoding='utf-8'))
-print(data.get('decision', 'missing'))
-PY
-)"
+            READY="$(python -c 'import json,pathlib; data=json.loads(pathlib.Path("outputs/self_evolution/adoption_decision.json").read_text(encoding="utf-8")); print(str(bool(data.get("ready_for_pull_request"))).lower())')"
+            DECISION="$(python -c 'import json,pathlib; data=json.loads(pathlib.Path("outputs/self_evolution/adoption_decision.json").read_text(encoding="utf-8")); print(data.get("decision", "missing"))')"
           fi
           echo "ready_for_pull_request=${READY}" >> "$GITHUB_OUTPUT"
           echo "decision=${DECISION}" >> "$GITHUB_OUTPUT"
