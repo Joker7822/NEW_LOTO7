@@ -182,43 +182,7 @@
       "score": 40216.09427754487
     },
     {
-      "ensemble_weight": 2.454133,
-      "genome_id": "g014_elite_0000",
-      "holdout": {
-        "evolution_score": 47792.12927470843,
-        "genome_id": "g014_elite_0000",
-        "grade_hit_count": 142,
-        "high_grade_hit_count": 9,
-        "max_bonus_match": 2,
-        "max_main_match": 5,
-        "missing_prize_draw_count": 0,
-        "missing_prize_draws": [],
-        "path": "loto7_best_model_shard00_of_08.json",
-        "profit": -795000,
-        "purchase_count": 5,
-        "rank_counts": {
-          "1等": 0,
-          "2等": 0,
-          "3等": 0,
-          "4等": 9,
-          "5等": 54,
-          "6等": 79,
-          "外れ": 3263
-        },
-        "roi": 0.221733,
-        "roi_percent": 22.173,
-        "target_draws": 681,
-        "total_cost": 1021500,
-        "total_payout": 226500,
-        "total_tickets": 3405,
-        "unit_cost": 300
-      },
-      "path": "loto7_best_model_shard00_of_08.json",
-      "rank": 6,
-      "score": 47792.12927470843
-    },
-    {
-      "ensemble_weight": 2.376629,
+      "ensemble_weight": 2.400439,
       "genome_id": "g013_0084_8386",
       "holdout": {
         "evolution_score": 49640.13126647346,
@@ -250,8 +214,44 @@
         "unit_cost": 300
       },
       "path": "loto7_best_model_shard04_of_08.json",
-      "rank": 7,
+      "rank": 6,
       "score": 49640.13126647346
+    },
+    {
+      "ensemble_weight": 2.358645,
+      "genome_id": "g027_0096_1316",
+      "holdout": {
+        "evolution_score": 48181.375477329406,
+        "genome_id": "g027_0096_1316",
+        "grade_hit_count": 147,
+        "high_grade_hit_count": 8,
+        "max_bonus_match": 2,
+        "max_main_match": 5,
+        "missing_prize_draw_count": 0,
+        "missing_prize_draws": [],
+        "path": "loto7_best_model_shard00_of_08.json",
+        "profit": -797900,
+        "purchase_count": 5,
+        "rank_counts": {
+          "1等": 0,
+          "2等": 0,
+          "3等": 0,
+          "4等": 8,
+          "5等": 55,
+          "6等": 84,
+          "外れ": 3258
+        },
+        "roi": 0.218894,
+        "roi_percent": 21.889,
+        "target_draws": 681,
+        "total_cost": 1021500,
+        "total_payout": 223600,
+        "total_tickets": 3405,
+        "unit_cost": 300
+      },
+      "path": "loto7_best_model_shard00_of_08.json",
+      "rank": 7,
+      "score": 48181.375477329406
     },
     {
       "ensemble_weight": 2.257374,
@@ -346,5 +346,5 @@
   "selection_sort_description": "最大本数字一致数 → 4等以上件数 → 1等→2等→3等→4等 → ROI → 5等→6等 → Evolutionスコア",
   "selection_target_draws": 681,
   "selection_unit_cost": 300,
-  "updated_at": "2026-06-21T14:23:37.979293+00:00"
+  "updated_at": "2026-06-21T22:45:28.895258+00:00"
 }

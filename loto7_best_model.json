@@ -30,8 +30,8 @@
     "loto7_best_model_shard06_of_08.json",
     "loto7_best_model_shard03_of_08.json",
     "loto7_best_model_shard07_of_08.json",
-    "loto7_best_model_shard00_of_08.json",
     "loto7_best_model_shard04_of_08.json",
+    "loto7_best_model_shard00_of_08.json",
     "loto7_best_model_shard01_of_08.json"
   ],
   "prediction_mode": "ensemble",
@@ -69,5 +69,5 @@
   "selection_reason": "holdout再ランキング: 最大本数字一致数 → 4等以上件数 → 1等→2等→3等→4等 → ROI → 5等→6等 → Evolutionスコア",
   "selection_sort_description": "最大本数字一致数 → 4等以上件数 → 1等→2等→3等→4等 → ROI → 5等→6等 → Evolutionスコア",
   "source_model": "loto7_best_model_shard05_of_08.json",
-  "updated_at": "2026-06-21T14:23:37.979293+00:00"
+  "updated_at": "2026-06-21T22:45:28.895258+00:00"
 }
