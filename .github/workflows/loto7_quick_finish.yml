@@ -1,0 +1,170 @@
+name: LOTO7 Quick Finish Check
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_scraping:
+        description: "Run scraping before quick check"
+        required: true
+        type: choice
+        default: "false"
+        options:
+          - "false"
+          - "true"
+      run_quick_holdout:
+        description: "Run lightweight resumable holdout check"
+        required: true
+        type: choice
+        default: "true"
+        options:
+          - "true"
+          - "false"
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: loto7-quick-finish-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  quick-finish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install base dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            python -m pip install -r requirements.txt
+          fi
+
+      - name: Optional scraping
+        if: ${{ github.event.inputs.run_scraping == 'true' }}
+        run: |
+          set -euo pipefail
+          python scrapingloto7.py
+
+      - name: Syntax check
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            scrapingloto7.py \
+            loto7_evolution_trainer.py \
+            loto7_precision_evolution_trainer.py \
+            merge_evolution_shards.py \
+            holdout_evaluator.py \
+            loto7_progress_monitor.py \
+            loto7_self_evolver.py
+          bash -n scripts/collect_txt_reports.sh
+
+      - name: Merge existing shard models and create latest prediction
+        run: |
+          set -euo pipefail
+          python merge_evolution_shards.py \
+            --csv loto7.csv \
+            --purchase-count 5 \
+            --min-models 1 \
+            --selection-holdout-start-draw 2 \
+            --selection-min-train-draws 1 \
+            --prediction-mode ensemble \
+            --ensemble-candidates-per-model 10 \
+            --ensemble-overlap-limit 4 \
+            --best-model loto7_best_model.json \
+            --prediction outputs/evolution_best_prediction.csv \
+            --summary outputs/evolution_merged_summary.json \
+            --manifest outputs/run_manifest.json
+
+      - name: Quick resumable holdout check
+        if: ${{ github.event.inputs.run_quick_holdout == 'true' }}
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: |
+          set -euo pipefail
+          python holdout_evaluator.py \
+            --csv loto7.csv \
+            --best-model loto7_best_model.json \
+            --holdout-start-draw 2 \
+            --min-train-draws 1 \
+            --purchase-count 5 \
+            --output outputs/holdout/holdout_result.csv \
+            --summary outputs/holdout/holdout_summary.json \
+            --report outputs/holdout/holdout_report.txt \
+            --state outputs/holdout/holdout_state.json \
+            --resume \
+            --progress-every 25 \
+            --max-runtime-minutes 45 \
+            --safe-exit-minutes 5 \
+            --fail-on-missing-prize
+
+      - name: Run progress monitor
+        run: |
+          set -euo pipefail
+          python loto7_progress_monitor.py
+
+      - name: Collect TXT reports
+        run: |
+          set -euo pipefail
+          bash scripts/collect_txt_reports.sh outputs/txt_reports
+
+      - name: Commit quick-check outputs
+        run: |
+          set -euo pipefail
+          git add -f \
+            loto7.csv \
+            loto7_best_model.json \
+            outputs/evolution_best_prediction.csv \
+            outputs/evolution_merged_summary.json \
+            outputs/run_manifest.json \
+            outputs/holdout/*.csv \
+            outputs/holdout/*.json \
+            outputs/holdout/*.txt \
+            outputs/loto7_progress_summary.json \
+            outputs/loto7_progress_summary.md \
+            outputs/txt_reports/*.txt || true
+          if git diff --cached --quiet; then
+            echo "No quick-check output changes"
+            exit 0
+          fi
+          git commit -m "Update LOTO7 quick finish outputs [skip ci]"
+          git pull --rebase --autostash || true
+          git push || true
+
+      - name: Upload quick finish artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: loto7-quick-finish-outputs
+          path: |
+            loto7_best_model.json
+            outputs/evolution_best_prediction.csv
+            outputs/evolution_merged_summary.json
+            outputs/run_manifest.json
+            outputs/holdout/*.csv
+            outputs/holdout/*.json
+            outputs/holdout/*.txt
+            outputs/loto7_progress_summary.json
+            outputs/loto7_progress_summary.md
+            outputs/txt_reports/*.txt
+          if-no-files-found: ignore
