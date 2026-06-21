@@ -1,5 +1,5 @@
 {
-  "started_at": "2026-06-20T21:02:22.594889+00:00",
+  "started_at": "2026-06-21T22:47:31.368263+00:00",
   "label_definitions": {
     "label_4plus": "1 when main_match >= 4",
     "label_5plus": "1 when main_match >= 5"
@@ -45,14 +45,14 @@
     }
   ],
   "optuna": {
-    "best_value": 0.8904453070626056,
+    "best_value": 0.8903455351915068,
     "model": "logistic",
-    "C": 0.052956221168100365
+    "C": 0.054414517097508726
   },
   "shap": {
     "model": "lightgbm",
     "rows": 17
   },
-  "finished_at": "2026-06-20T21:03:25.336083+00:00",
+  "finished_at": "2026-06-21T22:49:17.154704+00:00",
   "ok": true
 }
