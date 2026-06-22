@@ -2,7 +2,7 @@
 set -euo pipefail
 
 OUT_DIR="${1:-outputs/txt_reports}"
-mkdir -p "$OUT_DIR"
+mkdir -p outputs "$OUT_DIR" outputs/self_evolution
 
 copy_report() {
   local src="$1"
