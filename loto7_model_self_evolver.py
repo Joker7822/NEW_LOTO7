@@ -32,9 +32,6 @@ from merge_evolution_shards import evaluate_model_on_holdout, load_prize_rows, s
 
 DEFAULT_SEED_PATTERNS = [
     "loto7_best_model.json",
-    "outputs/model_self_evolution/best_candidate_model.json",
-    "loto7_best_model_shard*_of_08.json",
-    "outputs/loto7_best_model_shard*_of_08.json",
 ]
 
 
