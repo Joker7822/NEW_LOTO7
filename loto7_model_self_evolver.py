@@ -429,7 +429,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             best_genome = candidate
             best_metrics = metrics
             parent_pool.append(candidate)
-            parent_pool = sorted(parent_pool, key=lambda g: g.score, reverse=True)[-24:]
+            parent_pool = sorted(parent_pool, key=lambda g: g.score, reverse=True)[:24]
 
         append_history(
             args.history,
