@@ -11,9 +11,8 @@ import os
 import sys
 
 
-SELF_EVOLVED_MODEL_PATTERNS = [
+ADOPTED_BEST_MODEL_PATTERNS = [
     "loto7_best_model.json",
-    "outputs/model_self_evolution/best_candidate_model.json",
 ]
 
 
@@ -45,14 +44,14 @@ def _patch_merge_evolution_args(script_name: str) -> None:
     if script_name != "merge_evolution_shards.py":
         return
 
-    # Keep the Actions merge path aligned with the latest self-evolution config.
+    # Keep the Actions merge path aligned with the adopted best model flow.
     _set_option("--ensemble-candidates-per-model", "12")
 
     # Prefer the built-in holdout ROI ranking path for model selection.
     _set_option("--selection-mode", "holdout_roi")
 
-    # Keep model-only self-evolution outputs in the candidate pool.
-    _add_option_values("--patterns", SELF_EVOLVED_MODEL_PATTERNS)
+    # Use only the adopted best model when no explicit model patterns are passed.
+    _add_option_values("--patterns", ADOPTED_BEST_MODEL_PATTERNS)
 
 
 def _patch_model_self_evolver_args(script_name: str) -> None:
