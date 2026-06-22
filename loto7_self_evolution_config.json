@@ -49,7 +49,7 @@
     "high_grade_hit_count": 8,
     "max_main_match": 6,
     "min_total_target_draws": 600,
-    "roi_percent": 40.0
+    "roi_percent": 0.0
   },
-  "version": 2
+  "version": 3
 }
