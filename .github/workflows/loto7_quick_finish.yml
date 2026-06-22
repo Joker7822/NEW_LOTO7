@@ -29,7 +29,7 @@ defaults:
 
 concurrency:
   group: loto7-quick-finish-${{ github.ref_name }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   quick-finish:
