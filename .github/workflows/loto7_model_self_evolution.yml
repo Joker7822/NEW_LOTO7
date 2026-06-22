@@ -1,0 +1,96 @@
+name: LOTO7 Model Self Evolution
+
+on:
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: "Model-only self-evolution iterations"
+        required: false
+        default: "100"
+      max_targets:
+        description: "Recent holdout target draws. Use 0 for all targets."
+        required: false
+        default: "180"
+      apply_model:
+        description: "Apply improved model to loto7_best_model.json when adoption passes"
+        required: true
+        type: choice
+        default: "true"
+        options:
+          - "true"
+          - "false"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: loto7-model-self-evolution-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  model-self-evolution:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run model-only self evolution
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: |
+          set -euo pipefail
+          APPLY_FLAG=""
+          if [ "${{ github.event.inputs.apply_model }}" = "true" ]; then
+            APPLY_FLAG="--apply"
+          fi
+          python loto7_model_self_evolver.py \
+            --iterations "${{ github.event.inputs.iterations || '100' }}" \
+            --max-targets "${{ github.event.inputs.max_targets || '180' }}" \
+            --max-runtime-minutes 70 \
+            --safe-exit-minutes 5 \
+            --min-roi-delta-percent 0.10 \
+            --min-profit-delta 0 \
+            ${APPLY_FLAG}
+
+      - name: Commit model self-evolution outputs
+        if: always()
+        run: |
+          set -euo pipefail
+          git add -f \
+            loto7_best_model.json \
+            outputs/model_self_evolution/*.json \
+            outputs/model_self_evolution/*.txt \
+            outputs/model_self_evolution/*.csv || true
+          if git diff --cached --quiet; then
+            echo "No model self-evolution changes"
+            exit 0
+          fi
+          git commit -m "Run LOTO7 model self-evolution [skip ci]"
+          git pull --rebase --autostash || true
+          git push || true
+
+      - name: Upload model self-evolution artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: loto7-model-self-evolution
+          path: |
+            loto7_best_model.json
+            outputs/model_self_evolution/*.json
+            outputs/model_self_evolution/*.txt
+            outputs/model_self_evolution/*.csv
+          if-no-files-found: ignore
