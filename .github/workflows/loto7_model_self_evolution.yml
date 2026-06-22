@@ -10,7 +10,7 @@ on:
       max_targets:
         description: "Recent holdout target draws. Use 0 for all targets."
         required: false
-        default: "180"
+        default: "0"
       apply_model:
         description: "Apply improved model to loto7_best_model.json when adoption passes"
         required: true
@@ -59,7 +59,7 @@ jobs:
           fi
           python loto7_model_self_evolver.py \
             --iterations "${{ github.event.inputs.iterations || '100' }}" \
-            --max-targets "${{ github.event.inputs.max_targets || '180' }}" \
+            --max-targets "${{ github.event.inputs.max_targets || '0' }}" \
             --max-runtime-minutes 340 \
             --safe-exit-minutes 15 \
             --min-roi-delta-percent 0.10 \
