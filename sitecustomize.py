@@ -14,8 +14,6 @@ import sys
 SELF_EVOLVED_MODEL_PATTERNS = [
     "loto7_best_model.json",
     "outputs/model_self_evolution/best_candidate_model.json",
-    "loto7_best_model_shard*_of_08.json",
-    "outputs/loto7_best_model_shard*_of_08.json",
 ]
 
 
@@ -53,9 +51,7 @@ def _patch_merge_evolution_args(script_name: str) -> None:
     # Prefer the built-in holdout ROI ranking path for model selection.
     _set_option("--selection-mode", "holdout_roi")
 
-    # Keep model-only self-evolution outputs in the candidate pool so a later
-    # shard merge does not silently overwrite an improved model with shard-only
-    # results.
+    # Keep model-only self-evolution outputs in the candidate pool.
     _add_option_values("--patterns", SELF_EVOLVED_MODEL_PATTERNS)
 
 
