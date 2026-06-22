@@ -13,19 +13,19 @@ on:
           - "full_power"
           - "custom"
       generations:
-        description: "Custom generations. Used only when evolution_mode=custom. Increase gradually on resume runs."
+        description: "Custom generations. Used only when evolution_mode=custom. Kept for compatibility."
         required: false
         default: "60"
       population:
-        description: "Custom population. Used only when evolution_mode=custom."
+        description: "Custom population. Used only when evolution_mode=custom. Kept for compatibility."
         required: false
         default: "120"
       max_targets:
-        description: "Custom max targets. Used only when evolution_mode=custom. Use all only for local/full verification."
+        description: "Custom max targets. Used only when evolution_mode=custom. Kept for compatibility."
         required: false
         default: "160"
       target_stride:
-        description: "Custom target stride. Used only when evolution_mode=custom."
+        description: "Custom target stride. Used only when evolution_mode=custom. Kept for compatibility."
         required: true
         type: choice
         default: "2"
@@ -33,7 +33,7 @@ on:
           - "1"
           - "2"
       workers:
-        description: "Workers inside each shard"
+        description: "Workers inside each shard. Kept for compatibility."
         required: false
         default: "2"
       reset_state:
@@ -44,6 +44,14 @@ on:
         options:
           - "false"
           - "true"
+      model_iterations:
+        description: "Model-only self-evolution iterations"
+        required: false
+        default: "100"
+      model_max_targets:
+        description: "Model-only self-evolution holdout targets. Use 0 for full history."
+        required: false
+        default: "0"
       run_ml_stack:
         description: "Run MemoryBank/MetaClassifier/LightGBM/CatBoost/XGBoost/Optuna/SHAP after evolution"
         required: true
@@ -154,11 +162,7 @@ jobs:
   evolve:
     needs: scrape
     runs-on: ubuntu-latest
-    timeout-minutes: 340
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    timeout-minutes: 355
 
     steps:
       - name: Checkout repository
@@ -176,106 +180,61 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Pull latest model outputs
         run: |
           set -euo pipefail
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then
-            python -m pip install -r requirements.txt
-          fi
+          git fetch origin "${GITHUB_REF_NAME}"
+          git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
 
-      - name: Reset state if requested
+      - name: Reset model self-evolution outputs if requested
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.reset_state == 'true' }}
         run: |
-          rm -f outputs/evolution_state_*.json || true
-          rm -f outputs/evolution_history_*.csv || true
-          rm -f outputs/evolution_best_summary_*.csv || true
-          rm -f outputs/evolution_best_prediction_*.csv || true
-          rm -f loto7_best_model*.json || true
-          rm -f outputs/holdout/holdout_state.json || true
-          rm -f outputs/holdout/holdout_result.csv || true
+          rm -f outputs/model_self_evolution/history.csv || true
+          rm -f outputs/model_self_evolution/summary.json || true
+          rm -f outputs/model_self_evolution/report.txt || true
+          rm -f outputs/model_self_evolution/best_candidate_model.json || true
 
-      - name: Resolve evolution mode
-        id: mode
-        run: |
-          set -euo pipefail
-          MODE="${{ github.event.inputs.evolution_mode || 'recommended' }}"
-
-          if [ "$MODE" = "full_power" ]; then
-            GENERATIONS="120"
-            POPULATION="240"
-            MAX_TARGETS="240"
-            TARGET_STRIDE="2"
-          elif [ "$MODE" = "custom" ]; then
-            GENERATIONS="${{ github.event.inputs.generations || '60' }}"
-            POPULATION="${{ github.event.inputs.population || '120' }}"
-            MAX_TARGETS="${{ github.event.inputs.max_targets || '160' }}"
-            TARGET_STRIDE="${{ github.event.inputs.target_stride || '2' }}"
-          else
-            MODE="recommended"
-            GENERATIONS="60"
-            POPULATION="120"
-            MAX_TARGETS="160"
-            TARGET_STRIDE="2"
-          fi
-
-          ELITE_COUNT=$(( POPULATION / 20 ))
-          if [ "$ELITE_COUNT" -lt 4 ]; then
-            ELITE_COUNT="4"
-          fi
-          if [ "$ELITE_COUNT" -gt 10 ]; then
-            ELITE_COUNT="10"
-          fi
-          if [ "$ELITE_COUNT" -ge "$POPULATION" ]; then
-            ELITE_COUNT=$(( POPULATION - 1 ))
-          fi
-
-          echo "mode=${MODE}" >> "$GITHUB_OUTPUT"
-          echo "generations=${GENERATIONS}" >> "$GITHUB_OUTPUT"
-          echo "population=${POPULATION}" >> "$GITHUB_OUTPUT"
-          echo "elite_count=${ELITE_COUNT}" >> "$GITHUB_OUTPUT"
-          echo "max_targets=${MAX_TARGETS}" >> "$GITHUB_OUTPUT"
-          echo "target_stride=${TARGET_STRIDE}" >> "$GITHUB_OUTPUT"
-
-          echo "[MODE] mode=${MODE} generations=${GENERATIONS} population=${POPULATION} elite_count=${ELITE_COUNT} max_targets=${MAX_TARGETS} target_stride=${TARGET_STRIDE} shards=8 workers=${{ github.event.inputs.workers || '2' }}"
-
-      - name: Run precision evolution mode with resume, shard, and workers
+      - name: Run model-only self evolution
         env:
           PYTHONUNBUFFERED: "1"
         run: |
           set -euo pipefail
-          python loto7_precision_evolution_trainer.py \
-            --csv loto7.csv \
-            --output-dir outputs \
-            --best-model loto7_best_model.json \
-            --generations "${{ steps.mode.outputs.generations }}" \
-            --population "${{ steps.mode.outputs.population }}" \
-            --elite-count "${{ steps.mode.outputs.elite_count }}" \
-            --purchase-count 5 \
-            --min-train-draws 60 \
-            --max-targets "${{ steps.mode.outputs.max_targets }}" \
-            --target-stride "${{ steps.mode.outputs.target_stride }}" \
-            --shard-id "${{ matrix.shard }}" \
-            --num-shards 8 \
-            --workers "${{ github.event.inputs.workers || '2' }}" \
-            --resume \
-            --push-every-generation 1 \
-            --push-every-genome 25 \
-            --max-runtime-minutes 285 \
-            --safe-exit-minutes 45 \
-            --push-final
+          python loto7_model_self_evolver.py \
+            --iterations "${{ github.event.inputs.model_iterations || '100' }}" \
+            --max-targets "${{ github.event.inputs.model_max_targets || '0' }}" \
+            --max-runtime-minutes 340 \
+            --safe-exit-minutes 15 \
+            --min-roi-delta-percent 0.10 \
+            --min-profit-delta 0 \
+            --apply
 
-      - name: Upload shard artifacts
+      - name: Commit model self-evolution outputs
+        if: always()
+        run: |
+          set -euo pipefail
+          git add -f \
+            loto7_best_model.json \
+            outputs/model_self_evolution/*.json \
+            outputs/model_self_evolution/*.txt \
+            outputs/model_self_evolution/*.csv || true
+          if git diff --cached --quiet; then
+            echo "No model self-evolution changes"
+            exit 0
+          fi
+          git commit -m "Run LOTO7 model self-evolution from main trainer [skip ci]"
+          git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+          git push origin HEAD:"${GITHUB_REF_NAME}"
+
+      - name: Upload model self-evolution artifacts
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: loto7-evolution-outputs-shard-${{ matrix.shard }}
+          name: loto7-model-self-evolution-integrated
           path: |
-            loto7_best_model*.json
-            outputs/evolution_state_*.json
-            outputs/evolution_history_*.csv
-            outputs/evolution_best_summary_*.csv
-            outputs/evolution_best_prediction_*.csv
+            loto7_best_model.json
+            outputs/model_self_evolution/*.json
+            outputs/model_self_evolution/*.txt
+            outputs/model_self_evolution/*.csv
           if-no-files-found: ignore
 
   holdout:
@@ -300,14 +259,14 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Pull latest shard outputs
+      - name: Pull latest model outputs
         run: |
           set -euo pipefail
           BRANCH="${GITHUB_REF_NAME}"
           git fetch origin "${BRANCH}"
           git pull --rebase --autostash origin "${BRANCH}"
 
-      - name: Merge shard models
+      - name: Merge model candidates
         run: |
           set -euo pipefail
           python merge_evolution_shards.py \
@@ -316,8 +275,14 @@ jobs:
             --min-models 1 \
             --selection-holdout-start-draw 2 \
             --selection-min-train-draws 1 \
+            --selection-mode holdout_roi \
+            --patterns \
+              loto7_best_model.json \
+              outputs/model_self_evolution/best_candidate_model.json \
+              loto7_best_model_shard*_of_08.json \
+              outputs/loto7_best_model_shard*_of_08.json \
             --prediction-mode ensemble \
-            --ensemble-candidates-per-model 10 \
+            --ensemble-candidates-per-model 12 \
             --ensemble-overlap-limit 4 \
             --best-model loto7_best_model.json \
             --prediction outputs/evolution_best_prediction.csv \
@@ -612,21 +577,6 @@ jobs:
             --output-dir outputs/self_evolution \
             --apply
 
-      - name: Read self-evolution decision
-        if: ${{ steps.gate.outputs.should_run == 'true' }}
-        id: decision
-        run: |
-          set -euo pipefail
-          READY="false"
-          DECISION="missing"
-          if [ -f outputs/self_evolution/adoption_decision.json ]; then
-            READY="$(python -c 'import json,pathlib; data=json.loads(pathlib.Path("outputs/self_evolution/adoption_decision.json").read_text(encoding="utf-8")); print(str(bool(data.get("ready_for_pull_request"))).lower())')"
-            DECISION="$(python -c 'import json,pathlib; data=json.loads(pathlib.Path("outputs/self_evolution/adoption_decision.json").read_text(encoding="utf-8")); print(data.get("decision", "missing"))')"
-          fi
-          echo "ready_for_pull_request=${READY}" >> "$GITHUB_OUTPUT"
-          echo "decision=${DECISION}" >> "$GITHUB_OUTPUT"
-          echo "[SELF-EVOLVE] decision=${DECISION} ready_for_pull_request=${READY}"
-
       - name: Syntax check
         if: ${{ steps.gate.outputs.should_run == 'true' }}
         run: |
@@ -636,89 +586,25 @@ jobs:
             loto7_precision_evolution_trainer.py \
             merge_evolution_shards.py \
             holdout_evaluator.py \
-            loto7_self_evolver.py
+            loto7_self_evolver.py \
+            loto7_model_self_evolver.py
           bash -n scripts/collect_txt_reports.sh
 
-      - name: Smoke test precision trainer with proposed config
-        if: ${{ steps.gate.outputs.should_run == 'true' && steps.decision.outputs.ready_for_pull_request == 'true' }}
-        env:
-          PYTHONUNBUFFERED: "1"
-          DISABLE_GIT_PUSH: "1"
-          LOTO7_SELF_EVOLUTION_CONFIG: "loto7_self_evolution_config.json"
-        run: |
-          set -euo pipefail
-          python loto7_precision_evolution_trainer.py \
-            --csv loto7.csv \
-            --output-dir outputs/self_evolution/smoke \
-            --best-model outputs/self_evolution/smoke_best_model.json \
-            --state-path outputs/self_evolution/smoke_precision_state.json \
-            --generations 1 \
-            --population 12 \
-            --elite-count 3 \
-            --purchase-count 5 \
-            --min-train-draws 60 \
-            --max-targets 12 \
-            --target-stride 5 \
-            --shard-id 0 \
-            --num-shards 1 \
-            --workers 1 \
-            --max-runtime-minutes 20 \
-            --safe-exit-minutes 5
-
       - name: Collect TXT reports
-        if: ${{ steps.gate.outputs.should_run == 'true' && steps.decision.outputs.ready_for_pull_request == 'true' }}
+        if: ${{ steps.gate.outputs.should_run == 'true' }}
         run: |
           set -euo pipefail
           bash scripts/collect_txt_reports.sh outputs/txt_reports
 
-      - name: Build PR body
-        if: ${{ steps.gate.outputs.should_run == 'true' && steps.decision.outputs.ready_for_pull_request == 'true' }}
-        id: body
-        run: |
-          set -euo pipefail
-          BODY_FILE="outputs/self_evolution/pr_body.md"
-          {
-            echo "## LOTO7 Self-Evolving AI Proposal"
-            echo ""
-            echo "This PR was generated by the managed self-evolution step integrated into LOTO7 Evolution Trainer."
-            echo ""
-            echo "### Safety"
-            echo "- No direct push to main"
-            echo "- Config-only self modification"
-            echo "- Python syntax check passed"
-            echo "- Precision trainer smoke test passed"
-            echo "- TXT reports collected under outputs/txt_reports/"
-            echo ""
-            echo "### PR Summary"
-            echo "\`\`\`text"
-            if [ -f outputs/txt_reports/10_pr_summary.txt ]; then
-              cat outputs/txt_reports/10_pr_summary.txt
-            elif [ -f outputs/self_evolution/comparison_report.txt ]; then
-              cat outputs/self_evolution/comparison_report.txt
-            else
-              echo "No summary report was generated."
-            fi
-            echo "\`\`\`"
-            echo ""
-            echo "### TXT Reports"
-            echo "See: \`outputs/txt_reports/00_index.txt\` and \`outputs/txt_reports/all_reports.txt\`."
-          } > "$BODY_FILE"
-          echo "body_file=$BODY_FILE" >> "$GITHUB_OUTPUT"
-
       - name: Detect changes
-        if: ${{ steps.gate.outputs.should_run == 'true' && steps.decision.outputs.ready_for_pull_request == 'true' }}
+        if: ${{ steps.gate.outputs.should_run == 'true' }}
         id: changes
         run: |
           set -euo pipefail
           git add -f \
             loto7_self_evolution_config.json \
-            outputs/self_evolution/diagnosis.json \
-            outputs/self_evolution/proposal.json \
-            outputs/self_evolution/adoption_decision.json \
-            outputs/self_evolution/comparison_report.txt \
-            outputs/self_evolution/applied_config.json \
-            outputs/self_evolution/pr_body.md \
-            outputs/self_evolution/pr_summary.txt \
+            outputs/self_evolution/*.json \
+            outputs/self_evolution/*.txt \
             outputs/txt_reports/*.txt || true
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -726,8 +612,16 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Commit self-evolution artifacts
+        if: ${{ steps.gate.outputs.should_run == 'true' && steps.changes.outputs.changed == 'true' && (github.event_name != 'workflow_dispatch' || github.event.inputs.create_self_evolution_pr == 'false') }}
+        run: |
+          set -euo pipefail
+          git commit -m "Generate LOTO7 self-evolution proposal [skip ci]"
+          git pull --rebase --autostash || true
+          git push || true
+
       - name: Create self-evolution branch and PR
-        if: ${{ steps.gate.outputs.should_run == 'true' && steps.decision.outputs.ready_for_pull_request == 'true' && steps.changes.outputs.changed == 'true' && (github.event_name != 'workflow_dispatch' || github.event.inputs.create_self_evolution_pr != 'false') }}
+        if: ${{ steps.gate.outputs.should_run == 'true' && steps.changes.outputs.changed == 'true' && (github.event_name != 'workflow_dispatch' || github.event.inputs.create_self_evolution_pr != 'false') }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -736,30 +630,11 @@ jobs:
           git checkout -b "$BRANCH"
           git commit -m "Propose LOTO7 self-evolution config update"
           git push origin "$BRANCH"
-
-          PR_URL="https://github.com/${GITHUB_REPOSITORY}/pull/new/${BRANCH}"
-          set +e
           gh pr create \
             --base "${GITHUB_REF_NAME}" \
             --head "$BRANCH" \
             --title "LOTO7 self-evolution proposal" \
-            --body-file "${{ steps.body.outputs.body_file }}"
-          PR_STATUS=$?
-          set -e
-
-          if [ "$PR_STATUS" -ne 0 ]; then
-            echo "::warning::GitHub Actions could not create the pull request. This usually means repository workflow permissions do not allow Actions to create PRs."
-            echo "::warning::Manual PR URL: ${PR_URL}"
-            echo "To enable automatic PR creation, open Settings > Actions > General > Workflow permissions and enable 'Allow GitHub Actions to create and approve pull requests'."
-            exit 0
-          fi
-
-      - name: Keep artifacts when PR disabled
-        if: ${{ steps.gate.outputs.should_run == 'true' && steps.decision.outputs.ready_for_pull_request == 'true' && steps.changes.outputs.changed == 'true' && github.event_name == 'workflow_dispatch' && github.event.inputs.create_self_evolution_pr == 'false' }}
-        run: |
-          set -euo pipefail
-          git commit -m "Generate LOTO7 self-evolution proposal [skip ci]" || true
-          echo "PR creation disabled by workflow input."
+            --body "Managed self-evolution proposal generated by LOTO7 Evolution Trainer."
 
       - name: Upload self-evolution artifacts
         if: ${{ always() && steps.gate.outputs.should_run == 'true' }}
@@ -767,13 +642,7 @@ jobs:
         with:
           name: loto7-self-evolution-outputs
           path: |
-            outputs/self_evolution/diagnosis.json
-            outputs/self_evolution/proposal.json
-            outputs/self_evolution/adoption_decision.json
-            outputs/self_evolution/comparison_report.txt
-            outputs/self_evolution/applied_config.json
-            outputs/self_evolution/pr_body.md
-            outputs/self_evolution/pr_summary.txt
-            outputs/self_evolution/smoke_best_model.json
+            outputs/self_evolution/*.json
+            outputs/self_evolution/*.txt
             outputs/txt_reports/*.txt
           if-no-files-found: ignore
