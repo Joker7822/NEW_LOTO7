@@ -3,6 +3,14 @@ name: LOTO7 Quick Finish Check
 on:
   workflow_dispatch:
     inputs:
+      install_optional_deps:
+        description: "Install requirements.txt. Keep false for fastest quick finish."
+        required: true
+        type: choice
+        default: "false"
+        options:
+          - "false"
+          - "true"
       run_scraping:
         description: "Run scraping before quick check"
         required: true
@@ -53,12 +61,16 @@ defaults:
 
 concurrency:
   group: loto7-quick-finish-${{ github.ref_name }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   quick-finish:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      PYTHONUNBUFFERED: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
 
     steps:
       - name: Checkout repository
@@ -76,20 +88,35 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install minimal dependencies
+      - name: Quick mode summary
+        run: |
+          set -euo pipefail
+          python --version
+          echo "[QUICK] install_optional_deps=${{ github.event.inputs.install_optional_deps }}"
+          echo "[QUICK] run_scraping=${{ github.event.inputs.run_scraping }}"
+          echo "[QUICK] run_prediction_merge=${{ github.event.inputs.run_prediction_merge }}"
+          echo "[QUICK] run_quick_holdout=${{ github.event.inputs.run_quick_holdout }}"
+          echo "[QUICK] run_progress_monitor=${{ github.event.inputs.run_progress_monitor }}"
+          echo "[QUICK] commit_outputs=${{ github.event.inputs.commit_outputs }}"
+
+      - name: Optional dependency install
+        if: ${{ github.event.inputs.install_optional_deps == 'true' }}
+        timeout-minutes: 3
+        continue-on-error: true
         run: |
           set -euo pipefail
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then
-            # Keep quick-finish light. Install only when the repository explicitly needs it.
             python -m pip install -r requirements.txt
           fi
 
       - name: Optional scraping
         if: ${{ github.event.inputs.run_scraping == 'true' }}
+        timeout-minutes: 3
+        continue-on-error: true
         run: |
           set -euo pipefail
-          python scrapingloto7.py
+          python scrapingloto7.py --months 1 --sleep 0
 
       - name: Syntax check
         run: |
@@ -108,15 +135,25 @@ jobs:
         run: |
           set -euo pipefail
           echo "[CHECK] key files"
-          test -f loto7.csv
-          test -f loto7_best_model.json
-          test -f outputs/holdout/holdout_summary.json || echo "::warning::outputs/holdout/holdout_summary.json not found"
-          test -f outputs/holdout/holdout_report.txt || echo "::warning::outputs/holdout/holdout_report.txt not found"
-          test -f outputs/txt_reports/00_index.txt || echo "::warning::outputs/txt_reports/00_index.txt not found"
-          test -f outputs/txt_reports/all_reports.txt || echo "::warning::outputs/txt_reports/all_reports.txt not found"
+          test -f loto7.csv || { echo "::error::loto7.csv not found"; exit 1; }
+          for f in \
+            loto7_best_model.json \
+            outputs/holdout/holdout_summary.json \
+            outputs/holdout/holdout_report.txt \
+            outputs/txt_reports/00_index.txt \
+            outputs/txt_reports/all_reports.txt
+          do
+            if [ ! -f "$f" ]; then
+              echo "::warning::$f not found"
+            else
+              echo "[OK] $f"
+            fi
+          done
 
       - name: Optional shard merge and latest prediction
         if: ${{ github.event.inputs.run_prediction_merge == 'true' }}
+        timeout-minutes: 5
+        continue-on-error: true
         run: |
           set -euo pipefail
           python merge_evolution_shards.py \
@@ -135,8 +172,8 @@ jobs:
 
       - name: Optional resumable holdout check
         if: ${{ github.event.inputs.run_quick_holdout == 'true' }}
-        env:
-          PYTHONUNBUFFERED: "1"
+        timeout-minutes: 8
+        continue-on-error: true
         run: |
           set -euo pipefail
           python holdout_evaluator.py \
@@ -150,13 +187,15 @@ jobs:
             --report outputs/holdout/holdout_report.txt \
             --state outputs/holdout/holdout_state.json \
             --resume \
-            --progress-every 25 \
-            --max-runtime-minutes 10 \
+            --progress-every 10 \
+            --max-runtime-minutes 6 \
             --safe-exit-minutes 2 \
             --fail-on-missing-prize
 
       - name: Optional progress monitor
         if: ${{ github.event.inputs.run_progress_monitor == 'true' }}
+        timeout-minutes: 2
+        continue-on-error: true
         run: |
           set -euo pipefail
           python loto7_progress_monitor.py
