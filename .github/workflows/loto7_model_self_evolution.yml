@@ -30,7 +30,7 @@ concurrency:
 jobs:
   model-self-evolution:
     runs-on: ubuntu-latest
-    timeout-minutes: 75
+    timeout-minutes: 355
 
     steps:
       - name: Checkout repository
@@ -60,8 +60,8 @@ jobs:
           python loto7_model_self_evolver.py \
             --iterations "${{ github.event.inputs.iterations || '100' }}" \
             --max-targets "${{ github.event.inputs.max_targets || '180' }}" \
-            --max-runtime-minutes 70 \
-            --safe-exit-minutes 5 \
+            --max-runtime-minutes 340 \
+            --safe-exit-minutes 15 \
             --min-roi-delta-percent 0.10 \
             --min-profit-delta 0 \
             ${APPLY_FLAG}
