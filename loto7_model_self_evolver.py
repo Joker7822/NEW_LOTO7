@@ -8,15 +8,18 @@ loto7_model_self_evolver.py
 holdoutの回収率・収支で採用判定する。
 
 標準では100回反復する。
+途中で安全終了しても state.json から再開できる。
 """
 
 from __future__ import annotations
 
 import argparse
+import base64
 import csv
 import datetime as dt
 import glob
 import json
+import pickle
 import random
 import time
 from dataclasses import asdict
@@ -29,6 +32,7 @@ from merge_evolution_shards import evaluate_model_on_holdout, load_prize_rows, s
 
 DEFAULT_SEED_PATTERNS = [
     "loto7_best_model.json",
+    "outputs/model_self_evolution/best_candidate_model.json",
     "loto7_best_model_shard*_of_08.json",
     "outputs/loto7_best_model_shard*_of_08.json",
 ]
@@ -143,6 +147,105 @@ def make_candidate(parent_pool: Sequence[Genome], iteration: int, rng: random.Ra
     return mutate(parent, iteration, iteration, rng)
 
 
+def encode_rng_state(rng: random.Random) -> str:
+    return base64.b64encode(pickle.dumps(rng.getstate())).decode("ascii")
+
+
+def restore_rng_state(rng: random.Random, encoded: object) -> bool:
+    if not isinstance(encoded, str) or not encoded:
+        return False
+    try:
+        rng.setstate(pickle.loads(base64.b64decode(encoded.encode("ascii"))))
+        return True
+    except Exception as exc:
+        print(f"[WARN] failed to restore RNG state: {exc}")
+        return False
+
+
+def state_matches(state: Dict[str, object], args: argparse.Namespace, target_draws: int) -> bool:
+    return (
+        state.get("csv") == args.csv
+        and int(state.get("purchase_count", -1)) == int(args.purchase_count)
+        and int(state.get("unit_cost", -1)) == int(args.unit_cost)
+        and int(state.get("target_draws", -1)) == int(target_draws)
+        and int(state.get("iterations_requested", -1)) == int(args.iterations)
+    )
+
+
+def load_resume_state(path: str, args: argparse.Namespace, target_draws: int) -> Optional[Dict[str, object]]:
+    p = Path(path)
+    if not p.exists() or p.stat().st_size <= 0:
+        return None
+    try:
+        state = read_json(path)
+    except Exception as exc:
+        print(f"[WARN] cannot read state {path}: {exc}")
+        return None
+    if not state_matches(state, args, target_draws):
+        print("[INFO] state exists but does not match current run settings; starting fresh")
+        return None
+    last_iteration = int(state.get("last_iteration", 0))
+    status = str(state.get("status", ""))
+    if last_iteration >= args.iterations and status == "completed":
+        print("[INFO] previous matching run already completed; starting fresh")
+        return None
+    return state
+
+
+def genomes_from_state(raw_items: object) -> List[Genome]:
+    if not isinstance(raw_items, list):
+        return []
+    out: List[Genome] = []
+    seen = set()
+    for item in raw_items:
+        if not isinstance(item, dict):
+            continue
+        try:
+            genome = genome_from_dict(item)
+        except Exception:
+            continue
+        if genome.id in seen:
+            continue
+        seen.add(genome.id)
+        out.append(genome)
+    return out
+
+
+def save_state(
+    path: str,
+    *,
+    args: argparse.Namespace,
+    status: str,
+    target_draws: int,
+    last_iteration: int,
+    evaluated_total: int,
+    best_genome: Genome,
+    best_metrics: Dict[str, object],
+    baseline_genome: Genome,
+    baseline_metrics: Dict[str, object],
+    parent_pool: Sequence[Genome],
+    rng: random.Random,
+) -> None:
+    payload = {
+        "updated_at": now_iso(),
+        "status": status,
+        "csv": args.csv,
+        "purchase_count": args.purchase_count,
+        "unit_cost": args.unit_cost,
+        "target_draws": target_draws,
+        "iterations_requested": args.iterations,
+        "last_iteration": last_iteration,
+        "iterations_evaluated": evaluated_total,
+        "best_genome": asdict(best_genome),
+        "best_metrics": best_metrics,
+        "baseline_genome": asdict(baseline_genome),
+        "baseline_metrics": baseline_metrics,
+        "parent_pool": [asdict(g) for g in parent_pool[-24:]],
+        "rng_state": encode_rng_state(rng),
+    }
+    write_json(path, payload)
+
+
 def payload_for_model(
     *,
     genome: Genome,
@@ -180,8 +283,12 @@ def write_report(path: str, summary: Dict[str, object]) -> None:
         "",
         f"created_at: {summary.get('created_at')}",
         f"status: {summary.get('status')}",
+        f"resume_used: {summary.get('resume_used')}",
+        f"start_iteration: {summary.get('start_iteration')}",
+        f"last_iteration: {summary.get('last_iteration')}",
         f"iterations_requested: {summary.get('iterations_requested')}",
         f"iterations_evaluated: {summary.get('iterations_evaluated')}",
+        f"iterations_evaluated_this_run: {summary.get('iterations_evaluated_this_run')}",
         "",
         "[Baseline]",
         f"roi_percent: {baseline.get('roi_percent') if isinstance(baseline, dict) else ''}",
@@ -213,6 +320,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--summary", default="outputs/model_self_evolution/summary.json")
     parser.add_argument("--report", default="outputs/model_self_evolution/report.txt")
     parser.add_argument("--history", default="outputs/model_self_evolution/history.csv")
+    parser.add_argument("--state", default="outputs/model_self_evolution/state.json")
     parser.add_argument("--iterations", type=int, default=100)
     parser.add_argument("--purchase-count", type=int, default=5)
     parser.add_argument("--unit-cost", type=int, default=300)
@@ -226,6 +334,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--min-profit-delta", type=int, default=0)
     parser.add_argument("--allow-high-grade-drop", action="store_true")
     parser.add_argument("--apply", action="store_true", help="Overwrite --best-model only if the candidate passes adoption rules.")
+    parser.add_argument("--resume", dest="resume", action="store_true", default=True, help="Resume from --state when compatible. Enabled by default.")
+    parser.add_argument("--no-resume", dest="resume", action="store_false", help="Ignore any existing --state and start fresh.")
     parser.add_argument("--max-runtime-minutes", type=float, default=65.0)
     parser.add_argument("--safe-exit-minutes", type=float, default=5.0)
     args = parser.parse_args(argv)
@@ -268,10 +378,35 @@ def main(argv: Optional[List[str]] = None) -> int:
     )
     best_genome = baseline
     best_metrics = baseline_metrics
+    baseline_genome = baseline
     status = "completed"
-    evaluated = 0
+    last_iteration = 0
+    evaluated_total = 0
+    evaluated_this_run = 0
+    resume_used = False
+    start_iteration = 1
 
-    for iteration in range(1, args.iterations + 1):
+    if args.resume:
+        state = load_resume_state(args.state, args, len(target_indices))
+        if state:
+            try:
+                baseline_genome = genome_from_dict(state.get("baseline_genome", {}))
+                baseline_metrics = state.get("baseline_metrics", baseline_metrics)  # type: ignore[assignment]
+                best_genome = genome_from_dict(state.get("best_genome", {}))
+                best_metrics = state.get("best_metrics", best_metrics)  # type: ignore[assignment]
+                restored_pool = genomes_from_state(state.get("parent_pool"))
+                if restored_pool:
+                    parent_pool = restored_pool
+                restore_rng_state(rng, state.get("rng_state"))
+                last_iteration = int(state.get("last_iteration", 0))
+                evaluated_total = int(state.get("iterations_evaluated", last_iteration))
+                start_iteration = last_iteration + 1
+                resume_used = True
+                print(f"[RESUME] continuing from iteration {start_iteration}/{args.iterations}")
+            except Exception as exc:
+                print(f"[WARN] failed to resume state; starting fresh: {exc}")
+
+    for iteration in range(start_iteration, args.iterations + 1):
         elapsed_minutes = (time.monotonic() - started) / 60.0
         if elapsed_minutes >= max(0.0, args.max_runtime_minutes - args.safe_exit_minutes):
             status = f"safe_exit_at_{elapsed_minutes:.2f}_minutes"
@@ -287,7 +422,9 @@ def main(argv: Optional[List[str]] = None) -> int:
             purchase_count=args.purchase_count,
             unit_cost=args.unit_cost,
         )
-        evaluated += 1
+        evaluated_total += 1
+        evaluated_this_run += 1
+        last_iteration = iteration
         if score_key(metrics) > score_key(best_metrics):
             best_genome = candidate
             best_metrics = metrics
@@ -309,6 +446,24 @@ def main(argv: Optional[List[str]] = None) -> int:
             },
         )
 
+        save_state(
+            args.state,
+            args=args,
+            status="running",
+            target_draws=len(target_indices),
+            last_iteration=last_iteration,
+            evaluated_total=evaluated_total,
+            best_genome=best_genome,
+            best_metrics=best_metrics,
+            baseline_genome=baseline_genome,
+            baseline_metrics=baseline_metrics,
+            parent_pool=parent_pool,
+            rng=rng,
+        )
+
+    if last_iteration >= args.iterations:
+        status = "completed"
+
     adopted, reasons = is_adoptable(
         best_metrics,
         baseline_metrics,
@@ -329,11 +484,31 @@ def main(argv: Optional[List[str]] = None) -> int:
     if adopted and args.apply:
         write_json(args.best_model, candidate_payload)
 
+    save_state(
+        args.state,
+        args=args,
+        status=status,
+        target_draws=len(target_indices),
+        last_iteration=last_iteration,
+        evaluated_total=evaluated_total,
+        best_genome=best_genome,
+        best_metrics=best_metrics,
+        baseline_genome=baseline_genome,
+        baseline_metrics=baseline_metrics,
+        parent_pool=parent_pool,
+        rng=rng,
+    )
+
     summary = {
         "created_at": now_iso(),
         "status": status,
+        "resume_used": resume_used,
+        "state": args.state,
+        "start_iteration": start_iteration,
+        "last_iteration": last_iteration,
         "iterations_requested": args.iterations,
-        "iterations_evaluated": evaluated,
+        "iterations_evaluated": evaluated_total,
+        "iterations_evaluated_this_run": evaluated_this_run,
         "target_draws": len(target_indices),
         "baseline_metrics": baseline_metrics,
         "best_metrics": best_metrics,
