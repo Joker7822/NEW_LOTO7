@@ -1,8 +1,8 @@
 """Runtime guard for LOTO7 GitHub Actions CLI arguments.
 
 Python imports ``sitecustomize`` automatically when it is available on
-``sys.path``. This guard is tightly scoped to ``merge_evolution_shards.py``
-and leaves other commands unchanged.
+``sys.path``. This guard is tightly scoped to LOTO7 workflow entry points
+and leaves unrelated commands unchanged.
 """
 
 from __future__ import annotations
@@ -25,8 +25,11 @@ def _set_option(flag: str, value: str) -> None:
         sys.argv.append(value)
 
 
-def _patch_merge_evolution_args() -> None:
-    script_name = os.path.basename(sys.argv[0] or "")
+def _has_option(flag: str) -> bool:
+    return flag in sys.argv
+
+
+def _patch_merge_evolution_args(script_name: str) -> None:
     if script_name != "merge_evolution_shards.py":
         return
 
@@ -37,4 +40,19 @@ def _patch_merge_evolution_args() -> None:
     _set_option("--selection-mode", "holdout_roi")
 
 
-_patch_merge_evolution_args()
+def _patch_model_self_evolver_args(script_name: str) -> None:
+    if script_name != "loto7_model_self_evolver.py":
+        return
+
+    # Default to full-history evaluation when max-targets is not specified.
+    if not _has_option("--max-targets"):
+        _set_option("--max-targets", "0")
+
+
+def _patch_args() -> None:
+    script_name = os.path.basename(sys.argv[0] or "")
+    _patch_merge_evolution_args(script_name)
+    _patch_model_self_evolver_args(script_name)
+
+
+_patch_args()
