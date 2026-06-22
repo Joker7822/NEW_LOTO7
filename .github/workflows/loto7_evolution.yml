@@ -74,7 +74,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 defaults:
   run:
@@ -224,7 +223,7 @@ jobs:
 
   holdout:
     needs: evolve
-    if: always()
+    if: ${{ !cancelled() && needs.evolve.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 355
 
@@ -312,8 +311,8 @@ jobs:
             exit 0
           fi
           git commit -m "Update LOTO7 holdout backtest outputs [skip ci]"
-          git pull --rebase --autostash || true
-          git push || true
+          git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+          git push origin HEAD:"${GITHUB_REF_NAME}"
 
       - name: Upload holdout artifacts
         uses: actions/upload-artifact@v4
@@ -332,7 +331,7 @@ jobs:
 
   ml-stack:
     needs: [evolve, holdout]
-    if: ${{ always() && (github.event_name != 'workflow_dispatch' || github.event.inputs.run_ml_stack != 'false') }}
+    if: ${{ !cancelled() && needs.evolve.result == 'success' && needs.holdout.result == 'success' && (github.event_name != 'workflow_dispatch' || github.event.inputs.run_ml_stack != 'false') }}
     runs-on: ubuntu-latest
     timeout-minutes: 355
 
@@ -398,8 +397,8 @@ jobs:
           if-no-files-found: ignore
 
   complete-ai:
-    needs: [evolve, ml-stack]
-    if: ${{ always() && (github.event_name != 'workflow_dispatch' || github.event.inputs.run_complete_ai != 'false') }}
+    needs: [evolve, holdout, ml-stack]
+    if: ${{ always() && !cancelled() && needs.evolve.result == 'success' && needs.holdout.result == 'success' && (github.event_name != 'workflow_dispatch' || github.event.inputs.run_complete_ai != 'false') }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
 
