@@ -9,6 +9,7 @@ holdout_evaluator.py
 重要:
     - roi / roi_percent は「収支 ÷ 購入額」で計算する
     - 従来の「払戻 ÷ 購入額」は payout_roi / payout_roi_percent として別出力する
+    - 的中率は口数ベースと回別ベースの2種類を出力する
     - 各検証回の予測生成は train = draws[:idx] のみを使い、対象回以降は使わない
 """
 
@@ -95,6 +96,12 @@ def format_yen(value: object) -> str:
         return f"{value}円"
 
 
+def pct(numerator: int, denominator: int) -> float:
+    if denominator <= 0:
+        return 0.0
+    return numerator / denominator
+
+
 def roi_from_profit(total_cost: int, total_payout: int) -> float:
     """収支ベースROI: (払戻額 - 購入額) / 購入額。"""
     if total_cost <= 0:
@@ -113,6 +120,9 @@ def empty_year_stats() -> Dict[str, object]:
     return {
         "target_draws": 0,
         "total_tickets": 0,
+        "winning_ticket_count": 0,
+        "ticket_hit_rate": 0.0,
+        "ticket_hit_rate_percent": 0.0,
         "total_cost": 0,
         "total_payout": 0,
         "profit": 0,
@@ -127,6 +137,8 @@ def empty_year_stats() -> Dict[str, object]:
 
 def update_year_stats(stats: Dict[str, object], *, cost: int, payout: int, rank: str, main_match: int) -> None:
     stats["total_tickets"] = int(stats["total_tickets"]) + 1
+    if rank != "外れ":
+        stats["winning_ticket_count"] = int(stats.get("winning_ticket_count", 0)) + 1
     stats["total_cost"] = int(stats["total_cost"]) + cost
     stats["total_payout"] = int(stats["total_payout"]) + payout
     stats["profit"] = int(stats["total_payout"]) - int(stats["total_cost"])
@@ -136,12 +148,17 @@ def update_year_stats(stats: Dict[str, object], *, cost: int, payout: int, rank:
     rank_counts[rank] = int(rank_counts.get(rank, 0)) + 1
     total_cost = int(stats["total_cost"])
     total_payout = int(stats["total_payout"])
+    total_tickets = int(stats["total_tickets"])
+    winning_ticket_count = int(stats.get("winning_ticket_count", 0))
     roi = roi_from_profit(total_cost, total_payout)
     payout_roi = roi_from_payout(total_cost, total_payout)
+    ticket_hit_rate = pct(winning_ticket_count, total_tickets)
     stats["roi"] = round(roi, 6)
     stats["roi_percent"] = round(roi * 100.0, 3)
     stats["payout_roi"] = round(payout_roi, 6)
     stats["payout_roi_percent"] = round(payout_roi * 100.0, 3)
+    stats["ticket_hit_rate"] = round(ticket_hit_rate, 6)
+    stats["ticket_hit_rate_percent"] = round(ticket_hit_rate * 100.0, 3)
 
 
 def select_target_indices(draws: Sequence[Draw], *, min_train_draws: int, holdout_start_draw: int, holdout_end_draw: Optional[int]) -> List[int]:
@@ -236,6 +253,10 @@ def summarize_detail_csv(path: Path) -> Dict[str, object]:
             "roi_percent": 0.0,
             "payout_roi": 0.0,
             "payout_roi_percent": 0.0,
+            "ticket_hit_rate": 0.0,
+            "ticket_hit_rate_percent": 0.0,
+            "draw_hit_rate": 0.0,
+            "draw_hit_rate_percent": 0.0,
             "max_main_match": 0,
             "rank_counts": rank_counts,
             "missing_prize_draw_count": 0,
@@ -274,6 +295,8 @@ def summarize_detail_csv(path: Path) -> Dict[str, object]:
     profit = total_payout - total_cost
     roi = roi_from_profit(total_cost, total_payout)
     payout_roi = roi_from_payout(total_cost, total_payout)
+    ticket_hit_rate = pct(winning_ticket_count, total_tickets)
+    draw_hit_rate = pct(len(winning_draws), len(target_draws))
     return {
         "target_draws": len(target_draws),
         "total_tickets": total_tickets,
@@ -284,6 +307,10 @@ def summarize_detail_csv(path: Path) -> Dict[str, object]:
         "roi_percent": round(roi * 100.0, 3),
         "payout_roi": round(payout_roi, 6),
         "payout_roi_percent": round(payout_roi * 100.0, 3),
+        "ticket_hit_rate": round(ticket_hit_rate, 6),
+        "ticket_hit_rate_percent": round(ticket_hit_rate * 100.0, 3),
+        "draw_hit_rate": round(draw_hit_rate, 6),
+        "draw_hit_rate_percent": round(draw_hit_rate * 100.0, 3),
         "max_main_match": max_main_match,
         "rank_counts": rank_counts,
         "missing_prize_draw_count": len(missing_prize_draws),
@@ -371,6 +398,10 @@ def build_summary(args: argparse.Namespace, *, genome, output_csv: Path, summary
         "roi_percent": stats["roi_percent"],
         "payout_roi": stats["payout_roi"],
         "payout_roi_percent": stats["payout_roi_percent"],
+        "ticket_hit_rate": stats["ticket_hit_rate"],
+        "ticket_hit_rate_percent": stats["ticket_hit_rate_percent"],
+        "draw_hit_rate": stats["draw_hit_rate"],
+        "draw_hit_rate_percent": stats["draw_hit_rate_percent"],
         "max_main_match": stats["max_main_match"],
         "rank_counts": stats["rank_counts"],
         "missing_prize_draw_count": stats["missing_prize_draw_count"],
@@ -423,6 +454,8 @@ def write_text_report(summary: Dict[str, object], report_path: str) -> None:
     lines.append(f"総収支: {format_yen(summary.get('profit'))}")
     lines.append(f"収支率ROI: {summary.get('roi_percent')}%")
     lines.append(f"従来回収率(払戻÷購入): {summary.get('payout_roi_percent')}%")
+    lines.append(f"的中率(口数): {summary.get('ticket_hit_rate_percent')}%")
+    lines.append(f"的中回率(回別): {summary.get('draw_hit_rate_percent')}%")
     lines.append(f"最大本数字一致数: {summary.get('max_main_match')}")
     lines.append(f"当選回数: {summary.get('winning_draw_count')}")
     lines.append(f"当選口数: {summary.get('winning_ticket_count')}")
@@ -463,6 +496,7 @@ def write_text_report(summary: Dict[str, object], report_path: str) -> None:
                 f"収支={format_yen(item.get('profit'))} / "
                 f"収支率ROI={item.get('roi_percent')}% / "
                 f"従来回収率={item.get('payout_roi_percent')}% / "
+                f"的中率(口数)={item.get('ticket_hit_rate_percent')}% / "
                 f"最大一致={item.get('max_main_match')}"
             )
     else:
