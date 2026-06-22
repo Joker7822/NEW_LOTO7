@@ -14,17 +14,17 @@
     "max_match_weight": 0.15,
     "overlap_limit": 4,
     "prediction_mode": "ensemble",
-    "roi_weight": 2.0,
+    "roi_weight": 2.12,
     "sixth_weight": 0.002
   },
-  "last_self_evolved_at": "2026-06-19T22:08:41.278350+00:00",
+  "last_self_evolved_at": "2026-06-22T13:28:17.424113+00:00",
   "precision_scoring": {
     "1等": 100000.0,
     "2等": 60000.0,
     "3等": 38000.0,
     "4等": 9350.0,
-    "5等": 850.0,
-    "6等": 420.0,
+    "5等": 884.0,
+    "6等": 432.6,
     "fallback_bonus": 0.75,
     "fallback_main": 1.5,
     "near_miss_main2": 8.0,
@@ -49,7 +49,7 @@
     "high_grade_hit_count": 8,
     "max_main_match": 6,
     "min_total_target_draws": 600,
-    "roi_percent": 40.0
+    "roi_percent": 0.0
   },
-  "version": 2
+  "version": 4
 }

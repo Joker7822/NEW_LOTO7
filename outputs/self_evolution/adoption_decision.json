@@ -1,13 +1,20 @@
 {
   "auto_main_push_allowed": false,
   "blocking_issues": [],
-  "created_at": "2026-06-19T22:08:41.278356+00:00",
+  "changed_config_paths": [
+    "ensemble",
+    "precision_scoring",
+    "version"
+  ],
+  "created_at": "2026-06-22T13:28:17.424173+00:00",
   "decision": "propose_pr",
   "notes": [
     "この判定は安全な候補生成用です。mainへの直接反映は行いません。",
+    "実質差分がない場合は重複PRを作りません。",
     "宝くじの将来当せんや利益を保証しません。"
   ],
   "proposal_reason_count": 3,
   "ready_for_branch": true,
-  "ready_for_pull_request": true
+  "ready_for_pull_request": true,
+  "substantive_config_change": true
 }

@@ -1,27 +1,29 @@
 LOTO7 TXT Reports Index
 ========================
 
-作成日: 2026-06-20
-目的: 各種 .txt / .md レポートを一括確認するための専用フォルダ。
+Generated at UTC: 2026-06-22T13:31:52+00:00
 
-[おすすめ確認順]
-1. 10_pr_summary.txt
-2. 20_self_evolution_report.txt
-3. 30_latest_prediction_report.txt
-4. 40_model_selection_report.txt
-5. 50_holdout_report.txt
-6. 60_progress_summary.txt
-7. all_reports.txt
+Metric definitions:
+- profit-based ROI = profit / total cost
+- payout ROI = total payout / total cost
+- ticket hit rate = winning tickets / total tickets
+- draw hit rate = winning draws / target draws
 
-[ファイル一覧]
-- 10_pr_summary.txt <= 自己進化PR/採用判断の要約
-- 20_self_evolution_report.txt <= outputs/self_evolution/comparison_report.txt
-- 30_latest_prediction_report.txt <= outputs/holdout/latest_prediction_report.txt
-- 40_model_selection_report.txt <= outputs/holdout/model_selection_report.txt
-- 50_holdout_report.txt <= outputs/holdout/holdout_report.txt の概要版
-- 60_progress_summary.txt <= outputs/loto7_progress_summary.md
-- all_reports.txt <= 主要レポートの一括結合版
-- README.txt <= このフォルダの説明
-
-[注意]
-宝くじはランダム性が高く、各レポートは過去検証・予測補助であり、将来の当せんや利益を保証するものではありません。
+Files:
+10_pr_summary.txt <= outputs/self_evolution/pr_summary.txt
+20_self_evolution_report.txt <= outputs/self_evolution/comparison_report.txt
+30_latest_prediction_report.txt <= outputs/holdout/latest_prediction_report.txt
+40_model_selection_report.txt <= outputs/holdout/model_selection_report.txt
+50_holdout_report.txt <= outputs/holdout/holdout_report.txt
+60_progress_summary.txt <= outputs/loto7_progress_summary.md
+90_outputs_complete_ai_complete_ai_dashboard.md <= outputs/complete_ai/complete_ai_dashboard.md
+90_outputs_deep_ai_deep_ai_summary.md <= outputs/deep_ai/deep_ai_summary.md
+90_outputs_holdout_holdout_report.txt <= outputs/holdout/holdout_report.txt
+90_outputs_holdout_latest_prediction_report.txt <= outputs/holdout/latest_prediction_report.txt
+90_outputs_holdout_model_selection_report.txt <= outputs/holdout/model_selection_report.txt
+90_outputs_loto7_progress_summary.md <= outputs/loto7_progress_summary.md
+90_outputs_model_self_evolution_report.txt <= outputs/model_self_evolution/report.txt
+90_outputs_self_evolution_comparison_report.txt <= outputs/self_evolution/comparison_report.txt
+90_outputs_self_evolution_pr_body.md <= outputs/self_evolution/pr_body.md
+90_outputs_self_evolution_pr_summary.txt <= outputs/self_evolution/pr_summary.txt
+90_outputs_self_evolution_self_evolution_report.md <= outputs/self_evolution/self_evolution_report.md
