@@ -12,11 +12,12 @@ LOTO7 Self-Evolution PR Summary
 ================================
 
 [現在の採用状態]
-- mainには自己進化設定 version 2 / profile self_evolved_precision が採用済み。
+- mainには自己進化設定 version 3 / profile self_evolved_precision が採用済み。
 - candidates_per_model: 12
 - 4等スコア: 9350.0
 - near_miss_main4: 388.8
 - prediction_mode: ensemble
+- roi_percent は収支率ROI = 収支 ÷ 購入額 × 100 として扱います。
 
 [直近の自己進化判断]
 - decision: propose_pr
@@ -25,7 +26,8 @@ LOTO7 Self-Evolution PR Summary
 - auto_main_push_allowed: false
 
 [主要指標]
-- ROI: 58.385%
+- 収支率ROI: -41.615%
+- 従来回収率(払戻÷購入): 58.385%
 - 収支: -425,100円
 - 最大本数字一致: 6
 - 4等以上件数: 7
@@ -46,7 +48,8 @@ LOTO7 Self Evolution Report
 [現状指標]
 holdout完了: True
 検証回数: 681 / 681
-ROI: 58.385%
+収支率ROI: -41.615%
+従来回収率(払戻÷購入): 58.385%
 収支: -425100円
 最大本数字一致: 6
 4等以上件数: 7
@@ -99,9 +102,11 @@ LOTO7 Model Selection Report
 Evolutionスコア: 67991.78238597537
 
 [上位]
-1位: shard05 / ROI=58.385% / 収支=-425,100円 / 最大一致=6 / 4等以上=7
-2位: shard02 / ROI=57.67% / 収支=-432,400円 / 最大一致=6 / 4等以上=7
-3位: shard03 / ROI=23.279% / 収支=-783,700円 / 最大一致=5 / 4等以上=9
+次回holdout再生成後、ここに表示されるROIは収支率ROIになります。
+現行の旧レポート値は従来回収率です。
+1位: shard05 / 従来回収率=58.385% / 収支=-425,100円 / 最大一致=6 / 4等以上=7
+2位: shard02 / 従来回収率=57.67% / 収支=-432,400円 / 最大一致=6 / 4等以上=7
+3位: shard03 / 従来回収率=23.279% / 収支=-783,700円 / 最大一致=5 / 4等以上=9
 
 ################################################################################
 # 50_holdout_report.txt
@@ -122,7 +127,8 @@ LOTO7 Holdout Backtest Report - Summary Copy
 総購入額: 1,021,500円
 総払戻額: 596,400円
 総収支: -425,100円
-回収率ROI: 58.385%
+収支率ROI: -41.615%
+従来回収率(払戻÷購入): 58.385%
 最大本数字一致数: 6
 当選回数: 99
 当選口数: 149
