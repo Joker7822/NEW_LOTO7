@@ -3,47 +3,12 @@ name: LOTO7 Evolution Trainer
 on:
   workflow_dispatch:
     inputs:
-      evolution_mode:
-        description: "Execution mode"
-        required: true
-        type: choice
-        default: "recommended"
-        options:
-          - "recommended"
-          - "full_power"
-          - "custom"
-      generations:
-        description: "Custom generations. Used only when evolution_mode=custom. Kept for compatibility."
-        required: false
-        default: "60"
-      population:
-        description: "Custom population. Used only when evolution_mode=custom. Kept for compatibility."
-        required: false
-        default: "120"
-      max_targets:
-        description: "Custom max targets. Used only when evolution_mode=custom. Kept for compatibility."
-        required: false
-        default: "160"
-      target_stride:
-        description: "Custom target stride. Used only when evolution_mode=custom. Kept for compatibility."
-        required: true
-        type: choice
-        default: "2"
-        options:
-          - "1"
-          - "2"
-      workers:
-        description: "Workers inside each shard. Kept for compatibility."
-        required: false
-        default: "2"
       reset_state:
-        description: "Start from scratch instead of resume"
+        description: "Start model self-evolution from scratch"
         required: true
         type: choice
         default: "false"
-        options:
-          - "false"
-          - "true"
+        options: ["false", "true"]
       model_iterations:
         description: "Model-only self-evolution iterations"
         required: false
@@ -53,23 +18,18 @@ on:
         required: false
         default: "0"
       run_ml_stack:
-        description: "Run MemoryBank/MetaClassifier/LightGBM/CatBoost/XGBoost/Optuna/SHAP after evolution"
+        description: "Run ML stack after holdout"
         required: true
         type: choice
         default: "true"
-        options:
-          - "true"
-          - "false"
+        options: ["true", "false"]
       run_complete_ai:
-        description: "Run complete AI: Meta Ensemble, Master Champion, ROI, Bayesian, Monte Carlo, MCTS, Dashboard"
+        description: "Run complete AI after holdout"
         required: true
         type: choice
         default: "true"
-        options:
-          - "true"
-          - "false"
+        options: ["true", "false"]
   schedule:
-    # JST 00:00 / 08:00 / 16:00 = UTC 15:00 / 23:00 / 07:00
     - cron: "0 15,23,7 * * *"
 
 permissions:
@@ -87,88 +47,56 @@ jobs:
   scrape:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Resolve branch
-        id: br
-        run: |
-          set -euo pipefail
-          echo "branch=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
-
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
       - name: Configure git
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
       - name: Install dependencies
         run: |
           set -euo pipefail
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then
-            python -m pip install -r requirements.txt
-          fi
+          if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
           sudo apt-get update
           sudo apt-get install -y xvfb
-
       - name: Run scraping script
         run: xvfb-run -a python scrapingloto7.py
-
-      - name: Commit and push loto7.csv if changed
+      - name: Commit loto7.csv if changed
         run: |
           set -euo pipefail
-          BRANCH="${{ steps.br.outputs.branch }}"
-          git fetch origin "${BRANCH}"
-          git pull --rebase --autostash origin "${BRANCH}"
-
-          if [ -f loto7.csv ]; then
-            git add loto7.csv
-          fi
-
-          if git diff --cached --quiet; then
-            echo "No changes to loto7.csv"
-            exit 0
-          fi
-
+          git fetch origin "${GITHUB_REF_NAME}"
+          git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+          git add loto7.csv || true
+          if git diff --cached --quiet; then echo "No loto7.csv changes"; exit 0; fi
           git commit -m "Auto update loto7.csv [skip ci]"
-          git push --force-with-lease origin HEAD:"${BRANCH}"
+          git push --force-with-lease origin HEAD:"${GITHUB_REF_NAME}"
 
   evolve:
     needs: scrape
     runs-on: ubuntu-latest
     timeout-minutes: 355
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
       - name: Configure git
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
       - name: Pull latest model outputs
         run: |
           set -euo pipefail
           git fetch origin "${GITHUB_REF_NAME}"
           git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
-
       - name: Reset model self-evolution outputs if requested
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.reset_state == 'true' }}
         run: |
@@ -177,7 +105,6 @@ jobs:
           rm -f outputs/model_self_evolution/report.txt || true
           rm -f outputs/model_self_evolution/best_candidate_model.json || true
           rm -f outputs/model_self_evolution/state.json || true
-
       - name: Run model-only self evolution
         env:
           PYTHONUNBUFFERED: "1"
@@ -191,24 +118,15 @@ jobs:
             --min-roi-delta-percent 0.10 \
             --min-profit-delta 0 \
             --apply
-
-      - name: Commit model self-evolution outputs
+      - name: Commit adopted best model and self-evolution outputs
         if: always()
         run: |
           set -euo pipefail
-          git add -f \
-            loto7_best_model.json \
-            outputs/model_self_evolution/*.json \
-            outputs/model_self_evolution/*.txt \
-            outputs/model_self_evolution/*.csv || true
-          if git diff --cached --quiet; then
-            echo "No model self-evolution changes"
-            exit 0
-          fi
+          git add -f loto7_best_model.json outputs/model_self_evolution/*.json outputs/model_self_evolution/*.txt outputs/model_self_evolution/*.csv || true
+          if git diff --cached --quiet; then echo "No model self-evolution changes"; exit 0; fi
           git commit -m "Run LOTO7 model self-evolution from main trainer [skip ci]"
           git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
           git push origin HEAD:"${GITHUB_REF_NAME}"
-
       - name: Upload model self-evolution artifacts
         uses: actions/upload-artifact@v4
         if: always()
@@ -226,31 +144,23 @@ jobs:
     if: ${{ !cancelled() && needs.evolve.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 355
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
       - name: Configure git
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Pull latest model outputs
+      - name: Pull adopted best model
         run: |
           set -euo pipefail
-          BRANCH="${GITHUB_REF_NAME}"
-          git fetch origin "${BRANCH}"
-          git pull --rebase --autostash origin "${BRANCH}"
-
-      - name: Merge model candidates
+          git fetch origin "${GITHUB_REF_NAME}"
+          git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+      - name: Build latest prediction from adopted best model
         run: |
           set -euo pipefail
           python merge_evolution_shards.py \
@@ -260,20 +170,15 @@ jobs:
             --selection-holdout-start-draw 2 \
             --selection-min-train-draws 1 \
             --selection-mode holdout_roi \
-            --patterns \
-              loto7_best_model.json \
-              outputs/model_self_evolution/best_candidate_model.json \
-              loto7_best_model_shard*_of_08.json \
-              outputs/loto7_best_model_shard*_of_08.json \
-            --prediction-mode ensemble \
+            --patterns loto7_best_model.json \
+            --prediction-mode best_model \
             --ensemble-candidates-per-model 12 \
             --ensemble-overlap-limit 4 \
             --best-model loto7_best_model.json \
             --prediction outputs/evolution_best_prediction.csv \
             --summary outputs/evolution_merged_summary.json \
             --manifest outputs/run_manifest.json
-
-      - name: Run resumable full-period holdout backtest
+      - name: Run full-period holdout backtest with adopted best model
         env:
           PYTHONUNBUFFERED: "1"
         run: |
@@ -293,27 +198,15 @@ jobs:
             --max-runtime-minutes 330 \
             --safe-exit-minutes 20 \
             --fail-on-missing-prize
-
       - name: Commit holdout outputs
         if: always()
         run: |
           set -euo pipefail
-          git add -f \
-            loto7_best_model.json \
-            outputs/evolution_best_prediction.csv \
-            outputs/evolution_merged_summary.json \
-            outputs/run_manifest.json \
-            outputs/holdout/*.csv \
-            outputs/holdout/*.json \
-            outputs/holdout/*.txt || true
-          if git diff --cached --quiet; then
-            echo "No holdout output changes"
-            exit 0
-          fi
+          git add -f loto7_best_model.json outputs/evolution_best_prediction.csv outputs/evolution_merged_summary.json outputs/run_manifest.json outputs/holdout/*.csv outputs/holdout/*.json outputs/holdout/*.txt || true
+          if git diff --cached --quiet; then echo "No holdout output changes"; exit 0; fi
           git commit -m "Update LOTO7 holdout backtest outputs [skip ci]"
           git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
           git push origin HEAD:"${GITHUB_REF_NAME}"
-
       - name: Upload holdout artifacts
         uses: actions/upload-artifact@v4
         if: always()
@@ -334,66 +227,38 @@ jobs:
     if: ${{ !cancelled() && needs.evolve.result == 'success' && needs.holdout.result == 'success' && (github.event_name != 'workflow_dispatch' || github.event.inputs.run_ml_stack != 'false') }}
     runs-on: ubuntu-latest
     timeout-minutes: 355
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Configure git
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
       - name: Install ML dependencies
         run: |
           set -euo pipefail
           python -m pip install --upgrade pip
-          if [ -f requirements-ml.txt ]; then
-            python -m pip install -r requirements-ml.txt
-          fi
-
+          if [ -f requirements-ml.txt ]; then python -m pip install -r requirements-ml.txt; fi
       - name: Run ML stack
         env:
           PYTHONUNBUFFERED: "1"
         run: |
           set -euo pipefail
-          python loto7_ml_stack.py \
-            --csv loto7.csv \
-            --output-dir outputs/ml_stack \
-            --min-train 60 \
-            --max-targets 240 \
-            --candidates-per-draw 80 \
-            --label label_4plus \
-            --optuna-trials 50
-
+          python loto7_ml_stack.py --csv loto7.csv --output-dir outputs/ml_stack --min-train 60 --max-targets 240 --candidates-per-draw 80 --label label_4plus --optuna-trials 50
       - name: Commit ML outputs
         if: always()
         run: |
           set -euo pipefail
           git add -f outputs/ml_stack/*.csv outputs/ml_stack/*.json || true
-          if git diff --cached --quiet; then
-            echo "No ML output changes"
-            exit 0
-          fi
+          if git diff --cached --quiet; then echo "No ML output changes"; exit 0; fi
           git commit -m "Update LOTO7 ML stack outputs [skip ci]"
           git pull --rebase --autostash || true
           git push || true
-
-      - name: Upload ML artifacts
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: loto7-ml-stack-outputs
-          path: |
-            outputs/ml_stack/*.csv
-            outputs/ml_stack/*.json
+          path: outputs/ml_stack/*
           if-no-files-found: ignore
 
   complete-ai:
@@ -401,56 +266,31 @@ jobs:
     if: ${{ always() && !cancelled() && needs.evolve.result == 'success' && needs.holdout.result == 'success' && (github.event_name != 'workflow_dispatch' || github.event.inputs.run_complete_ai != 'false') }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Configure git
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
       - name: Run complete AI system
         env:
           PYTHONUNBUFFERED: "1"
-        run: |
-          set -euo pipefail
-          python loto7_complete_ai_system.py \
-            --csv loto7.csv \
-            --output-dir outputs/complete_ai \
-            --monte-carlo-sims 20000 \
-            --roi-window 100
-
+        run: python loto7_complete_ai_system.py --csv loto7.csv --output-dir outputs/complete_ai --monte-carlo-sims 20000 --roi-window 100
       - name: Commit complete AI outputs
         if: always()
         run: |
           set -euo pipefail
           git add -f outputs/complete_ai/*.csv outputs/complete_ai/*.json outputs/complete_ai/*.md || true
-          if git diff --cached --quiet; then
-            echo "No complete AI output changes"
-            exit 0
-          fi
+          if git diff --cached --quiet; then echo "No complete AI output changes"; exit 0; fi
           git commit -m "Update LOTO7 complete AI outputs [skip ci]"
           git pull --rebase --autostash || true
           git push || true
-
-      - name: Upload complete AI artifacts
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: loto7-complete-ai-outputs
-          path: |
-            outputs/complete_ai/*.csv
-            outputs/complete_ai/*.json
-            outputs/complete_ai/*.md
+          path: outputs/complete_ai/*
           if-no-files-found: ignore
 
   monitor:
@@ -458,41 +298,25 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 30
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Configure git
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
       - name: Run progress monitor
         run: python loto7_progress_monitor.py
-
       - name: Commit monitor outputs
         if: always()
         run: |
           set -euo pipefail
           git add -f outputs/loto7_progress_summary.json outputs/loto7_progress_summary.md || true
-          if git diff --cached --quiet; then
-            echo "No monitor output changes"
-            exit 0
-          fi
+          if git diff --cached --quiet; then echo "No monitor output changes"; exit 0; fi
           git commit -m "Update LOTO7 progress summary [skip ci]"
           git pull --rebase --autostash || true
           git push || true
-
-      - name: Upload progress summary
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: loto7-progress-summary
