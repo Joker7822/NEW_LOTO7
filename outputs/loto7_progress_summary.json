@@ -1,0 +1,175 @@
+{
+  "history_files": [],
+  "state_files": [],
+  "best_model_files": [
+    "loto7_best_model.json",
+    "loto7_best_model_shard00_of_08.json",
+    "loto7_best_model_shard01_of_08.json",
+    "loto7_best_model_shard02_of_08.json",
+    "loto7_best_model_shard03_of_08.json",
+    "loto7_best_model_shard04_of_08.json",
+    "loto7_best_model_shard05_of_08.json",
+    "loto7_best_model_shard06_of_08.json",
+    "loto7_best_model_shard07_of_08.json"
+  ],
+  "evaluated_genomes_rows": 0,
+  "max_generation_seen": -1,
+  "best_score": null,
+  "best_row": null,
+  "rank_counts": {
+    "rank_1等": 0,
+    "rank_2等": 0,
+    "rank_3等": 0,
+    "rank_4等": 0,
+    "rank_5等": 0,
+    "rank_6等": 0,
+    "rank_外れ": 0
+  },
+  "states": [],
+  "best_models": [
+    {
+      "source_file": "loto7_best_model.json",
+      "score": 67991.78238597537,
+      "id": "g002_0013_8486",
+      "generation": 2
+    },
+    {
+      "source_file": "loto7_best_model_shard00_of_08.json",
+      "score": 48181.375477329406,
+      "id": "g027_0096_1316",
+      "generation": 27
+    },
+    {
+      "source_file": "loto7_best_model_shard01_of_08.json",
+      "score": 60928.05795397377,
+      "id": "g030_0065_3171",
+      "generation": 30
+    },
+    {
+      "source_file": "loto7_best_model_shard02_of_08.json",
+      "score": 66492.35528426003,
+      "id": "g001_0066_8960",
+      "generation": 1
+    },
+    {
+      "source_file": "loto7_best_model_shard03_of_08.json",
+      "score": 57089.49179873565,
+      "id": "g035_0099_4539",
+      "generation": 35
+    },
+    {
+      "source_file": "loto7_best_model_shard04_of_08.json",
+      "score": 49640.13126647346,
+      "id": "g013_0084_8386",
+      "generation": 13
+    },
+    {
+      "source_file": "loto7_best_model_shard05_of_08.json",
+      "score": 67991.78238597537,
+      "id": "g002_0013_8486",
+      "generation": 2
+    },
+    {
+      "source_file": "loto7_best_model_shard06_of_08.json",
+      "score": 43633.59673343581,
+      "id": "g010_0086_5179",
+      "generation": 10
+    },
+    {
+      "source_file": "loto7_best_model_shard07_of_08.json",
+      "score": 40216.09427754487,
+      "id": "g007_0095_6353",
+      "generation": 7
+    }
+  ],
+  "ml_status": {
+    "started_at": "2026-06-22T13:24:11.875374+00:00",
+    "label_definitions": {
+      "label_4plus": "1 when main_match >= 4",
+      "label_5plus": "1 when main_match >= 5"
+    },
+    "imports": {
+      "sklearn": null,
+      "xgboost": null,
+      "lightgbm": null,
+      "catboost": null,
+      "optuna": null,
+      "shap": null
+    },
+    "reports": [
+      {
+        "model": "meta_logistic",
+        "auc": 0.8860812370883461,
+        "test_rows": 5266,
+        "positive_rate": 0.11849601215343715
+      },
+      {
+        "model": "meta_rf",
+        "auc": 0.8323637509804571,
+        "test_rows": 5266,
+        "positive_rate": 0.11849601215343715
+      },
+      {
+        "model": "xgboost",
+        "auc": 0.8493035647212188,
+        "test_rows": 5266,
+        "positive_rate": 0.11849601215343715
+      },
+      {
+        "model": "lightgbm",
+        "auc": 0.8691869938907854,
+        "test_rows": 5266,
+        "positive_rate": 0.11849601215343715
+      },
+      {
+        "model": "catboost",
+        "auc": 0.852960428197395,
+        "test_rows": 5266,
+        "positive_rate": 0.11849601215343715
+      }
+    ],
+    "optuna": {
+      "best_value": 0.8904028436018958,
+      "model": "logistic",
+      "C": 0.05352965617311234
+    },
+    "shap": {
+      "model": "lightgbm",
+      "rows": 17
+    },
+    "finished_at": "2026-06-22T13:26:01.927060+00:00",
+    "ok": true
+  },
+  "ml_reports": [
+    {
+      "model": "meta_logistic",
+      "auc": "0.8860812370883461",
+      "test_rows": "5266",
+      "positive_rate": "0.11849601215343715"
+    },
+    {
+      "model": "meta_rf",
+      "auc": "0.8323637509804571",
+      "test_rows": "5266",
+      "positive_rate": "0.11849601215343715"
+    },
+    {
+      "model": "xgboost",
+      "auc": "0.8493035647212188",
+      "test_rows": "5266",
+      "positive_rate": "0.11849601215343715"
+    },
+    {
+      "model": "lightgbm",
+      "auc": "0.8691869938907854",
+      "test_rows": "5266",
+      "positive_rate": "0.11849601215343715"
+    },
+    {
+      "model": "catboost",
+      "auc": "0.852960428197395",
+      "test_rows": "5266",
+      "positive_rate": "0.11849601215343715"
+    }
+  ]
+}
