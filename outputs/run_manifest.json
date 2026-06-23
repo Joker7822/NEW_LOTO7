@@ -1,34 +1,21 @@
 {
-  "genome": {
-    "best_rank_count": 2,
-    "consecutive_penalty": 0.2307354823692875,
-    "dormancy_weight": 0.04916003393539038,
-    "full_weight": 0.3032937958195276,
-    "generation": 2,
-    "id": "g002_0013_8486",
-    "low_high_bonus": 0.2661977650130201,
-    "max_consecutive_pairs": 1,
-    "max_main_match": 6,
-    "odd_bonus": 0.3571829368097169,
-    "overlap_limit": 4,
-    "pair_recency_weight": 0.09639309396022575,
-    "pair_stability_weight": 0.1595570365521473,
-    "pair_weight": 0.08323802332455774,
-    "pool_size": 17,
-    "recent120_weight": 0.2328013140826817,
-    "recent240_weight": 0.3444181065874426,
-    "recent60_weight": 0.11948678351034817,
-    "score": 67991.78238597537,
-    "sum_bonus": 0.5785715541028872,
-    "target_sum_max": 175,
-    "target_sum_min": 103,
-    "triple_weight": 0.012776004750939308
-  },
-  "merged_from": [
+  "best_model": "loto7_best_model.json",
+  "created_at": "2026-06-23T11:32:18.808326+00:00",
+  "csv": "loto7.csv",
+  "kind": "loto7_evolution_merge_holdout_rerank_ensemble",
+  "latest_draw_date": "2026-06-19",
+  "latest_draw_no": 682,
+  "model_count": 1,
+  "model_patterns": [
     "loto7_best_model.json"
   ],
+  "model_selection_report": "outputs/holdout/model_selection_report.txt",
+  "model_selection_summary": "outputs/holdout/model_selection_summary.json",
+  "prediction": "outputs/evolution_best_prediction.csv",
   "prediction_mode": "best_model",
+  "prediction_report": "outputs/holdout/latest_prediction_report.txt",
   "purchase_count": 5,
+  "selected_genome_id": "g002_0013_8486",
   "selected_holdout": {
     "evolution_score": 67991.78238597537,
     "genome_id": "g002_0013_8486",
@@ -58,9 +45,10 @@
     "total_tickets": 3405,
     "unit_cost": 300
   },
+  "selected_model": "loto7_best_model.json",
+  "selected_score": 67991.78238597537,
   "selection_mode": "holdout_roi",
   "selection_reason": "holdout再ランキング: ROI → 最大本数字一致数 → 1等→2等→3等→4等→5等→6等 → Evolutionスコア",
   "selection_sort_description": "ROI → 最大本数字一致数 → 1等→2等→3等→4等→5等→6等 → Evolutionスコア",
-  "source_model": "loto7_best_model.json",
-  "updated_at": "2026-06-23T11:32:18.808326+00:00"
+  "summary": "outputs/evolution_merged_summary.json"
 }
