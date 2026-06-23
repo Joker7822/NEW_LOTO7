@@ -60,6 +60,7 @@ jobs:
           python loto7_model_self_evolver.py \
             --iterations "${{ github.event.inputs.iterations || '100' }}" \
             --max-targets "${{ github.event.inputs.max_targets || '0' }}" \
+            --seed "${{ github.run_id }}" \
             --max-runtime-minutes 340 \
             --safe-exit-minutes 15 \
             --min-roi-delta-percent 0.10 \
