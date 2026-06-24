@@ -6,7 +6,7 @@ on:
       iterations:
         description: "Model-only self-evolution iterations"
         required: false
-        default: "100"
+        default: "1000"
       max_targets:
         description: "Recent holdout target draws. Use 0 for all targets."
         required: false
@@ -19,6 +19,9 @@ on:
         options:
           - "true"
           - "false"
+  schedule:
+    # JST 00:00 / 06:00 / 12:00 / 18:00 = UTC 15:00 / 21:00 / 03:00 / 09:00
+    - cron: "0 3,9,15,21 * * *"
 
 permissions:
   contents: write
@@ -59,12 +62,12 @@ jobs:
           PYTHONUNBUFFERED: "1"
         run: |
           set -euo pipefail
-          APPLY_FLAG=""
-          if [ "${{ github.event.inputs.apply_model }}" = "true" ]; then
-            APPLY_FLAG="--apply"
+          APPLY_FLAG="--apply"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.apply_model || 'true' }}" != "true" ]; then
+            APPLY_FLAG=""
           fi
           python loto7_model_self_evolver.py \
-            --iterations "${{ github.event.inputs.iterations || '100' }}" \
+            --iterations "${{ github.event.inputs.iterations || '1000' }}" \
             --max-targets "${{ github.event.inputs.max_targets || '0' }}" \
             --seed "${{ github.run_id }}" \
             --state outputs/model_self_evolution/standalone_state.json \
