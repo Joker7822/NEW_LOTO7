@@ -2,11 +2,11 @@
   "best_model": "loto7_best_model.json",
   "candidates": [
     {
-      "ensemble_weight": 4.241006,
-      "genome_id": "g058_0058_1225",
+      "ensemble_weight": 4.225006,
+      "genome_id": "g097_0097_1844",
       "holdout": {
         "evolution_score": 0.0,
-        "genome_id": "g058_0058_1225",
+        "genome_id": "g097_0097_1844",
         "grade_hit_count": 158,
         "high_grade_hit_count": 9,
         "max_bonus_match": 2,
@@ -21,8 +21,8 @@
           "2等": 0,
           "3等": 1,
           "4等": 8,
-          "5等": 57,
-          "6等": 92,
+          "5等": 49,
+          "6等": 100,
           "外れ": 3247
         },
         "roi": 0.604503,
@@ -53,10 +53,10 @@
   "prediction": "outputs/evolution_best_prediction.csv",
   "prediction_mode": "best_model",
   "prediction_report": "outputs/holdout/latest_prediction_report.txt",
-  "selected_genome_id": "g058_0058_1225",
+  "selected_genome_id": "g097_0097_1844",
   "selected_holdout": {
     "evolution_score": 0.0,
-    "genome_id": "g058_0058_1225",
+    "genome_id": "g097_0097_1844",
     "grade_hit_count": 158,
     "high_grade_hit_count": 9,
     "max_bonus_match": 2,
@@ -71,8 +71,8 @@
       "2等": 0,
       "3等": 1,
       "4等": 8,
-      "5等": 57,
-      "6等": 92,
+      "5等": 49,
+      "6等": 100,
       "外れ": 3247
     },
     "roi": 0.604503,
@@ -93,5 +93,5 @@
   "selection_sort_description": "ROI → 最大本数字一致数 → 1等→2等→3等→4等→5等→6等 → Evolutionスコア",
   "selection_target_draws": 681,
   "selection_unit_cost": 300,
-  "updated_at": "2026-06-24T16:05:05.462817+00:00"
+  "updated_at": "2026-06-24T22:00:45.827346+00:00"
 }
