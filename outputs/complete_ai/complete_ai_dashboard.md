@@ -1,6 +1,6 @@
 # LOTO7 Complete AI Dashboard
 
-- generated_at: 2026-06-24T08:48:39.234783+00:00
+- generated_at: 2026-06-24T16:10:23.644990+00:00
 - candidates: 2008
 - ROI window: 100
 - ROI: -0.624
@@ -22,7 +22,7 @@
 - loto7_best_model_shard00_of_08.json id=g027_0096_1316 score=48181.375477329406 generation=27
 - loto7_best_model_shard06_of_08.json id=g010_0086_5179 score=43633.59673343581 generation=10
 - loto7_best_model_shard07_of_08.json id=g007_0095_6353 score=40216.09427754487 generation=7
-- loto7_best_model.json id=g067_0067_8357 score=0.0 generation=67
+- loto7_best_model.json id=g058_0058_1225 score=0.0 generation=58
 
 ## ROI Backtest
 ```json
