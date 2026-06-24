@@ -67,6 +67,11 @@ jobs:
             --iterations "${{ github.event.inputs.iterations || '100' }}" \
             --max-targets "${{ github.event.inputs.max_targets || '0' }}" \
             --seed "${{ github.run_id }}" \
+            --state outputs/model_self_evolution/standalone_state.json \
+            --history outputs/model_self_evolution/standalone_history.csv \
+            --summary outputs/model_self_evolution/standalone_summary.json \
+            --report outputs/model_self_evolution/standalone_report.txt \
+            --candidate-model outputs/model_self_evolution/standalone_best_candidate_model.json \
             --max-runtime-minutes 320 \
             --safe-exit-minutes 30 \
             --min-roi-delta-percent 0.10 \
