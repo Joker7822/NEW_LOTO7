@@ -19,8 +19,10 @@ import csv
 import datetime as dt
 import glob
 import json
+import os
 import pickle
 import random
+import subprocess
 import time
 from dataclasses import asdict
 from pathlib import Path
@@ -307,6 +309,136 @@ def write_report(path: str, summary: Dict[str, object]) -> None:
     p.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def run_git(args: Sequence[str]) -> int:
+    proc = subprocess.run(["git", *args], text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    if proc.stdout:
+        print(proc.stdout.rstrip())
+    return int(proc.returncode)
+
+
+def checkpoint_commit(args: argparse.Namespace, *, iteration: int, adopted: bool) -> None:
+    if not args.checkpoint_commit:
+        return
+    try:
+        paths = [args.best_model, args.candidate_model, args.summary, args.report, args.history, args.state]
+        existing = [p for p in paths if Path(p).exists()]
+        if not existing:
+            return
+        add_rc = run_git(["add", "-f", *existing])
+        if add_rc != 0:
+            print(f"[WARN] checkpoint git add failed at iteration {iteration}")
+            return
+        if run_git(["diff", "--cached", "--quiet"]) == 0:
+            return
+        label = "adopted" if adopted else "candidate"
+        if run_git(["commit", "-m", f"Checkpoint LOTO7 model self-evolution {label} at iteration {iteration} [skip ci]"]) != 0:
+            print(f"[WARN] checkpoint git commit failed at iteration {iteration}")
+            return
+        branch = args.checkpoint_branch or os.environ.get("GITHUB_REF_NAME", "")
+        if branch:
+            push_rc = run_git(["push", "origin", f"HEAD:{branch}"])
+        else:
+            push_rc = run_git(["push"])
+        if push_rc != 0:
+            print(f"[WARN] checkpoint git push failed at iteration {iteration}; final workflow commit can still save outputs")
+            return
+        print(f"[CHECKPOINT] committed best model update at iteration {iteration}")
+    except Exception as exc:
+        print(f"[WARN] checkpoint commit failed at iteration {iteration}: {exc}")
+
+
+def build_summary(
+    *,
+    status: str,
+    resume_used: bool,
+    start_iteration: int,
+    last_iteration: int,
+    evaluated_total: int,
+    evaluated_this_run: int,
+    target_draws: int,
+    baseline_metrics: Dict[str, object],
+    best_metrics: Dict[str, object],
+    adopted: bool,
+    reasons: List[str],
+    args: argparse.Namespace,
+) -> Dict[str, object]:
+    return {
+        "created_at": now_iso(),
+        "status": status,
+        "resume_used": resume_used,
+        "state": args.state,
+        "start_iteration": start_iteration,
+        "last_iteration": last_iteration,
+        "iterations_requested": args.iterations,
+        "iterations_evaluated": evaluated_total,
+        "iterations_evaluated_this_run": evaluated_this_run,
+        "target_draws": target_draws,
+        "baseline_metrics": baseline_metrics,
+        "best_metrics": best_metrics,
+        "candidate_model": args.candidate_model,
+        "best_model": args.best_model,
+        "adoption": {
+            "adopted": adopted,
+            "apply_requested": bool(args.apply),
+            "applied": bool(adopted and args.apply),
+            "reasons": reasons,
+            "min_roi_delta_percent": args.min_roi_delta_percent,
+            "min_profit_delta": args.min_profit_delta,
+            "allow_high_grade_drop": bool(args.allow_high_grade_drop),
+        },
+    }
+
+
+def write_candidate_outputs(
+    *,
+    args: argparse.Namespace,
+    best_genome: Genome,
+    baseline_metrics: Dict[str, object],
+    best_metrics: Dict[str, object],
+    status: str,
+    resume_used: bool,
+    start_iteration: int,
+    last_iteration: int,
+    evaluated_total: int,
+    evaluated_this_run: int,
+    target_draws: int,
+) -> Tuple[bool, List[str], Dict[str, object]]:
+    adopted, reasons = is_adoptable(
+        best_metrics,
+        baseline_metrics,
+        min_roi_delta=args.min_roi_delta_percent / 100.0,
+        min_profit_delta=args.min_profit_delta,
+        allow_high_grade_drop=args.allow_high_grade_drop,
+    )
+    candidate_payload = payload_for_model(
+        genome=best_genome,
+        source="model_self_evolver",
+        baseline_metrics=baseline_metrics,
+        selected_metrics=best_metrics,
+        args=args,
+    )
+    write_json(args.candidate_model, candidate_payload)
+    if adopted and args.apply:
+        write_json(args.best_model, candidate_payload)
+    summary = build_summary(
+        status=status,
+        resume_used=resume_used,
+        start_iteration=start_iteration,
+        last_iteration=last_iteration,
+        evaluated_total=evaluated_total,
+        evaluated_this_run=evaluated_this_run,
+        target_draws=target_draws,
+        baseline_metrics=baseline_metrics,
+        best_metrics=best_metrics,
+        adopted=adopted,
+        reasons=reasons,
+        args=args,
+    )
+    write_json(args.summary, summary)
+    write_report(args.report, summary)
+    return adopted, reasons, summary
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Self-evolve only LOTO7 model Genome JSON.")
     parser.add_argument("--csv", default="loto7.csv")
@@ -335,6 +467,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--no-resume", dest="resume", action="store_false", help="Ignore any existing --state and start fresh.")
     parser.add_argument("--max-runtime-minutes", type=float, default=65.0)
     parser.add_argument("--safe-exit-minutes", type=float, default=5.0)
+    parser.add_argument("--checkpoint-commit", action="store_true", help="Commit and push whenever a new in-run best candidate is found.")
+    parser.add_argument("--checkpoint-branch", default="", help="Branch to push checkpoint commits to. Defaults to GITHUB_REF_NAME.")
     args = parser.parse_args(argv)
 
     if args.iterations <= 0:
@@ -422,7 +556,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         evaluated_total += 1
         evaluated_this_run += 1
         last_iteration = iteration
-        if score_key(metrics) > score_key(best_metrics):
+        improved = score_key(metrics) > score_key(best_metrics)
+        if improved:
             best_genome = candidate
             best_metrics = metrics
             parent_pool.append(candidate)
@@ -458,28 +593,38 @@ def main(argv: Optional[List[str]] = None) -> int:
             rng=rng,
         )
 
+        if improved:
+            adopted_now, _reasons, _summary = write_candidate_outputs(
+                args=args,
+                best_genome=best_genome,
+                baseline_metrics=baseline_metrics,
+                best_metrics=best_metrics,
+                status="running",
+                resume_used=resume_used,
+                start_iteration=start_iteration,
+                last_iteration=last_iteration,
+                evaluated_total=evaluated_total,
+                evaluated_this_run=evaluated_this_run,
+                target_draws=len(target_indices),
+            )
+            checkpoint_commit(args, iteration=iteration, adopted=adopted_now)
+
     if last_iteration >= args.iterations:
         status = "completed"
 
-    adopted, reasons = is_adoptable(
-        best_metrics,
-        baseline_metrics,
-        min_roi_delta=args.min_roi_delta_percent / 100.0,
-        min_profit_delta=args.min_profit_delta,
-        allow_high_grade_drop=args.allow_high_grade_drop,
-    )
-
-    candidate_payload = payload_for_model(
-        genome=best_genome,
-        source="model_self_evolver",
-        baseline_metrics=baseline_metrics,
-        selected_metrics=best_metrics,
+    adopted, reasons, summary = write_candidate_outputs(
         args=args,
+        best_genome=best_genome,
+        baseline_metrics=baseline_metrics,
+        best_metrics=best_metrics,
+        status=status,
+        resume_used=resume_used,
+        start_iteration=start_iteration,
+        last_iteration=last_iteration,
+        evaluated_total=evaluated_total,
+        evaluated_this_run=evaluated_this_run,
+        target_draws=len(target_indices),
     )
-    write_json(args.candidate_model, candidate_payload)
-
-    if adopted and args.apply:
-        write_json(args.best_model, candidate_payload)
 
     save_state(
         args.state,
@@ -496,33 +641,6 @@ def main(argv: Optional[List[str]] = None) -> int:
         rng=rng,
     )
 
-    summary = {
-        "created_at": now_iso(),
-        "status": status,
-        "resume_used": resume_used,
-        "state": args.state,
-        "start_iteration": start_iteration,
-        "last_iteration": last_iteration,
-        "iterations_requested": args.iterations,
-        "iterations_evaluated": evaluated_total,
-        "iterations_evaluated_this_run": evaluated_this_run,
-        "target_draws": len(target_indices),
-        "baseline_metrics": baseline_metrics,
-        "best_metrics": best_metrics,
-        "candidate_model": args.candidate_model,
-        "best_model": args.best_model,
-        "adoption": {
-            "adopted": adopted,
-            "apply_requested": bool(args.apply),
-            "applied": bool(adopted and args.apply),
-            "reasons": reasons,
-            "min_roi_delta_percent": args.min_roi_delta_percent,
-            "min_profit_delta": args.min_profit_delta,
-            "allow_high_grade_drop": bool(args.allow_high_grade_drop),
-        },
-    }
-    write_json(args.summary, summary)
-    write_report(args.report, summary)
     print(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True))
     return 0
 
