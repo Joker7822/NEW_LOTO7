@@ -29,9 +29,9 @@
   "best_models": [
     {
       "source_file": "loto7_best_model.json",
-      "score": 67991.78238597537,
-      "id": "g002_0013_8486",
-      "generation": 2
+      "score": 0.0,
+      "id": "g067_0067_8357",
+      "generation": 67
     },
     {
       "source_file": "loto7_best_model_shard00_of_08.json",
@@ -83,7 +83,7 @@
     }
   ],
   "ml_status": {
-    "started_at": "2026-06-22T13:24:11.875374+00:00",
+    "started_at": "2026-06-24T02:35:42.194701+00:00",
     "label_definitions": {
       "label_4plus": "1 when main_match >= 4",
       "label_5plus": "1 when main_match >= 5"
@@ -129,15 +129,15 @@
       }
     ],
     "optuna": {
-      "best_value": 0.8904028436018958,
+      "best_value": 0.8901649791756426,
       "model": "logistic",
-      "C": 0.05352965617311234
+      "C": 0.057853020269114805
     },
     "shap": {
       "model": "lightgbm",
       "rows": 17
     },
-    "finished_at": "2026-06-22T13:26:01.927060+00:00",
+    "finished_at": "2026-06-24T02:36:45.425739+00:00",
     "ok": true
   },
   "ml_reports": [
