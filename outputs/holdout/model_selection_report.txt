@@ -1,7 +1,7 @@
 LOTO7 Model Selection Report
 ==============================
 
-作成日時(UTC): 2026-06-24T08:37:35.831630+00:00
+作成日時(UTC): 2026-06-24T16:05:05.462817+00:00
 選定方式: holdout_roi
 holdout開始回: 2
 holdout終了回: None
