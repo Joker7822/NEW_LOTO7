@@ -66,7 +66,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y xvfb
       - name: Run scraping script
-        run: xvfb-run -a python scrapingloto7.py
+        run: |
+          set +e
+          xvfb-run -a python scrapingloto7.py
+          status=$?
+          set -e
+          if [ "$status" -ne 0 ]; then
+            echo "::warning::scraping did not complete; using current loto7.csv"
+            test -s loto7.csv
+          fi
       - name: Commit loto7.csv if changed
         run: |
           set -euo pipefail
