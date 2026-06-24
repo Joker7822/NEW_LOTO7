@@ -72,6 +72,8 @@ jobs:
             --summary outputs/model_self_evolution/standalone_summary.json \
             --report outputs/model_self_evolution/standalone_report.txt \
             --candidate-model outputs/model_self_evolution/standalone_best_candidate_model.json \
+            --checkpoint-commit \
+            --checkpoint-branch "${GITHUB_REF_NAME}" \
             --max-runtime-minutes 320 \
             --safe-exit-minutes 30 \
             --min-roi-delta-percent 0.10 \
