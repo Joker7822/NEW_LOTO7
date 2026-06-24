@@ -1,13 +1,14 @@
 {
   "adoption": {
-    "adopted": false,
+    "adopted": true,
     "allow_high_grade_drop": false,
-    "applied": false,
+    "applied": true,
     "apply_requested": true,
     "min_profit_delta": 0,
     "min_roi_delta_percent": 0.1,
     "reasons": [
-      "profit -359600 -> -359000"
+      "roi 0.614577 -> 0.627546",
+      "profit -359600 -> -347500"
     ]
   },
   "baseline_metrics": {
@@ -41,43 +42,43 @@
   },
   "best_metrics": {
     "evolution_score": 0.0,
-    "genome_id": "g013_0013_6833",
+    "genome_id": "g067_0067_8357",
     "grade_hit_count": 144,
-    "high_grade_hit_count": 6,
+    "high_grade_hit_count": 7,
     "max_bonus_match": 2,
     "max_main_match": 6,
     "missing_prize_draw_count": 0,
     "missing_prize_draws": [],
-    "path": "candidate_13",
-    "profit": -359000,
+    "path": "candidate_67",
+    "profit": -347500,
     "purchase_count": 5,
     "rank_counts": {
       "1等": 0,
       "2等": 0,
       "3等": 1,
-      "4等": 5,
-      "5等": 47,
-      "6等": 91,
+      "4等": 6,
+      "5等": 52,
+      "6等": 85,
       "外れ": 2966
     },
-    "roi": 0.61522,
-    "roi_percent": 61.522,
+    "roi": 0.627546,
+    "roi_percent": 62.755,
     "target_draws": 622,
     "total_cost": 933000,
-    "total_payout": 574000,
+    "total_payout": 585500,
     "total_tickets": 3110,
     "unit_cost": 300
   },
   "best_model": "loto7_best_model.json",
   "candidate_model": "outputs/model_self_evolution/best_candidate_model.json",
-  "created_at": "2026-06-23T14:00:13.587988+00:00",
-  "iterations_evaluated": 100,
-  "iterations_evaluated_this_run": 32,
+  "created_at": "2026-06-24T02:26:57.789685+00:00",
+  "iterations_evaluated": 84,
+  "iterations_evaluated_this_run": 84,
   "iterations_requested": 100,
-  "last_iteration": 100,
-  "resume_used": true,
-  "start_iteration": 69,
+  "last_iteration": 84,
+  "resume_used": false,
+  "start_iteration": 1,
   "state": "outputs/model_self_evolution/state.json",
-  "status": "completed",
+  "status": "safe_exit_at_328.45_minutes",
   "target_draws": 622
 }
