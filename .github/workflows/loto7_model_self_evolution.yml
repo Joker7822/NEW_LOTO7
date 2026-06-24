@@ -48,6 +48,12 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Pull latest state before run
+        run: |
+          set -euo pipefail
+          git fetch origin "${GITHUB_REF_NAME}"
+          git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+
       - name: Run model-only self evolution
         env:
           PYTHONUNBUFFERED: "1"
@@ -61,8 +67,8 @@ jobs:
             --iterations "${{ github.event.inputs.iterations || '100' }}" \
             --max-targets "${{ github.event.inputs.max_targets || '0' }}" \
             --seed "${{ github.run_id }}" \
-            --max-runtime-minutes 340 \
-            --safe-exit-minutes 15 \
+            --max-runtime-minutes 320 \
+            --safe-exit-minutes 30 \
             --min-roi-delta-percent 0.10 \
             --min-profit-delta 0 \
             ${APPLY_FLAG}
@@ -81,8 +87,8 @@ jobs:
             exit 0
           fi
           git commit -m "Run LOTO7 model self-evolution [skip ci]"
-          git pull --rebase --autostash
-          git push
+          git pull --rebase -X theirs --autostash origin "${GITHUB_REF_NAME}"
+          git push origin HEAD:"${GITHUB_REF_NAME}"
 
       - name: Upload model self-evolution artifacts
         uses: actions/upload-artifact@v4
