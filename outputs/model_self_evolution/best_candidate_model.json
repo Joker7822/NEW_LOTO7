@@ -1,30 +1,30 @@
 {
   "baseline_metrics": {
     "evolution_score": 0.0,
-    "genome_id": "g067_0067_8357",
-    "grade_hit_count": 144,
-    "high_grade_hit_count": 7,
+    "genome_id": "g058_0058_1225",
+    "grade_hit_count": 145,
+    "high_grade_hit_count": 8,
     "max_bonus_match": 2,
     "max_main_match": 6,
     "missing_prize_draw_count": 0,
     "missing_prize_draws": [],
     "path": "loto7_best_model.json",
-    "profit": -347500,
+    "profit": -340900,
     "purchase_count": 5,
     "rank_counts": {
       "1等": 0,
       "2等": 0,
       "3等": 1,
-      "4等": 6,
+      "4等": 7,
       "5等": 52,
       "6等": 85,
-      "外れ": 2966
+      "外れ": 2965
     },
-    "roi": 0.627546,
-    "roi_percent": 62.755,
+    "roi": 0.63462,
+    "roi_percent": 63.462,
     "target_draws": 622,
     "total_cost": 933000,
-    "total_payout": 585500,
+    "total_payout": 592100,
     "total_tickets": 3110,
     "unit_cost": 300
   },
@@ -69,7 +69,7 @@
     "max_main_match": 6,
     "missing_prize_draw_count": 0,
     "missing_prize_draws": [],
-    "path": "candidate_58",
+    "path": "loto7_best_model.json",
     "profit": -340900,
     "purchase_count": 5,
     "rank_counts": {
@@ -91,5 +91,5 @@
   },
   "selection_mode": "model_only_holdout_roi",
   "source": "model_self_evolver",
-  "updated_at": "2026-06-24T08:31:37.904062+00:00"
+  "updated_at": "2026-06-24T15:59:28.047998+00:00"
 }
