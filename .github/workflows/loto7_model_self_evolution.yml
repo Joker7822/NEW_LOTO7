@@ -69,6 +69,8 @@ jobs:
           python loto7_model_self_evolver.py \
             --iterations "${{ github.event.inputs.iterations || '1000' }}" \
             --max-targets "${{ github.event.inputs.max_targets || '0' }}" \
+            --min-train-draws 1 \
+            --holdout-start-draw 2 \
             --seed "${{ github.run_id }}" \
             --state outputs/model_self_evolution/standalone_state.json \
             --history outputs/model_self_evolution/standalone_history.csv \
