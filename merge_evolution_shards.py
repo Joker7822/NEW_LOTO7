@@ -3,18 +3,13 @@
 """
 merge_evolution_shards.py
 
-複数shardで出力された loto7_best_model_shardXX_of_08.json を統合し、
-候補モデルをholdout成績で再ランキングして最終採用モデルを決める。
+現行workflow用のLOTO7モデル統合・holdout再ランキング・最新予測出力。
 
-目的:
-    - 現行8 shardの最良モデルだけを標準候補として集める
-    - 全候補をholdoutで検証し、最大一致数・ROI・等級件数で再ランキングする
-    - 最終採用モデル、または8 shard合議制で最新予測5口を信頼度順にCSV/TXT出力する
-    - 採用モデル、最新予測、統合サマリー、run manifestを出力する
-    - モデル数不足や不正JSONを検出し、誤った採用を防ぐ
+ROI定義:
+    - roi / roi_percent: 収支ROI = (払戻額 - 購入額) / 購入額
+    - payout_roi / payout_roi_percent: 従来回収率 = 払戻額 / 購入額
 
-例:
-    python merge_evolution_shards.py --csv loto7.csv --purchase-count 5
+この定義は holdout_evaluator.py と揃える。
 """
 
 from __future__ import annotations
@@ -32,7 +27,56 @@ from loto7_evolution_trainer import Draw, Genome, evaluate_ticket, generate_tick
 
 RANK_ORDER = ["1等", "2等", "3等", "4等", "5等", "6等", "外れ"]
 PRIZE_RANKS = ["1等", "2等", "3等", "4等", "5等", "6等"]
-CURRENT_8_SHARD_PATTERNS = ["loto7_best_model_shard*_of_08.json", "outputs/loto7_best_model_shard*_of_08.json"]
+CURRENT_8_SHARD_PATTERNS = [
+    "loto7_best_model_shard*_of_08.json",
+    "outputs/loto7_best_model_shard*_of_08.json",
+]
+
+
+def utc_now() -> str:
+    return dt.datetime.now(dt.timezone.utc).isoformat()
+
+
+def parse_money_yen(text: object) -> int:
+    raw = str(text or "").strip()
+    if not raw or raw == "該当なし":
+        return 0
+    m = re.search(r"([0-9,]+)", raw)
+    return int(m.group(1).replace(",", "")) if m else 0
+
+
+def draw_no_int(text: object) -> Optional[int]:
+    m = re.search(r"\d+", str(text or ""))
+    return int(m.group(0)) if m else None
+
+
+def fmt_ticket(ticket: Sequence[int]) -> str:
+    return " ".join(f"{int(n):02d}" for n in ticket)
+
+
+def ticket_key(ticket: Sequence[int]) -> Tuple[int, ...]:
+    return tuple(sorted(int(n) for n in ticket))
+
+
+def format_yen(value: object) -> str:
+    try:
+        return f"{int(value):,}円"
+    except Exception:
+        return f"{value}円"
+
+
+def roi_from_profit(total_cost: int, total_payout: int) -> float:
+    """収支ROI: (払戻額 - 購入額) / 購入額。"""
+    if total_cost <= 0:
+        return 0.0
+    return (total_payout - total_cost) / total_cost
+
+
+def roi_from_payout(total_cost: int, total_payout: int) -> float:
+    """従来回収率: 払戻額 / 購入額。"""
+    if total_cost <= 0:
+        return 0.0
+    return total_payout / total_cost
 
 
 def load_model(path: Path) -> Optional[Dict[str, object]]:
@@ -46,7 +90,7 @@ def load_model(path: Path) -> Optional[Dict[str, object]]:
         return None
 
 
-def find_models(patterns: List[str]) -> List[Dict[str, object]]:
+def find_models(patterns: Sequence[str]) -> List[Dict[str, object]]:
     found: List[Dict[str, object]] = []
     for pattern in patterns:
         for name in sorted(glob.glob(pattern)):
@@ -58,29 +102,6 @@ def find_models(patterns: List[str]) -> List[Dict[str, object]]:
     for item in found:
         unique[str(item["path"])] = item
     return list(unique.values())
-
-
-def fmt_ticket(ticket: Sequence[int]) -> str:
-    return " ".join(f"{n:02d}" for n in ticket)
-
-
-def ticket_key(ticket: Sequence[int]) -> Tuple[int, ...]:
-    return tuple(sorted(int(n) for n in ticket))
-
-
-def parse_money_yen(text: object) -> int:
-    raw = str(text or "").strip()
-    if not raw or raw == "該当なし":
-        return 0
-    m = re.search(r"([0-9,]+)", raw)
-    if not m:
-        return 0
-    return int(m.group(1).replace(",", ""))
-
-
-def draw_no_int(text: object) -> Optional[int]:
-    m = re.search(r"\d+", str(text or ""))
-    return int(m.group(0)) if m else None
 
 
 def load_prize_rows(csv_path: str) -> Dict[int, Dict[str, str]]:
@@ -110,14 +131,13 @@ def write_json(path: str, payload: Dict[str, object]) -> None:
     p.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def format_yen(value: object) -> str:
-    try:
-        return f"{int(value):,}円"
-    except Exception:
-        return f"{value}円"
-
-
-def select_target_indices(draws: Sequence[Draw], *, min_train_draws: int, holdout_start_draw: int, holdout_end_draw: Optional[int]) -> List[int]:
+def select_target_indices(
+    draws: Sequence[Draw],
+    *,
+    min_train_draws: int,
+    holdout_start_draw: int,
+    holdout_end_draw: Optional[int],
+) -> List[int]:
     out: List[int] = []
     for idx, draw in enumerate(draws):
         if idx < min_train_draws:
@@ -162,12 +182,13 @@ def evaluate_model_on_holdout(
             total_cost += unit_cost
             total_payout += payout
             total_tickets += 1
-            rank_counts[rank] = rank_counts.get(rank, 0) + 1
+            rank_counts[rank] = int(rank_counts.get(rank, 0)) + 1
             max_main_match = max(max_main_match, main_match)
             max_bonus_match = max(max_bonus_match, bonus_match)
 
     profit = total_payout - total_cost
-    roi = (total_payout / total_cost) if total_cost else 0.0
+    roi = roi_from_profit(total_cost, total_payout)
+    payout_roi = roi_from_payout(total_cost, total_payout)
     grade_hit_count = sum(rank_counts.get(rank, 0) for rank in PRIZE_RANKS)
     high_grade_hit_count = sum(rank_counts.get(rank, 0) for rank in ["1等", "2等", "3等", "4等"])
 
@@ -184,6 +205,8 @@ def evaluate_model_on_holdout(
         "profit": profit,
         "roi": round(roi, 6),
         "roi_percent": round(roi * 100.0, 3),
+        "payout_roi": round(payout_roi, 6),
+        "payout_roi_percent": round(payout_roi * 100.0, 3),
         "max_main_match": max_main_match,
         "max_bonus_match": max_bonus_match,
         "rank_counts": rank_counts,
@@ -211,6 +234,7 @@ def holdout_roi_sort_key(item: Dict[str, object]) -> tuple:
     evo_score = getattr(genome, "score", 0.0)
     return (
         float(metrics.get("roi", 0.0)),
+        int(metrics.get("profit", 0)),
         int(metrics.get("max_main_match", 0)),
         int(rank_counts.get("1等", 0)),
         int(rank_counts.get("2等", 0)),
@@ -235,6 +259,7 @@ def holdout_balanced_sort_key(item: Dict[str, object]) -> tuple:
         int(rank_counts.get("3等", 0)),
         int(rank_counts.get("4等", 0)),
         float(metrics.get("roi", 0.0)),
+        int(metrics.get("profit", 0)),
         int(rank_counts.get("5等", 0)),
         int(rank_counts.get("6等", 0)),
         float(evo_score),
@@ -243,14 +268,14 @@ def holdout_balanced_sort_key(item: Dict[str, object]) -> tuple:
 
 def selection_sort_description(selection_mode: str) -> str:
     if selection_mode in {"holdout", "holdout_roi"}:
-        return "ROI → 最大本数字一致数 → 1等→2等→3等→4等→5等→6等 → Evolutionスコア"
+        return "収支ROI → 収支 → 最大本数字一致数 → 1等→2等→3等→4等→5等→6等 → Evolutionスコア"
     if selection_mode == "holdout_balanced":
-        return "最大本数字一致数 → 4等以上件数 → 1等→2等→3等→4等 → ROI → 5等→6等 → Evolutionスコア"
+        return "最大本数字一致数 → 4等以上件数 → 1等→2等→3等→4等 → 収支ROI → 収支 → 5等→6等 → Evolutionスコア"
     return "Evolutionスコア"
 
 
 def rerank_models_by_holdout(
-    models: List[Dict[str, object]],
+    models: Sequence[Dict[str, object]],
     *,
     draws: Sequence[Draw],
     prize_rows: Dict[int, Dict[str, str]],
@@ -301,6 +326,10 @@ def write_model_selection_report(report_path: str, ranked_models: Sequence[Dict[
     lines.append("[並び替え基準]")
     lines.append(str(summary.get("selection_sort_description")))
     lines.append("")
+    lines.append("[ROI定義]")
+    lines.append("ROI: 収支ROI = (払戻額 - 購入額) ÷ 購入額")
+    lines.append("従来回収率: 払戻額 ÷ 購入額")
+    lines.append("")
     lines.append("[最終採用モデル]")
     lines.append(f"採用モデル: {summary.get('selected_model')}")
     lines.append(f"モデルID: {summary.get('selected_genome_id')}")
@@ -313,7 +342,8 @@ def write_model_selection_report(report_path: str, ranked_models: Sequence[Dict[
         rank_counts = _rank_counts(metrics)
         lines.append(
             f"{rank}位: {item.get('path')} / "
-            f"ROI={metrics.get('roi_percent')}% / "
+            f"収支ROI={metrics.get('roi_percent')}% / "
+            f"従来回収率={metrics.get('payout_roi_percent')}% / "
             f"収支={format_yen(metrics.get('profit'))} / "
             f"最大一致={metrics.get('max_main_match')} / "
             f"4等以上={metrics.get('high_grade_hit_count')} / "
@@ -330,18 +360,19 @@ def model_weight_for_ensemble(item: Dict[str, object], rank_index: int) -> float
     metrics = _metrics(item)
     rank_counts = _rank_counts(metrics)
     base = 1.0 / float(rank_index + 1)
-    roi = max(0.0, float(metrics.get("roi", 0.0)))
+    payout_roi = max(0.0, float(metrics.get("payout_roi", 0.0)))
+    profit_roi = max(0.0, float(metrics.get("roi", 0.0)))
     max_match = float(metrics.get("max_main_match", 0.0))
     high_grade = float(metrics.get("high_grade_hit_count", 0.0))
     fifth = float(rank_counts.get("5等", 0))
     sixth = float(rank_counts.get("6等", 0))
-    return base + roi * 2.0 + max_match * 0.15 + high_grade * 0.08 + fifth * 0.004 + sixth * 0.002
+    return base + payout_roi * 1.2 + profit_roi * 0.8 + max_match * 0.15 + high_grade * 0.08 + fifth * 0.004 + sixth * 0.002
 
 
-def make_prediction_rows(best: Genome, source_model: str, draws, purchase_count: int) -> List[Dict[str, object]]:
+def make_prediction_rows(best: Genome, source_model: str, draws: Sequence[Draw], purchase_count: int) -> List[Dict[str, object]]:
     latest = draws[-1]
     tickets = generate_tickets(draws, best, purchase_count)
-    created_at = dt.datetime.now(dt.timezone.utc).isoformat()
+    created_at = utc_now()
     rows: List[Dict[str, object]] = []
     for idx, ticket in enumerate(tickets, start=1):
         rows.append(
@@ -353,7 +384,7 @@ def make_prediction_rows(best: Genome, source_model: str, draws, purchase_count:
                 "combo_index": idx,
                 "numbers": fmt_ticket(ticket),
                 "model_id": best.id,
-                "model_score": round(best.score, 6),
+                "model_score": round(float(best.score), 6),
                 "source_model": source_model,
                 "prediction_method": "best_model",
                 "ensemble_score": "",
@@ -375,7 +406,7 @@ def make_ensemble_prediction_rows(
     fallback_source: str,
 ) -> List[Dict[str, object]]:
     latest = draws[-1]
-    created_at = dt.datetime.now(dt.timezone.utc).isoformat()
+    created_at = utc_now()
     candidate_scores: Dict[Tuple[int, ...], float] = {}
     support: Dict[Tuple[int, ...], List[str]] = {}
     number_votes = {n: 0.0 for n in range(1, 38)}
@@ -412,9 +443,11 @@ def make_ensemble_prediction_rows(
         if len(selected) >= purchase_count:
             break
     if len(selected) < purchase_count:
+        selected_keys = {key for key, _ in selected}
         for key, score in ranked_tickets:
-            if key not in [prev_key for prev_key, _ in selected]:
+            if key not in selected_keys:
                 selected.append((key, score))
+                selected_keys.add(key)
             if len(selected) >= purchase_count:
                 break
 
@@ -443,22 +476,42 @@ def make_ensemble_prediction_rows(
     return rows
 
 
-def write_prediction(csv_path: str, rows: List[Dict[str, object]]) -> None:
+def write_prediction(csv_path: str, rows: Sequence[Dict[str, object]]) -> None:
     out = Path(csv_path)
     out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(
             f,
             fieldnames=[
-                "confidence_rank", "base_latest_draw_no", "base_latest_date", "prediction_draw_no", "combo_index",
-                "numbers", "model_id", "model_score", "source_model", "prediction_method", "ensemble_score", "support_models", "created_at",
+                "confidence_rank",
+                "base_latest_draw_no",
+                "base_latest_date",
+                "prediction_draw_no",
+                "combo_index",
+                "numbers",
+                "model_id",
+                "model_score",
+                "source_model",
+                "prediction_method",
+                "ensemble_score",
+                "support_models",
+                "created_at",
             ],
         )
         writer.writeheader()
         writer.writerows(rows)
 
 
-def write_prediction_report(report_path: str, rows: List[Dict[str, object]], best: Genome, source_model: str, model_count: int, min_models: int, selection_reason: str, prediction_mode: str) -> None:
+def write_prediction_report(
+    report_path: str,
+    rows: Sequence[Dict[str, object]],
+    best: Genome,
+    source_model: str,
+    model_count: int,
+    min_models: int,
+    selection_reason: str,
+    prediction_mode: str,
+) -> None:
     out = Path(report_path)
     out.parent.mkdir(parents=True, exist_ok=True)
     first = rows[0] if rows else {}
@@ -474,7 +527,7 @@ def write_prediction_report(report_path: str, rows: List[Dict[str, object]], bes
     lines.append("")
     lines.append("[採用モデル]")
     lines.append(f"モデルID: {best.id}")
-    lines.append(f"モデルスコア: {round(best.score, 6)}")
+    lines.append(f"モデルスコア: {round(float(best.score), 6)}")
     lines.append(f"採用元shardモデル: {source_model}")
     lines.append(f"統合対象モデル数: {model_count}")
     lines.append(f"必要最小モデル数: {min_models}")
@@ -490,7 +543,7 @@ def write_prediction_report(report_path: str, rows: List[Dict[str, object]], bes
     lines.append("")
     lines.append("[読み方]")
     if prediction_mode == "ensemble":
-        lines.append("8 shard候補モデルの合議制で、複数モデルが推す組み合わせとholdout実績を再スコアリングしています。")
+        lines.append("複数候補モデルの合議制で、複数モデルが推す組み合わせとholdout実績を再スコアリングしています。")
         lines.append("1位が合議制スコアで最も高い組み合わせです。")
     else:
         lines.append("1位がこのモデル内で最も信頼度が高い組み合わせです。")
@@ -502,6 +555,33 @@ def write_prediction_report(report_path: str, rows: List[Dict[str, object]], bes
     lines.append("")
     lines.append("注意: 宝くじはランダム性が高く、この予測は当せんや利益を保証するものではありません。")
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def build_zero_holdout(item: Dict[str, object], target_count: int) -> Dict[str, object]:
+    genome: Genome = item["genome"]  # type: ignore[assignment]
+    return {
+        "path": str(item["path"]),
+        "genome_id": genome.id,
+        "evolution_score": genome.score,
+        "target_draws": target_count,
+        "purchase_count": 0,
+        "unit_cost": 0,
+        "total_tickets": 0,
+        "total_cost": 0,
+        "total_payout": 0,
+        "profit": 0,
+        "roi": 0.0,
+        "roi_percent": 0.0,
+        "payout_roi": 0.0,
+        "payout_roi_percent": 0.0,
+        "rank_counts": {rank: 0 for rank in RANK_ORDER},
+        "max_main_match": 0,
+        "max_bonus_match": 0,
+        "grade_hit_count": 0,
+        "high_grade_hit_count": 0,
+        "missing_prize_draw_count": 0,
+        "missing_prize_draws": [],
+    }
 
 
 def main(argv: Optional[List[str]] = None) -> int:
@@ -535,7 +615,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         raise SystemExit("--selection-unit-cost must be positive")
     if args.ensemble_candidates_per_model < args.purchase_count:
         raise SystemExit("--ensemble-candidates-per-model must be >= --purchase-count")
-    if args.ensemble_overlap_limit < 0 or args.ensemble_overlap_limit > 7:
+    if not 0 <= args.ensemble_overlap_limit <= 7:
         raise SystemExit("--ensemble-overlap-limit must be between 0 and 7")
     if args.selection_holdout_end_draw is not None and args.selection_holdout_end_draw < args.selection_holdout_start_draw:
         raise SystemExit("--selection-holdout-end-draw must be >= --selection-holdout-start-draw")
@@ -574,18 +654,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     else:
         ranked_models = sorted(models, key=lambda item: item["genome"].score, reverse=True)  # type: ignore[index, union-attr]
         for item in ranked_models:
-            genome: Genome = item["genome"]  # type: ignore[assignment]
-            item["holdout"] = {
-                "path": str(item["path"]),
-                "genome_id": genome.id,
-                "evolution_score": genome.score,
-                "target_draws": len(target_indices),
-                "rank_counts": {rank: 0 for rank in RANK_ORDER},
-                "roi": 0.0,
-                "roi_percent": 0.0,
-                "max_main_match": 0,
-                "high_grade_hit_count": 0,
-            }
+            item["holdout"] = build_zero_holdout(item, len(target_indices))
         selection_reason = "Evolutionスコア最大"
 
     best_item = ranked_models[0]
@@ -593,7 +662,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     source_model = str(best_item["path"])
     selected_holdout = best_item.get("holdout", {}) if isinstance(best_item.get("holdout", {}), dict) else {}
 
-    updated_at = dt.datetime.now(dt.timezone.utc).isoformat()
+    updated_at = utc_now()
     payload = {
         "updated_at": updated_at,
         "selection_mode": normalized_selection_mode,
@@ -621,7 +690,16 @@ def main(argv: Optional[List[str]] = None) -> int:
     else:
         prediction_rows = make_prediction_rows(best, source_model, draws, args.purchase_count)
     write_prediction(args.prediction, prediction_rows)
-    write_prediction_report(args.prediction_report, prediction_rows, best, source_model, len(ranked_models), args.min_models, selection_reason, args.prediction_mode)
+    write_prediction_report(
+        args.prediction_report,
+        prediction_rows,
+        best,
+        source_model,
+        len(ranked_models),
+        args.min_models,
+        selection_reason,
+        args.prediction_mode,
+    )
 
     candidates = []
     for i, item in enumerate(ranked_models):
