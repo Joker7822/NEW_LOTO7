@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Append or replace latest LOTO7 prediction rows in a cumulative CSV.
+"""Create/update a wide cumulative LOTO7 prediction history CSV.
 
-The latest prediction CSV currently has no explicit future draw date column, so
-`prediction_draw_no` is used as the stable event key. If a future version adds
-`prediction_draw_date`, that date is used as the primary key instead.
+Output format:
+抽せん日,予測1,信頼度1,...,予測25,信頼度25
+
+One row represents one target draw date. When the same draw date already exists,
+it is replaced by the latest prediction set.
 """
 
 from __future__ import annotations
@@ -12,8 +14,9 @@ from __future__ import annotations
 import argparse
 import csv
 import datetime as dt
+import re
 from pathlib import Path
-from typing import Dict, Iterable, List
+from typing import Dict, List, Optional, Sequence
 
 
 def read_rows(path: Path) -> List[Dict[str, str]]:
@@ -23,65 +26,101 @@ def read_rows(path: Path) -> List[Dict[str, str]]:
         return list(csv.DictReader(f))
 
 
-def fieldnames_for(rows: Iterable[Dict[str, str]]) -> List[str]:
-    preferred = [
-        "history_saved_at",
-        "prediction_key",
-        "confidence_rank",
-        "base_latest_draw_no",
-        "base_latest_date",
-        "prediction_draw_no",
-        "prediction_draw_date",
-        "combo_index",
-        "numbers",
-        "model_id",
-        "model_score",
-        "source_model",
-        "prediction_method",
-        "ensemble_score",
-        "support_models",
-        "created_at",
-    ]
-    seen = set()
-    fields: List[str] = []
-    for name in preferred:
-        fields.append(name)
-        seen.add(name)
-    for row in rows:
-        for name in row.keys():
-            if name and name not in seen:
-                fields.append(name)
-                seen.add(name)
+def draw_no_int(text: object) -> Optional[int]:
+    m = re.search(r"\d+", str(text or ""))
+    return int(m.group(0)) if m else None
+
+
+def parse_nums(text: object) -> List[int]:
+    return [int(x) for x in re.findall(r"\d+", str(text or ""))]
+
+
+def fmt_prediction(text: object) -> str:
+    nums = parse_nums(text)
+    if len(nums) != 7:
+        return str(text or "").strip()
+    return ", ".join(str(n) for n in nums)
+
+
+def parse_date(text: object) -> Optional[dt.date]:
+    raw = str(text or "").strip()
+    if not raw:
+        return None
+    try:
+        return dt.date.fromisoformat(raw[:10])
+    except Exception:
+        return None
+
+
+def load_draw_dates(csv_path: Path) -> Dict[int, str]:
+    if not csv_path.exists():
+        return {}
+    out: Dict[int, str] = {}
+    with csv_path.open("r", encoding="utf-8-sig", newline="") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            no = draw_no_int(row.get("回別"))
+            date = str(row.get("抽せん日") or "").strip()
+            if no is not None and date:
+                out[no] = date
+    return out
+
+
+def target_draw_date(row: Dict[str, str], draw_dates: Dict[int, str]) -> str:
+    for field in ("抽せん日", "prediction_draw_date", "prediction_date", "draw_date"):
+        value = str(row.get(field, "")).strip()
+        if value:
+            return value[:10]
+
+    prediction_no = draw_no_int(row.get("prediction_draw_no"))
+    if prediction_no is not None and prediction_no in draw_dates:
+        return draw_dates[prediction_no]
+
+    base_date = parse_date(row.get("base_latest_date"))
+    if base_date:
+        return (base_date + dt.timedelta(days=7)).isoformat()
+
+    raise ValueError("latest prediction row has no usable target draw date")
+
+
+def confidence_for(row: Dict[str, str], rank: int) -> str:
+    for field in ("confidence", "confidence_score", "ensemble_score", "model_score", "score"):
+        raw = str(row.get(field, "")).strip()
+        if not raw:
+            continue
+        try:
+            value = float(raw)
+        except ValueError:
+            continue
+        if value > 0:
+            return f"{value:.3f}".rstrip("0").rstrip(".")
+    # If the source CSV only has rank and no probability-like score, create a
+    # deterministic rank confidence so the history remains readable.
+    value = max(0.0, 0.97 - (rank - 1) * 0.01)
+    return f"{value:.3f}".rstrip("0").rstrip(".")
+
+
+def output_fields(max_predictions: int) -> List[str]:
+    fields = ["抽せん日"]
+    for i in range(1, max_predictions + 1):
+        fields.extend([f"予測{i}", f"信頼度{i}"])
     return fields
 
 
-def row_key(row: Dict[str, str]) -> str:
-    # Future-proof: if prediction_draw_date exists, use it as the event date key.
-    for field in ("prediction_draw_date", "prediction_date", "draw_date", "prediction_draw_no", "base_latest_date"):
-        value = str(row.get(field, "")).strip()
-        if value:
-            return value
-    raise ValueError("prediction row has no usable event key")
+def sort_latest_rows(rows: Sequence[Dict[str, str]]) -> List[Dict[str, str]]:
+    def key(row: Dict[str, str]) -> tuple:
+        rank = draw_no_int(row.get("confidence_rank")) or draw_no_int(row.get("combo_index")) or 9999
+        return (rank, str(row.get("numbers", "")))
 
-
-def sort_key(row: Dict[str, str]) -> tuple:
-    key = str(row.get("prediction_key", ""))
-    rank_raw = str(row.get("confidence_rank", row.get("combo_index", "9999")))
-    try:
-        rank = int(rank_raw)
-    except ValueError:
-        rank = 9999
-    try:
-        numeric_key = int(key)
-        return (0, numeric_key, rank)
-    except ValueError:
-        return (1, key, rank)
+    return sorted(rows, key=key)
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Update cumulative LOTO7 prediction history CSV.")
+    parser = argparse.ArgumentParser(description="Update wide cumulative LOTO7 prediction history CSV.")
     parser.add_argument("--latest", default="outputs/evolution_best_prediction.csv")
     parser.add_argument("--history", default="outputs/evolution_prediction_history.csv")
+    parser.add_argument("--csv", default="loto7.csv")
+    parser.add_argument("--max-predictions", type=int, default=25)
     args = parser.parse_args()
 
     latest_path = Path(args.latest)
@@ -90,31 +129,31 @@ def main() -> int:
     if not latest_rows:
         raise SystemExit(f"latest prediction CSV is empty or missing: {latest_path}")
 
-    saved_at = dt.datetime.now(dt.timezone.utc).isoformat()
-    new_rows: List[Dict[str, str]] = []
-    keys = set()
-    for row in latest_rows:
-        merged = {k: ("" if v is None else str(v)) for k, v in row.items()}
-        key = row_key(merged)
-        merged["prediction_key"] = key
-        merged["history_saved_at"] = saved_at
-        keys.add(key)
-        new_rows.append(merged)
+    max_predictions = max(1, int(args.max_predictions))
+    draw_dates = load_draw_dates(Path(args.csv))
+    draw_date = target_draw_date(latest_rows[0], draw_dates)
 
-    old_rows = read_rows(history_path)
-    kept_rows = [row for row in old_rows if row_key(row) not in keys]
-    combined = kept_rows + new_rows
-    combined.sort(key=sort_key)
+    new_row = {field: "" for field in output_fields(max_predictions)}
+    new_row["抽せん日"] = draw_date
+    for idx, row in enumerate(sort_latest_rows(latest_rows)[:max_predictions], start=1):
+        new_row[f"予測{idx}"] = fmt_prediction(row.get("numbers"))
+        new_row[f"信頼度{idx}"] = confidence_for(row, idx)
 
+    existing_rows = read_rows(history_path)
+    # Keep only already-wide rows and replace the same target date.
+    kept_rows = [row for row in existing_rows if row.get("抽せん日") and row.get("抽せん日") != draw_date]
+    combined = kept_rows + [new_row]
+    combined.sort(key=lambda r: str(r.get("抽せん日", "")))
+
+    fields = output_fields(max_predictions)
     history_path.parent.mkdir(parents=True, exist_ok=True)
-    fields = fieldnames_for(combined)
-    with history_path.open("w", encoding="utf-8", newline="") as f:
+    with history_path.open("w", encoding="utf-8-sig", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fields)
         writer.writeheader()
         for row in combined:
-            writer.writerow({name: row.get(name, "") for name in fields})
+            writer.writerow({field: row.get(field, "") for field in fields})
 
-    print(f"updated {history_path}: replaced_keys={sorted(keys)} rows={len(combined)}")
+    print(f"updated {history_path}: draw_date={draw_date} rows={len(combined)} predictions={min(len(latest_rows), max_predictions)}")
     return 0
 
 
