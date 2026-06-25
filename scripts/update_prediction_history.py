@@ -3,7 +3,7 @@
 """Create/update a wide cumulative LOTO7 prediction history CSV.
 
 Output format:
-抽せん日,予測1,信頼度1,...,予測25,信頼度25
+抽せん日,予測1,信頼度1,...,予測5,信頼度5
 
 One row represents one target draw date. When the same draw date already exists,
 it is replaced by the latest prediction set.
@@ -120,7 +120,7 @@ def main() -> int:
     parser.add_argument("--latest", default="outputs/evolution_best_prediction.csv")
     parser.add_argument("--history", default="outputs/evolution_prediction_history.csv")
     parser.add_argument("--csv", default="loto7.csv")
-    parser.add_argument("--max-predictions", type=int, default=25)
+    parser.add_argument("--max-predictions", type=int, default=5)
     args = parser.parse_args()
 
     latest_path = Path(args.latest)
