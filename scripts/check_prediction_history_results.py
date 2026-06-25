@@ -8,9 +8,14 @@ import argparse
 import csv
 import datetime as dt
 import re
+import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from loto7_evolution_trainer import Draw, evaluate_ticket, load_draws, parse_nums
 from holdout_evaluator import load_prize_rows, prize_amount_for_rank
