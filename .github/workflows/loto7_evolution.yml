@@ -203,6 +203,13 @@ jobs:
           python scripts/update_prediction_history.py \
             --latest outputs/evolution_best_prediction.csv \
             --history outputs/evolution_prediction_history.csv
+      - name: Check cumulative prediction history results
+        run: |
+          set -euo pipefail
+          python scripts/check_prediction_history_results.py \
+            --history outputs/evolution_prediction_history.csv \
+            --csv loto7.csv \
+            --output outputs/evolution_prediction_history_result.txt
       - name: Run full-period holdout backtest with adopted best model
         env:
           PYTHONUNBUFFERED: "1"
@@ -232,6 +239,7 @@ jobs:
           cp -f loto7_best_model.json "$SNAPSHOT/" 2>/dev/null || true
           cp -f outputs/evolution_best_prediction.csv "$SNAPSHOT/outputs/" 2>/dev/null || true
           cp -f outputs/evolution_prediction_history.csv "$SNAPSHOT/outputs/" 2>/dev/null || true
+          cp -f outputs/evolution_prediction_history_result.txt "$SNAPSHOT/outputs/" 2>/dev/null || true
           cp -f outputs/evolution_merged_summary.json "$SNAPSHOT/outputs/" 2>/dev/null || true
           cp -f outputs/run_manifest.json "$SNAPSHOT/outputs/" 2>/dev/null || true
           cp -f outputs/holdout/*.csv "$SNAPSHOT/outputs/holdout/" 2>/dev/null || true
@@ -243,7 +251,7 @@ jobs:
           cp -f "$SNAPSHOT/loto7_best_model.json" loto7_best_model.json 2>/dev/null || true
           cp -f "$SNAPSHOT"/outputs/* outputs/ 2>/dev/null || true
           cp -f "$SNAPSHOT"/outputs/holdout/* outputs/holdout/ 2>/dev/null || true
-          git add -f loto7_best_model.json outputs/evolution_best_prediction.csv outputs/evolution_prediction_history.csv outputs/evolution_merged_summary.json outputs/run_manifest.json outputs/holdout/*.csv outputs/holdout/*.json outputs/holdout/*.txt || true
+          git add -f loto7_best_model.json outputs/evolution_best_prediction.csv outputs/evolution_prediction_history.csv outputs/evolution_prediction_history_result.txt outputs/evolution_merged_summary.json outputs/run_manifest.json outputs/holdout/*.csv outputs/holdout/*.json outputs/holdout/*.txt || true
           if git diff --cached --quiet; then echo "No holdout output changes"; exit 0; fi
           git commit -m "Update LOTO7 holdout backtest outputs [skip ci]"
           git push origin HEAD:"${GITHUB_REF_NAME}"
@@ -256,6 +264,7 @@ jobs:
             loto7_best_model.json
             outputs/evolution_best_prediction.csv
             outputs/evolution_prediction_history.csv
+            outputs/evolution_prediction_history_result.txt
             outputs/evolution_merged_summary.json
             outputs/run_manifest.json
             outputs/holdout/*.csv
