@@ -121,6 +121,8 @@ jobs:
           python loto7_model_self_evolver.py \
             --iterations "${{ github.event.inputs.model_iterations || '100' }}" \
             --max-targets "${{ github.event.inputs.model_max_targets || '0' }}" \
+            --min-train-draws 1 \
+            --holdout-start-draw 2 \
             --seed "${{ github.run_id }}" \
             --max-runtime-minutes 340 \
             --safe-exit-minutes 15 \
