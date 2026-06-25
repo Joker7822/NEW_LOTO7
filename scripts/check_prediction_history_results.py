@@ -29,6 +29,11 @@ def read_rows(path: Path) -> List[Dict[str, str]]:
         return list(csv.DictReader(f))
 
 
+def draw_no_int(text: object) -> Optional[int]:
+    m = re.search(r"\d+", str(text or ""))
+    return int(m.group(0)) if m else None
+
+
 def fmt_nums(nums: Sequence[int]) -> str:
     return ", ".join(str(n) for n in nums)
 
@@ -73,7 +78,9 @@ def main() -> int:
     if not rows:
         raise SystemExit(f"prediction history CSV is empty or missing: {history_path}")
 
-    draws_by_date: Dict[str, Draw] = {normalize_date(draw.date): draw for draw in load_draws(args.csv)}
+    draws = load_draws(args.csv)
+    draws_by_date: Dict[str, Draw] = {normalize_date(draw.date): draw for draw in draws}
+    draws_by_no: Dict[int, Draw] = {draw.draw_no: draw for draw in draws}
     prize_rows = load_prize_rows(args.csv)
 
     by_date: Dict[str, List[Dict[str, object]]] = defaultdict(list)
@@ -89,9 +96,14 @@ def main() -> int:
 
     for row in sorted(rows, key=lambda r: normalize_date(r.get("抽せん日"))):
         draw_date = normalize_date(row.get("抽せん日"))
-        if not draw_date:
+        draw_no = draw_no_int(row.get("回別"))
+        if not draw_date and draw_no is None:
             continue
-        draw = draws_by_date.get(draw_date)
+        draw = draws_by_no.get(draw_no) if draw_no is not None else None
+        if draw is None and draw_date:
+            draw = draws_by_date.get(draw_date)
+        display_date = draw_date or (normalize_date(draw.date) if draw else "")
+        display_draw_label = str(row.get("回別") or (f"第{draw.draw_no}回" if draw else "-")).strip()
         limit = max_prediction_index(row)
         for idx in range(1, limit + 1):
             prediction = str(row.get(f"予測{idx}", "")).strip()
@@ -106,7 +118,7 @@ def main() -> int:
             if draw is None:
                 pending_rows += 1
                 rank_counts["未抽せん"] += 1
-                by_date[draw_date].append({
+                by_date[display_date].append({
                     "index": idx,
                     "numbers": fmt_nums(nums),
                     "confidence": confidence,
@@ -116,7 +128,7 @@ def main() -> int:
                     "payout": 0,
                     "actual_main": "-",
                     "actual_bonus": "-",
-                    "draw_no": "-",
+                    "draw_label": display_draw_label or "-",
                 })
                 continue
 
@@ -131,7 +143,7 @@ def main() -> int:
             if rank != "外れ":
                 winning_rows += 1
 
-            by_date[draw_date].append({
+            by_date[display_date].append({
                 "index": idx,
                 "numbers": fmt_nums(nums),
                 "confidence": confidence,
@@ -141,7 +153,7 @@ def main() -> int:
                 "payout": payout,
                 "actual_main": fmt_actual_nums(draw.main),
                 "actual_bonus": fmt_actual_nums(draw.bonus),
-                "draw_no": draw.draw_no,
+                "draw_label": f"第{draw.draw_no}回",
             })
 
     total_profit = total_payout - total_cost
@@ -180,7 +192,7 @@ def main() -> int:
         first = items[0]
         lines.extend([
             "",
-            f"抽せん日: {draw_date} / 第{first.get('draw_no')}回",
+            f"抽せん日: {draw_date} / {first.get('draw_label')}",
             f"actual_main: {first.get('actual_main')} / actual_bonus: {first.get('actual_bonus')}",
         ])
         for item in items:
