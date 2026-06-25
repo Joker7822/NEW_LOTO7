@@ -3,10 +3,10 @@
 """Create/update a wide cumulative LOTO7 prediction history CSV.
 
 Output format:
-抽せん日,予測1,信頼度1,...,予測5,信頼度5
+抽せん日,回別,予測1,信頼度1,...,予測5,信頼度5
 
-One row represents one target draw date. When the same draw date already exists,
-it is replaced by the latest prediction set.
+One row represents one target draw. When the same draw date or draw number already
+exists, it is replaced by the latest prediction set.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ import csv
 import datetime as dt
 import re
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, Tuple
 
 
 def read_rows(path: Path) -> List[Dict[str, str]]:
@@ -66,19 +66,24 @@ def load_draw_dates(csv_path: Path) -> Dict[int, str]:
     return out
 
 
-def target_draw_date(row: Dict[str, str], draw_dates: Dict[int, str]) -> str:
+def target_draw(row: Dict[str, str], draw_dates: Dict[int, str]) -> Tuple[str, str]:
+    prediction_no = draw_no_int(row.get("prediction_draw_no"))
+
     for field in ("抽せん日", "prediction_draw_date", "prediction_date", "draw_date"):
         value = str(row.get(field, "")).strip()
         if value:
-            return value[:10]
+            draw_date = value[:10]
+            draw_label = f"第{prediction_no}回" if prediction_no is not None else ""
+            return draw_date, draw_label
 
-    prediction_no = draw_no_int(row.get("prediction_draw_no"))
     if prediction_no is not None and prediction_no in draw_dates:
-        return draw_dates[prediction_no]
+        return draw_dates[prediction_no], f"第{prediction_no}回"
 
     base_date = parse_date(row.get("base_latest_date"))
+    base_no = draw_no_int(row.get("base_latest_draw_no"))
     if base_date:
-        return (base_date + dt.timedelta(days=7)).isoformat()
+        draw_no = prediction_no or ((base_no + 1) if base_no is not None else None)
+        return (base_date + dt.timedelta(days=7)).isoformat(), (f"第{draw_no}回" if draw_no is not None else "")
 
     raise ValueError("latest prediction row has no usable target draw date")
 
@@ -94,14 +99,12 @@ def confidence_for(row: Dict[str, str], rank: int) -> str:
             continue
         if value > 0:
             return f"{value:.3f}".rstrip("0").rstrip(".")
-    # If the source CSV only has rank and no probability-like score, create a
-    # deterministic rank confidence so the history remains readable.
     value = max(0.0, 0.97 - (rank - 1) * 0.01)
     return f"{value:.3f}".rstrip("0").rstrip(".")
 
 
 def output_fields(max_predictions: int) -> List[str]:
-    fields = ["抽せん日"]
+    fields = ["抽せん日", "回別"]
     for i in range(1, max_predictions + 1):
         fields.extend([f"予測{i}", f"信頼度{i}"])
     return fields
@@ -131,17 +134,22 @@ def main() -> int:
 
     max_predictions = max(1, int(args.max_predictions))
     draw_dates = load_draw_dates(Path(args.csv))
-    draw_date = target_draw_date(latest_rows[0], draw_dates)
+    draw_date, draw_label = target_draw(latest_rows[0], draw_dates)
 
     new_row = {field: "" for field in output_fields(max_predictions)}
     new_row["抽せん日"] = draw_date
+    new_row["回別"] = draw_label
     for idx, row in enumerate(sort_latest_rows(latest_rows)[:max_predictions], start=1):
         new_row[f"予測{idx}"] = fmt_prediction(row.get("numbers"))
         new_row[f"信頼度{idx}"] = confidence_for(row, idx)
 
     existing_rows = read_rows(history_path)
-    # Keep only already-wide rows and replace the same target date.
-    kept_rows = [row for row in existing_rows if row.get("抽せん日") and row.get("抽せん日") != draw_date]
+    kept_rows = [
+        row for row in existing_rows
+        if row.get("抽せん日")
+        and row.get("抽せん日") != draw_date
+        and (not draw_label or row.get("回別") != draw_label)
+    ]
     combined = kept_rows + [new_row]
     combined.sort(key=lambda r: str(r.get("抽せん日", "")))
 
@@ -153,7 +161,7 @@ def main() -> int:
         for row in combined:
             writer.writerow({field: row.get(field, "") for field in fields})
 
-    print(f"updated {history_path}: draw_date={draw_date} rows={len(combined)} predictions={min(len(latest_rows), max_predictions)}")
+    print(f"updated {history_path}: draw_date={draw_date} draw={draw_label} rows={len(combined)} predictions={min(len(latest_rows), max_predictions)}")
     return 0
 
 
