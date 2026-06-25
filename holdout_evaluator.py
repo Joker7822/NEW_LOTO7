@@ -3,14 +3,15 @@
 """
 holdout_evaluator.py
 
-進化型探索で作成した loto7_best_model.json を固定し、holdout成績を
-実当せん金額ベースで評価する。全期間バックテスト向けに途中保存・再開に対応。
+採用済み loto7_best_model.json を固定し、walk-forward holdout成績を
+実当せん金額ベースで評価する。
 
-重要:
-    - roi / roi_percent は「収支 ÷ 購入額」で計算する
-    - 従来の「払戻 ÷ 購入額」は payout_roi / payout_roi_percent として別出力する
-    - 的中率は口数ベースと回別ベースの2種類を出力する
-    - 各検証回の予測生成は train = draws[:idx] のみを使い、対象回以降は使わない
+ROI定義:
+    - roi / roi_percent: 収支ROI = (払戻額 - 購入額) / 購入額
+    - payout_roi / payout_roi_percent: 従来回収率 = 払戻額 / 購入額
+
+年別成績:
+    - target_draws は年別のユニーク対象回数で集計する。
 """
 
 from __future__ import annotations
@@ -24,19 +25,25 @@ import time
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence, Set
 
-from loto7_evolution_trainer import (
-    Draw,
-    evaluate_ticket,
-    generate_tickets,
-    load_best_model,
-    load_draws,
-)
+from loto7_evolution_trainer import Draw, evaluate_ticket, generate_tickets, load_best_model, load_draws
 
 RANK_ORDER = ["1等", "2等", "3等", "4等", "5等", "6等", "外れ"]
 PRIZE_RANKS = ["1等", "2等", "3等", "4等", "5等", "6等"]
 FIELDNAMES = [
-    "draw_no", "date", "year", "combo_index", "ticket", "actual_main", "actual_bonus",
-    "main_match", "bonus_match", "rank", "purchase_cost", "prize_amount", "profit", "prize_data_missing",
+    "draw_no",
+    "date",
+    "year",
+    "combo_index",
+    "ticket",
+    "actual_main",
+    "actual_bonus",
+    "main_match",
+    "bonus_match",
+    "rank",
+    "purchase_cost",
+    "prize_amount",
+    "profit",
+    "prize_data_missing",
 ]
 
 
@@ -54,9 +61,7 @@ def parse_money_yen(text: object) -> int:
     if not raw or raw == "該当なし":
         return 0
     m = re.search(r"([0-9,]+)", raw)
-    if not m:
-        return 0
-    return int(m.group(1).replace(",", ""))
+    return int(m.group(1).replace(",", "")) if m else 0
 
 
 def load_prize_rows(csv_path: str) -> Dict[int, Dict[str, str]]:
@@ -70,18 +75,18 @@ def load_prize_rows(csv_path: str) -> Dict[int, Dict[str, str]]:
     return out
 
 
+def has_any_prize_amount(row: Dict[str, str]) -> bool:
+    return any(str(row.get(f"{rank}当選金額", "")).strip() for rank in PRIZE_RANKS)
+
+
 def prize_amount_for_rank(row: Dict[str, str], rank: str) -> int:
     if rank == "外れ":
         return 0
     return parse_money_yen(row.get(f"{rank}当選金額", ""))
 
 
-def has_any_prize_amount(row: Dict[str, str]) -> bool:
-    return any(str(row.get(f"{rank}当選金額", "")).strip() for rank in PRIZE_RANKS)
-
-
 def fmt_ticket(ticket: Sequence[int]) -> str:
-    return " ".join(f"{n:02d}" for n in ticket)
+    return " ".join(f"{int(n):02d}" for n in ticket)
 
 
 def draw_year(draw: Draw) -> str:
@@ -103,14 +108,14 @@ def pct(numerator: int, denominator: int) -> float:
 
 
 def roi_from_profit(total_cost: int, total_payout: int) -> float:
-    """収支ベースROI: (払戻額 - 購入額) / 購入額。"""
+    """収支ROI: (払戻額 - 購入額) / 購入額。"""
     if total_cost <= 0:
         return 0.0
     return (total_payout - total_cost) / total_cost
 
 
 def roi_from_payout(total_cost: int, total_payout: int) -> float:
-    """従来の回収率: 払戻額 / 購入額。互換確認用に別名で保持する。"""
+    """従来回収率: 払戻額 / 購入額。"""
     if total_cost <= 0:
         return 0.0
     return total_payout / total_cost
@@ -135,17 +140,18 @@ def empty_year_stats() -> Dict[str, object]:
     }
 
 
-def update_year_stats(stats: Dict[str, object], *, cost: int, payout: int, rank: str, main_match: int) -> None:
-    stats["total_tickets"] = int(stats["total_tickets"]) + 1
+def update_money_stats(stats: Dict[str, object], *, cost: int, payout: int, rank: str, main_match: int) -> None:
+    stats["total_tickets"] = int(stats.get("total_tickets", 0)) + 1
     if rank != "外れ":
         stats["winning_ticket_count"] = int(stats.get("winning_ticket_count", 0)) + 1
-    stats["total_cost"] = int(stats["total_cost"]) + cost
-    stats["total_payout"] = int(stats["total_payout"]) + payout
+    stats["total_cost"] = int(stats.get("total_cost", 0)) + cost
+    stats["total_payout"] = int(stats.get("total_payout", 0)) + payout
     stats["profit"] = int(stats["total_payout"]) - int(stats["total_cost"])
-    stats["max_main_match"] = max(int(stats["max_main_match"]), main_match)
+    stats["max_main_match"] = max(int(stats.get("max_main_match", 0)), main_match)
     rank_counts = stats["rank_counts"]
     assert isinstance(rank_counts, dict)
     rank_counts[rank] = int(rank_counts.get(rank, 0)) + 1
+
     total_cost = int(stats["total_cost"])
     total_payout = int(stats["total_payout"])
     total_tickets = int(stats["total_tickets"])
@@ -153,6 +159,7 @@ def update_year_stats(stats: Dict[str, object], *, cost: int, payout: int, rank:
     roi = roi_from_profit(total_cost, total_payout)
     payout_roi = roi_from_payout(total_cost, total_payout)
     ticket_hit_rate = pct(winning_ticket_count, total_tickets)
+
     stats["roi"] = round(roi, 6)
     stats["roi_percent"] = round(roi * 100.0, 3)
     stats["payout_roi"] = round(payout_roi, 6)
@@ -161,7 +168,13 @@ def update_year_stats(stats: Dict[str, object], *, cost: int, payout: int, rank:
     stats["ticket_hit_rate_percent"] = round(ticket_hit_rate * 100.0, 3)
 
 
-def select_target_indices(draws: Sequence[Draw], *, min_train_draws: int, holdout_start_draw: int, holdout_end_draw: Optional[int]) -> List[int]:
+def select_target_indices(
+    draws: Sequence[Draw],
+    *,
+    min_train_draws: int,
+    holdout_start_draw: int,
+    holdout_end_draw: Optional[int],
+) -> List[int]:
     out: List[int] = []
     for idx, draw in enumerate(draws):
         if idx < min_train_draws:
@@ -233,6 +246,7 @@ def append_rows(path: Path, rows: Iterable[Dict[str, object]]) -> None:
 def summarize_detail_csv(path: Path) -> Dict[str, object]:
     rank_counts = {rank: 0 for rank in RANK_ORDER}
     year_summary: Dict[str, Dict[str, object]] = {}
+    year_draws: Dict[str, Set[int]] = {}
     max_main_match = 0
     total_cost = 0
     total_payout = 0
@@ -270,21 +284,26 @@ def summarize_detail_csv(path: Path) -> Dict[str, object]:
         reader = csv.DictReader(f)
         for row in reader:
             draw_no = draw_no_int(row.get("draw_no"))
-            if draw_no is not None:
-                target_draws.add(draw_no)
             year = str(row.get("year") or "unknown")
             if year not in year_summary:
                 year_summary[year] = empty_year_stats()
+                year_draws[year] = set()
+            if draw_no is not None:
+                target_draws.add(draw_no)
+                year_draws[year].add(draw_no)
+
             rank = str(row.get("rank") or "外れ")
             cost = int(row.get("purchase_cost") or 0)
             payout = int(row.get("prize_amount") or 0)
             main_match = int(row.get("main_match") or 0)
+
             total_cost += cost
             total_payout += payout
             total_tickets += 1
             rank_counts[rank] = int(rank_counts.get(rank, 0)) + 1
             max_main_match = max(max_main_match, main_match)
-            update_year_stats(year_summary[year], cost=cost, payout=payout, rank=rank, main_match=main_match)
+            update_money_stats(year_summary[year], cost=cost, payout=payout, rank=rank, main_match=main_match)
+
             if rank != "外れ":
                 winning_ticket_count += 1
                 if draw_no is not None:
@@ -292,11 +311,15 @@ def summarize_detail_csv(path: Path) -> Dict[str, object]:
             if str(row.get("prize_data_missing") or "0") == "1" and draw_no is not None:
                 missing_prize_draws.add(draw_no)
 
+    for year, draws_for_year in year_draws.items():
+        year_summary[year]["target_draws"] = len(draws_for_year)
+
     profit = total_payout - total_cost
     roi = roi_from_profit(total_cost, total_payout)
     payout_roi = roi_from_payout(total_cost, total_payout)
     ticket_hit_rate = pct(winning_ticket_count, total_tickets)
     draw_hit_rate = pct(len(winning_draws), len(target_draws))
+
     return {
         "target_draws": len(target_draws),
         "total_tickets": total_tickets,
@@ -374,7 +397,17 @@ def write_state(path: Path, *, key: Dict[str, object], complete: bool, completed
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def build_summary(args: argparse.Namespace, *, genome, output_csv: Path, summary_json: Path, report_txt: Optional[Path], complete: bool, total_targets: int, state_path: Path) -> Dict[str, object]:
+def build_summary(
+    args: argparse.Namespace,
+    *,
+    genome,
+    output_csv: Path,
+    summary_json: Path,
+    report_txt: Optional[Path],
+    complete: bool,
+    total_targets: int,
+    state_path: Path,
+) -> Dict[str, object]:
     stats = summarize_detail_csv(output_csv)
     return {
         "created_at": utc_now(),
@@ -447,6 +480,10 @@ def write_text_report(summary: Dict[str, object], report_path: str) -> None:
     lines.append(f"1回あたり購入口数: {summary.get('purchase_count')}")
     lines.append(f"1口単価: {format_yen(summary.get('unit_cost'))}")
     lines.append("")
+    lines.append("[ROI定義]")
+    lines.append("収支率ROI: (払戻額 - 購入額) ÷ 購入額")
+    lines.append("従来回収率: 払戻額 ÷ 購入額")
+    lines.append("")
     lines.append("[総合成績]")
     lines.append(f"総購入口数: {summary.get('total_tickets')}")
     lines.append(f"総購入額: {format_yen(summary.get('total_cost'))}")
@@ -516,8 +553,27 @@ def write_text_report(summary: Dict[str, object], report_path: str) -> None:
     p.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def write_summary_outputs(args: argparse.Namespace, *, genome, output_csv: Path, summary_json: Path, report_txt: Optional[Path], complete: bool, total_targets: int, state_path: Path) -> Dict[str, object]:
-    summary = build_summary(args, genome=genome, output_csv=output_csv, summary_json=summary_json, report_txt=report_txt, complete=complete, total_targets=total_targets, state_path=state_path)
+def write_summary_outputs(
+    args: argparse.Namespace,
+    *,
+    genome,
+    output_csv: Path,
+    summary_json: Path,
+    report_txt: Optional[Path],
+    complete: bool,
+    total_targets: int,
+    state_path: Path,
+) -> Dict[str, object]:
+    summary = build_summary(
+        args,
+        genome=genome,
+        output_csv=output_csv,
+        summary_json=summary_json,
+        report_txt=report_txt,
+        complete=complete,
+        total_targets=total_targets,
+        state_path=state_path,
+    )
     summary_json.parent.mkdir(parents=True, exist_ok=True)
     summary_json.write_text(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     if report_txt is not None:
@@ -601,12 +657,30 @@ def evaluate_holdout(args: argparse.Namespace) -> int:
 
         if should_safe_exit(start_monotonic, args.max_runtime_minutes, args.safe_exit_minutes):
             print(f"[SAFE EXIT] completed={len(completed)}/{len(target_indices)}. Resume next run with --resume.")
-            write_summary_outputs(args, genome=genome, output_csv=output_csv, summary_json=summary_json, report_txt=report_txt, complete=False, total_targets=len(target_indices), state_path=state_path)
+            write_summary_outputs(
+                args,
+                genome=genome,
+                output_csv=output_csv,
+                summary_json=summary_json,
+                report_txt=report_txt,
+                complete=False,
+                total_targets=len(target_indices),
+                state_path=state_path,
+            )
             return 0
 
     complete = set(target_draw_nos).issubset(completed)
     write_state(state_path, key=key, complete=complete, completed_draws=sorted(completed), total_targets=len(target_indices))
-    summary = write_summary_outputs(args, genome=genome, output_csv=output_csv, summary_json=summary_json, report_txt=report_txt, complete=complete, total_targets=len(target_indices), state_path=state_path)
+    summary = write_summary_outputs(
+        args,
+        genome=genome,
+        output_csv=output_csv,
+        summary_json=summary_json,
+        report_txt=report_txt,
+        complete=complete,
+        total_targets=len(target_indices),
+        state_path=state_path,
+    )
 
     if args.fail_on_missing_prize and complete and summary["missing_prize_draw_count"]:
         raise SystemExit(f"missing prize amount rows: {summary['missing_prize_draws']}")
