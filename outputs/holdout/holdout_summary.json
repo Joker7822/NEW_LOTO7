@@ -1,7 +1,7 @@
 {
   "best_model": "loto7_best_model.json",
   "complete": true,
-  "created_at": "2026-06-25T22:42:19.548395+00:00",
+  "created_at": "2026-06-26T05:37:00.308255+00:00",
   "csv": "loto7.csv",
   "detail_csv": "outputs/holdout/holdout_result.csv",
   "draw_hit_rate": 0.14978,
