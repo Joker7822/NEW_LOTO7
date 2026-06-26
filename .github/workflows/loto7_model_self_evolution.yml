@@ -89,17 +89,30 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
+          SNAPSHOT="$(mktemp -d)"
+          mkdir -p "$SNAPSHOT/outputs/model_self_evolution"
+          cp -f loto7_best_model.json "$SNAPSHOT/" 2>/dev/null || true
+          cp -f outputs/model_self_evolution/standalone_*.json "$SNAPSHOT/outputs/model_self_evolution/" 2>/dev/null || true
+          cp -f outputs/model_self_evolution/standalone_*.txt "$SNAPSHOT/outputs/model_self_evolution/" 2>/dev/null || true
+          cp -f outputs/model_self_evolution/standalone_*.csv "$SNAPSHOT/outputs/model_self_evolution/" 2>/dev/null || true
+
+          git fetch origin "${GITHUB_REF_NAME}"
+          git reset --hard "origin/${GITHUB_REF_NAME}"
+
+          mkdir -p outputs/model_self_evolution
+          cp -f "$SNAPSHOT/loto7_best_model.json" loto7_best_model.json 2>/dev/null || true
+          cp -f "$SNAPSHOT"/outputs/model_self_evolution/* outputs/model_self_evolution/ 2>/dev/null || true
+
           git add -f \
             loto7_best_model.json \
-            outputs/model_self_evolution/*.json \
-            outputs/model_self_evolution/*.txt \
-            outputs/model_self_evolution/*.csv || true
+            outputs/model_self_evolution/standalone_*.json \
+            outputs/model_self_evolution/standalone_*.txt \
+            outputs/model_self_evolution/standalone_*.csv || true
           if git diff --cached --quiet; then
             echo "No model self-evolution changes"
             exit 0
           fi
           git commit -m "Run LOTO7 model self-evolution [skip ci]"
-          git pull --rebase -X theirs --autostash origin "${GITHUB_REF_NAME}"
           git push origin HEAD:"${GITHUB_REF_NAME}"
 
       - name: Upload model self-evolution artifacts
