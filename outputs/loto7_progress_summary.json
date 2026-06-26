@@ -2,15 +2,7 @@
   "history_files": [],
   "state_files": [],
   "best_model_files": [
-    "loto7_best_model.json",
-    "loto7_best_model_shard00_of_08.json",
-    "loto7_best_model_shard01_of_08.json",
-    "loto7_best_model_shard02_of_08.json",
-    "loto7_best_model_shard03_of_08.json",
-    "loto7_best_model_shard04_of_08.json",
-    "loto7_best_model_shard05_of_08.json",
-    "loto7_best_model_shard06_of_08.json",
-    "loto7_best_model_shard07_of_08.json"
+    "loto7_best_model.json"
   ],
   "evaluated_genomes_rows": 0,
   "max_generation_seen": -1,
@@ -32,58 +24,10 @@
       "score": 0.0,
       "id": "g097_0097_1844",
       "generation": 97
-    },
-    {
-      "source_file": "loto7_best_model_shard00_of_08.json",
-      "score": 48181.375477329406,
-      "id": "g027_0096_1316",
-      "generation": 27
-    },
-    {
-      "source_file": "loto7_best_model_shard01_of_08.json",
-      "score": 60928.05795397377,
-      "id": "g030_0065_3171",
-      "generation": 30
-    },
-    {
-      "source_file": "loto7_best_model_shard02_of_08.json",
-      "score": 66492.35528426003,
-      "id": "g001_0066_8960",
-      "generation": 1
-    },
-    {
-      "source_file": "loto7_best_model_shard03_of_08.json",
-      "score": 57089.49179873565,
-      "id": "g035_0099_4539",
-      "generation": 35
-    },
-    {
-      "source_file": "loto7_best_model_shard04_of_08.json",
-      "score": 49640.13126647346,
-      "id": "g013_0084_8386",
-      "generation": 13
-    },
-    {
-      "source_file": "loto7_best_model_shard05_of_08.json",
-      "score": 67991.78238597537,
-      "id": "g002_0013_8486",
-      "generation": 2
-    },
-    {
-      "source_file": "loto7_best_model_shard06_of_08.json",
-      "score": 43633.59673343581,
-      "id": "g010_0086_5179",
-      "generation": 10
-    },
-    {
-      "source_file": "loto7_best_model_shard07_of_08.json",
-      "score": 40216.09427754487,
-      "id": "g007_0095_6353",
-      "generation": 7
     }
   ],
   "ml_status": {
-    "started_at": "2026-06-26T05:38:43.784605+00:00",
+    "started_at": "2026-06-26T12:34:17.966604+00:00",
     "label_definitions": {
       "label_4plus": "1 when main_match >= 4",
       "label_5plus": "1 when main_match >= 5"
@@ -129,15 +73,15 @@
       }
     ],
     "optuna": {
-      "best_value": 0.8905229841248798,
+      "best_value": 0.8905792568411052,
       "model": "logistic",
-      "C": 0.05142831410594517
+      "C": 0.05054782080395401
     },
     "shap": {
       "model": "lightgbm",
       "rows": 17
     },
-    "finished_at": "2026-06-26T05:40:37.344044+00:00",
+    "finished_at": "2026-06-26T12:36:10.276447+00:00",
     "ok": true
   },
   "ml_reports": [
