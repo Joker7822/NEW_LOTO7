@@ -1,10 +1,10 @@
 {
   "best_model": "loto7_best_model.json",
-  "created_at": "2026-06-26T12:32:35.171050+00:00",
+  "created_at": "2026-06-26T22:29:52.369243+00:00",
   "csv": "loto7.csv",
   "kind": "loto7_evolution_merge_holdout_rerank_ensemble",
-  "latest_draw_date": "2026-06-19",
-  "latest_draw_no": 682,
+  "latest_draw_date": "2026-06-26",
+  "latest_draw_no": 683,
   "model_count": 1,
   "model_patterns": [
     "loto7_best_model.json"
@@ -26,7 +26,7 @@
     "missing_prize_draw_count": 0,
     "missing_prize_draws": [],
     "path": "loto7_best_model.json",
-    "profit": -404000,
+    "profit": -405500,
     "purchase_count": 5,
     "rank_counts": {
       "1等": 0,
@@ -35,14 +35,14 @@
       "4等": 8,
       "5等": 49,
       "6等": 100,
-      "外れ": 3247
+      "外れ": 3252
     },
-    "roi": 0.604503,
-    "roi_percent": 60.45,
-    "target_draws": 681,
-    "total_cost": 1021500,
+    "roi": 0.603617,
+    "roi_percent": 60.362,
+    "target_draws": 682,
+    "total_cost": 1023000,
     "total_payout": 617500,
-    "total_tickets": 3405,
+    "total_tickets": 3410,
     "unit_cost": 300
   },
   "selected_model": "loto7_best_model.json",

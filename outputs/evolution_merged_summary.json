@@ -2,7 +2,7 @@
   "best_model": "loto7_best_model.json",
   "candidates": [
     {
-      "ensemble_weight": 4.225006,
+      "ensemble_weight": 4.223234,
       "genome_id": "g097_0097_1844",
       "holdout": {
         "evolution_score": 0.0,
@@ -14,7 +14,7 @@
         "missing_prize_draw_count": 0,
         "missing_prize_draws": [],
         "path": "loto7_best_model.json",
-        "profit": -404000,
+        "profit": -405500,
         "purchase_count": 5,
         "rank_counts": {
           "1等": 0,
@@ -23,14 +23,14 @@
           "4等": 8,
           "5等": 49,
           "6等": 100,
-          "外れ": 3247
+          "外れ": 3252
         },
-        "roi": 0.604503,
-        "roi_percent": 60.45,
-        "target_draws": 681,
-        "total_cost": 1021500,
+        "roi": 0.603617,
+        "roi_percent": 60.362,
+        "target_draws": 682,
+        "total_cost": 1023000,
         "total_payout": 617500,
-        "total_tickets": 3405,
+        "total_tickets": 3410,
         "unit_cost": 300
       },
       "path": "loto7_best_model.json",
@@ -41,8 +41,8 @@
   "csv": "loto7.csv",
   "ensemble_candidates_per_model": 12,
   "ensemble_overlap_limit": 4,
-  "latest_draw_date": "2026-06-19",
-  "latest_draw_no": 682,
+  "latest_draw_date": "2026-06-26",
+  "latest_draw_no": 683,
   "min_models": 1,
   "model_count": 1,
   "model_patterns": [
@@ -64,7 +64,7 @@
     "missing_prize_draw_count": 0,
     "missing_prize_draws": [],
     "path": "loto7_best_model.json",
-    "profit": -404000,
+    "profit": -405500,
     "purchase_count": 5,
     "rank_counts": {
       "1等": 0,
@@ -73,14 +73,14 @@
       "4等": 8,
       "5等": 49,
       "6等": 100,
-      "外れ": 3247
+      "外れ": 3252
     },
-    "roi": 0.604503,
-    "roi_percent": 60.45,
-    "target_draws": 681,
-    "total_cost": 1021500,
+    "roi": 0.603617,
+    "roi_percent": 60.362,
+    "target_draws": 682,
+    "total_cost": 1023000,
     "total_payout": 617500,
-    "total_tickets": 3405,
+    "total_tickets": 3410,
     "unit_cost": 300
   },
   "selected_model": "loto7_best_model.json",
@@ -91,7 +91,7 @@
   "selection_mode": "holdout_roi",
   "selection_reason": "holdout再ランキング: ROI → 最大本数字一致数 → 1等→2等→3等→4等→5等→6等 → Evolutionスコア",
   "selection_sort_description": "ROI → 最大本数字一致数 → 1等→2等→3等→4等→5等→6等 → Evolutionスコア",
-  "selection_target_draws": 681,
+  "selection_target_draws": 682,
   "selection_unit_cost": 300,
-  "updated_at": "2026-06-26T12:32:35.171050+00:00"
+  "updated_at": "2026-06-26T22:29:52.369243+00:00"
 }
