@@ -1,14 +1,14 @@
 LOTO7 Model-Only Self Evolution Report
 ======================================
 
-created_at: 2026-06-27T14:53:16.111468+00:00
-status: safe_exit_at_325.63_minutes
-resume_used: False
-start_iteration: 1
-last_iteration: 69
+created_at: 2026-06-27T18:14:42.977571+00:00
+status: completed
+resume_used: True
+start_iteration: 70
+last_iteration: 100
 iterations_requested: 100
-iterations_evaluated: 69
-iterations_evaluated_this_run: 69
+iterations_evaluated: 100
+iterations_evaluated_this_run: 31
 
 [Baseline]
 roi_percent: 60.362
