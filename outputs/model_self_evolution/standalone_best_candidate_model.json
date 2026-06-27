@@ -9,7 +9,7 @@
     "missing_prize_draw_count": 0,
     "missing_prize_draws": [],
     "path": "loto7_best_model.json",
-    "profit": -404000,
+    "profit": -405500,
     "purchase_count": 5,
     "rank_counts": {
       "1等": 0,
@@ -18,14 +18,14 @@
       "4等": 8,
       "5等": 49,
       "6等": 100,
-      "外れ": 3247
+      "外れ": 3252
     },
-    "roi": 0.604503,
-    "roi_percent": 60.45,
-    "target_draws": 681,
-    "total_cost": 1021500,
+    "roi": 0.603617,
+    "roi_percent": 60.362,
+    "target_draws": 682,
+    "total_cost": 1023000,
     "total_payout": 617500,
-    "total_tickets": 3405,
+    "total_tickets": 3410,
     "unit_cost": 300
   },
   "csv": "loto7.csv",
@@ -70,7 +70,7 @@
     "missing_prize_draw_count": 0,
     "missing_prize_draws": [],
     "path": "loto7_best_model.json",
-    "profit": -404000,
+    "profit": -405500,
     "purchase_count": 5,
     "rank_counts": {
       "1等": 0,
@@ -79,17 +79,17 @@
       "4等": 8,
       "5等": 49,
       "6等": 100,
-      "外れ": 3247
+      "外れ": 3252
     },
-    "roi": 0.604503,
-    "roi_percent": 60.45,
-    "target_draws": 681,
-    "total_cost": 1021500,
+    "roi": 0.603617,
+    "roi_percent": 60.362,
+    "target_draws": 682,
+    "total_cost": 1023000,
     "total_payout": 617500,
-    "total_tickets": 3405,
+    "total_tickets": 3410,
     "unit_cost": 300
   },
   "selection_mode": "model_only_holdout_roi",
   "source": "model_self_evolver",
-  "updated_at": "2026-06-26T21:46:11.702920+00:00"
+  "updated_at": "2026-06-27T02:53:12.497028+00:00"
 }
