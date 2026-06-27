@@ -22,8 +22,8 @@ null
 ```
 
 ## ML reports
-- {'model': 'meta_logistic', 'auc': '0.8860812370883461', 'test_rows': '5266', 'positive_rate': '0.11849601215343715'}
-- {'model': 'meta_rf', 'auc': '0.8323637509804571', 'test_rows': '5266', 'positive_rate': '0.11849601215343715'}
-- {'model': 'xgboost', 'auc': '0.8493035647212188', 'test_rows': '5266', 'positive_rate': '0.11849601215343715'}
-- {'model': 'lightgbm', 'auc': '0.8691869938907854', 'test_rows': '5266', 'positive_rate': '0.11849601215343715'}
-- {'model': 'catboost', 'auc': '0.852960428197395', 'test_rows': '5266', 'positive_rate': '0.11849601215343715'}
+- {'model': 'meta_logistic', 'auc': '0.8882795346833261', 'test_rows': '5267', 'positive_rate': '0.11866337573571292'}
+- {'model': 'meta_rf', 'auc': '0.8314273158121499', 'test_rows': '5267', 'positive_rate': '0.11866337573571292'}
+- {'model': 'xgboost', 'auc': '0.8436520465316674', 'test_rows': '5267', 'positive_rate': '0.11866337573571292'}
+- {'model': 'lightgbm', 'auc': '0.8647083153813012', 'test_rows': '5267', 'positive_rate': '0.11866337573571292'}
+- {'model': 'catboost', 'auc': '0.8557966393795777', 'test_rows': '5267', 'positive_rate': '0.11866337573571292'}
