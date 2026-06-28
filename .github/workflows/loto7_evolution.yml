@@ -278,6 +278,70 @@ jobs:
             outputs/holdout/*.txt
           if-no-files-found: ignore
 
+  role-ensemble-backtest:
+    needs: holdout
+    if: ${{ !cancelled() && needs.holdout.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Pull latest role ensemble inputs
+        run: |
+          set -euo pipefail
+          git fetch origin "${GITHUB_REF_NAME}"
+          git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+      - name: Run role ensemble backtest
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: |
+          set -euo pipefail
+          python scripts/backtest_role_ensemble.py \
+            --csv loto7.csv \
+            --best-model loto7_best_model.json \
+            --holdout-start-draw 2 \
+            --min-train-draws 1 \
+            --purchase-count 5 \
+            --overlap-limit 4 \
+            --output outputs/role_ensemble/role_ensemble_backtest.csv \
+            --summary outputs/role_ensemble/role_ensemble_summary.json \
+            --report outputs/role_ensemble/role_ensemble_report.txt
+      - name: Commit role ensemble backtest outputs
+        if: always()
+        run: |
+          set -euo pipefail
+          SNAPSHOT="$(mktemp -d)"
+          mkdir -p "$SNAPSHOT/outputs/role_ensemble"
+          cp -f outputs/role_ensemble/*.csv "$SNAPSHOT/outputs/role_ensemble/" 2>/dev/null || true
+          cp -f outputs/role_ensemble/*.json "$SNAPSHOT/outputs/role_ensemble/" 2>/dev/null || true
+          cp -f outputs/role_ensemble/*.txt "$SNAPSHOT/outputs/role_ensemble/" 2>/dev/null || true
+          git fetch origin "${GITHUB_REF_NAME}"
+          git reset --hard "origin/${GITHUB_REF_NAME}"
+          mkdir -p outputs/role_ensemble
+          cp -f "$SNAPSHOT"/outputs/role_ensemble/* outputs/role_ensemble/ 2>/dev/null || true
+          git add -f outputs/role_ensemble/*.csv outputs/role_ensemble/*.json outputs/role_ensemble/*.txt || true
+          if git diff --cached --quiet; then echo "No role ensemble backtest changes"; exit 0; fi
+          git commit -m "Update LOTO7 role ensemble backtest outputs [skip ci]"
+          git push origin HEAD:"${GITHUB_REF_NAME}"
+      - name: Upload role ensemble backtest artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: loto7-role-ensemble-backtest
+          path: |
+            outputs/role_ensemble/*.csv
+            outputs/role_ensemble/*.json
+            outputs/role_ensemble/*.txt
+          if-no-files-found: ignore
+
   ml-stack:
     needs: [evolve, holdout]
     if: ${{ !cancelled() && needs.evolve.result == 'success' && needs.holdout.result == 'success' && (github.event_name != 'workflow_dispatch' || github.event.inputs.run_ml_stack != 'false') }}
@@ -358,7 +422,7 @@ jobs:
           if-no-files-found: ignore
 
   monitor:
-    needs: [evolve, holdout, ml-stack, complete-ai]
+    needs: [evolve, holdout, role-ensemble-backtest, ml-stack, complete-ai]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 30
