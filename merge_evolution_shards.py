@@ -3,18 +3,16 @@
 """
 merge_evolution_shards.py
 
-複数shardで出力された loto7_best_model_shardXX_of_08.json を統合し、
-候補モデルをholdout成績で再ランキングして最終採用モデルを決める。
+複数shardで出力された候補モデル、または採用済み best model を統合し、
+holdout成績で再ランキングして最終採用モデルと最新予測を出力する。
 
-目的:
-    - 現行8 shardの最良モデルだけを標準候補として集める
-    - 全候補をholdoutで検証し、最大一致数・ROI・等級件数で再ランキングする
-    - 最終採用モデル、または8 shard合議制で最新予測5口を信頼度順にCSV/TXT出力する
-    - 採用モデル、最新予測、統合サマリー、run manifestを出力する
-    - モデル数不足や不正JSONを検出し、誤った採用を防ぐ
+最新予測は以下をサポートする。
+  - best_model: 採用モデル単体の上位候補
+  - ensemble: 複数モデル合議制
+  - role_ensemble: 5口を役割分担する構造型予測
 
-例:
-    python merge_evolution_shards.py --csv loto7.csv --purchase-count 5
+注意:
+  宝くじ抽せんはランダム性が高く、当せんや利益を保証しない。
 """
 
 from __future__ import annotations
@@ -33,6 +31,23 @@ from loto7_evolution_trainer import Draw, Genome, evaluate_ticket, generate_tick
 RANK_ORDER = ["1等", "2等", "3等", "4等", "5等", "6等", "外れ"]
 PRIZE_RANKS = ["1等", "2等", "3等", "4等", "5等", "6等"]
 CURRENT_8_SHARD_PATTERNS = ["loto7_best_model_shard*_of_08.json", "outputs/loto7_best_model_shard*_of_08.json"]
+ROLE_ORDER = [
+    ("main_best", "本命: 採用ベストモデル"),
+    ("high_match", "高一致狙い: ペア/3連/最大一致重視"),
+    ("recent120", "直近寄り: 直近120回/60回の流れ重視"),
+    ("mid_high", "中高数字補正: 20番台後半〜30番台も押さえる"),
+    ("contrarian", "荒れ目/逆張り: 休眠・広めレンジ・低重複"),
+]
+
+
+def clamp(value: float, low: float, high: float) -> float:
+    return min(high, max(low, float(value)))
+
+
+def normalize_weights(values: Sequence[float]) -> Tuple[float, float, float, float]:
+    clipped = [max(0.01, float(v)) for v in values]
+    total = sum(clipped) or 1.0
+    return tuple(v / total for v in clipped)  # type: ignore[return-value]
 
 
 def load_model(path: Path) -> Optional[Dict[str, object]]:
@@ -338,6 +353,121 @@ def model_weight_for_ensemble(item: Dict[str, object], rank_index: int) -> float
     return base + roi * 2.0 + max_match * 0.15 + high_grade * 0.08 + fifth * 0.004 + sixth * 0.002
 
 
+def clone_genome_for_role(base: Genome, role: str) -> Genome:
+    data = dict(base.__dict__)
+    data["id"] = f"{base.id}_{role}"
+    data["score"] = 0.0
+    data["max_main_match"] = 0
+    data["best_rank_count"] = 0
+
+    if role == "main_best":
+        return Genome(**data)
+
+    if role == "high_match":
+        w = normalize_weights([
+            data["full_weight"] * 1.15,
+            data["recent240_weight"] * 1.05,
+            data["recent120_weight"] * 0.95,
+            data["recent60_weight"] * 0.90,
+        ])
+        data.update({"full_weight": w[0], "recent240_weight": w[1], "recent120_weight": w[2], "recent60_weight": w[3]})
+        data["pair_weight"] = clamp(data["pair_weight"] * 1.45 + 0.03, 0.02, 0.38)
+        data["pair_recency_weight"] = clamp(data["pair_recency_weight"] * 1.25, 0.02, 0.42)
+        data["pair_stability_weight"] = clamp(data["pair_stability_weight"] * 1.40 + 0.03, 0.02, 0.38)
+        data["triple_weight"] = clamp(data["triple_weight"] * 2.20 + 0.02, 0.00, 0.22)
+        data["pool_size"] = max(15, min(20, int(data["pool_size"])))
+        data["overlap_limit"] = min(4, int(data["overlap_limit"]))
+
+    elif role == "recent120":
+        w = normalize_weights([
+            data["full_weight"] * 0.45,
+            data["recent240_weight"] * 0.80,
+            data["recent120_weight"] * 1.65,
+            data["recent60_weight"] * 1.80,
+        ])
+        data.update({"full_weight": w[0], "recent240_weight": w[1], "recent120_weight": w[2], "recent60_weight": w[3]})
+        data["pair_recency_weight"] = clamp(data["pair_recency_weight"] * 1.60 + 0.04, 0.02, 0.45)
+        data["dormancy_weight"] = clamp(data["dormancy_weight"] * 0.70, 0.00, 0.08)
+        data["pool_size"] = max(15, min(21, int(data["pool_size"]) + 1))
+
+    elif role == "mid_high":
+        w = normalize_weights([
+            data["full_weight"] * 0.80,
+            data["recent240_weight"] * 1.05,
+            data["recent120_weight"] * 1.10,
+            data["recent60_weight"] * 0.95,
+        ])
+        data.update({"full_weight": w[0], "recent240_weight": w[1], "recent120_weight": w[2], "recent60_weight": w[3]})
+        data["target_sum_min"] = max(118, int(data["target_sum_min"]))
+        data["target_sum_max"] = max(172, int(data["target_sum_max"]))
+        data["sum_bonus"] = clamp(data["sum_bonus"] * 1.25 + 0.05, 0.10, 1.10)
+        data["low_high_bonus"] = clamp(data["low_high_bonus"] * 0.80, 0.00, 0.70)
+        data["pool_size"] = max(17, min(24, int(data["pool_size"]) + 3))
+
+    elif role == "contrarian":
+        w = normalize_weights([
+            data["full_weight"] * 1.10,
+            data["recent240_weight"] * 0.85,
+            data["recent120_weight"] * 0.70,
+            data["recent60_weight"] * 0.55,
+        ])
+        data.update({"full_weight": w[0], "recent240_weight": w[1], "recent120_weight": w[2], "recent60_weight": w[3]})
+        data["dormancy_weight"] = clamp(data["dormancy_weight"] * 1.80 + 0.02, 0.01, 0.12)
+        data["pair_weight"] = clamp(data["pair_weight"] * 0.65, 0.00, 0.25)
+        data["pair_recency_weight"] = clamp(data["pair_recency_weight"] * 0.60, 0.00, 0.30)
+        data["triple_weight"] = clamp(data["triple_weight"] * 0.55, 0.00, 0.12)
+        data["target_sum_min"] = min(95, int(data["target_sum_min"]))
+        data["target_sum_max"] = max(190, int(data["target_sum_max"]))
+        data["pool_size"] = max(20, min(27, int(data["pool_size"]) + 5))
+        data["overlap_limit"] = min(4, int(data["overlap_limit"]))
+        data["max_consecutive_pairs"] = max(0, min(2, int(data["max_consecutive_pairs"])))
+
+    if int(data["target_sum_min"]) >= int(data["target_sum_max"]):
+        data["target_sum_min"] = 100
+        data["target_sum_max"] = 180
+    return Genome(**data)
+
+
+def role_ticket_score(ticket: Sequence[int], role: str, latest_draw: Draw) -> float:
+    nums = tuple(sorted(ticket))
+    total = sum(nums)
+    odd = sum(1 for n in nums if n % 2)
+    low = sum(1 for n in nums if n <= 18)
+    mid_high = sum(1 for n in nums if 21 <= n <= 36)
+    high = sum(1 for n in nums if n >= 25)
+    latest_overlap = len(set(nums) & set(latest_draw.main))
+    consecutive_pairs = sum(1 for a, b in zip(nums, nums[1:]) if b == a + 1)
+
+    score = 0.0
+    if 3 <= odd <= 4:
+        score += 4.0
+    if 3 <= low <= 4:
+        score += 3.0
+    score -= abs(total - 140) * 0.03
+
+    if role == "main_best":
+        score += 20.0
+    elif role == "high_match":
+        score += latest_overlap * 1.6
+        score += 2.0 if 110 <= total <= 170 else -2.0
+        score -= max(0, consecutive_pairs - 2) * 1.5
+    elif role == "recent120":
+        score += latest_overlap * 2.0
+        score += 2.5 if 105 <= total <= 165 else -1.5
+        score += 1.0 if 2 <= consecutive_pairs <= 3 else 0.0
+    elif role == "mid_high":
+        score += mid_high * 1.2
+        score += high * 0.8
+        score += 4.0 if 125 <= total <= 185 else -3.0
+        score -= max(0, low - 4) * 1.5
+    elif role == "contrarian":
+        score += max(0, 3 - latest_overlap) * 1.8
+        score += 2.0 if high >= 2 else 0.0
+        score += 2.0 if 95 <= total <= 195 else -1.0
+        score -= latest_overlap * 0.8
+    return round(score, 6)
+
+
 def make_prediction_rows(best: Genome, source_model: str, draws, purchase_count: int) -> List[Dict[str, object]]:
     latest = draws[-1]
     tickets = generate_tickets(draws, best, purchase_count)
@@ -358,6 +488,75 @@ def make_prediction_rows(best: Genome, source_model: str, draws, purchase_count:
                 "prediction_method": "best_model",
                 "ensemble_score": "",
                 "support_models": "",
+                "created_at": created_at,
+            }
+        )
+    return rows
+
+
+def make_role_ensemble_prediction_rows(best: Genome, source_model: str, draws: Sequence[Draw], purchase_count: int, overlap_limit: int) -> List[Dict[str, object]]:
+    latest = draws[-1]
+    created_at = dt.datetime.now(dt.timezone.utc).isoformat()
+    selected: List[Tuple[str, str, Tuple[int, ...], float]] = []
+    used = set()
+    roles = ROLE_ORDER[: max(1, purchase_count)]
+    candidate_count = max(40, purchase_count * 12)
+
+    for role, label in roles:
+        genome = clone_genome_for_role(best, role)
+        try:
+            raw_tickets = generate_tickets(draws, genome, candidate_count)
+        except Exception as exc:
+            print(f"[WARN] role_ensemble fallback role={role}: {exc}")
+            raw_tickets = generate_tickets(draws, best, candidate_count)
+        ranked = sorted(
+            [(ticket_key(ticket), role_ticket_score(ticket, role, latest)) for ticket in raw_tickets],
+            key=lambda kv: kv[1],
+            reverse=True,
+        )
+        chosen: Optional[Tuple[Tuple[int, ...], float]] = None
+        for key, score in ranked:
+            if key in used:
+                continue
+            if all(len(set(key) & set(prev)) <= overlap_limit for _role, _label, prev, _score in selected):
+                chosen = (key, score)
+                break
+        if chosen is None:
+            for key, score in ranked:
+                if key not in used:
+                    chosen = (key, score)
+                    break
+        if chosen is not None:
+            used.add(chosen[0])
+            selected.append((role, label, chosen[0], chosen[1]))
+
+    if len(selected) < purchase_count:
+        fallback_tickets = generate_tickets(draws, best, max(purchase_count * 4, 20))
+        for ticket in fallback_tickets:
+            key = ticket_key(ticket)
+            if key in used:
+                continue
+            selected.append(("fallback", "補完: 採用ベストモデル", key, role_ticket_score(key, "main_best", latest)))
+            used.add(key)
+            if len(selected) >= purchase_count:
+                break
+
+    rows: List[Dict[str, object]] = []
+    for idx, (role, label, ticket, score) in enumerate(selected[:purchase_count], start=1):
+        rows.append(
+            {
+                "confidence_rank": idx,
+                "base_latest_draw_no": latest.draw_no,
+                "base_latest_date": latest.date,
+                "prediction_draw_no": latest.draw_no + 1,
+                "combo_index": idx,
+                "numbers": fmt_ticket(ticket),
+                "model_id": f"{best.id}:{role}",
+                "model_score": round(best.score, 6),
+                "source_model": source_model,
+                "prediction_method": "role_ensemble",
+                "ensemble_score": round(score, 6),
+                "support_models": label,
                 "created_at": created_at,
             }
         )
@@ -484,14 +683,18 @@ def write_prediction_report(report_path: str, rows: List[Dict[str, object]], bes
     lines.append("[最新予測 5口: 信頼度の高い順]")
     for row in rows:
         extra = ""
-        if row.get("prediction_method") == "ensemble":
-            extra = f" / ensemble_score={row.get('ensemble_score')}"
-        lines.append(f"{int(row['confidence_rank'])}位 / {int(row['combo_index'])}口目: {row['numbers']}{extra}")
+        if row.get("prediction_method") in {"ensemble", "role_ensemble"}:
+            extra = f" / score={row.get('ensemble_score')}"
+        role = f" / {row.get('support_models')}" if row.get("prediction_method") == "role_ensemble" else ""
+        lines.append(f"{int(row['confidence_rank'])}位 / {int(row['combo_index'])}口目: {row['numbers']}{extra}{role}")
     lines.append("")
     lines.append("[読み方]")
     if prediction_mode == "ensemble":
         lines.append("8 shard候補モデルの合議制で、複数モデルが推す組み合わせとholdout実績を再スコアリングしています。")
         lines.append("1位が合議制スコアで最も高い組み合わせです。")
+    elif prediction_mode == "role_ensemble":
+        lines.append("5口を同一モデルの単純上位ではなく、役割別に分けています。")
+        lines.append("本命・高一致狙い・直近寄り・中高数字補正・荒れ目/逆張りを1口ずつ配置します。")
     else:
         lines.append("1位がこのモデル内で最も信頼度が高い組み合わせです。")
         lines.append("信頼度順位は、採用Genomeが生成した候補のスコア順を保持しています。")
@@ -518,7 +721,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--purchase-count", type=int, default=5)
     parser.add_argument("--min-models", type=int, default=1, help="統合に必要な最小モデル数。8を指定すると現行8 shardの欠損を検出できる。")
     parser.add_argument("--selection-mode", choices=["holdout", "holdout_roi", "holdout_balanced", "evolution_score"], default="holdout_balanced")
-    parser.add_argument("--prediction-mode", choices=["ensemble", "best_model"], default="ensemble")
+    parser.add_argument("--prediction-mode", choices=["ensemble", "best_model", "role_ensemble"], default="role_ensemble")
     parser.add_argument("--ensemble-candidates-per-model", type=int, default=10)
     parser.add_argument("--ensemble-overlap-limit", type=int, default=4)
     parser.add_argument("--selection-holdout-start-draw", type=int, default=641)
@@ -618,6 +821,8 @@ def main(argv: Optional[List[str]] = None) -> int:
             fallback_best=best,
             fallback_source=source_model,
         )
+    elif args.prediction_mode == "role_ensemble":
+        prediction_rows = make_role_ensemble_prediction_rows(best, source_model, draws, args.purchase_count, args.ensemble_overlap_limit)
     else:
         prediction_rows = make_prediction_rows(best, source_model, draws, args.purchase_count)
     write_prediction(args.prediction, prediction_rows)
@@ -645,6 +850,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         "prediction_mode": args.prediction_mode,
         "ensemble_candidates_per_model": args.ensemble_candidates_per_model,
         "ensemble_overlap_limit": args.ensemble_overlap_limit,
+        "role_strategy": [label for _role, label in ROLE_ORDER[: args.purchase_count]] if args.prediction_mode == "role_ensemble" else [],
         "selection_holdout_start_draw": args.selection_holdout_start_draw,
         "selection_holdout_end_draw": args.selection_holdout_end_draw,
         "selection_min_train_draws": args.selection_min_train_draws,
@@ -687,6 +893,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         "selection_reason": selection_reason,
         "selection_sort_description": sort_description,
         "prediction_mode": args.prediction_mode,
+        "role_strategy": [label for _role, label in ROLE_ORDER[: args.purchase_count]] if args.prediction_mode == "role_ensemble" else [],
         "selected_model": source_model,
         "selected_genome_id": best.id,
         "selected_score": best.score,
