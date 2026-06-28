@@ -196,7 +196,7 @@ jobs:
             --selection-min-train-draws 1 \
             --selection-mode holdout_roi \
             --patterns loto7_best_model.json \
-            --prediction-mode best_model \
+            --prediction-mode role_ensemble \
             --ensemble-candidates-per-model 12 \
             --ensemble-overlap-limit 4 \
             --best-model loto7_best_model.json \
