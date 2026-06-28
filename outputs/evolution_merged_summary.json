@@ -51,9 +51,15 @@
   "model_selection_report": "outputs/holdout/model_selection_report.txt",
   "model_selection_summary": "outputs/holdout/model_selection_summary.json",
   "prediction": "outputs/evolution_best_prediction.csv",
-  "prediction_mode": "best_model",
+  "prediction_mode": "role_ensemble",
   "prediction_report": "outputs/holdout/latest_prediction_report.txt",
-  "role_strategy": [],
+  "role_strategy": [
+    "本命: 採用ベストモデル",
+    "高一致狙い: ペア/3連/最大一致重視",
+    "直近寄り: 直近120回/60回の流れ重視",
+    "中高数字補正: 20番台後半〜30番台も押さえる",
+    "荒れ目/逆張り: 休眠・広めレンジ・低重複"
+  ],
   "selected_genome_id": "g097_0097_1844",
   "selected_holdout": {
     "evolution_score": 0.0,
@@ -94,5 +100,5 @@
   "selection_sort_description": "ROI → 最大本数字一致数 → 1等→2等→3等→4等→5等→6等 → Evolutionスコア",
   "selection_target_draws": 682,
   "selection_unit_cost": 300,
-  "updated_at": "2026-06-28T13:46:38.389502+00:00"
+  "updated_at": "2026-06-28T16:16:06.197319+00:00"
 }
