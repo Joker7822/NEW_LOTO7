@@ -10,9 +10,9 @@ on:
         default: "false"
         options: ["false", "true"]
       model_iterations:
-        description: "Model-only self-evolution iterations"
+        description: "Integrated model self-evolution iterations. Use standalone workflow for long runs."
         required: false
-        default: "100"
+        default: "20"
       model_max_targets:
         description: "Model-only self-evolution holdout targets. Use 0 for full history."
         required: false
@@ -119,13 +119,17 @@ jobs:
         run: |
           set -euo pipefail
           python loto7_model_self_evolver.py \
-            --iterations "${{ github.event.inputs.model_iterations || '100' }}" \
+            --iterations "${{ github.event.inputs.model_iterations || '20' }}" \
             --max-targets "${{ github.event.inputs.model_max_targets || '0' }}" \
             --min-train-draws 1 \
             --holdout-start-draw 2 \
+            --parent-pool-size 24 \
+            --random-parents 6 \
+            --exploration-rate 0.25 \
+            --stagnation-patience 25 \
             --seed "${{ github.run_id }}" \
-            --max-runtime-minutes 340 \
-            --safe-exit-minutes 15 \
+            --max-runtime-minutes 220 \
+            --safe-exit-minutes 90 \
             --min-roi-delta-percent 0.10 \
             --min-profit-delta 0 \
             --apply
