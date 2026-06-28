@@ -91,6 +91,7 @@ jobs:
             --safe-exit-minutes 30 \
             --min-roi-delta-percent 0.10 \
             --min-profit-delta 0 \
+            --allow-high-grade-drop \
             ${APPLY_FLAG}
 
       - name: Commit model self-evolution outputs
