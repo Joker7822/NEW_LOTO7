@@ -30,7 +30,7 @@
   },
   "csv": "loto7.csv",
   "genome": {
-    "best_rank_count": 0,
+    "best_rank_count": 9,
     "consecutive_penalty": 0.1795610104986201,
     "dormancy_weight": 0.07425200919324469,
     "full_weight": 0.2802323680672007,
@@ -38,7 +38,7 @@
     "id": "g097_0097_1844",
     "low_high_bonus": 0.302496328282947,
     "max_consecutive_pairs": 2,
-    "max_main_match": 0,
+    "max_main_match": 6,
     "odd_bonus": 0.3635733796357519,
     "overlap_limit": 4,
     "pair_recency_weight": 0.1903981867976266,
@@ -48,7 +48,7 @@
     "recent120_weight": 0.24225512587474127,
     "recent240_weight": 0.33841848320447765,
     "recent60_weight": 0.13909402285358013,
-    "score": 0.0,
+    "score": 48868.67,
     "sum_bonus": 0.6347632152580138,
     "target_sum_max": 164,
     "target_sum_min": 108,
@@ -57,8 +57,10 @@
   "kind": "loto7_model_only_self_evolution",
   "notes": [
     "Only Genome/model JSON is self-evolved.",
+    "Parent-pool diversity and composite exploration score are used before strict adoption.",
     "This does not guarantee future lottery winnings or profit."
   ],
+  "objective_score": 48868.67,
   "purchase_count": 5,
   "selected_holdout": {
     "evolution_score": 0.0,
@@ -89,7 +91,7 @@
     "total_tickets": 3410,
     "unit_cost": 300
   },
-  "selection_mode": "model_only_holdout_roi",
+  "selection_mode": "model_only_holdout_roi_with_exploration_score",
   "source": "model_self_evolver",
-  "updated_at": "2026-06-27T20:52:11.500495+00:00"
+  "updated_at": "2026-06-28T02:51:43.591660+00:00"
 }
