@@ -132,6 +132,7 @@ jobs:
             --safe-exit-minutes 90 \
             --min-roi-delta-percent 0.10 \
             --min-profit-delta 0 \
+            --allow-high-grade-drop \
             --apply
       - name: Commit adopted best model and self-evolution outputs
         if: always()
