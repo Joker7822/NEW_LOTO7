@@ -9,10 +9,16 @@ role_ensemble 5口構造の専用バックテスト。
   1) role_ensemble: 本命 / 高一致 / 直近 / 中高補正 / 荒れ目 の5口
   2) best_model: 採用ベストモデル単体の上位5口
 
+再開対応:
+  - CSVへ1対象回ずつ逐次追記
+  - state JSONへ完了済み対象回を保存
+  - タイムアウト前にsafe_exitし、次回は未処理分だけ続行
+
 出力:
   outputs/role_ensemble/role_ensemble_backtest.csv
   outputs/role_ensemble/role_ensemble_summary.json
   outputs/role_ensemble/role_ensemble_report.txt
+  outputs/role_ensemble/role_ensemble_state.json
 
 注意:
   宝くじはランダム性が高く、当せんや利益を保証しない。
@@ -25,8 +31,9 @@ import csv
 import datetime as dt
 import json
 import sys
+import time
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Dict, Iterable, List, Optional, Sequence, Set, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
@@ -44,9 +51,28 @@ from merge_evolution_shards import (  # noqa: E402
     select_target_indices,
 )
 
+DETAIL_FIELDS = [
+    "system",
+    "role_key",
+    "role_label",
+    "target_draw_no",
+    "target_date",
+    "base_latest_draw_no",
+    "ticket_index",
+    "numbers",
+    "main_match",
+    "bonus_match",
+    "rank",
+    "payout",
+]
+
 
 def now_iso() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat()
+
+
+def read_json(path: str) -> Dict[str, object]:
+    return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
 def parse_numbers(text: object) -> Tuple[int, ...]:
@@ -112,7 +138,6 @@ def finalize_stats(stats: Dict[str, object]) -> Dict[str, object]:
     roi = (total_payout / total_cost) if total_cost else 0.0
     ticket_hit_rate = (grade_hit_count / total_tickets * 100.0) if total_tickets else 0.0
     draw_hit_rate = (int(stats.get("draw_hit_count", 0)) / draw_count * 100.0) if draw_count else 0.0
-
     out = dict(stats)
     out.update(
         {
@@ -131,10 +156,6 @@ def finalize_stats(stats: Dict[str, object]) -> Dict[str, object]:
     return out
 
 
-def summarize_roles(role_stats: Dict[str, Dict[str, object]]) -> Dict[str, Dict[str, object]]:
-    return {role: finalize_stats(stats) for role, stats in sorted(role_stats.items())}
-
-
 def compare(role: Dict[str, object], best: Dict[str, object]) -> Dict[str, object]:
     role_roi = float(role.get("roi_percent", 0.0))
     best_roi = float(best.get("roi_percent", 0.0))
@@ -150,33 +171,123 @@ def compare(role: Dict[str, object], best: Dict[str, object]) -> Dict[str, objec
     }
 
 
-def write_detail_csv(path: str, rows: Sequence[Dict[str, object]]) -> None:
-    out = Path(path)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    fields = [
-        "system",
-        "role_key",
-        "role_label",
-        "target_draw_no",
-        "target_date",
-        "base_latest_draw_no",
-        "ticket_index",
-        "numbers",
-        "main_match",
-        "bonus_match",
-        "rank",
-        "payout",
-    ]
-    with out.open("w", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fields)
-        writer.writeheader()
-        writer.writerows(rows)
-
-
 def write_json(path: str, payload: Dict[str, object]) -> None:
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def append_detail_csv(path: str, rows: Sequence[Dict[str, object]]) -> None:
+    out = Path(path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    exists = out.exists() and out.stat().st_size > 0
+    with out.open("a", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=DETAIL_FIELDS)
+        if not exists:
+            writer.writeheader()
+        writer.writerows(rows)
+
+
+def read_detail_csv(path: str) -> List[Dict[str, object]]:
+    p = Path(path)
+    if not p.exists() or p.stat().st_size <= 0:
+        return []
+    with p.open("r", encoding="utf-8", newline="") as f:
+        return [dict(row) for row in csv.DictReader(f)]
+
+
+def write_detail_csv(path: str, rows: Sequence[Dict[str, object]]) -> None:
+    out = Path(path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with out.open("w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=DETAIL_FIELDS)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def completed_draws_from_details(rows: Sequence[Dict[str, object]], purchase_count: int) -> Set[int]:
+    counts: Dict[int, Dict[str, int]] = {}
+    for row in rows:
+        try:
+            draw_no = int(row.get("target_draw_no", 0))
+        except Exception:
+            continue
+        system = str(row.get("system", ""))
+        if system not in {"role_ensemble", "best_model"}:
+            continue
+        counts.setdefault(draw_no, {"role_ensemble": 0, "best_model": 0})
+        counts[draw_no][system] = counts[draw_no].get(system, 0) + 1
+    return {
+        draw_no
+        for draw_no, by_system in counts.items()
+        if by_system.get("role_ensemble", 0) >= purchase_count and by_system.get("best_model", 0) >= purchase_count
+    }
+
+
+def filter_complete_detail_rows(rows: Sequence[Dict[str, object]], completed_draws: Set[int]) -> List[Dict[str, object]]:
+    out: List[Dict[str, object]] = []
+    for row in rows:
+        try:
+            draw_no = int(row.get("target_draw_no", 0))
+        except Exception:
+            continue
+        if draw_no in completed_draws:
+            out.append(dict(row))
+    return out
+
+
+def update_stats_from_detail_rows(rows: Sequence[Dict[str, object]], unit_cost: int) -> Tuple[Dict[str, object], Dict[str, object], Dict[str, Dict[str, object]]]:
+    role_system_stats = new_stats()
+    best_system_stats = new_stats()
+    role_stats: Dict[str, Dict[str, object]] = {}
+    draw_hit: Dict[Tuple[str, int], bool] = {}
+    role_draw_hit: Dict[Tuple[str, int], bool] = {}
+    draw_seen: Set[Tuple[str, int]] = set()
+    role_draw_seen: Set[Tuple[str, int]] = set()
+
+    for row in rows:
+        system = str(row.get("system", ""))
+        if system not in {"role_ensemble", "best_model"}:
+            continue
+        try:
+            draw_no = int(row.get("target_draw_no", 0))
+            payout = int(row.get("payout", 0))
+            main_match = int(row.get("main_match", 0))
+            bonus_match = int(row.get("bonus_match", 0))
+        except Exception:
+            continue
+        rank = str(row.get("rank", "外れ")) or "外れ"
+        stats = role_system_stats if system == "role_ensemble" else best_system_stats
+        sys_key = (system, draw_no)
+        if sys_key not in draw_seen:
+            stats["draw_count"] = int(stats["draw_count"]) + 1
+            draw_seen.add(sys_key)
+            draw_hit[sys_key] = False
+        update_ticket_stats(stats, unit_cost=unit_cost, payout=payout, main_match=main_match, bonus_match=bonus_match, rank=rank)
+        if rank != "外れ":
+            draw_hit[sys_key] = True
+
+        if system == "role_ensemble":
+            role_key = str(row.get("role_key", "unknown"))
+            rstats = role_stats.setdefault(role_key, new_stats())
+            rkey = (role_key, draw_no)
+            if rkey not in role_draw_seen:
+                rstats["draw_count"] = int(rstats["draw_count"]) + 1
+                role_draw_seen.add(rkey)
+                role_draw_hit[rkey] = False
+            update_ticket_stats(rstats, unit_cost=unit_cost, payout=payout, main_match=main_match, bonus_match=bonus_match, rank=rank)
+            if rank != "外れ":
+                role_draw_hit[rkey] = True
+
+    for (system, draw_no), hit in draw_hit.items():
+        if hit:
+            stats = role_system_stats if system == "role_ensemble" else best_system_stats
+            stats["draw_hit_count"] = int(stats["draw_hit_count"]) + 1
+    for (role_key, draw_no), hit in role_draw_hit.items():
+        if hit:
+            role_stats[role_key]["draw_hit_count"] = int(role_stats[role_key]["draw_hit_count"]) + 1
+
+    return finalize_stats(role_system_stats), finalize_stats(best_system_stats), {k: finalize_stats(v) for k, v in sorted(role_stats.items())}
 
 
 def write_report(path: str, summary: Dict[str, object]) -> None:
@@ -190,9 +301,12 @@ def write_report(path: str, summary: Dict[str, object]) -> None:
     lines.append("===================================")
     lines.append("")
     lines.append(f"created_at: {summary.get('created_at')}")
+    lines.append(f"status: {summary.get('status')}")
     lines.append(f"model: {summary.get('best_model_path')}")
     lines.append(f"genome_id: {summary.get('genome_id')}")
-    lines.append(f"target_draws: {summary.get('target_draws')}")
+    lines.append(f"target_draws_total: {summary.get('target_draws_total')}")
+    lines.append(f"completed_target_draws: {summary.get('completed_target_draws')}")
+    lines.append(f"last_completed_draw_no: {summary.get('last_completed_draw_no')}")
     lines.append(f"purchase_count: {summary.get('purchase_count')}")
     lines.append(f"holdout_start_draw: {summary.get('holdout_start_draw')}")
     lines.append(f"min_train_draws: {summary.get('min_train_draws')}")
@@ -246,29 +360,14 @@ def evaluate_rows_for_draw(
     rows: Iterable[Dict[str, object]],
     target: Draw,
     prize_row: Dict[str, str],
-    unit_cost: int,
-    system_stats: Dict[str, object],
-    role_stats: Optional[Dict[str, Dict[str, object]]],
     detail_rows: List[Dict[str, object]],
 ) -> None:
-    system_stats["draw_count"] = int(system_stats["draw_count"]) + 1
-    draw_hit = False
     for idx, row in enumerate(rows, start=1):
         nums = parse_numbers(row.get("numbers"))
         main_match, bonus_match, rank = evaluate_ticket(nums, target)
         payout = prize_amount_for_rank(prize_row, rank)
-        update_ticket_stats(system_stats, unit_cost=unit_cost, payout=payout, main_match=main_match, bonus_match=bonus_match, rank=rank)
-        draw_hit = draw_hit or rank != "外れ"
-
         role_key = str(row.get("role_key") or role_key_from_row(row, f"rank_{idx}"))
         role_label = str(row.get("support_models") or row.get("role_label") or role_key)
-        if role_stats is not None:
-            stats = role_stats.setdefault(role_key, new_stats())
-            stats["draw_count"] = int(stats["draw_count"]) + 1
-            update_ticket_stats(stats, unit_cost=unit_cost, payout=payout, main_match=main_match, bonus_match=bonus_match, rank=rank)
-            if rank != "外れ":
-                stats["draw_hit_count"] = int(stats["draw_hit_count"]) + 1
-
         detail_rows.append(
             {
                 "system": system,
@@ -285,8 +384,119 @@ def evaluate_rows_for_draw(
                 "payout": payout,
             }
         )
-    if draw_hit:
-        system_stats["draw_hit_count"] = int(system_stats["draw_hit_count"]) + 1
+
+
+def state_matches(state: Dict[str, object], args: argparse.Namespace, genome_id: str, target_draw_nos: Sequence[int]) -> bool:
+    return (
+        state.get("csv") == args.csv
+        and state.get("best_model") == args.best_model
+        and state.get("genome_id") == genome_id
+        and int(state.get("purchase_count", -1)) == int(args.purchase_count)
+        and int(state.get("unit_cost", -1)) == int(args.unit_cost)
+        and int(state.get("holdout_start_draw", -1)) == int(args.holdout_start_draw)
+        and int(state.get("min_train_draws", -1)) == int(args.min_train_draws)
+        and int(state.get("target_draws_total", -1)) == len(target_draw_nos)
+    )
+
+
+def load_resume_details(args: argparse.Namespace, genome_id: str, target_draw_nos: Sequence[int]) -> Tuple[List[Dict[str, object]], Set[int], List[int]]:
+    if not args.resume:
+        return [], set(), []
+    state_path = Path(args.state)
+    if not state_path.exists() or state_path.stat().st_size <= 0:
+        return [], set(), []
+    try:
+        state = read_json(args.state)
+    except Exception as exc:
+        print(f"[WARN] cannot read state; starting fresh: {exc}")
+        return [], set(), []
+    if not state_matches(state, args, genome_id, target_draw_nos):
+        print("[INFO] role ensemble state does not match current settings; starting fresh")
+        return [], set(), []
+    detail_rows = read_detail_csv(args.output)
+    completed = completed_draws_from_details(detail_rows, args.purchase_count)
+    cleaned = filter_complete_detail_rows(detail_rows, completed)
+    if len(cleaned) != len(detail_rows):
+        write_detail_csv(args.output, cleaned)
+    missing = [int(x) for x in state.get("missing_prize_draws", []) if str(x).isdigit()]
+    print(f"[RESUME] completed target draws: {len(completed)}/{len(target_draw_nos)}")
+    return cleaned, completed, missing
+
+
+def build_summary(
+    *,
+    args: argparse.Namespace,
+    status: str,
+    genome_id: str,
+    target_indices: Sequence[int],
+    draws: Sequence[Draw],
+    detail_rows: Sequence[Dict[str, object]],
+    missing_prize_draws: Sequence[int],
+) -> Dict[str, object]:
+    completed = completed_draws_from_details(detail_rows, args.purchase_count)
+    role_summary, best_summary, roles_summary = update_stats_from_detail_rows(detail_rows, args.unit_cost)
+    last_completed = max(completed) if completed else None
+    return {
+        "created_at": now_iso(),
+        "status": status,
+        "csv": args.csv,
+        "best_model_path": args.best_model,
+        "genome_id": genome_id,
+        "purchase_count": args.purchase_count,
+        "unit_cost": args.unit_cost,
+        "holdout_start_draw": args.holdout_start_draw,
+        "holdout_end_draw": args.holdout_end_draw,
+        "min_train_draws": args.min_train_draws,
+        "max_targets": args.max_targets,
+        "target_draws_total": len(target_indices),
+        "completed_target_draws": len(completed),
+        "first_target_draw_no": draws[target_indices[0]].draw_no if target_indices else None,
+        "last_target_draw_no": draws[target_indices[-1]].draw_no if target_indices else None,
+        "last_completed_draw_no": last_completed,
+        "missing_prize_draw_count": len(set(missing_prize_draws)),
+        "missing_prize_draws": sorted(set(missing_prize_draws)),
+        "role_ensemble": role_summary,
+        "best_model": best_summary,
+        "comparison": compare(role_summary, best_summary),
+        "roles": roles_summary,
+        "output": args.output,
+        "summary": args.summary,
+        "report": args.report,
+        "state": args.state,
+    }
+
+
+def save_state(
+    *,
+    args: argparse.Namespace,
+    status: str,
+    genome_id: str,
+    target_draw_nos: Sequence[int],
+    completed_draws: Set[int],
+    missing_prize_draws: Sequence[int],
+) -> None:
+    payload = {
+        "updated_at": now_iso(),
+        "status": status,
+        "csv": args.csv,
+        "best_model": args.best_model,
+        "genome_id": genome_id,
+        "purchase_count": args.purchase_count,
+        "unit_cost": args.unit_cost,
+        "holdout_start_draw": args.holdout_start_draw,
+        "holdout_end_draw": args.holdout_end_draw,
+        "min_train_draws": args.min_train_draws,
+        "max_targets": args.max_targets,
+        "target_draws_total": len(target_draw_nos),
+        "completed_target_draws": len(completed_draws),
+        "last_completed_draw_no": max(completed_draws) if completed_draws else None,
+        "completed_draws": sorted(completed_draws),
+        "missing_prize_draws": sorted(set(int(x) for x in missing_prize_draws)),
+        "output": args.output,
+        "summary": args.summary,
+        "report": args.report,
+    }
+    write_json(args.state, payload)
 
 
 def main(argv: Optional[List[str]] = None) -> int:
@@ -303,6 +513,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--output", default="outputs/role_ensemble/role_ensemble_backtest.csv")
     parser.add_argument("--summary", default="outputs/role_ensemble/role_ensemble_summary.json")
     parser.add_argument("--report", default="outputs/role_ensemble/role_ensemble_report.txt")
+    parser.add_argument("--state", default="outputs/role_ensemble/role_ensemble_state.json")
+    parser.add_argument("--resume", dest="resume", action="store_true", default=True)
+    parser.add_argument("--no-resume", dest="resume", action="store_false")
+    parser.add_argument("--max-runtime-minutes", type=float, default=320.0)
+    parser.add_argument("--safe-exit-minutes", type=float, default=30.0)
+    parser.add_argument("--progress-every", type=int, default=10)
     args = parser.parse_args(argv)
 
     if args.purchase_count <= 0:
@@ -312,12 +528,14 @@ def main(argv: Optional[List[str]] = None) -> int:
     if args.overlap_limit < 0 or args.overlap_limit > 7:
         raise SystemExit("--overlap-limit must be between 0 and 7")
 
+    started = time.monotonic()
     draws = load_draws(args.csv)
     prize_rows = load_prize_rows(args.csv)
     model_item = load_model(Path(args.best_model))
     if model_item is None:
         raise SystemExit(f"cannot load best model: {args.best_model}")
     genome = model_item["genome"]
+    genome_id = str(getattr(genome, "id", ""))
 
     target_indices = select_target_indices(
         draws,
@@ -330,86 +548,85 @@ def main(argv: Optional[List[str]] = None) -> int:
     target_indices = [idx for idx in target_indices if idx > 0]
     if not target_indices:
         raise SystemExit("no targets selected")
+    target_draw_nos = [draws[idx].draw_no for idx in target_indices]
 
-    role_system_stats = new_stats()
-    best_system_stats = new_stats()
-    role_stats: Dict[str, Dict[str, object]] = {}
-    detail_rows: List[Dict[str, object]] = []
-    missing_prize_draws: List[int] = []
+    detail_rows, completed_draws, missing_prize_draws = load_resume_details(args, genome_id, target_draw_nos)
+    if not args.resume and Path(args.output).exists():
+        Path(args.output).unlink()
 
-    for idx in target_indices:
-        train = draws[:idx]
+    status = "completed"
+    processed_this_run = 0
+    for pos, idx in enumerate(target_indices, start=1):
         target = draws[idx]
+        if target.draw_no in completed_draws:
+            continue
+        elapsed = (time.monotonic() - started) / 60.0
+        if elapsed >= max(0.0, args.max_runtime_minutes - args.safe_exit_minutes):
+            status = f"safe_exit_at_{elapsed:.2f}_minutes"
+            break
+
+        train = draws[:idx]
         prize_row = prize_rows.get(target.draw_no, {})
         if not prize_row:
             missing_prize_draws.append(target.draw_no)
 
+        new_rows: List[Dict[str, object]] = []
         role_rows = make_role_ensemble_prediction_rows(
             genome, str(model_item.get("path", args.best_model)), train, args.purchase_count, args.overlap_limit
         )
-        evaluate_rows_for_draw(
-            system="role_ensemble",
-            rows=role_rows,
-            target=target,
-            prize_row=prize_row,
-            unit_cost=args.unit_cost,
-            system_stats=role_system_stats,
-            role_stats=role_stats,
-            detail_rows=detail_rows,
-        )
+        evaluate_rows_for_draw(system="role_ensemble", rows=role_rows, target=target, prize_row=prize_row, detail_rows=new_rows)
 
         best_rows = []
         for ticket_index, ticket in enumerate(generate_tickets(train, genome, args.purchase_count), start=1):
             best_rows.append(
                 {
                     "numbers": fmt_ticket(ticket),
-                    "model_id": f"{getattr(genome, 'id', 'best_model')}:best_rank_{ticket_index}",
+                    "model_id": f"{genome_id}:best_rank_{ticket_index}",
                     "role_key": f"best_rank_{ticket_index}",
                     "support_models": "best_model_top5",
                     "base_latest_draw_no": train[-1].draw_no,
                 }
             )
-        evaluate_rows_for_draw(
-            system="best_model",
-            rows=best_rows,
-            target=target,
-            prize_row=prize_row,
-            unit_cost=args.unit_cost,
-            system_stats=best_system_stats,
-            role_stats=None,
-            detail_rows=detail_rows,
+        evaluate_rows_for_draw(system="best_model", rows=best_rows, target=target, prize_row=prize_row, detail_rows=new_rows)
+
+        append_detail_csv(args.output, new_rows)
+        detail_rows.extend(new_rows)
+        completed_draws.add(target.draw_no)
+        processed_this_run += 1
+
+        if args.progress_every > 0 and processed_this_run % args.progress_every == 0:
+            print(f"[PROGRESS] completed {len(completed_draws)}/{len(target_indices)} target draws; latest={target.draw_no}")
+        save_state(
+            args=args,
+            status="running",
+            genome_id=genome_id,
+            target_draw_nos=target_draw_nos,
+            completed_draws=completed_draws,
+            missing_prize_draws=missing_prize_draws,
         )
 
-    role_summary = finalize_stats(role_system_stats)
-    best_summary = finalize_stats(best_system_stats)
-    summary: Dict[str, object] = {
-        "created_at": now_iso(),
-        "csv": args.csv,
-        "best_model_path": args.best_model,
-        "genome_id": getattr(genome, "id", ""),
-        "purchase_count": args.purchase_count,
-        "unit_cost": args.unit_cost,
-        "holdout_start_draw": args.holdout_start_draw,
-        "holdout_end_draw": args.holdout_end_draw,
-        "min_train_draws": args.min_train_draws,
-        "max_targets": args.max_targets,
-        "target_draws": len(target_indices),
-        "first_target_draw_no": draws[target_indices[0]].draw_no,
-        "last_target_draw_no": draws[target_indices[-1]].draw_no,
-        "missing_prize_draw_count": len(set(missing_prize_draws)),
-        "missing_prize_draws": sorted(set(missing_prize_draws)),
-        "role_ensemble": role_summary,
-        "best_model": best_summary,
-        "comparison": compare(role_summary, best_summary),
-        "roles": summarize_roles(role_stats),
-        "output": args.output,
-        "summary": args.summary,
-        "report": args.report,
-    }
+    if len(completed_draws) >= len(target_indices):
+        status = "completed"
 
-    write_detail_csv(args.output, detail_rows)
+    summary = build_summary(
+        args=args,
+        status=status,
+        genome_id=genome_id,
+        target_indices=target_indices,
+        draws=draws,
+        detail_rows=detail_rows,
+        missing_prize_draws=missing_prize_draws,
+    )
     write_json(args.summary, summary)
     write_report(args.report, summary)
+    save_state(
+        args=args,
+        status=status,
+        genome_id=genome_id,
+        target_draw_nos=target_draw_nos,
+        completed_draws=completed_draws,
+        missing_prize_draws=missing_prize_draws,
+    )
     print(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True))
     return 0
 
