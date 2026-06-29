@@ -53,7 +53,30 @@
   "prediction": "outputs/evolution_best_prediction.csv",
   "prediction_mode": "role_ensemble",
   "prediction_report": "outputs/holdout/latest_prediction_report.txt",
-  "role_strategy": [
+  "role_sequence": [
+    {
+      "label": "本命: 採用ベストモデル",
+      "role": "main_best"
+    },
+    {
+      "label": "高一致狙い: ペア/3連/最大一致重視",
+      "role": "high_match"
+    },
+    {
+      "label": "直近寄り: 直近120回/60回の流れ重視",
+      "role": "recent120"
+    },
+    {
+      "label": "中高数字補正: 20番台後半〜30番台も押さえる",
+      "role": "mid_high"
+    },
+    {
+      "label": "荒れ目/逆張り: 休眠・広めレンジ・低重複",
+      "role": "contrarian"
+    }
+  ],
+  "role_strategy": "outputs/role_ensemble/role_strategy.json",
+  "role_strategy_fallback": [
     "本命: 採用ベストモデル",
     "高一致狙い: ペア/3連/最大一致重視",
     "直近寄り: 直近120回/60回の流れ重視",
@@ -100,5 +123,5 @@
   "selection_sort_description": "ROI → 最大本数字一致数 → 1等→2等→3等→4等→5等→6等 → Evolutionスコア",
   "selection_target_draws": 682,
   "selection_unit_cost": 300,
-  "updated_at": "2026-06-29T17:08:36.287112+00:00"
+  "updated_at": "2026-06-29T22:18:22.688121+00:00"
 }

@@ -1,7 +1,7 @@
 LOTO7 Latest Prediction Report
 ===============================
 
-作成日時(UTC): 2026-06-29T17:08:36.287480+00:00
+作成日時(UTC): 2026-06-29T22:18:22.688440+00:00
 基準最新回: 第683回
 基準最新抽せん日: 2026-06-26
 予測対象回: 第684回
@@ -14,6 +14,7 @@ LOTO7 Latest Prediction Report
 必要最小モデル数: 1
 採用基準: holdout再ランキング: ROI → 最大本数字一致数 → 1等→2等→3等→4等→5等→6等 → Evolutionスコア
 予測方式: role_ensemble
+役割戦略: outputs/role_ensemble/role_strategy.json
 
 [最新予測 5口: 信頼度の高い順]
 1位 / 1口目: 06 09 12 22 26 33 35 / score=26.91 / 本命: 採用ベストモデル
@@ -24,7 +25,7 @@ LOTO7 Latest Prediction Report
 
 [読み方]
 5口を同一モデルの単純上位ではなく、役割別に分けています。
-本命・高一致狙い・直近寄り・中高数字補正・荒れ目/逆張りを1口ずつ配置します。
+role_strategy.json が存在する場合は、Role Strategy Optimizer の配分を使用します。
 
 [出力ファイル]
 CSV: outputs/evolution_best_prediction.csv
