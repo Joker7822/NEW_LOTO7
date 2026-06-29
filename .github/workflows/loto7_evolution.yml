@@ -198,6 +198,7 @@ jobs:
             --selection-mode holdout_roi \
             --patterns loto7_best_model.json \
             --prediction-mode role_ensemble \
+            --role-strategy outputs/role_ensemble/role_strategy.json \
             --ensemble-candidates-per-model 12 \
             --ensemble-overlap-limit 4 \
             --best-model loto7_best_model.json \
@@ -314,7 +315,12 @@ jobs:
             --overlap-limit 4 \
             --output outputs/role_ensemble/role_ensemble_backtest.csv \
             --summary outputs/role_ensemble/role_ensemble_summary.json \
-            --report outputs/role_ensemble/role_ensemble_report.txt
+            --report outputs/role_ensemble/role_ensemble_report.txt \
+            --state outputs/role_ensemble/role_ensemble_state.json \
+            --resume \
+            --progress-every 10 \
+            --max-runtime-minutes 320 \
+            --safe-exit-minutes 30
       - name: Commit role ensemble backtest outputs
         if: always()
         run: |
@@ -341,6 +347,54 @@ jobs:
             outputs/role_ensemble/*.csv
             outputs/role_ensemble/*.json
             outputs/role_ensemble/*.txt
+          if-no-files-found: ignore
+
+  role-strategy-optimizer:
+    needs: role-ensemble-backtest
+    if: ${{ !cancelled() && needs.role-ensemble-backtest.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Pull latest role backtest outputs
+        run: |
+          set -euo pipefail
+          git fetch origin "${GITHUB_REF_NAME}"
+          git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+      - name: Optimize role strategy
+        run: |
+          set -euo pipefail
+          python scripts/optimize_role_strategy.py \
+            --summary outputs/role_ensemble/role_ensemble_summary.json \
+            --output outputs/role_ensemble/role_strategy.json \
+            --report outputs/role_ensemble/role_strategy_report.txt \
+            --purchase-count 5 \
+            --min-completed-draws 80
+      - name: Commit role strategy outputs
+        if: always()
+        run: |
+          set -euo pipefail
+          git add -f outputs/role_ensemble/role_strategy.json outputs/role_ensemble/role_strategy_report.txt || true
+          if git diff --cached --quiet; then echo "No role strategy changes"; exit 0; fi
+          git commit -m "Update LOTO7 role strategy optimizer outputs [skip ci]"
+          git pull --rebase --autostash || true
+          git push || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: loto7-role-strategy
+          path: |
+            outputs/role_ensemble/role_strategy.json
+            outputs/role_ensemble/role_strategy_report.txt
           if-no-files-found: ignore
 
   ml-stack:
@@ -423,7 +477,7 @@ jobs:
           if-no-files-found: ignore
 
   monitor:
-    needs: [evolve, holdout, role-ensemble-backtest, ml-stack, complete-ai]
+    needs: [evolve, holdout, role-ensemble-backtest, role-strategy-optimizer, ml-stack, complete-ai]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 30
