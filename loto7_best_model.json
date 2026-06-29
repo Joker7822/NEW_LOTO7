@@ -1,34 +1,4 @@
 {
-  "baseline_metrics": {
-    "evolution_score": 0.0,
-    "genome_id": "g097_0097_1844",
-    "grade_hit_count": 158,
-    "high_grade_hit_count": 9,
-    "max_bonus_match": 2,
-    "max_main_match": 6,
-    "missing_prize_draw_count": 0,
-    "missing_prize_draws": [],
-    "path": "loto7_best_model.json",
-    "profit": -405500,
-    "purchase_count": 5,
-    "rank_counts": {
-      "1等": 0,
-      "2等": 0,
-      "3等": 1,
-      "4等": 8,
-      "5等": 49,
-      "6等": 100,
-      "外れ": 3252
-    },
-    "roi": 0.603617,
-    "roi_percent": 60.362,
-    "target_draws": 682,
-    "total_cost": 1023000,
-    "total_payout": 617500,
-    "total_tickets": 3410,
-    "unit_cost": 300
-  },
-  "csv": "loto7.csv",
   "genome": {
     "best_rank_count": 9,
     "consecutive_penalty": 0.20205453870079207,
@@ -54,16 +24,13 @@
     "target_sum_min": 97,
     "triple_weight": 0.04635558558696873
   },
-  "kind": "loto7_model_only_self_evolution",
-  "notes": [
-    "Only Genome/model JSON is self-evolved.",
-    "Parent-pool diversity and composite exploration score are used before strict adoption.",
-    "This does not guarantee future lottery winnings or profit."
+  "merged_from": [
+    "loto7_best_model.json"
   ],
-  "objective_score": 51261.54,
+  "prediction_mode": "role_ensemble",
   "purchase_count": 5,
   "selected_holdout": {
-    "evolution_score": 0.0,
+    "evolution_score": 51261.54,
     "genome_id": "g306_0306_9982",
     "grade_hit_count": 135,
     "high_grade_hit_count": 9,
@@ -71,7 +38,7 @@
     "max_main_match": 6,
     "missing_prize_draw_count": 0,
     "missing_prize_draws": [],
-    "path": "candidate_306",
+    "path": "loto7_best_model.json",
     "profit": -103800,
     "purchase_count": 5,
     "rank_counts": {
@@ -91,7 +58,9 @@
     "total_tickets": 3410,
     "unit_cost": 300
   },
-  "selection_mode": "model_only_holdout_roi_with_exploration_score",
-  "source": "model_self_evolver",
-  "updated_at": "2026-06-29T10:14:03.643933+00:00"
+  "selection_mode": "holdout_roi",
+  "selection_reason": "holdout再ランキング: ROI → 最大本数字一致数 → 1等→2等→3等→4等→5等→6等 → Evolutionスコア",
+  "selection_sort_description": "ROI → 最大本数字一致数 → 1等→2等→3等→4等→5等→6等 → Evolutionスコア",
+  "source_model": "loto7_best_model.json",
+  "updated_at": "2026-06-29T17:08:36.287112+00:00"
 }
