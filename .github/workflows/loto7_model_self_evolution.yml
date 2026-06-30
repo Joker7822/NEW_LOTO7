@@ -94,26 +94,65 @@ jobs:
             --allow-high-grade-drop \
             ${APPLY_FLAG}
 
+      - name: Detect regime strategy for adopted model
+        if: always()
+        run: |
+          set -euo pipefail
+          mkdir -p outputs/role_ensemble outputs/holdout
+          python scripts/detect_loto7_regime.py \
+            --csv loto7.csv \
+            --base-strategy outputs/role_ensemble/role_strategy.json \
+            --output outputs/role_ensemble/regime_state.json \
+            --strategy-output outputs/role_ensemble/regime_strategy.json \
+            --report outputs/role_ensemble/regime_strategy_report.txt \
+            --purchase-count 5 || echo "::warning::regime strategy detection failed; prediction will fallback to default role strategy"
+
+      - name: Build latest prediction from adopted model
+        if: always()
+        run: |
+          set -euo pipefail
+          mkdir -p outputs/holdout outputs/role_ensemble
+          python scripts/build_latest_prediction_from_best_model.py \
+            --csv loto7.csv \
+            --best-model loto7_best_model.json \
+            --prediction outputs/evolution_best_prediction.csv \
+            --prediction-report outputs/holdout/latest_prediction_report.txt \
+            --prediction-mode role_ensemble \
+            --role-strategy outputs/role_ensemble/regime_strategy.json \
+            --purchase-count 5 \
+            --overlap-limit 4
+
       - name: Commit model self-evolution outputs
         if: always()
         run: |
           set -euo pipefail
           SNAPSHOT="$(mktemp -d)"
-          mkdir -p "$SNAPSHOT/outputs/model_self_evolution"
+          mkdir -p "$SNAPSHOT/outputs/model_self_evolution" "$SNAPSHOT/outputs/holdout" "$SNAPSHOT/outputs/role_ensemble"
           cp -f loto7_best_model.json "$SNAPSHOT/" 2>/dev/null || true
+          cp -f outputs/evolution_best_prediction.csv "$SNAPSHOT/outputs/" 2>/dev/null || true
           cp -f outputs/model_self_evolution/standalone_*.json "$SNAPSHOT/outputs/model_self_evolution/" 2>/dev/null || true
           cp -f outputs/model_self_evolution/standalone_*.txt "$SNAPSHOT/outputs/model_self_evolution/" 2>/dev/null || true
           cp -f outputs/model_self_evolution/standalone_*.csv "$SNAPSHOT/outputs/model_self_evolution/" 2>/dev/null || true
+          cp -f outputs/holdout/latest_prediction_report.txt "$SNAPSHOT/outputs/holdout/" 2>/dev/null || true
+          cp -f outputs/role_ensemble/regime_*.json "$SNAPSHOT/outputs/role_ensemble/" 2>/dev/null || true
+          cp -f outputs/role_ensemble/regime_*.txt "$SNAPSHOT/outputs/role_ensemble/" 2>/dev/null || true
 
           git fetch origin "${GITHUB_REF_NAME}"
           git reset --hard "origin/${GITHUB_REF_NAME}"
 
-          mkdir -p outputs/model_self_evolution
+          mkdir -p outputs/model_self_evolution outputs/holdout outputs/role_ensemble
           cp -f "$SNAPSHOT/loto7_best_model.json" loto7_best_model.json 2>/dev/null || true
+          cp -f "$SNAPSHOT"/outputs/evolution_best_prediction.csv outputs/evolution_best_prediction.csv 2>/dev/null || true
           cp -f "$SNAPSHOT"/outputs/model_self_evolution/* outputs/model_self_evolution/ 2>/dev/null || true
+          cp -f "$SNAPSHOT"/outputs/holdout/* outputs/holdout/ 2>/dev/null || true
+          cp -f "$SNAPSHOT"/outputs/role_ensemble/* outputs/role_ensemble/ 2>/dev/null || true
 
           git add -f \
             loto7_best_model.json \
+            outputs/evolution_best_prediction.csv \
+            outputs/holdout/latest_prediction_report.txt \
+            outputs/role_ensemble/regime_*.json \
+            outputs/role_ensemble/regime_*.txt \
             outputs/model_self_evolution/standalone_*.json \
             outputs/model_self_evolution/standalone_*.txt \
             outputs/model_self_evolution/standalone_*.csv || true
@@ -121,7 +160,7 @@ jobs:
             echo "No model self-evolution changes"
             exit 0
           fi
-          git commit -m "Run LOTO7 model self-evolution [skip ci]"
+          git commit -m "Run LOTO7 model self-evolution and prediction [skip ci]"
           git push origin HEAD:"${GITHUB_REF_NAME}"
 
       - name: Upload model self-evolution artifacts
@@ -131,6 +170,10 @@ jobs:
           name: loto7-model-self-evolution
           path: |
             loto7_best_model.json
+            outputs/evolution_best_prediction.csv
+            outputs/holdout/latest_prediction_report.txt
+            outputs/role_ensemble/regime_*.json
+            outputs/role_ensemble/regime_*.txt
             outputs/model_self_evolution/*.json
             outputs/model_self_evolution/*.txt
             outputs/model_self_evolution/*.csv
