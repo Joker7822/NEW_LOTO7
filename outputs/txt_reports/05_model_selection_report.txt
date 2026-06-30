@@ -1,0 +1,29 @@
+Model Selection Report
+======================
+
+created_at: 2026-06-30T21:08:28.686888+00:00
+source: outputs/holdout/model_selection_report.txt
+status: FOUND
+LOTO7 Model Selection Report
+==============================
+
+作成日時(UTC): 2026-06-30T20:30:45.302137+00:00
+選定方式: holdout_roi
+holdout開始回: 2
+holdout終了回: None
+検証対象回数: 682
+候補モデル数: 1
+
+[並び替え基準]
+ROI → 最大本数字一致数 → 1等→2等→3等→4等→5等→6等 → Evolutionスコア
+
+[最終採用モデル]
+採用モデル: loto7_best_model.json
+モデルID: g306_0306_9982
+Evolutionスコア: 51261.54
+採用理由: holdout再ランキング: ROI → 最大本数字一致数 → 1等→2等→3等→4等→5等→6等 → Evolutionスコア
+
+[候補モデルランキング]
+1位: loto7_best_model.json / ROI=89.853% / 収支=-103,800円 / 最大一致=6 / 4等以上=9 / 1等=0, 2等=0, 3等=1, 4等=8, 5等=50, 6等=76 / EvolutionScore=51261.54
+
+注意: holdout再ランキングは過去検証上の優劣であり、将来の当せんや利益を保証するものではありません。

@@ -1,7 +1,7 @@
 LOTO7 Combined TXT Report
 =========================
 
-created_at: 2026-06-30T21:05:23.891346+00:00
+created_at: 2026-06-30T21:08:28.686888+00:00
 
 
 ################################################################################
@@ -11,7 +11,7 @@ created_at: 2026-06-30T21:05:23.891346+00:00
 Latest Prediction
 =================
 
-created_at: 2026-06-30T21:05:23.891346+00:00
+created_at: 2026-06-30T21:08:28.686888+00:00
 source: outputs/holdout/latest_prediction_report.txt
 status: FOUND
 LOTO7 Latest Prediction Report
@@ -57,7 +57,7 @@ TXT: outputs/holdout/latest_prediction_report.txt
 Prediction History Result
 =========================
 
-created_at: 2026-06-30T21:05:23.891346+00:00
+created_at: 2026-06-30T21:08:28.686888+00:00
 source: outputs/evolution_prediction_history_result.txt
 status: FOUND
 LOTO7 Prediction History Result Check
@@ -108,7 +108,7 @@ actual_main: - / actual_bonus: -
 Full Holdout Report
 ===================
 
-created_at: 2026-06-30T21:05:23.891346+00:00
+created_at: 2026-06-30T21:08:28.686888+00:00
 source: outputs/holdout/holdout_report.txt
 status: FOUND
 LOTO7 Holdout Backtest Report
@@ -506,13 +506,13 @@ CSV: loto7.csv
 
 
 ################################################################################
-# 04 Model Selection Report
+# 05 Model Selection Report
 ################################################################################
 
 Model Selection Report
 ======================
 
-created_at: 2026-06-30T21:05:23.891346+00:00
+created_at: 2026-06-30T21:08:28.686888+00:00
 source: outputs/holdout/model_selection_report.txt
 status: FOUND
 LOTO7 Model Selection Report
@@ -541,13 +541,13 @@ Evolutionスコア: 51261.54
 
 
 ################################################################################
-# 05 Model Self Evolution Standalone
+# 06 Model Self Evolution Standalone
 ################################################################################
 
 Model Self Evolution Standalone
 ===============================
 
-created_at: 2026-06-30T21:05:23.891346+00:00
+created_at: 2026-06-30T21:08:28.686888+00:00
 source: outputs/model_self_evolution/standalone_report.txt
 status: FOUND
 LOTO7 Model-Only Self Evolution Report
@@ -598,13 +598,13 @@ max_main_match: 6
 
 
 ################################################################################
-# 06 Model Self Evolution Integrated
+# 07 Model Self Evolution Integrated
 ################################################################################
 
 Model Self Evolution Integrated
 ===============================
 
-created_at: 2026-06-30T21:05:23.891346+00:00
+created_at: 2026-06-30T21:08:28.686888+00:00
 source: outputs/model_self_evolution/report.txt
 status: FOUND
 LOTO7 Model-Only Self Evolution Report
@@ -655,13 +655,13 @@ max_main_match: 6
 
 
 ################################################################################
-# 10 Progress Summary
+# 11 Progress Summary
 ################################################################################
 
 Progress Summary
 ================
 
-created_at: 2026-06-30T21:05:23.891346+00:00
+created_at: 2026-06-30T21:08:28.686888+00:00
 source: outputs/loto7_progress_summary.md
 status: FOUND
 # LOTO7 Progress Summary
@@ -696,13 +696,13 @@ null
 
 
 ################################################################################
-# 11 JSON Summary Digest
+# 12 JSON Summary Digest
 ################################################################################
 
 JSON Summary Digest
 ===================
 
-created_at: 2026-06-30T21:05:23.891346+00:00
+created_at: 2026-06-30T21:08:28.686888+00:00
 
 ## outputs/evolution_merged_summary.json
 status: FOUND
@@ -730,6 +730,9 @@ roi_percent: -10.147
 profit: -103800
 target_draws: 682
 best_model: loto7_best_model.json
+
+## outputs/holdout/recent_era_summary.json
+status: MISSING
 
 ## outputs/holdout/model_selection_summary.json
 status: FOUND
