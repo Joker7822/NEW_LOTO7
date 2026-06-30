@@ -186,6 +186,16 @@ jobs:
           set -euo pipefail
           git fetch origin "${GITHUB_REF_NAME}"
           git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+      - name: Detect regime based role strategy
+        run: |
+          set -euo pipefail
+          python scripts/detect_loto7_regime.py \
+            --csv loto7.csv \
+            --base-strategy outputs/role_ensemble/role_strategy.json \
+            --output outputs/role_ensemble/regime_state.json \
+            --strategy-output outputs/role_ensemble/regime_strategy.json \
+            --report outputs/role_ensemble/regime_strategy_report.txt \
+            --purchase-count 5
       - name: Build latest prediction from adopted best model
         run: |
           set -euo pipefail
@@ -198,7 +208,7 @@ jobs:
             --selection-mode holdout_roi \
             --patterns loto7_best_model.json \
             --prediction-mode role_ensemble \
-            --role-strategy outputs/role_ensemble/role_strategy.json \
+            --role-strategy outputs/role_ensemble/regime_strategy.json \
             --ensemble-candidates-per-model 12 \
             --ensemble-overlap-limit 4 \
             --best-model loto7_best_model.json \
@@ -243,7 +253,7 @@ jobs:
         run: |
           set -euo pipefail
           SNAPSHOT="$(mktemp -d)"
-          mkdir -p "$SNAPSHOT/outputs/holdout"
+          mkdir -p "$SNAPSHOT/outputs/holdout" "$SNAPSHOT/outputs/role_ensemble"
           cp -f loto7_best_model.json "$SNAPSHOT/" 2>/dev/null || true
           cp -f outputs/evolution_best_prediction.csv "$SNAPSHOT/outputs/" 2>/dev/null || true
           cp -f outputs/evolution_prediction_history.csv "$SNAPSHOT/outputs/" 2>/dev/null || true
@@ -253,13 +263,16 @@ jobs:
           cp -f outputs/holdout/*.csv "$SNAPSHOT/outputs/holdout/" 2>/dev/null || true
           cp -f outputs/holdout/*.json "$SNAPSHOT/outputs/holdout/" 2>/dev/null || true
           cp -f outputs/holdout/*.txt "$SNAPSHOT/outputs/holdout/" 2>/dev/null || true
+          cp -f outputs/role_ensemble/regime_*.json "$SNAPSHOT/outputs/role_ensemble/" 2>/dev/null || true
+          cp -f outputs/role_ensemble/regime_*.txt "$SNAPSHOT/outputs/role_ensemble/" 2>/dev/null || true
           git fetch origin "${GITHUB_REF_NAME}"
           git reset --hard "origin/${GITHUB_REF_NAME}"
-          mkdir -p outputs/holdout
+          mkdir -p outputs/holdout outputs/role_ensemble
           cp -f "$SNAPSHOT/loto7_best_model.json" loto7_best_model.json 2>/dev/null || true
           cp -f "$SNAPSHOT"/outputs/* outputs/ 2>/dev/null || true
           cp -f "$SNAPSHOT"/outputs/holdout/* outputs/holdout/ 2>/dev/null || true
-          git add -f loto7_best_model.json outputs/evolution_best_prediction.csv outputs/evolution_prediction_history.csv outputs/evolution_prediction_history_result.txt outputs/evolution_merged_summary.json outputs/run_manifest.json outputs/holdout/*.csv outputs/holdout/*.json outputs/holdout/*.txt || true
+          cp -f "$SNAPSHOT"/outputs/role_ensemble/* outputs/role_ensemble/ 2>/dev/null || true
+          git add -f loto7_best_model.json outputs/evolution_best_prediction.csv outputs/evolution_prediction_history.csv outputs/evolution_prediction_history_result.txt outputs/evolution_merged_summary.json outputs/run_manifest.json outputs/holdout/*.csv outputs/holdout/*.json outputs/holdout/*.txt outputs/role_ensemble/regime_*.json outputs/role_ensemble/regime_*.txt || true
           if git diff --cached --quiet; then echo "No holdout output changes"; exit 0; fi
           git commit -m "Update LOTO7 holdout backtest outputs [skip ci]"
           git push origin HEAD:"${GITHUB_REF_NAME}"
@@ -278,6 +291,8 @@ jobs:
             outputs/holdout/*.csv
             outputs/holdout/*.json
             outputs/holdout/*.txt
+            outputs/role_ensemble/regime_*.json
+            outputs/role_ensemble/regime_*.txt
           if-no-files-found: ignore
 
   role-ensemble-backtest:
