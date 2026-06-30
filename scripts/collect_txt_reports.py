@@ -7,8 +7,8 @@ LOTO7 の主要テキストレポートを outputs/txt_reports/ に再構成し�
 
 目的:
   - 最新予測、履歴照合、holdout、自己進化、Role/Regime系を1フォルダで確認できるようにする
-  - 欠損レポートも MISSING として明示する
-  - combined_report.txt と 00_INDEX.txt を自動生成する
+  - 欠損レポートはINDEXとmanifestにだけ記録し、MISSING専用の空ファイルは作らない
+  - 00_INDEX.txt と 99_combined_report.txt を自動生成する
 
 出力:
   outputs/txt_reports/00_INDEX.txt
@@ -20,8 +20,9 @@ LOTO7 の主要テキストレポートを outputs/txt_reports/ に再構成し�
   outputs/txt_reports/06_model_self_evolution_integrated.txt
   outputs/txt_reports/07_role_ensemble_backtest.txt
   outputs/txt_reports/08_role_strategy_optimizer.txt
-  outputs/txt_reports/09_regime_strategy.txt
+  outputs/txt_reports/09_regime_strategy.txt  # source exists only
   outputs/txt_reports/10_progress_summary.md
+  outputs/txt_reports/11_json_summary_digest.txt
   outputs/txt_reports/99_combined_report.txt
   outputs/txt_reports/manifest.json
 """
@@ -31,7 +32,6 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
-import shutil
 from pathlib import Path
 from typing import Dict, List, Sequence
 
@@ -163,10 +163,10 @@ def copy_report(report: Dict[str, str], out_dir: Path, created_at: str) -> Dict[
     exists = src.exists() and src.is_file() and src.stat().st_size > 0
     if exists:
         body = read_text(src).rstrip() + "\n"
-    else:
-        body = f"MISSING: {report['source']}\n"
-    content = header(str(report["title"]), str(report["source"]), created_at, exists) + body
-    write_text(dst, content)
+        content = header(str(report["title"]), str(report["source"]), created_at, True) + body
+        write_text(dst, content)
+    elif dst.exists():
+        dst.unlink()
     return {
         "order": report["order"],
         "title": report["title"],
@@ -255,8 +255,9 @@ def write_index(out_dir: Path, created_at: str, entries: Sequence[Dict[str, obje
         "[Reports]",
     ]
     for entry in entries:
-        status = "FOUND" if entry.get("exists") else "MISSING"
-        lines.append(f"{entry['order']}. {entry['title']} / {entry['target']} / {status}")
+        status = "FOUND" if entry.get("exists") else "MISSING_SOURCE_NO_FILE"
+        target = entry["target"] if entry.get("exists") else "(not generated)"
+        lines.append(f"{entry['order']}. {entry['title']} / {target} / {status}")
         lines.append(f"    source: {entry['source']}")
         lines.append(f"    note: {entry['description']}")
     lines.extend(["", "[JSON Summaries]"])
@@ -268,7 +269,7 @@ def write_index(out_dir: Path, created_at: str, entries: Sequence[Dict[str, obje
             "",
             "[Recommended Reading Order]",
             "1. 01_latest_prediction.txt",
-            "2. 09_regime_strategy.txt",
+            "2. 09_regime_strategy.txt / generated only after regime report exists",
             "3. 08_role_strategy_optimizer.txt",
             "4. 07_role_ensemble_backtest.txt",
             "5. 03_holdout_report.txt",
@@ -276,7 +277,7 @@ def write_index(out_dir: Path, created_at: str, entries: Sequence[Dict[str, obje
             "7. 02_prediction_history_result.txt",
             "",
             "[Combined]",
-            "- 99_combined_report.txt includes all report files in this order.",
+            "- 99_combined_report.txt includes only generated report files.",
         ]
     )
     write_text(out_dir / "00_INDEX.txt", "\n".join(lines).rstrip() + "\n")
@@ -291,12 +292,16 @@ def write_combined(out_dir: Path, entries: Sequence[Dict[str, object]], created_
         "",
     ]
     for entry in entries:
+        if not entry.get("exists"):
+            continue
         target = Path(str(entry["target"]))
+        if not target.exists():
+            continue
         parts.append("\n" + "#" * 80)
         parts.append(f"# {entry['order']} {entry['title']}")
         parts.append("#" * 80)
         parts.append("")
-        parts.append(read_text(target) if target.exists() else f"MISSING: {target}\n")
+        parts.append(read_text(target))
     json_digest = out_dir / "11_json_summary_digest.txt"
     if json_digest.exists():
         parts.append("\n" + "#" * 80)
@@ -334,6 +339,7 @@ def main() -> int:
         "json_summaries": json_items,
         "index": str(out_dir / "00_INDEX.txt"),
         "combined": str(out_dir / "99_combined_report.txt"),
+        "policy": "missing_source_reports_are_not_materialized_as_placeholder_files",
     }
     write_text(out_dir / "manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
     print(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True))
