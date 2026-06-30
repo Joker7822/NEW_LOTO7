@@ -1,7 +1,7 @@
 JSON Summary Digest
 ===================
 
-created_at: 2026-06-30T21:03:50.417771+00:00
+created_at: 2026-06-30T21:04:31.802205+00:00
 
 ## outputs/evolution_merged_summary.json
 status: FOUND
@@ -50,10 +50,7 @@ best_model: loto7_best_model.json
 status: MISSING
 
 ## outputs/role_ensemble/role_strategy.json
-status: FOUND
-created_at: 2026-06-30T20:31:14.859513+00:00
-kind: loto7_role_strategy
-strategy_counts: {"contrarian": 0, "high_match": 1, "main_best": 2, "mid_high": 1, "recent120": 1}
+status: MISSING
 
 ## outputs/role_ensemble/regime_state.json
 status: FOUND
