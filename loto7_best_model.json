@@ -39,19 +39,19 @@
       "role": "high_match"
     },
     {
+      "label": "高一致狙い: ペア/3連/最大一致重視",
+      "role": "high_match"
+    },
+    {
       "label": "直近寄り: 直近120回/60回の流れ重視",
       "role": "recent120"
     },
     {
-      "label": "中高数字補正: 20番台後半〜30番台も押さえる",
-      "role": "mid_high"
-    },
-    {
-      "label": "荒れ目/逆張り: 休眠・広めレンジ・低重複",
-      "role": "contrarian"
+      "label": "直近寄り: 直近120回/60回の流れ重視",
+      "role": "recent120"
     }
   ],
-  "role_strategy": "outputs/role_ensemble/role_strategy.json",
+  "role_strategy": "outputs/role_ensemble/regime_strategy.json",
   "selected_holdout": {
     "evolution_score": 51261.54,
     "genome_id": "g306_0306_9982",
@@ -85,5 +85,5 @@
   "selection_reason": "holdout再ランキング: ROI → 最大本数字一致数 → 1等→2等→3等→4等→5等→6等 → Evolutionスコア",
   "selection_sort_description": "ROI → 最大本数字一致数 → 1等→2等→3等→4等→5等→6等 → Evolutionスコア",
   "source_model": "loto7_best_model.json",
-  "updated_at": "2026-06-30T04:42:13.855528+00:00"
+  "updated_at": "2026-06-30T13:55:10.681667+00:00"
 }
