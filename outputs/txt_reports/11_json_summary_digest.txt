@@ -1,11 +1,11 @@
 JSON Summary Digest
 ===================
 
-created_at: 2026-06-30T12:28:34.416824+00:00
+created_at: 2026-06-30T18:17:51.517760+00:00
 
 ## outputs/evolution_merged_summary.json
 status: FOUND
-updated_at: 2026-06-30T04:42:13.855528+00:00
+updated_at: 2026-06-30T13:55:10.681667+00:00
 prediction_mode: role_ensemble
 selected_genome_id: g306_0306_9982
 latest_draw_no: 683
@@ -14,7 +14,7 @@ best_model: loto7_best_model.json
 
 ## outputs/run_manifest.json
 status: FOUND
-created_at: 2026-06-30T04:42:13.855528+00:00
+created_at: 2026-06-30T13:55:10.681667+00:00
 kind: loto7_evolution_merge_holdout_rerank_ensemble
 prediction_mode: role_ensemble
 selected_genome_id: g306_0306_9982
@@ -24,7 +24,7 @@ best_model: loto7_best_model.json
 
 ## outputs/holdout/holdout_summary.json
 status: FOUND
-created_at: 2026-06-30T04:42:22.520751+00:00
+created_at: 2026-06-30T13:55:14.092966+00:00
 roi_percent: -10.147
 profit: -103800
 target_draws: 682
@@ -32,7 +32,7 @@ best_model: loto7_best_model.json
 
 ## outputs/holdout/model_selection_summary.json
 status: FOUND
-updated_at: 2026-06-30T04:42:13.855528+00:00
+updated_at: 2026-06-30T13:55:10.681667+00:00
 prediction_mode: role_ensemble
 selected_genome_id: g306_0306_9982
 latest_draw_no: 683
@@ -48,7 +48,7 @@ best_model: loto7_best_model.json
 
 ## outputs/role_ensemble/role_ensemble_summary.json
 status: FOUND
-created_at: 2026-06-30T04:42:35.418616+00:00
+created_at: 2026-06-30T13:55:26.585364+00:00
 status: completed
 genome_id: g306_0306_9982
 target_draws_total: 682
@@ -59,15 +59,26 @@ comparison: {"grade_hit_delta": -5, "high_grade_hit_delta": -8, "max_main_match_
 
 ## outputs/role_ensemble/role_strategy.json
 status: FOUND
-created_at: 2026-06-30T04:42:46.320608+00:00
+created_at: 2026-06-30T13:55:36.890846+00:00
 kind: loto7_role_strategy
 strategy_counts: {"contrarian": 0, "high_match": 1, "main_best": 2, "mid_high": 1, "recent120": 1}
 
 ## outputs/role_ensemble/regime_state.json
-status: MISSING
+status: FOUND
+created_at: 2026-06-30T13:49:46.619534+00:00
+kind: loto7_regime_state
+regime: recent_repeat_trend
+regime_strength: 0.773997
+latest_draw_no: 683
+final_counts: {"contrarian": 0, "high_match": 2, "main_best": 1, "mid_high": 0, "recent120": 2}
 
 ## outputs/role_ensemble/regime_strategy.json
-status: MISSING
+status: FOUND
+created_at: 2026-06-30T13:49:46.619565+00:00
+kind: loto7_regime_role_strategy
+regime: recent_repeat_trend
+regime_strength: 0.773997
+strategy_counts: {"contrarian": 0, "high_match": 2, "main_best": 1, "mid_high": 0, "recent120": 2}
 
 ## outputs/loto7_progress_summary.json
 status: FOUND
