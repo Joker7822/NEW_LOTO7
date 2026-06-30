@@ -13,6 +13,7 @@ role_ensemble 5口構造の専用バックテスト。
   - CSVへ1対象回ずつ逐次追記
   - state JSONへ完了済み対象回を保存
   - タイムアウト前にsafe_exitし、次回は未処理分だけ続行
+  - 既存CSVに重複行があっても、同一 system / target_draw_no / ticket_index を自動重複排除
 
 出力:
   outputs/role_ensemble/role_ensemble_backtest.csv
@@ -65,6 +66,7 @@ DETAIL_FIELDS = [
     "rank",
     "payout",
 ]
+VALID_SYSTEMS = {"role_ensemble", "best_model"}
 
 
 def now_iso() -> str:
@@ -205,34 +207,83 @@ def write_detail_csv(path: str, rows: Sequence[Dict[str, object]]) -> None:
         writer.writerows(rows)
 
 
-def completed_draws_from_details(rows: Sequence[Dict[str, object]], purchase_count: int) -> Set[int]:
-    counts: Dict[int, Dict[str, int]] = {}
-    for row in rows:
-        try:
-            draw_no = int(row.get("target_draw_no", 0))
-        except Exception:
-            continue
+def detail_identity(row: Dict[str, object]) -> Optional[Tuple[str, int, int]]:
+    try:
         system = str(row.get("system", ""))
-        if system not in {"role_ensemble", "best_model"}:
+        draw_no = int(row.get("target_draw_no", 0))
+        ticket_index = int(row.get("ticket_index", 0))
+    except Exception:
+        return None
+    if system not in VALID_SYSTEMS or draw_no <= 0 or ticket_index <= 0:
+        return None
+    return (system, draw_no, ticket_index)
+
+
+def dedupe_detail_rows(rows: Sequence[Dict[str, object]], purchase_count: int) -> Tuple[List[Dict[str, object]], int]:
+    """同一 system/draw/ticket_index の重複を除去する。
+
+    古いrunで同じ対象回が再追記されたCSVを安全に正規化するため、
+    ticket_index が purchase_count を超える行も除外する。
+    """
+    seen: Set[Tuple[str, int, int]] = set()
+    cleaned: List[Dict[str, object]] = []
+    removed = 0
+    for row in rows:
+        key = detail_identity(row)
+        if key is None:
+            removed += 1
             continue
-        counts.setdefault(draw_no, {"role_ensemble": 0, "best_model": 0})
-        counts[draw_no][system] = counts[draw_no].get(system, 0) + 1
+        _system, _draw_no, ticket_index = key
+        if ticket_index > purchase_count:
+            removed += 1
+            continue
+        if key in seen:
+            removed += 1
+            continue
+        seen.add(key)
+        cleaned.append(dict(row))
+    return cleaned, removed
+
+
+def completed_draws_from_details(rows: Sequence[Dict[str, object]], purchase_count: int) -> Set[int]:
+    counts: Dict[int, Dict[str, Set[int]]] = {}
+    for row in rows:
+        key = detail_identity(row)
+        if key is None:
+            continue
+        system, draw_no, ticket_index = key
+        if ticket_index > purchase_count:
+            continue
+        counts.setdefault(draw_no, {"role_ensemble": set(), "best_model": set()})
+        counts[draw_no][system].add(ticket_index)
     return {
         draw_no
         for draw_no, by_system in counts.items()
-        if by_system.get("role_ensemble", 0) >= purchase_count and by_system.get("best_model", 0) >= purchase_count
+        if len(by_system.get("role_ensemble", set())) == purchase_count and len(by_system.get("best_model", set())) == purchase_count
     }
 
 
-def filter_complete_detail_rows(rows: Sequence[Dict[str, object]], completed_draws: Set[int]) -> List[Dict[str, object]]:
+def filter_complete_detail_rows(rows: Sequence[Dict[str, object]], completed_draws: Set[int], purchase_count: int) -> List[Dict[str, object]]:
+    deduped, _removed = dedupe_detail_rows(rows, purchase_count)
     out: List[Dict[str, object]] = []
-    for row in rows:
-        try:
-            draw_no = int(row.get("target_draw_no", 0))
-        except Exception:
+    for row in deduped:
+        key = detail_identity(row)
+        if key is None:
             continue
+        _system, draw_no, _ticket_index = key
         if draw_no in completed_draws:
             out.append(dict(row))
+    return out
+
+
+def system_ticket_counts(rows: Sequence[Dict[str, object]]) -> Dict[str, int]:
+    out = {"role_ensemble": 0, "best_model": 0}
+    for row in rows:
+        key = detail_identity(row)
+        if key is None:
+            continue
+        system, _draw_no, _ticket_index = key
+        out[system] = out.get(system, 0) + 1
     return out
 
 
@@ -243,17 +294,18 @@ def update_stats_from_detail_rows(rows: Sequence[Dict[str, object]], unit_cost: 
     draw_hit: Dict[Tuple[str, int], bool] = {}
     role_draw_hit: Dict[Tuple[str, int], bool] = {}
     draw_seen: Set[Tuple[str, int]] = set()
-    role_draw_seen: Set[Tuple[str, int]] = set()
+    role_draw_seen: Set[Tuple[str, int], Set[int]] = {}
 
     for row in rows:
         system = str(row.get("system", ""))
-        if system not in {"role_ensemble", "best_model"}:
+        if system not in VALID_SYSTEMS:
             continue
         try:
             draw_no = int(row.get("target_draw_no", 0))
             payout = int(row.get("payout", 0))
             main_match = int(row.get("main_match", 0))
             bonus_match = int(row.get("bonus_match", 0))
+            ticket_index = int(row.get("ticket_index", 0))
         except Exception:
             continue
         rank = str(row.get("rank", "外れ")) or "外れ"
@@ -271,10 +323,12 @@ def update_stats_from_detail_rows(rows: Sequence[Dict[str, object]], unit_cost: 
             role_key = str(row.get("role_key", "unknown"))
             rstats = role_stats.setdefault(role_key, new_stats())
             rkey = (role_key, draw_no)
-            if rkey not in role_draw_seen:
-                rstats["draw_count"] = int(rstats["draw_count"]) + 1
-                role_draw_seen.add(rkey)
-                role_draw_hit[rkey] = False
+            role_draw_seen.setdefault(rkey, set())
+            if ticket_index not in role_draw_seen[rkey]:
+                if not role_draw_seen[rkey]:
+                    rstats["draw_count"] = int(rstats["draw_count"]) + 1
+                    role_draw_hit[rkey] = False
+                role_draw_seen[rkey].add(ticket_index)
             update_ticket_stats(rstats, unit_cost=unit_cost, payout=payout, main_match=main_match, bonus_match=bonus_match, rank=rank)
             if rank != "外れ":
                 role_draw_hit[rkey] = True
@@ -295,6 +349,7 @@ def write_report(path: str, summary: Dict[str, object]) -> None:
     best = summary.get("best_model", {}) if isinstance(summary.get("best_model"), dict) else {}
     comparison = summary.get("comparison", {}) if isinstance(summary.get("comparison"), dict) else {}
     roles = summary.get("roles", {}) if isinstance(summary.get("roles"), dict) else {}
+    validation = summary.get("validation", {}) if isinstance(summary.get("validation"), dict) else {}
 
     lines: List[str] = []
     lines.append("LOTO7 Role Ensemble Backtest Report")
@@ -310,6 +365,13 @@ def write_report(path: str, summary: Dict[str, object]) -> None:
     lines.append(f"purchase_count: {summary.get('purchase_count')}")
     lines.append(f"holdout_start_draw: {summary.get('holdout_start_draw')}")
     lines.append(f"min_train_draws: {summary.get('min_train_draws')}")
+    lines.append("")
+    lines.append("[Validation]")
+    lines.append(f"expected_tickets_per_system: {validation.get('expected_tickets_per_system')}")
+    lines.append(f"role_ensemble_tickets: {validation.get('role_ensemble_tickets')}")
+    lines.append(f"best_model_tickets: {validation.get('best_model_tickets')}")
+    lines.append(f"duplicates_removed: {validation.get('duplicates_removed')}")
+    lines.append(f"is_ticket_count_valid: {validation.get('is_ticket_count_valid')}")
     lines.append("")
     lines.append("[Role Ensemble]")
     lines.append(f"roi_percent: {role.get('roi_percent')}")
@@ -399,28 +461,42 @@ def state_matches(state: Dict[str, object], args: argparse.Namespace, genome_id:
     )
 
 
-def load_resume_details(args: argparse.Namespace, genome_id: str, target_draw_nos: Sequence[int]) -> Tuple[List[Dict[str, object]], Set[int], List[int]]:
+def load_resume_details(args: argparse.Namespace, genome_id: str, target_draw_nos: Sequence[int]) -> Tuple[List[Dict[str, object]], Set[int], List[int], int]:
     if not args.resume:
-        return [], set(), []
+        return [], set(), [], 0
     state_path = Path(args.state)
     if not state_path.exists() or state_path.stat().st_size <= 0:
-        return [], set(), []
+        return [], set(), [], 0
     try:
         state = read_json(args.state)
     except Exception as exc:
         print(f"[WARN] cannot read state; starting fresh: {exc}")
-        return [], set(), []
+        return [], set(), [], 0
     if not state_matches(state, args, genome_id, target_draw_nos):
         print("[INFO] role ensemble state does not match current settings; starting fresh")
-        return [], set(), []
+        return [], set(), [], 0
     detail_rows = read_detail_csv(args.output)
-    completed = completed_draws_from_details(detail_rows, args.purchase_count)
-    cleaned = filter_complete_detail_rows(detail_rows, completed)
+    deduped, duplicate_removed = dedupe_detail_rows(detail_rows, args.purchase_count)
+    completed = completed_draws_from_details(deduped, args.purchase_count)
+    cleaned = filter_complete_detail_rows(deduped, completed, args.purchase_count)
     if len(cleaned) != len(detail_rows):
         write_detail_csv(args.output, cleaned)
+        print(f"[CLEAN] normalized role backtest CSV rows: {len(detail_rows)} -> {len(cleaned)}")
     missing = [int(x) for x in state.get("missing_prize_draws", []) if str(x).isdigit()]
     print(f"[RESUME] completed target draws: {len(completed)}/{len(target_draw_nos)}")
-    return cleaned, completed, missing
+    return cleaned, completed, missing, duplicate_removed
+
+
+def validation_summary(detail_rows: Sequence[Dict[str, object]], completed_count: int, purchase_count: int, duplicates_removed: int) -> Dict[str, object]:
+    counts = system_ticket_counts(detail_rows)
+    expected = completed_count * purchase_count
+    return {
+        "expected_tickets_per_system": expected,
+        "role_ensemble_tickets": counts.get("role_ensemble", 0),
+        "best_model_tickets": counts.get("best_model", 0),
+        "duplicates_removed": duplicates_removed,
+        "is_ticket_count_valid": counts.get("role_ensemble", 0) == expected and counts.get("best_model", 0) == expected,
+    }
 
 
 def build_summary(
@@ -432,10 +508,12 @@ def build_summary(
     draws: Sequence[Draw],
     detail_rows: Sequence[Dict[str, object]],
     missing_prize_draws: Sequence[int],
+    duplicates_removed: int,
 ) -> Dict[str, object]:
     completed = completed_draws_from_details(detail_rows, args.purchase_count)
     role_summary, best_summary, roles_summary = update_stats_from_detail_rows(detail_rows, args.unit_cost)
     last_completed = max(completed) if completed else None
+    validation = validation_summary(detail_rows, len(completed), args.purchase_count, duplicates_removed)
     return {
         "created_at": now_iso(),
         "status": status,
@@ -455,6 +533,7 @@ def build_summary(
         "last_completed_draw_no": last_completed,
         "missing_prize_draw_count": len(set(missing_prize_draws)),
         "missing_prize_draws": sorted(set(missing_prize_draws)),
+        "validation": validation,
         "role_ensemble": role_summary,
         "best_model": best_summary,
         "comparison": compare(role_summary, best_summary),
@@ -474,7 +553,10 @@ def save_state(
     target_draw_nos: Sequence[int],
     completed_draws: Set[int],
     missing_prize_draws: Sequence[int],
+    detail_rows: Sequence[Dict[str, object]],
+    duplicates_removed: int,
 ) -> None:
+    counts = system_ticket_counts(detail_rows)
     payload = {
         "updated_at": now_iso(),
         "status": status,
@@ -491,6 +573,10 @@ def save_state(
         "completed_target_draws": len(completed_draws),
         "last_completed_draw_no": max(completed_draws) if completed_draws else None,
         "completed_draws": sorted(completed_draws),
+        "detail_row_count": len(detail_rows),
+        "role_ensemble_ticket_rows": counts.get("role_ensemble", 0),
+        "best_model_ticket_rows": counts.get("best_model", 0),
+        "duplicates_removed": duplicates_removed,
         "missing_prize_draws": sorted(set(int(x) for x in missing_prize_draws)),
         "output": args.output,
         "summary": args.summary,
@@ -550,9 +636,9 @@ def main(argv: Optional[List[str]] = None) -> int:
         raise SystemExit("no targets selected")
     target_draw_nos = [draws[idx].draw_no for idx in target_indices]
 
-    detail_rows, completed_draws, missing_prize_draws = load_resume_details(args, genome_id, target_draw_nos)
     if not args.resume and Path(args.output).exists():
         Path(args.output).unlink()
+    detail_rows, completed_draws, missing_prize_draws, duplicates_removed = load_resume_details(args, genome_id, target_draw_nos)
 
     status = "completed"
     processed_this_run = 0
@@ -589,6 +675,9 @@ def main(argv: Optional[List[str]] = None) -> int:
             )
         evaluate_rows_for_draw(system="best_model", rows=best_rows, target=target, prize_row=prize_row, detail_rows=new_rows)
 
+        # 同一run内の保険として、対象回単位でも重複除去する。
+        new_rows, removed_now = dedupe_detail_rows(new_rows, args.purchase_count)
+        duplicates_removed += removed_now
         append_detail_csv(args.output, new_rows)
         detail_rows.extend(new_rows)
         completed_draws.add(target.draw_no)
@@ -603,7 +692,20 @@ def main(argv: Optional[List[str]] = None) -> int:
             target_draw_nos=target_draw_nos,
             completed_draws=completed_draws,
             missing_prize_draws=missing_prize_draws,
+            detail_rows=detail_rows,
+            duplicates_removed=duplicates_removed,
         )
+
+    # 最終集計前に必ずCSVを正規化する。
+    normalized_rows, removed_final = dedupe_detail_rows(detail_rows, args.purchase_count)
+    duplicates_removed += removed_final
+    completed_draws = completed_draws_from_details(normalized_rows, args.purchase_count)
+    normalized_rows = filter_complete_detail_rows(normalized_rows, completed_draws, args.purchase_count)
+    if len(normalized_rows) != len(detail_rows) or removed_final:
+        write_detail_csv(args.output, normalized_rows)
+        detail_rows = normalized_rows
+    else:
+        detail_rows = normalized_rows
 
     if len(completed_draws) >= len(target_indices):
         status = "completed"
@@ -616,6 +718,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         draws=draws,
         detail_rows=detail_rows,
         missing_prize_draws=missing_prize_draws,
+        duplicates_removed=duplicates_removed,
     )
     write_json(args.summary, summary)
     write_report(args.report, summary)
@@ -626,6 +729,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         target_draw_nos=target_draw_nos,
         completed_draws=completed_draws,
         missing_prize_draws=missing_prize_draws,
+        detail_rows=detail_rows,
+        duplicates_removed=duplicates_removed,
     )
     print(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True))
     return 0
