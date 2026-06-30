@@ -1,7 +1,7 @@
 LOTO7 Combined TXT Report
 =========================
 
-created_at: 2026-06-30T21:04:31.802205+00:00
+created_at: 2026-06-30T21:04:42.825221+00:00
 
 
 ################################################################################
@@ -11,7 +11,7 @@ created_at: 2026-06-30T21:04:31.802205+00:00
 Latest Prediction
 =================
 
-created_at: 2026-06-30T21:04:31.802205+00:00
+created_at: 2026-06-30T21:04:42.825221+00:00
 source: outputs/holdout/latest_prediction_report.txt
 status: FOUND
 LOTO7 Latest Prediction Report
@@ -57,7 +57,7 @@ TXT: outputs/holdout/latest_prediction_report.txt
 Prediction History Result
 =========================
 
-created_at: 2026-06-30T21:04:31.802205+00:00
+created_at: 2026-06-30T21:04:42.825221+00:00
 source: outputs/evolution_prediction_history_result.txt
 status: FOUND
 LOTO7 Prediction History Result Check
@@ -108,7 +108,7 @@ actual_main: - / actual_bonus: -
 Full Holdout Report
 ===================
 
-created_at: 2026-06-30T21:04:31.802205+00:00
+created_at: 2026-06-30T21:04:42.825221+00:00
 source: outputs/holdout/holdout_report.txt
 status: FOUND
 LOTO7 Holdout Backtest Report
@@ -512,7 +512,7 @@ CSV: loto7.csv
 Model Selection Report
 ======================
 
-created_at: 2026-06-30T21:04:31.802205+00:00
+created_at: 2026-06-30T21:04:42.825221+00:00
 source: outputs/holdout/model_selection_report.txt
 status: FOUND
 LOTO7 Model Selection Report
@@ -547,7 +547,7 @@ Evolutionスコア: 51261.54
 Model Self Evolution Standalone
 ===============================
 
-created_at: 2026-06-30T21:04:31.802205+00:00
+created_at: 2026-06-30T21:04:42.825221+00:00
 source: outputs/model_self_evolution/standalone_report.txt
 status: FOUND
 LOTO7 Model-Only Self Evolution Report
@@ -604,7 +604,7 @@ max_main_match: 6
 Model Self Evolution Integrated
 ===============================
 
-created_at: 2026-06-30T21:04:31.802205+00:00
+created_at: 2026-06-30T21:04:42.825221+00:00
 source: outputs/model_self_evolution/report.txt
 status: FOUND
 LOTO7 Model-Only Self Evolution Report
@@ -655,67 +655,13 @@ max_main_match: 6
 
 
 ################################################################################
-# 08 Role Strategy Optimizer
-################################################################################
-
-Role Strategy Optimizer
-=======================
-
-created_at: 2026-06-30T21:04:31.802205+00:00
-source: outputs/role_ensemble/role_strategy_report.txt
-status: FOUND
-LOTO7 Role Strategy Optimizer Report
-====================================
-
-created_at: 2026-06-30T20:31:14.859513+00:00
-reason: optimized_from_role_ensemble_backtest
-source_status: completed
-completed_target_draws: 682 / 682
-genome_id: g306_0306_9982
-
-[Strategy Counts]
-{
-  "contrarian": 0,
-  "high_match": 1,
-  "main_best": 2,
-  "mid_high": 1,
-  "recent120": 1
-}
-
-[Role Sequence]
-1: main_best / 本命: 採用ベストモデル
-2: main_best / 本命: 採用ベストモデル
-3: mid_high / 中高数字補正: 20番台後半〜30番台も押さえる
-4: high_match / 高一致狙い: ペア/3連/最大一致重視
-5: recent120 / 直近寄り: 直近120回/60回の流れ重視
-
-[Scores]
-{
-  "contrarian": 42.349741,
-  "high_match": 116.01283,
-  "main_best": 469.107133,
-  "mid_high": 122.002968,
-  "recent120": 103.340516
-}
-
-[Role Source Stats]
-contrarian: ROI=13.832% / profit=-352600 / grade=49 / high_grade=0 / max_main=4
-high_match: ROI=20.479% / profit=-325400 / grade=56 / high_grade=2 / max_main=5
-main_best: ROI=190.494% / profit=370300 / grade=53 / high_grade=3 / max_main=6
-mid_high: ROI=25.367% / profit=-305400 / grade=66 / high_grade=3 / max_main=5
-recent120: ROI=21.97% / profit=-319300 / grade=64 / high_grade=2 / max_main=5
-
-注意: 過去検証上の役割配分最適化であり、将来の当せんや利益を保証しません。
-
-
-################################################################################
 # 09 Regime Strategy
 ################################################################################
 
 Regime Strategy
 ===============
 
-created_at: 2026-06-30T21:04:31.802205+00:00
+created_at: 2026-06-30T21:04:42.825221+00:00
 source: outputs/role_ensemble/regime_strategy_report.txt
 status: FOUND
 LOTO7 Regime-Based Role Strategy Report
@@ -788,7 +734,7 @@ regime_strength: 0.773997
 Progress Summary
 ================
 
-created_at: 2026-06-30T21:04:31.802205+00:00
+created_at: 2026-06-30T21:04:42.825221+00:00
 source: outputs/loto7_progress_summary.md
 status: FOUND
 # LOTO7 Progress Summary
@@ -829,7 +775,7 @@ null
 JSON Summary Digest
 ===================
 
-created_at: 2026-06-30T21:04:31.802205+00:00
+created_at: 2026-06-30T21:04:42.825221+00:00
 
 ## outputs/evolution_merged_summary.json
 status: FOUND
