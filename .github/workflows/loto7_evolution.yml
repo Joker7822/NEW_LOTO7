@@ -248,6 +248,15 @@ jobs:
             --max-runtime-minutes 330 \
             --safe-exit-minutes 20 \
             --fail-on-missing-prize
+      - name: Repair holdout year summary and recent era report
+        run: |
+          set -euo pipefail
+          python scripts/repair_holdout_summary.py \
+            --detail outputs/holdout/holdout_result.csv \
+            --summary outputs/holdout/holdout_summary.json \
+            --recent-summary outputs/holdout/recent_era_summary.json \
+            --recent-report outputs/holdout/recent_era_report.txt \
+            --recent-start-year 2020
       - name: Commit holdout outputs
         if: always()
         run: |
