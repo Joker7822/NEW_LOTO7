@@ -1,7 +1,7 @@
 LOTO7 TXT Reports Index
 =======================
 
-created_at: 2026-06-30T18:17:51.517760+00:00
+created_at: 2026-06-30T21:03:20.126333+00:00
 directory: outputs/txt_reports
 
 [Reports]
@@ -42,7 +42,7 @@ directory: outputs/txt_reports
 - outputs/holdout/holdout_summary.json / FOUND
 - outputs/holdout/model_selection_summary.json / FOUND
 - outputs/model_self_evolution/standalone_summary.json / FOUND
-- outputs/role_ensemble/role_ensemble_summary.json / FOUND
+- outputs/role_ensemble/role_ensemble_summary.json / MISSING
 - outputs/role_ensemble/role_strategy.json / FOUND
 - outputs/role_ensemble/regime_state.json / FOUND
 - outputs/role_ensemble/regime_strategy.json / FOUND

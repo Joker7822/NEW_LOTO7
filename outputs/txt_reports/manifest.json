@@ -1,6 +1,6 @@
 {
   "combined": "outputs/txt_reports/99_combined_report.txt",
-  "created_at": "2026-06-30T18:17:51.517760+00:00",
+  "created_at": "2026-06-30T21:03:20.126333+00:00",
   "index": "outputs/txt_reports/00_INDEX.txt",
   "json_summaries": [
     {
@@ -40,7 +40,7 @@
           "total_tickets": 3410,
           "unit_cost": 300
         },
-        "updated_at": "2026-06-30T13:55:10.681667+00:00"
+        "updated_at": "2026-06-30T20:30:45.302137+00:00"
       }
     },
     {
@@ -48,7 +48,7 @@
       "source": "outputs/run_manifest.json",
       "summary": {
         "best_model": "loto7_best_model.json",
-        "created_at": "2026-06-30T13:55:10.681667+00:00",
+        "created_at": "2026-06-30T20:30:45.302137+00:00",
         "kind": "loto7_evolution_merge_holdout_rerank_ensemble",
         "latest_draw_no": 683,
         "prediction_mode": "role_ensemble",
@@ -89,7 +89,7 @@
       "source": "outputs/holdout/holdout_summary.json",
       "summary": {
         "best_model": "loto7_best_model.json",
-        "created_at": "2026-06-30T13:55:14.092966+00:00",
+        "created_at": "2026-06-30T20:30:48.898064+00:00",
         "profit": -103800,
         "roi_percent": -10.147,
         "target_draws": 682
@@ -132,7 +132,7 @@
           "total_tickets": 3410,
           "unit_cost": 300
         },
-        "updated_at": "2026-06-30T13:55:10.681667+00:00"
+        "updated_at": "2026-06-30T20:30:45.302137+00:00"
       }
     },
     {
@@ -146,79 +146,14 @@
       }
     },
     {
-      "exists": true,
-      "source": "outputs/role_ensemble/role_ensemble_summary.json",
-      "summary": {
-        "best_model": {
-          "draw_count": 682,
-          "draw_hit_count": 111,
-          "draw_hit_rate_percent": 16.276,
-          "grade_hit_count": 293,
-          "high_grade_hit_count": 18,
-          "max_bonus_match": 2,
-          "max_main_match": 6,
-          "profit": -509300,
-          "rank_counts": {
-            "1等": 0,
-            "2等": 0,
-            "3等": 2,
-            "4等": 16,
-            "5等": 99,
-            "6等": 176,
-            "外れ": 6527
-          },
-          "roi": 0.751075,
-          "roi_percent": 75.108,
-          "ticket_hit_rate_percent": 4.296,
-          "total_cost": 2046000,
-          "total_payout": 1536700,
-          "total_tickets": 6820
-        },
-        "comparison": {
-          "grade_hit_delta": -5,
-          "high_grade_hit_delta": -8,
-          "max_main_match_delta": 0,
-          "profit_delta": -423100,
-          "roi_percent_delta": -20.68,
-          "winner": "best_model"
-        },
-        "completed_target_draws": 682,
-        "created_at": "2026-06-30T13:55:26.585364+00:00",
-        "genome_id": "g306_0306_9982",
-        "role_ensemble": {
-          "draw_count": 682,
-          "draw_hit_count": 152,
-          "draw_hit_rate_percent": 22.287,
-          "grade_hit_count": 288,
-          "high_grade_hit_count": 10,
-          "max_bonus_match": 2,
-          "max_main_match": 6,
-          "profit": -932400,
-          "rank_counts": {
-            "1等": 0,
-            "2等": 0,
-            "3等": 1,
-            "4等": 9,
-            "5等": 110,
-            "6等": 168,
-            "外れ": 6532
-          },
-          "roi": 0.544282,
-          "roi_percent": 54.428,
-          "ticket_hit_rate_percent": 4.223,
-          "total_cost": 2046000,
-          "total_payout": 1113600,
-          "total_tickets": 6820
-        },
-        "status": "completed",
-        "target_draws_total": 682
-      }
+      "exists": false,
+      "source": "outputs/role_ensemble/role_ensemble_summary.json"
     },
     {
       "exists": true,
       "source": "outputs/role_ensemble/role_strategy.json",
       "summary": {
-        "created_at": "2026-06-30T13:55:36.890846+00:00",
+        "created_at": "2026-06-30T20:31:14.859513+00:00",
         "kind": "loto7_role_strategy",
         "strategy_counts": {
           "contrarian": 0,
@@ -233,7 +168,7 @@
       "exists": true,
       "source": "outputs/role_ensemble/regime_state.json",
       "summary": {
-        "created_at": "2026-06-30T13:49:46.619534+00:00",
+        "created_at": "2026-06-30T20:24:56.309792+00:00",
         "final_counts": {
           "contrarian": 0,
           "high_match": 2,
@@ -251,7 +186,7 @@
       "exists": true,
       "source": "outputs/role_ensemble/regime_strategy.json",
       "summary": {
-        "created_at": "2026-06-30T13:49:46.619565+00:00",
+        "created_at": "2026-06-30T20:24:56.309811+00:00",
         "kind": "loto7_regime_role_strategy",
         "regime": "recent_repeat_trend",
         "regime_strength": 0.773997,

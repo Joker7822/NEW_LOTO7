@@ -1,13 +1,13 @@
 Model Selection Report
 ======================
 
-created_at: 2026-06-30T18:17:51.517760+00:00
+created_at: 2026-06-30T21:03:20.126333+00:00
 source: outputs/holdout/model_selection_report.txt
 status: FOUND
 LOTO7 Model Selection Report
 ==============================
 
-作成日時(UTC): 2026-06-30T13:55:10.681667+00:00
+作成日時(UTC): 2026-06-30T20:30:45.302137+00:00
 選定方式: holdout_roi
 holdout開始回: 2
 holdout終了回: None
