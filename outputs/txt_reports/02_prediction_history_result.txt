@@ -1,0 +1,45 @@
+Prediction History Result
+=========================
+
+created_at: 2026-06-30T06:49:32.252833+00:00
+source: outputs/evolution_prediction_history_result.txt
+status: FOUND
+LOTO7 Prediction History Result Check
+====================================
+
+created_at: 2026-06-30T04:42:22.391975+00:00
+history_csv: outputs/evolution_prediction_history.csv
+loto7_csv: loto7.csv
+
+[Summary]
+history_draw_rows: 2
+prediction_rows: 10
+evaluated_rows: 5
+pending_rows: 5
+winning_rows: 0
+hit_rate: 0.000%
+max_main_match: 2
+total_cost: 1,500円
+total_payout: 0円
+profit: -1,500円
+payout_roi: 0.000%
+profit_roi: -100.000%
+rank_counts: 外れ:5 / 未抽せん:5
+
+[Details]
+
+抽せん日: 2026-06-26 / 第683回
+actual_main: 11 21 22 25 28 29 36 / actual_bonus: 08 32
+  予測1: 6, 7, 9, 12, 22, 33, 35 | 信頼度=0.97 | main=1 bonus=0 | result=外れ | payout=0円
+  予測2: 1, 6, 9, 12, 22, 29, 34 | 信頼度=0.96 | main=2 bonus=0 | result=外れ | payout=0円
+  予測3: 6, 8, 9, 10, 12, 18, 22 | 信頼度=0.95 | main=1 bonus=1 | result=外れ | payout=0円
+  予測4: 7, 9, 12, 16, 18, 22, 29 | 信頼度=0.94 | main=2 bonus=0 | result=外れ | payout=0円
+  予測5: 6, 7, 12, 15, 17, 22, 34 | 信頼度=0.93 | main=1 bonus=0 | result=外れ | payout=0円
+
+抽せん日: 2026-07-03 / 第684回
+actual_main: - / actual_bonus: -
+  予測1: 6, 9, 12, 22, 26, 33, 35 | 信頼度=26.91 | main=- bonus=- | result=未抽せん | payout=0円
+  予測2: 6, 7, 15, 22, 29, 35, 36 | 信頼度=13.5 | main=- bonus=- | result=未抽せん | payout=0円
+  予測3: 6, 7, 9, 12, 22, 29, 34 | 信頼度=12.87 | main=- bonus=- | result=未抽せん | payout=0円
+  予測4: 6, 9, 12, 22, 26, 29, 35 | 信頼度=18.17 | main=- bonus=- | result=未抽せん | payout=0円
+  予測5: 10, 12, 13, 16, 22, 33, 35 | 信頼度=13.77 | main=- bonus=- | result=未抽せん | payout=0円

@@ -1,0 +1,340 @@
+{
+  "combined": "outputs/txt_reports/99_combined_report.txt",
+  "created_at": "2026-06-30T06:49:32.252833+00:00",
+  "index": "outputs/txt_reports/00_INDEX.txt",
+  "json_summaries": [
+    {
+      "exists": true,
+      "source": "outputs/evolution_merged_summary.json",
+      "summary": {
+        "best_model": "loto7_best_model.json",
+        "latest_draw_no": 683,
+        "prediction_mode": "role_ensemble",
+        "selected_genome_id": "g306_0306_9982",
+        "selected_holdout": {
+          "evolution_score": 51261.54,
+          "genome_id": "g306_0306_9982",
+          "grade_hit_count": 135,
+          "high_grade_hit_count": 9,
+          "max_bonus_match": 2,
+          "max_main_match": 6,
+          "missing_prize_draw_count": 0,
+          "missing_prize_draws": [],
+          "path": "loto7_best_model.json",
+          "profit": -103800,
+          "purchase_count": 5,
+          "rank_counts": {
+            "1等": 0,
+            "2等": 0,
+            "3等": 1,
+            "4等": 8,
+            "5等": 50,
+            "6等": 76,
+            "外れ": 3275
+          },
+          "roi": 0.898534,
+          "roi_percent": 89.853,
+          "target_draws": 682,
+          "total_cost": 1023000,
+          "total_payout": 919200,
+          "total_tickets": 3410,
+          "unit_cost": 300
+        },
+        "updated_at": "2026-06-30T04:42:13.855528+00:00"
+      }
+    },
+    {
+      "exists": true,
+      "source": "outputs/run_manifest.json",
+      "summary": {
+        "best_model": "loto7_best_model.json",
+        "created_at": "2026-06-30T04:42:13.855528+00:00",
+        "kind": "loto7_evolution_merge_holdout_rerank_ensemble",
+        "latest_draw_no": 683,
+        "prediction_mode": "role_ensemble",
+        "selected_genome_id": "g306_0306_9982",
+        "selected_holdout": {
+          "evolution_score": 51261.54,
+          "genome_id": "g306_0306_9982",
+          "grade_hit_count": 135,
+          "high_grade_hit_count": 9,
+          "max_bonus_match": 2,
+          "max_main_match": 6,
+          "missing_prize_draw_count": 0,
+          "missing_prize_draws": [],
+          "path": "loto7_best_model.json",
+          "profit": -103800,
+          "purchase_count": 5,
+          "rank_counts": {
+            "1等": 0,
+            "2等": 0,
+            "3等": 1,
+            "4等": 8,
+            "5等": 50,
+            "6等": 76,
+            "外れ": 3275
+          },
+          "roi": 0.898534,
+          "roi_percent": 89.853,
+          "target_draws": 682,
+          "total_cost": 1023000,
+          "total_payout": 919200,
+          "total_tickets": 3410,
+          "unit_cost": 300
+        }
+      }
+    },
+    {
+      "exists": true,
+      "source": "outputs/holdout/holdout_summary.json",
+      "summary": {
+        "best_model": "loto7_best_model.json",
+        "created_at": "2026-06-30T04:42:22.520751+00:00",
+        "profit": -103800,
+        "roi_percent": -10.147,
+        "target_draws": 682
+      }
+    },
+    {
+      "exists": true,
+      "source": "outputs/holdout/model_selection_summary.json",
+      "summary": {
+        "best_model": "loto7_best_model.json",
+        "latest_draw_no": 683,
+        "prediction_mode": "role_ensemble",
+        "selected_genome_id": "g306_0306_9982",
+        "selected_holdout": {
+          "evolution_score": 51261.54,
+          "genome_id": "g306_0306_9982",
+          "grade_hit_count": 135,
+          "high_grade_hit_count": 9,
+          "max_bonus_match": 2,
+          "max_main_match": 6,
+          "missing_prize_draw_count": 0,
+          "missing_prize_draws": [],
+          "path": "loto7_best_model.json",
+          "profit": -103800,
+          "purchase_count": 5,
+          "rank_counts": {
+            "1等": 0,
+            "2等": 0,
+            "3等": 1,
+            "4等": 8,
+            "5等": 50,
+            "6等": 76,
+            "外れ": 3275
+          },
+          "roi": 0.898534,
+          "roi_percent": 89.853,
+          "target_draws": 682,
+          "total_cost": 1023000,
+          "total_payout": 919200,
+          "total_tickets": 3410,
+          "unit_cost": 300
+        },
+        "updated_at": "2026-06-30T04:42:13.855528+00:00"
+      }
+    },
+    {
+      "exists": true,
+      "source": "outputs/model_self_evolution/standalone_summary.json",
+      "summary": {
+        "best_model": "loto7_best_model.json",
+        "created_at": "2026-06-30T04:38:51.068208+00:00",
+        "status": "safe_exit_at_316.79_minutes",
+        "target_draws": 682
+      }
+    },
+    {
+      "exists": true,
+      "source": "outputs/role_ensemble/role_ensemble_summary.json",
+      "summary": {
+        "best_model": {
+          "draw_count": 682,
+          "draw_hit_count": 111,
+          "draw_hit_rate_percent": 16.276,
+          "grade_hit_count": 293,
+          "high_grade_hit_count": 18,
+          "max_bonus_match": 2,
+          "max_main_match": 6,
+          "profit": -509300,
+          "rank_counts": {
+            "1等": 0,
+            "2等": 0,
+            "3等": 2,
+            "4等": 16,
+            "5等": 99,
+            "6等": 176,
+            "外れ": 6527
+          },
+          "roi": 0.751075,
+          "roi_percent": 75.108,
+          "ticket_hit_rate_percent": 4.296,
+          "total_cost": 2046000,
+          "total_payout": 1536700,
+          "total_tickets": 6820
+        },
+        "comparison": {
+          "grade_hit_delta": -5,
+          "high_grade_hit_delta": -8,
+          "max_main_match_delta": 0,
+          "profit_delta": -423100,
+          "roi_percent_delta": -20.68,
+          "winner": "best_model"
+        },
+        "completed_target_draws": 682,
+        "created_at": "2026-06-30T04:42:35.418616+00:00",
+        "genome_id": "g306_0306_9982",
+        "role_ensemble": {
+          "draw_count": 682,
+          "draw_hit_count": 152,
+          "draw_hit_rate_percent": 22.287,
+          "grade_hit_count": 288,
+          "high_grade_hit_count": 10,
+          "max_bonus_match": 2,
+          "max_main_match": 6,
+          "profit": -932400,
+          "rank_counts": {
+            "1等": 0,
+            "2等": 0,
+            "3等": 1,
+            "4等": 9,
+            "5等": 110,
+            "6等": 168,
+            "外れ": 6532
+          },
+          "roi": 0.544282,
+          "roi_percent": 54.428,
+          "ticket_hit_rate_percent": 4.223,
+          "total_cost": 2046000,
+          "total_payout": 1113600,
+          "total_tickets": 6820
+        },
+        "status": "completed",
+        "target_draws_total": 682
+      }
+    },
+    {
+      "exists": true,
+      "source": "outputs/role_ensemble/role_strategy.json",
+      "summary": {
+        "created_at": "2026-06-30T04:42:46.320608+00:00",
+        "kind": "loto7_role_strategy",
+        "strategy_counts": {
+          "contrarian": 0,
+          "high_match": 1,
+          "main_best": 2,
+          "mid_high": 1,
+          "recent120": 1
+        }
+      }
+    },
+    {
+      "exists": false,
+      "source": "outputs/role_ensemble/regime_state.json"
+    },
+    {
+      "exists": false,
+      "source": "outputs/role_ensemble/regime_strategy.json"
+    },
+    {
+      "exists": true,
+      "source": "outputs/loto7_progress_summary.json",
+      "summary": {}
+    }
+  ],
+  "kind": "loto7_txt_reports_manifest",
+  "output_dir": "outputs/txt_reports",
+  "reports": [
+    {
+      "bytes": 1757,
+      "description": "最新5口予測。role/regime strategyが適用されている場合は役割も表示。",
+      "exists": true,
+      "order": "01",
+      "source": "outputs/holdout/latest_prediction_report.txt",
+      "target": "outputs/txt_reports/01_latest_prediction.txt",
+      "title": "Latest Prediction"
+    },
+    {
+      "bytes": 1847,
+      "description": "累積予測履歴の照合結果。実抽せんとの一致・収支・等級を確認。",
+      "exists": true,
+      "order": "02",
+      "source": "outputs/evolution_prediction_history_result.txt",
+      "target": "outputs/txt_reports/02_prediction_history_result.txt",
+      "title": "Prediction History Result"
+    },
+    {
+      "bytes": 26258,
+      "description": "採用モデルの全期間holdout検証。ROI・収支・等級別回数。",
+      "exists": true,
+      "order": "03",
+      "source": "outputs/holdout/holdout_report.txt",
+      "target": "outputs/txt_reports/03_holdout_report.txt",
+      "title": "Full Holdout Report"
+    },
+    {
+      "bytes": 1121,
+      "description": "候補モデルの再ランキングと採用理由。",
+      "exists": true,
+      "order": "04",
+      "source": "outputs/holdout/model_selection_report.txt",
+      "target": "outputs/txt_reports/04_model_selection_report.txt",
+      "title": "Model Selection Report"
+    },
+    {
+      "bytes": 1197,
+      "description": "専用workflowの自己進化レポート。長時間探索の最新状態。",
+      "exists": true,
+      "order": "05",
+      "source": "outputs/model_self_evolution/standalone_report.txt",
+      "target": "outputs/txt_reports/05_model_self_evolution_standalone.txt",
+      "title": "Model Self Evolution Standalone"
+    },
+    {
+      "bytes": 1200,
+      "description": "統合workflow内の軽量自己進化レポート。",
+      "exists": true,
+      "order": "06",
+      "source": "outputs/model_self_evolution/report.txt",
+      "target": "outputs/txt_reports/06_model_self_evolution_integrated.txt",
+      "title": "Model Self Evolution Integrated"
+    },
+    {
+      "bytes": 2113,
+      "description": "role_ensemble と best_model top5 の比較、役割別成績。",
+      "exists": true,
+      "order": "07",
+      "source": "outputs/role_ensemble/role_ensemble_report.txt",
+      "target": "outputs/txt_reports/07_role_ensemble_backtest.txt",
+      "title": "Role Ensemble Backtest"
+    },
+    {
+      "bytes": 1517,
+      "description": "役割別成績から生成された5口配分 strategy。",
+      "exists": true,
+      "order": "08",
+      "source": "outputs/role_ensemble/role_strategy_report.txt",
+      "target": "outputs/txt_reports/08_role_strategy_optimizer.txt",
+      "title": "Role Strategy Optimizer"
+    },
+    {
+      "bytes": 209,
+      "description": "直近レジーム判定と、状態別に補正された5口配分。",
+      "exists": false,
+      "order": "09",
+      "source": "outputs/role_ensemble/regime_strategy_report.txt",
+      "target": "outputs/txt_reports/09_regime_strategy.txt",
+      "title": "Regime Strategy"
+    },
+    {
+      "bytes": 1034,
+      "description": "全体進捗サマリー。",
+      "exists": true,
+      "order": "10",
+      "source": "outputs/loto7_progress_summary.md",
+      "target": "outputs/txt_reports/10_progress_summary.md",
+      "title": "Progress Summary"
+    }
+  ]
+}

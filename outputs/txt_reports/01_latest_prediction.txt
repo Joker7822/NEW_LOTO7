@@ -1,0 +1,40 @@
+Latest Prediction
+=================
+
+created_at: 2026-06-30T06:49:32.252833+00:00
+source: outputs/holdout/latest_prediction_report.txt
+status: FOUND
+LOTO7 Latest Prediction Report
+===============================
+
+作成日時(UTC): 2026-06-30T04:42:13.855886+00:00
+基準最新回: 第683回
+基準最新抽せん日: 2026-06-26
+予測対象回: 第684回
+
+[採用モデル]
+モデルID: g306_0306_9982
+モデルスコア: 51261.54
+採用元shardモデル: loto7_best_model.json
+統合対象モデル数: 1
+必要最小モデル数: 1
+採用基準: holdout再ランキング: ROI → 最大本数字一致数 → 1等→2等→3等→4等→5等→6等 → Evolutionスコア
+予測方式: role_ensemble
+役割戦略: outputs/role_ensemble/role_strategy.json
+
+[最新予測 5口: 信頼度の高い順]
+1位 / 1口目: 06 09 12 22 26 33 35 / score=26.91 / 本命: 採用ベストモデル
+2位 / 2口目: 06 07 15 22 29 35 36 / score=13.5 / 高一致狙い: ペア/3連/最大一致重視
+3位 / 3口目: 06 07 09 12 22 29 34 / score=12.87 / 直近寄り: 直近120回/60回の流れ重視
+4位 / 4口目: 06 09 12 22 26 29 35 / score=18.17 / 中高数字補正: 20番台後半〜30番台も押さえる
+5位 / 5口目: 10 12 13 16 22 33 35 / score=13.77 / 荒れ目/逆張り: 休眠・広めレンジ・低重複
+
+[読み方]
+5口を同一モデルの単純上位ではなく、役割別に分けています。
+role_strategy.json が存在する場合は、Role Strategy Optimizer の配分を使用します。
+
+[出力ファイル]
+CSV: outputs/evolution_best_prediction.csv
+TXT: outputs/holdout/latest_prediction_report.txt
+
+注意: 宝くじはランダム性が高く、この予測は当せんや利益を保証するものではありません。
