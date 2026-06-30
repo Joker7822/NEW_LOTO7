@@ -1,7 +1,7 @@
 LOTO7 TXT Reports Index
 =======================
 
-created_at: 2026-06-30T06:49:32.252833+00:00
+created_at: 2026-06-30T09:43:38.771450+00:00
 directory: outputs/txt_reports
 
 [Reports]
@@ -29,7 +29,7 @@ directory: outputs/txt_reports
 08. Role Strategy Optimizer / outputs/txt_reports/08_role_strategy_optimizer.txt / FOUND
     source: outputs/role_ensemble/role_strategy_report.txt
     note: 役割別成績から生成された5口配分 strategy。
-09. Regime Strategy / outputs/txt_reports/09_regime_strategy.txt / MISSING
+09. Regime Strategy / (not generated) / MISSING_SOURCE_NO_FILE
     source: outputs/role_ensemble/regime_strategy_report.txt
     note: 直近レジーム判定と、状態別に補正された5口配分。
 10. Progress Summary / outputs/txt_reports/10_progress_summary.md / FOUND
@@ -50,7 +50,7 @@ directory: outputs/txt_reports
 
 [Recommended Reading Order]
 1. 01_latest_prediction.txt
-2. 09_regime_strategy.txt
+2. 09_regime_strategy.txt / generated only after regime report exists
 3. 08_role_strategy_optimizer.txt
 4. 07_role_ensemble_backtest.txt
 5. 03_holdout_report.txt
@@ -58,4 +58,4 @@ directory: outputs/txt_reports
 7. 02_prediction_history_result.txt
 
 [Combined]
-- 99_combined_report.txt includes all report files in this order.
+- 99_combined_report.txt includes only generated report files.

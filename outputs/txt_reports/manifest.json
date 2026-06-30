@@ -1,6 +1,6 @@
 {
   "combined": "outputs/txt_reports/99_combined_report.txt",
-  "created_at": "2026-06-30T06:49:32.252833+00:00",
+  "created_at": "2026-06-30T09:43:38.771450+00:00",
   "index": "outputs/txt_reports/00_INDEX.txt",
   "json_summaries": [
     {
@@ -245,6 +245,7 @@
   ],
   "kind": "loto7_txt_reports_manifest",
   "output_dir": "outputs/txt_reports",
+  "policy": "missing_source_reports_are_not_materialized_as_placeholder_files",
   "reports": [
     {
       "bytes": 1757,
@@ -319,7 +320,7 @@
       "title": "Role Strategy Optimizer"
     },
     {
-      "bytes": 209,
+      "bytes": 0,
       "description": "直近レジーム判定と、状態別に補正された5口配分。",
       "exists": false,
       "order": "09",
