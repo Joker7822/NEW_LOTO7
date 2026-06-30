@@ -1,7 +1,7 @@
 LOTO7 TXT Reports Index
 =======================
 
-created_at: 2026-06-30T21:03:20.126333+00:00
+created_at: 2026-06-30T21:03:50.417771+00:00
 directory: outputs/txt_reports
 
 [Reports]
@@ -23,7 +23,7 @@ directory: outputs/txt_reports
 06. Model Self Evolution Integrated / outputs/txt_reports/06_model_self_evolution_integrated.txt / FOUND
     source: outputs/model_self_evolution/report.txt
     note: 統合workflow内の軽量自己進化レポート。
-07. Role Ensemble Backtest / outputs/txt_reports/07_role_ensemble_backtest.txt / FOUND
+07. Role Ensemble Backtest / (not generated) / MISSING_SOURCE_NO_FILE
     source: outputs/role_ensemble/role_ensemble_report.txt
     note: role_ensemble と best_model top5 の比較、役割別成績。
 08. Role Strategy Optimizer / outputs/txt_reports/08_role_strategy_optimizer.txt / FOUND

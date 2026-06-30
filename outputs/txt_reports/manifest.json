@@ -1,6 +1,6 @@
 {
   "combined": "outputs/txt_reports/99_combined_report.txt",
-  "created_at": "2026-06-30T21:03:20.126333+00:00",
+  "created_at": "2026-06-30T21:03:50.417771+00:00",
   "index": "outputs/txt_reports/00_INDEX.txt",
   "json_summaries": [
     {
@@ -264,9 +264,9 @@
       "title": "Model Self Evolution Integrated"
     },
     {
-      "bytes": 2113,
+      "bytes": 0,
       "description": "role_ensemble と best_model top5 の比較、役割別成績。",
-      "exists": true,
+      "exists": false,
       "order": "07",
       "source": "outputs/role_ensemble/role_ensemble_report.txt",
       "target": "outputs/txt_reports/07_role_ensemble_backtest.txt",
