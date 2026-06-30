@@ -20,6 +20,14 @@ outputs/*
 !outputs/holdout/*.csv
 !outputs/holdout/*.json
 !outputs/holdout/*.txt
+!outputs/role_ensemble/
+!outputs/role_ensemble/*.json
+!outputs/role_ensemble/*.txt
+!outputs/role_ensemble/*.csv
+!outputs/txt_reports/
+!outputs/txt_reports/*.txt
+!outputs/txt_reports/*.md
+!outputs/txt_reports/*.json
 *.log
 
 # Deprecated root generated LOTO7 outputs
