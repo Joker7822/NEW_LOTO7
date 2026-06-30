@@ -1,6 +1,6 @@
 {
   "combined": "outputs/txt_reports/99_combined_report.txt",
-  "created_at": "2026-06-30T21:04:42.825221+00:00",
+  "created_at": "2026-06-30T21:04:54.606534+00:00",
   "index": "outputs/txt_reports/00_INDEX.txt",
   "json_summaries": [
     {
@@ -154,22 +154,8 @@
       "source": "outputs/role_ensemble/role_strategy.json"
     },
     {
-      "exists": true,
-      "source": "outputs/role_ensemble/regime_state.json",
-      "summary": {
-        "created_at": "2026-06-30T20:24:56.309792+00:00",
-        "final_counts": {
-          "contrarian": 0,
-          "high_match": 2,
-          "main_best": 1,
-          "mid_high": 0,
-          "recent120": 2
-        },
-        "kind": "loto7_regime_state",
-        "latest_draw_no": 683,
-        "regime": "recent_repeat_trend",
-        "regime_strength": 0.773997
-      }
+      "exists": false,
+      "source": "outputs/role_ensemble/regime_state.json"
     },
     {
       "exists": true,
