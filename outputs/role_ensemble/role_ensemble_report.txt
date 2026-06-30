@@ -1,7 +1,7 @@
 LOTO7 Role Ensemble Backtest Report
 ===================================
 
-created_at: 2026-06-30T04:42:35.418616+00:00
+created_at: 2026-06-30T13:55:26.585364+00:00
 status: completed
 model: loto7_best_model.json
 genome_id: g306_0306_9982
