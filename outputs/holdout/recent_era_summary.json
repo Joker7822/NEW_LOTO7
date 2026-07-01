@@ -1,31 +1,7 @@
 {
-  "best_model": "loto7_best_model.json",
-  "complete": true,
-  "created_at": "2026-07-01T04:14:57.165967+00:00",
-  "csv": "loto7.csv",
+  "created_at": "2026-07-01T04:14:57.254168+00:00",
   "detail_csv": "outputs/holdout/holdout_result.csv",
-  "draw_hit_rate": 0.089443,
-  "draw_hit_rate_percent": 8.944,
-  "holdout_end_draw": null,
-  "holdout_start_draw": 2,
-  "max_main_match": 6,
-  "missing_prize_draw_count": 0,
-  "missing_prize_draws": [],
-  "model_id": "g334_0334_4175",
-  "model_score": 54604.79,
-  "payout_roi": 0.915249,
-  "payout_roi_percent": 91.525,
-  "profit": -86700,
-  "purchase_count": 5,
-  "rank_counts": {
-    "1等": 0,
-    "2等": 0,
-    "3等": 1,
-    "4等": 9,
-    "5等": 53,
-    "6等": 85,
-    "外れ": 3262
-  },
+  "kind": "loto7_recent_era_holdout_summary",
   "recent_era_summary": {
     "draw_hit_rate": 0.080838,
     "draw_hit_rate_percent": 8.084,
@@ -54,22 +30,7 @@
     "winning_draw_count": 27,
     "winning_ticket_count": 53
   },
-  "remaining_target_draws": 0,
-  "report_txt": "outputs/holdout/holdout_report.txt",
-  "roi": -0.084751,
-  "roi_percent": -8.475,
-  "state_json": "outputs/holdout/holdout_state.json",
   "summary_json": "outputs/holdout/holdout_summary.json",
-  "target_draws": 682,
-  "ticket_hit_rate": 0.043402,
-  "ticket_hit_rate_percent": 4.34,
-  "total_cost": 1023000,
-  "total_payout": 936300,
-  "total_target_draws": 682,
-  "total_tickets": 3410,
-  "unit_cost": 300,
-  "winning_draw_count": 61,
-  "winning_ticket_count": 148,
   "year_summary": {
     "2013": {
       "draw_hit_rate": 0.026316,
@@ -449,6 +410,5 @@
       "winning_draw_count": 3,
       "winning_ticket_count": 9
     }
-  },
-  "year_summary_repaired_at": "2026-07-01T04:14:57.253527+00:00"
+  }
 }
