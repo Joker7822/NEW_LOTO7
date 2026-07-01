@@ -1,0 +1,51 @@
+{
+  "created_at": "2026-07-01T04:58:29.163123+00:00",
+  "kind": "loto7_role_strategy",
+  "notes": [
+    "Role counts are optimized from role_ensemble backtest role breakdown.",
+    "Fallback default is used until enough completed target draws are available.",
+    "This does not guarantee lottery winnings or profit."
+  ],
+  "purchase_count": 5,
+  "reason": "optimized_from_role_ensemble_backtest",
+  "role_sequence": [
+    {
+      "label": "本命: 採用ベストモデル",
+      "role": "main_best"
+    },
+    {
+      "label": "本命: 採用ベストモデル",
+      "role": "main_best"
+    },
+    {
+      "label": "直近寄り: 直近120回/60回の流れ重視",
+      "role": "recent120"
+    },
+    {
+      "label": "直近寄り: 直近120回/60回の流れ重視",
+      "role": "recent120"
+    },
+    {
+      "label": "中高数字補正: 20番台後半〜30番台も押さえる",
+      "role": "mid_high"
+    }
+  ],
+  "scores": {
+    "contrarian": 85.743198,
+    "high_match": 99.323593,
+    "main_best": 798.043171,
+    "mid_high": 107.862356,
+    "recent120": 116.154343
+  },
+  "source_completed_target_draws": 682,
+  "source_genome_id": "g334_0334_4175",
+  "source_summary_status": "completed",
+  "source_target_draws_total": 682,
+  "strategy_counts": {
+    "contrarian": 0,
+    "high_match": 0,
+    "main_best": 2,
+    "mid_high": 1,
+    "recent120": 2
+  }
+}
