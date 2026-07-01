@@ -1,6 +1,6 @@
 # LOTO7 Complete AI Dashboard
 
-- generated_at: 2026-06-30T20:35:56.142852+00:00
+- generated_at: 2026-07-01T04:20:06.598410+00:00
 - candidates: 1997
 - ROI window: 100
 - ROI: -0.52
@@ -14,7 +14,7 @@
 5. `07 09 12 22 29 34 36` score=237.86954495 expected_roi=1.65366667
 
 ## Master Champions
-- loto7_best_model.json id=g306_0306_9982 score=51261.54 generation=306
+- loto7_best_model.json id=g334_0334_4175 score=54604.79 generation=334
 
 ## ROI Backtest
 ```json
