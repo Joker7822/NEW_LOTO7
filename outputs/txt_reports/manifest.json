@@ -1,6 +1,6 @@
 {
   "combined": "outputs/txt_reports/99_combined_report.txt",
-  "created_at": "2026-07-01T23:50:35.945951+00:00",
+  "created_at": "2026-07-02T07:49:49.346131+00:00",
   "index": "outputs/txt_reports/00_INDEX.txt",
   "json_summaries": [
     {
@@ -40,7 +40,7 @@
           "total_tickets": 3410,
           "unit_cost": 300
         },
-        "updated_at": "2026-07-01T19:40:09.571316+00:00"
+        "updated_at": "2026-07-02T03:12:40.929463+00:00"
       }
     },
     {
@@ -48,7 +48,7 @@
       "source": "outputs/run_manifest.json",
       "summary": {
         "best_model": "loto7_best_model.json",
-        "created_at": "2026-07-01T19:40:09.571316+00:00",
+        "created_at": "2026-07-02T03:12:40.929463+00:00",
         "kind": "loto7_evolution_merge_holdout_rerank_ensemble",
         "latest_draw_no": 683,
         "prediction_mode": "role_ensemble",
@@ -89,7 +89,7 @@
       "source": "outputs/holdout/holdout_summary.json",
       "summary": {
         "best_model": "loto7_best_model.json",
-        "created_at": "2026-07-01T19:37:25.937337+00:00",
+        "created_at": "2026-07-02T03:10:07.798729+00:00",
         "profit": -86700,
         "recent_era_summary": {
           "draw_hit_rate": 0.080838,
@@ -121,14 +121,14 @@
         },
         "roi_percent": -8.475,
         "target_draws": 682,
-        "year_summary_repaired_at": "2026-07-01T19:37:26.032086+00:00"
+        "year_summary_repaired_at": "2026-07-02T03:10:07.912195+00:00"
       }
     },
     {
       "exists": true,
       "source": "outputs/holdout/recent_era_summary.json",
       "summary": {
-        "created_at": "2026-07-01T19:37:26.032692+00:00",
+        "created_at": "2026-07-02T03:10:07.912904+00:00",
         "kind": "loto7_recent_era_holdout_summary",
         "recent_era_summary": {
           "draw_hit_rate": 0.080838,
@@ -205,8 +205,8 @@
       "source": "outputs/model_self_evolution/standalone_summary.json",
       "summary": {
         "best_model": "loto7_best_model.json",
-        "created_at": "2026-07-01T22:32:26.430084+00:00",
-        "status": "safe_exit_at_290.55_minutes",
+        "created_at": "2026-07-02T03:28:03.645742+00:00",
+        "status": "safe_exit_at_295.43_minutes",
         "target_draws": 682
       }
     },
@@ -248,7 +248,7 @@
           "winner": "best_model"
         },
         "completed_target_draws": 682,
-        "created_at": "2026-07-01T19:37:46.845889+00:00",
+        "created_at": "2026-07-02T03:10:18.594567+00:00",
         "genome_id": "g334_0334_4175",
         "role_ensemble": {
           "draw_count": 682,
@@ -290,7 +290,7 @@
       "exists": true,
       "source": "outputs/role_ensemble/role_strategy.json",
       "summary": {
-        "created_at": "2026-07-01T19:37:57.803127+00:00",
+        "created_at": "2026-07-02T03:10:28.634115+00:00",
         "kind": "loto7_role_strategy",
         "strategy_counts": {
           "contrarian": 0,
@@ -305,7 +305,7 @@
       "exists": true,
       "source": "outputs/role_ensemble/regime_state.json",
       "summary": {
-        "created_at": "2026-07-01T22:32:26.542888+00:00",
+        "created_at": "2026-07-02T03:33:32.434191+00:00",
         "final_counts": {
           "contrarian": 0,
           "high_match": 2,
@@ -323,7 +323,7 @@
       "exists": true,
       "source": "outputs/role_ensemble/regime_strategy.json",
       "summary": {
-        "created_at": "2026-07-01T22:32:26.542906+00:00",
+        "created_at": "2026-07-02T03:33:32.434209+00:00",
         "kind": "loto7_regime_role_strategy",
         "regime": "recent_repeat_trend",
         "regime_strength": 0.773997,
@@ -347,7 +347,7 @@
   "policy": "missing_source_reports_are_not_materialized_as_placeholder_files",
   "reports": [
     {
-      "bytes": 1736,
+      "bytes": 1664,
       "description": "最新5口予測。role/regime strategyが適用されている場合は役割も表示。",
       "exists": true,
       "order": "01",
@@ -392,7 +392,7 @@
       "title": "Model Selection Report"
     },
     {
-      "bytes": 1197,
+      "bytes": 1196,
       "description": "専用workflowの自己進化レポート。長時間探索の最新状態。",
       "exists": true,
       "order": "06",
