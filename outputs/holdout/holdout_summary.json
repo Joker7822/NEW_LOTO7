@@ -1,7 +1,7 @@
 {
   "best_model": "loto7_best_model.json",
   "complete": true,
-  "created_at": "2026-07-01T19:37:25.937337+00:00",
+  "created_at": "2026-07-02T03:10:07.798729+00:00",
   "csv": "loto7.csv",
   "detail_csv": "outputs/holdout/holdout_result.csv",
   "draw_hit_rate": 0.089443,
@@ -450,5 +450,5 @@
       "winning_ticket_count": 9
     }
   },
-  "year_summary_repaired_at": "2026-07-01T19:37:26.032086+00:00"
+  "year_summary_repaired_at": "2026-07-02T03:10:07.912195+00:00"
 }
