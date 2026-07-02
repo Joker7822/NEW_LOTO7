@@ -85,5 +85,5 @@
   "selection_reason": "holdout再ランキング: ROI → 最大本数字一致数 → 1等→2等→3等→4等→5等→6等 → Evolutionスコア",
   "selection_sort_description": "ROI → 最大本数字一致数 → 1等→2等→3等→4等→5等→6等 → Evolutionスコア",
   "source_model": "loto7_best_model.json",
-  "updated_at": "2026-07-02T13:22:52.724362+00:00"
+  "updated_at": "2026-07-02T19:31:40.968355+00:00"
 }
