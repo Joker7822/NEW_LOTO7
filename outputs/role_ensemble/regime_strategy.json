@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-07-02T19:29:50.631540+00:00",
+  "created_at": "2026-07-02T22:52:10.068093+00:00",
   "kind": "loto7_regime_role_strategy",
   "notes": [
     "Regime-based strategy adjusts Role Strategy Optimizer output using recent draw state.",
