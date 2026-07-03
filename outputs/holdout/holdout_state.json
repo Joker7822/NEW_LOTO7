@@ -1,6 +1,6 @@
 {
   "complete": true,
-  "completed_draw_count": 682,
+  "completed_draw_count": 683,
   "completed_draws": [
     2,
     3,
@@ -683,7 +683,8 @@
     680,
     681,
     682,
-    683
+    683,
+    684
   ],
   "remaining_draw_count": 0,
   "state_key": {
@@ -692,12 +693,12 @@
     "holdout_end_draw": null,
     "holdout_start_draw": 2,
     "min_train_draws": 1,
-    "model_id": "g334_0334_4175",
-    "model_score": 54604.79,
+    "model_id": "g007_0007_2402",
+    "model_score": 60288.21,
     "output": "outputs/holdout/holdout_result.csv",
     "purchase_count": 5,
     "unit_cost": 300
   },
-  "total_targets": 682,
-  "updated_at": "2026-07-03T11:54:24.441190+00:00"
+  "total_targets": 683,
+  "updated_at": "2026-07-03T19:00:39.010820+00:00"
 }
