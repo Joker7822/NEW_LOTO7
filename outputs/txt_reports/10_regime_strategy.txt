@@ -1,51 +1,51 @@
 Regime Strategy
 ===============
 
-created_at: 2026-07-03T17:55:38.614148+00:00
+created_at: 2026-07-03T23:33:04.511653+00:00
 source: outputs/role_ensemble/regime_strategy_report.txt
 status: FOUND
 LOTO7 Regime-Based Role Strategy Report
 ========================================
 
-created_at: 2026-07-03T11:59:58.759734+00:00
-latest_draw_no: 683
-latest_draw_date: 2026-06-26
+created_at: 2026-07-03T23:31:10.821326+00:00
+latest_draw_no: 684
+latest_draw_date: 2026-07-03
 regime: recent_repeat_trend
-regime_strength: 0.773997
+regime_strength: 0.664687
 
 [Regime Scores]
 {
-  "balanced": 1.201264,
-  "consecutive_trend": 3.5672,
-  "contrarian_gap_trend": 0.92988,
-  "high_variance_trend": 5.693035,
-  "low_balanced_trend": 11.296685,
-  "mid_high_trend": -20.11306,
-  "recent_repeat_trend": 19.3966
+  "balanced": 2.446264,
+  "consecutive_trend": 3.7,
+  "contrarian_gap_trend": 1.213605,
+  "high_variance_trend": 6.06186,
+  "low_balanced_trend": 10.246535,
+  "mid_high_trend": -19.20696,
+  "recent_repeat_trend": 15.6137
 }
 
 [Recent 20 Metrics]
 {
   "avg_consecutive_pairs": 1.1,
-  "avg_high_count": 1.75,
-  "avg_low_count": 3.9,
-  "avg_mid_high_count": 2.75,
-  "avg_odd_count": 3.3,
-  "avg_repeat_from_previous": 1.7368,
-  "avg_sum": 121.8,
-  "sum_stddev": 28.9872
+  "avg_high_count": 1.8,
+  "avg_low_count": 3.85,
+  "avg_mid_high_count": 2.7,
+  "avg_odd_count": 3.25,
+  "avg_repeat_from_previous": 1.5789,
+  "avg_sum": 123.85,
+  "sum_stddev": 29.1758
 }
 
 [Prior 120 Metrics]
 {
-  "avg_consecutive_pairs": 1.0833,
-  "avg_high_count": 2.5833,
-  "avg_low_count": 3.4,
-  "avg_mid_high_count": 3.0,
-  "avg_odd_count": 3.4833,
-  "avg_repeat_from_previous": 1.3361,
-  "avg_sum": 135.0667,
-  "sum_stddev": 26.9208
+  "avg_consecutive_pairs": 1.075,
+  "avg_high_count": 2.6,
+  "avg_low_count": 3.3833,
+  "avg_mid_high_count": 3.0167,
+  "avg_odd_count": 3.4583,
+  "avg_repeat_from_previous": 1.3445,
+  "avg_sum": 135.6917,
+  "sum_stddev": 26.4789
 }
 
 [Strategy Counts]

@@ -1,6 +1,6 @@
 {
   "combined": "outputs/txt_reports/99_combined_report.txt",
-  "created_at": "2026-07-03T17:55:38.614148+00:00",
+  "created_at": "2026-07-03T23:33:04.511653+00:00",
   "index": "outputs/txt_reports/00_INDEX.txt",
   "json_summaries": [
     {
@@ -8,39 +8,39 @@
       "source": "outputs/evolution_merged_summary.json",
       "summary": {
         "best_model": "loto7_best_model.json",
-        "latest_draw_no": 683,
+        "latest_draw_no": 684,
         "prediction_mode": "role_ensemble",
-        "selected_genome_id": "g334_0334_4175",
+        "selected_genome_id": "g007_0007_2402",
         "selected_holdout": {
-          "evolution_score": 54604.79,
-          "genome_id": "g334_0334_4175",
-          "grade_hit_count": 148,
-          "high_grade_hit_count": 10,
+          "evolution_score": 60288.21,
+          "genome_id": "g007_0007_2402",
+          "grade_hit_count": 150,
+          "high_grade_hit_count": 12,
           "max_bonus_match": 2,
           "max_main_match": 6,
           "missing_prize_draw_count": 0,
           "missing_prize_draws": [],
           "path": "loto7_best_model.json",
-          "profit": -86700,
+          "profit": -61500,
           "purchase_count": 5,
           "rank_counts": {
             "1等": 0,
             "2等": 0,
             "3等": 1,
-            "4等": 9,
-            "5等": 53,
-            "6等": 85,
-            "外れ": 3262
+            "4等": 11,
+            "5等": 60,
+            "6等": 78,
+            "外れ": 3265
           },
-          "roi": 0.915249,
-          "roi_percent": 91.525,
-          "target_draws": 682,
-          "total_cost": 1023000,
-          "total_payout": 936300,
-          "total_tickets": 3410,
+          "roi": 0.939971,
+          "roi_percent": 93.997,
+          "target_draws": 683,
+          "total_cost": 1024500,
+          "total_payout": 963000,
+          "total_tickets": 3415,
           "unit_cost": 300
         },
-        "updated_at": "2026-07-03T11:57:08.730752+00:00"
+        "updated_at": "2026-07-03T20:43:58.398633+00:00"
       }
     },
     {
@@ -48,38 +48,38 @@
       "source": "outputs/run_manifest.json",
       "summary": {
         "best_model": "loto7_best_model.json",
-        "created_at": "2026-07-03T11:57:08.730752+00:00",
+        "created_at": "2026-07-03T20:43:58.398633+00:00",
         "kind": "loto7_evolution_merge_holdout_rerank_ensemble",
-        "latest_draw_no": 683,
+        "latest_draw_no": 684,
         "prediction_mode": "role_ensemble",
-        "selected_genome_id": "g334_0334_4175",
+        "selected_genome_id": "g007_0007_2402",
         "selected_holdout": {
-          "evolution_score": 54604.79,
-          "genome_id": "g334_0334_4175",
-          "grade_hit_count": 148,
-          "high_grade_hit_count": 10,
+          "evolution_score": 60288.21,
+          "genome_id": "g007_0007_2402",
+          "grade_hit_count": 150,
+          "high_grade_hit_count": 12,
           "max_bonus_match": 2,
           "max_main_match": 6,
           "missing_prize_draw_count": 0,
           "missing_prize_draws": [],
           "path": "loto7_best_model.json",
-          "profit": -86700,
+          "profit": -61500,
           "purchase_count": 5,
           "rank_counts": {
             "1等": 0,
             "2等": 0,
             "3等": 1,
-            "4等": 9,
-            "5等": 53,
-            "6等": 85,
-            "外れ": 3262
+            "4等": 11,
+            "5等": 60,
+            "6等": 78,
+            "外れ": 3265
           },
-          "roi": 0.915249,
-          "roi_percent": 91.525,
-          "target_draws": 682,
-          "total_cost": 1023000,
-          "total_payout": 936300,
-          "total_tickets": 3410,
+          "roi": 0.939971,
+          "roi_percent": 93.997,
+          "target_draws": 683,
+          "total_cost": 1024500,
+          "total_payout": 963000,
+          "total_tickets": 3415,
           "unit_cost": 300
         }
       }
@@ -89,73 +89,73 @@
       "source": "outputs/holdout/holdout_summary.json",
       "summary": {
         "best_model": "loto7_best_model.json",
-        "created_at": "2026-07-03T11:54:24.472421+00:00",
-        "profit": -86700,
+        "created_at": "2026-07-03T19:00:39.037584+00:00",
+        "profit": -61500,
         "recent_era_summary": {
-          "draw_hit_rate": 0.080838,
-          "draw_hit_rate_percent": 8.084,
-          "max_main_match": 5,
-          "payout_roi": 0.117365,
-          "payout_roi_percent": 11.737,
-          "profit": -442200,
+          "draw_hit_rate": 0.077612,
+          "draw_hit_rate_percent": 7.761,
+          "max_main_match": 4,
+          "payout_roi": 0.114229,
+          "payout_roi_percent": 11.423,
+          "profit": -445100,
           "rank_counts": {
             "1等": 0,
             "2等": 0,
             "3等": 0,
-            "4等": 1,
-            "5等": 19,
-            "6等": 33,
-            "外れ": 1617
+            "4等": 0,
+            "5等": 24,
+            "6等": 29,
+            "外れ": 1622
           },
-          "roi": -0.882635,
-          "roi_percent": -88.263,
+          "roi": -0.885771,
+          "roi_percent": -88.577,
           "start_year": 2020,
-          "target_draws": 334,
-          "ticket_hit_rate": 0.031737,
-          "ticket_hit_rate_percent": 3.174,
-          "total_cost": 501000,
-          "total_payout": 58800,
-          "total_tickets": 1670,
-          "winning_draw_count": 27,
+          "target_draws": 335,
+          "ticket_hit_rate": 0.031642,
+          "ticket_hit_rate_percent": 3.164,
+          "total_cost": 502500,
+          "total_payout": 57400,
+          "total_tickets": 1675,
+          "winning_draw_count": 26,
           "winning_ticket_count": 53
         },
-        "roi_percent": -8.475,
-        "target_draws": 682,
-        "year_summary_repaired_at": "2026-07-03T11:54:24.574490+00:00"
+        "roi_percent": -6.003,
+        "target_draws": 683,
+        "year_summary_repaired_at": "2026-07-03T19:00:39.130200+00:00"
       }
     },
     {
       "exists": true,
       "source": "outputs/holdout/recent_era_summary.json",
       "summary": {
-        "created_at": "2026-07-03T11:54:24.575105+00:00",
+        "created_at": "2026-07-03T19:00:39.130809+00:00",
         "kind": "loto7_recent_era_holdout_summary",
         "recent_era_summary": {
-          "draw_hit_rate": 0.080838,
-          "draw_hit_rate_percent": 8.084,
-          "max_main_match": 5,
-          "payout_roi": 0.117365,
-          "payout_roi_percent": 11.737,
-          "profit": -442200,
+          "draw_hit_rate": 0.077612,
+          "draw_hit_rate_percent": 7.761,
+          "max_main_match": 4,
+          "payout_roi": 0.114229,
+          "payout_roi_percent": 11.423,
+          "profit": -445100,
           "rank_counts": {
             "1等": 0,
             "2等": 0,
             "3等": 0,
-            "4等": 1,
-            "5等": 19,
-            "6等": 33,
-            "外れ": 1617
+            "4等": 0,
+            "5等": 24,
+            "6等": 29,
+            "外れ": 1622
           },
-          "roi": -0.882635,
-          "roi_percent": -88.263,
+          "roi": -0.885771,
+          "roi_percent": -88.577,
           "start_year": 2020,
-          "target_draws": 334,
-          "ticket_hit_rate": 0.031737,
-          "ticket_hit_rate_percent": 3.174,
-          "total_cost": 501000,
-          "total_payout": 58800,
-          "total_tickets": 1670,
-          "winning_draw_count": 27,
+          "target_draws": 335,
+          "ticket_hit_rate": 0.031642,
+          "ticket_hit_rate_percent": 3.164,
+          "total_cost": 502500,
+          "total_payout": 57400,
+          "total_tickets": 1675,
+          "winning_draw_count": 26,
           "winning_ticket_count": 53
         }
       }
@@ -205,9 +205,9 @@
       "source": "outputs/model_self_evolution/standalone_summary.json",
       "summary": {
         "best_model": "loto7_best_model.json",
-        "created_at": "2026-07-02T22:46:32.446550+00:00",
-        "status": "safe_exit_at_296.98_minutes",
-        "target_draws": 682
+        "created_at": "2026-07-03T23:24:48.550854+00:00",
+        "status": "safe_exit_at_304.72_minutes",
+        "target_draws": 683
       }
     },
     {
@@ -215,74 +215,74 @@
       "source": "outputs/role_ensemble/role_ensemble_summary.json",
       "summary": {
         "best_model": {
-          "draw_count": 682,
-          "draw_hit_count": 61,
-          "draw_hit_rate_percent": 8.944,
-          "grade_hit_count": 148,
-          "high_grade_hit_count": 10,
+          "draw_count": 683,
+          "draw_hit_count": 64,
+          "draw_hit_rate_percent": 9.37,
+          "grade_hit_count": 150,
+          "high_grade_hit_count": 12,
           "max_bonus_match": 2,
           "max_main_match": 6,
-          "profit": -86700,
+          "profit": -61500,
           "rank_counts": {
             "1等": 0,
             "2等": 0,
             "3等": 1,
-            "4等": 9,
-            "5等": 53,
-            "6等": 85,
-            "外れ": 3262
+            "4等": 11,
+            "5等": 60,
+            "6等": 78,
+            "外れ": 3265
           },
-          "roi": 0.915249,
-          "roi_percent": 91.525,
-          "ticket_hit_rate_percent": 4.34,
-          "total_cost": 1023000,
-          "total_payout": 936300,
-          "total_tickets": 3410
+          "roi": 0.939971,
+          "roi_percent": 93.997,
+          "ticket_hit_rate_percent": 4.392,
+          "total_cost": 1024500,
+          "total_payout": 963000,
+          "total_tickets": 3415
         },
         "comparison": {
-          "grade_hit_delta": -8,
-          "high_grade_hit_delta": -2,
+          "grade_hit_delta": -9,
+          "high_grade_hit_delta": -7,
           "max_main_match_delta": 0,
-          "profit_delta": -22100,
-          "roi_percent_delta": -2.16,
+          "profit_delta": -65600,
+          "roi_percent_delta": -6.403,
           "winner": "best_model"
         },
-        "completed_target_draws": 682,
-        "created_at": "2026-07-03T11:54:36.886072+00:00",
-        "genome_id": "g334_0334_4175",
+        "completed_target_draws": 683,
+        "created_at": "2026-07-03T20:39:17.691050+00:00",
+        "genome_id": "g007_0007_2402",
         "role_ensemble": {
-          "draw_count": 682,
-          "draw_hit_count": 93,
-          "draw_hit_rate_percent": 13.636,
-          "grade_hit_count": 140,
-          "high_grade_hit_count": 8,
+          "draw_count": 683,
+          "draw_hit_count": 92,
+          "draw_hit_rate_percent": 13.47,
+          "grade_hit_count": 141,
+          "high_grade_hit_count": 5,
           "max_bonus_match": 2,
           "max_main_match": 6,
-          "profit": -108800,
+          "profit": -127100,
           "rank_counts": {
             "1等": 0,
             "2等": 0,
             "3等": 1,
-            "4等": 7,
-            "5等": 57,
-            "6等": 75,
-            "外れ": 3270
+            "4等": 4,
+            "5等": 53,
+            "6等": 83,
+            "外れ": 3274
           },
-          "roi": 0.893646,
-          "roi_percent": 89.365,
-          "ticket_hit_rate_percent": 4.106,
-          "total_cost": 1023000,
-          "total_payout": 914200,
-          "total_tickets": 3410
+          "roi": 0.875939,
+          "roi_percent": 87.594,
+          "ticket_hit_rate_percent": 4.129,
+          "total_cost": 1024500,
+          "total_payout": 897400,
+          "total_tickets": 3415
         },
         "status": "completed",
-        "target_draws_total": 682,
+        "target_draws_total": 683,
         "validation": {
-          "best_model_tickets": 3410,
+          "best_model_tickets": 3415,
           "duplicates_removed": 0,
-          "expected_tickets_per_system": 3410,
+          "expected_tickets_per_system": 3415,
           "is_ticket_count_valid": true,
-          "role_ensemble_tickets": 3410
+          "role_ensemble_tickets": 3415
         }
       }
     },
@@ -290,14 +290,14 @@
       "exists": true,
       "source": "outputs/role_ensemble/role_strategy.json",
       "summary": {
-        "created_at": "2026-07-03T11:54:49.231621+00:00",
+        "created_at": "2026-07-03T20:39:31.338662+00:00",
         "kind": "loto7_role_strategy",
         "strategy_counts": {
           "contrarian": 0,
           "high_match": 1,
           "main_best": 1,
-          "mid_high": 1,
-          "recent120": 2
+          "mid_high": 2,
+          "recent120": 1
         }
       }
     },
@@ -305,7 +305,7 @@
       "exists": true,
       "source": "outputs/role_ensemble/regime_state.json",
       "summary": {
-        "created_at": "2026-07-03T11:59:58.759734+00:00",
+        "created_at": "2026-07-03T23:31:10.821326+00:00",
         "final_counts": {
           "contrarian": 0,
           "high_match": 2,
@@ -314,19 +314,19 @@
           "recent120": 2
         },
         "kind": "loto7_regime_state",
-        "latest_draw_no": 683,
+        "latest_draw_no": 684,
         "regime": "recent_repeat_trend",
-        "regime_strength": 0.773997
+        "regime_strength": 0.664687
       }
     },
     {
       "exists": true,
       "source": "outputs/role_ensemble/regime_strategy.json",
       "summary": {
-        "created_at": "2026-07-03T11:59:58.759755+00:00",
+        "created_at": "2026-07-03T23:31:10.821342+00:00",
         "kind": "loto7_regime_role_strategy",
         "regime": "recent_repeat_trend",
-        "regime_strength": 0.773997,
+        "regime_strength": 0.664687,
         "strategy_counts": {
           "contrarian": 0,
           "high_match": 2,
@@ -356,7 +356,7 @@
       "title": "Latest Prediction"
     },
     {
-      "bytes": 1831,
+      "bytes": 2416,
       "description": "累積予測履歴の照合結果。実抽せんとの一致・収支・等級を確認。",
       "exists": true,
       "order": "02",
@@ -365,7 +365,7 @@
       "title": "Prediction History Result"
     },
     {
-      "bytes": 27839,
+      "bytes": 28383,
       "description": "採用モデルの全期間holdout検証。ROI・収支・等級別回数。",
       "exists": true,
       "order": "03",
@@ -392,7 +392,7 @@
       "title": "Model Selection Report"
     },
     {
-      "bytes": 1197,
+      "bytes": 1192,
       "description": "専用workflowの自己進化レポート。長時間探索の最新状態。",
       "exists": true,
       "order": "06",
@@ -401,7 +401,7 @@
       "title": "Model Self Evolution Standalone"
     },
     {
-      "bytes": 1204,
+      "bytes": 1180,
       "description": "統合workflow内の軽量自己進化レポート。",
       "exists": true,
       "order": "07",
@@ -410,7 +410,7 @@
       "title": "Model Self Evolution Integrated"
     },
     {
-      "bytes": 2250,
+      "bytes": 2249,
       "description": "role_ensemble と best_model top5 の比較、役割別成績。",
       "exists": true,
       "order": "08",
@@ -419,7 +419,7 @@
       "title": "Role Ensemble Backtest"
     },
     {
-      "bytes": 1569,
+      "bytes": 1581,
       "description": "役割別成績から生成された5口配分 strategy。",
       "exists": true,
       "order": "09",
