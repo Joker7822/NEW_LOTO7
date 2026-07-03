@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-07-03T11:54:49.231621+00:00",
+  "created_at": "2026-07-03T20:39:31.338662+00:00",
   "kind": "loto7_role_strategy",
   "max_main_best": 1,
   "notes": [
@@ -16,12 +16,8 @@
       "role": "main_best"
     },
     {
-      "label": "直近寄り: 直近120回/60回の流れ重視",
-      "role": "recent120"
-    },
-    {
-      "label": "直近寄り: 直近120回/60回の流れ重視",
-      "role": "recent120"
+      "label": "中高数字補正: 20番台後半〜30番台も押さえる",
+      "role": "mid_high"
     },
     {
       "label": "中高数字補正: 20番台後半〜30番台も押さえる",
@@ -30,24 +26,28 @@
     {
       "label": "高一致狙い: ペア/3連/最大一致重視",
       "role": "high_match"
+    },
+    {
+      "label": "直近寄り: 直近120回/60回の流れ重視",
+      "role": "recent120"
     }
   ],
   "scores": {
-    "contrarian": 85.743198,
-    "high_match": 99.323593,
-    "main_best": 798.043171,
-    "mid_high": 107.862356,
-    "recent120": 116.154343
+    "contrarian": 56.282315,
+    "high_match": 106.440883,
+    "main_best": 805.490813,
+    "mid_high": 111.050955,
+    "recent120": 94.987916
   },
-  "source_completed_target_draws": 682,
-  "source_genome_id": "g334_0334_4175",
+  "source_completed_target_draws": 683,
+  "source_genome_id": "g007_0007_2402",
   "source_summary_status": "completed",
-  "source_target_draws_total": 682,
+  "source_target_draws_total": 683,
   "strategy_counts": {
     "contrarian": 0,
     "high_match": 1,
     "main_best": 1,
-    "mid_high": 1,
-    "recent120": 2
+    "mid_high": 2,
+    "recent120": 1
   }
 }
