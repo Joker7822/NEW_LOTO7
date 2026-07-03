@@ -1,6 +1,6 @@
 {
   "combined": "outputs/txt_reports/99_combined_report.txt",
-  "created_at": "2026-07-03T07:45:01.413940+00:00",
+  "created_at": "2026-07-03T12:24:04.267466+00:00",
   "index": "outputs/txt_reports/00_INDEX.txt",
   "json_summaries": [
     {
@@ -40,7 +40,7 @@
           "total_tickets": 3410,
           "unit_cost": 300
         },
-        "updated_at": "2026-07-03T03:31:21.746296+00:00"
+        "updated_at": "2026-07-03T11:57:08.730752+00:00"
       }
     },
     {
@@ -48,7 +48,7 @@
       "source": "outputs/run_manifest.json",
       "summary": {
         "best_model": "loto7_best_model.json",
-        "created_at": "2026-07-03T03:31:21.746296+00:00",
+        "created_at": "2026-07-03T11:57:08.730752+00:00",
         "kind": "loto7_evolution_merge_holdout_rerank_ensemble",
         "latest_draw_no": 683,
         "prediction_mode": "role_ensemble",
@@ -89,7 +89,7 @@
       "source": "outputs/holdout/holdout_summary.json",
       "summary": {
         "best_model": "loto7_best_model.json",
-        "created_at": "2026-07-03T03:28:54.266304+00:00",
+        "created_at": "2026-07-03T11:54:24.472421+00:00",
         "profit": -86700,
         "recent_era_summary": {
           "draw_hit_rate": 0.080838,
@@ -121,14 +121,14 @@
         },
         "roi_percent": -8.475,
         "target_draws": 682,
-        "year_summary_repaired_at": "2026-07-03T03:28:54.365486+00:00"
+        "year_summary_repaired_at": "2026-07-03T11:54:24.574490+00:00"
       }
     },
     {
       "exists": true,
       "source": "outputs/holdout/recent_era_summary.json",
       "summary": {
-        "created_at": "2026-07-03T03:28:54.366182+00:00",
+        "created_at": "2026-07-03T11:54:24.575105+00:00",
         "kind": "loto7_recent_era_holdout_summary",
         "recent_era_summary": {
           "draw_hit_rate": 0.080838,
@@ -248,7 +248,7 @@
           "winner": "best_model"
         },
         "completed_target_draws": 682,
-        "created_at": "2026-07-03T03:29:05.503952+00:00",
+        "created_at": "2026-07-03T11:54:36.886072+00:00",
         "genome_id": "g334_0334_4175",
         "role_ensemble": {
           "draw_count": 682,
@@ -290,12 +290,12 @@
       "exists": true,
       "source": "outputs/role_ensemble/role_strategy.json",
       "summary": {
-        "created_at": "2026-07-03T03:29:17.457853+00:00",
+        "created_at": "2026-07-03T11:54:49.231621+00:00",
         "kind": "loto7_role_strategy",
         "strategy_counts": {
           "contrarian": 0,
-          "high_match": 0,
-          "main_best": 2,
+          "high_match": 1,
+          "main_best": 1,
           "mid_high": 1,
           "recent120": 2
         }
@@ -305,7 +305,7 @@
       "exists": true,
       "source": "outputs/role_ensemble/regime_state.json",
       "summary": {
-        "created_at": "2026-07-03T03:29:30.354591+00:00",
+        "created_at": "2026-07-03T11:59:58.759734+00:00",
         "final_counts": {
           "contrarian": 0,
           "high_match": 2,
@@ -323,7 +323,7 @@
       "exists": true,
       "source": "outputs/role_ensemble/regime_strategy.json",
       "summary": {
-        "created_at": "2026-07-03T03:29:30.354612+00:00",
+        "created_at": "2026-07-03T11:59:58.759755+00:00",
         "kind": "loto7_regime_role_strategy",
         "regime": "recent_repeat_trend",
         "regime_strength": 0.773997,
@@ -347,7 +347,7 @@
   "policy": "missing_source_reports_are_not_materialized_as_placeholder_files",
   "reports": [
     {
-      "bytes": 1737,
+      "bytes": 1308,
       "description": "最新5口予測。role/regime strategyが適用されている場合は役割も表示。",
       "exists": true,
       "order": "01",
@@ -356,7 +356,7 @@
       "title": "Latest Prediction"
     },
     {
-      "bytes": 1845,
+      "bytes": 1831,
       "description": "累積予測履歴の照合結果。実抽せんとの一致・収支・等級を確認。",
       "exists": true,
       "order": "02",
@@ -401,7 +401,7 @@
       "title": "Model Self Evolution Standalone"
     },
     {
-      "bytes": 1185,
+      "bytes": 1204,
       "description": "統合workflow内の軽量自己進化レポート。",
       "exists": true,
       "order": "07",
@@ -419,7 +419,7 @@
       "title": "Role Ensemble Backtest"
     },
     {
-      "bytes": 1517,
+      "bytes": 1569,
       "description": "役割別成績から生成された5口配分 strategy。",
       "exists": true,
       "order": "09",
