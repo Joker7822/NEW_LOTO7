@@ -1,0 +1,169 @@
+name: LOTO7 Dual Model Prediction
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - LOTO7 Evolution Trainer
+      - LOTO7 Model Self Evolution
+      - LOTO7 Recent Era Self Evolution
+    types:
+      - completed
+  schedule:
+    # JST 04:10 / 16:10
+    - cron: "10 7,19 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: loto7-dual-prediction-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  dual-prediction:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Pull latest outputs
+        run: |
+          set -euo pipefail
+          git fetch origin "${GITHUB_REF_NAME}"
+          git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+
+      - name: Optimize recent era role strategy
+        run: |
+          set -euo pipefail
+          mkdir -p outputs/recent_era outputs/role_ensemble
+          if [ -s outputs/role_ensemble/role_ensemble_backtest.csv ]; then
+            python scripts/optimize_recent_era_role_strategy.py \
+              --input outputs/role_ensemble/role_ensemble_backtest.csv \
+              --output outputs/recent_era/recent_role_strategy.json \
+              --report outputs/recent_era/recent_role_strategy_report.txt \
+              --start-year 2020 \
+              --purchase-count 5 \
+              --unit-cost 300 \
+              --max-main-best 1 \
+              --min-completed-draws 80
+          else
+            echo "::warning::role_ensemble_backtest.csv not found; skipping recent era role strategy"
+          fi
+
+      - name: Detect regime with recent era role strategy
+        run: |
+          set -euo pipefail
+          mkdir -p outputs/role_ensemble outputs/recent_era
+          BASE_STRATEGY="outputs/recent_era/recent_role_strategy.json"
+          if [ ! -s "$BASE_STRATEGY" ]; then
+            BASE_STRATEGY="outputs/role_ensemble/role_strategy.json"
+          fi
+          python scripts/detect_loto7_regime.py \
+            --csv loto7.csv \
+            --base-strategy "$BASE_STRATEGY" \
+            --output outputs/role_ensemble/regime_state.json \
+            --strategy-output outputs/role_ensemble/regime_strategy.json \
+            --report outputs/role_ensemble/regime_strategy_report.txt \
+            --purchase-count 5
+
+      - name: Build dual model prediction
+        run: |
+          set -euo pipefail
+          mkdir -p outputs/holdout outputs/recent_era outputs/role_ensemble
+          python scripts/build_dual_model_prediction.py \
+            --csv loto7.csv \
+            --full-model loto7_best_model.json \
+            --recent-model outputs/recent_era/recent_era_best_model.json \
+            --regime-strategy outputs/role_ensemble/regime_strategy.json \
+            --prediction outputs/evolution_best_prediction.csv \
+            --prediction-report outputs/holdout/latest_prediction_report.txt \
+            --purchase-count 5 \
+            --full-count 2 \
+            --recent-count 2 \
+            --overlap-limit 4
+
+      - name: Update cumulative prediction history
+        run: |
+          set -euo pipefail
+          python scripts/update_prediction_history.py \
+            --latest outputs/evolution_best_prediction.csv \
+            --history outputs/evolution_prediction_history.csv \
+            --csv loto7.csv
+
+      - name: Check cumulative prediction history results
+        run: |
+          set -euo pipefail
+          python scripts/check_prediction_history_results.py \
+            --history outputs/evolution_prediction_history.csv \
+            --csv loto7.csv \
+            --output outputs/evolution_prediction_history_result.txt
+
+      - name: Commit dual prediction outputs
+        if: always()
+        run: |
+          set -euo pipefail
+          SNAPSHOT="$(mktemp -d)"
+          mkdir -p "$SNAPSHOT/outputs/holdout" "$SNAPSHOT/outputs/role_ensemble" "$SNAPSHOT/outputs/recent_era"
+          cp -f outputs/evolution_best_prediction.csv "$SNAPSHOT/outputs/" 2>/dev/null || true
+          cp -f outputs/evolution_prediction_history.csv "$SNAPSHOT/outputs/" 2>/dev/null || true
+          cp -f outputs/evolution_prediction_history_result.txt "$SNAPSHOT/outputs/" 2>/dev/null || true
+          cp -f outputs/holdout/latest_prediction_report.txt "$SNAPSHOT/outputs/holdout/" 2>/dev/null || true
+          cp -f outputs/role_ensemble/regime_*.json "$SNAPSHOT/outputs/role_ensemble/" 2>/dev/null || true
+          cp -f outputs/role_ensemble/regime_*.txt "$SNAPSHOT/outputs/role_ensemble/" 2>/dev/null || true
+          cp -f outputs/recent_era/recent_role_strategy.* "$SNAPSHOT/outputs/recent_era/" 2>/dev/null || true
+
+          git fetch origin "${GITHUB_REF_NAME}"
+          git reset --hard "origin/${GITHUB_REF_NAME}"
+
+          mkdir -p outputs/holdout outputs/role_ensemble outputs/recent_era
+          cp -f "$SNAPSHOT"/outputs/evolution_best_prediction.csv outputs/evolution_best_prediction.csv 2>/dev/null || true
+          cp -f "$SNAPSHOT"/outputs/evolution_prediction_history.csv outputs/evolution_prediction_history.csv 2>/dev/null || true
+          cp -f "$SNAPSHOT"/outputs/evolution_prediction_history_result.txt outputs/evolution_prediction_history_result.txt 2>/dev/null || true
+          cp -f "$SNAPSHOT"/outputs/holdout/* outputs/holdout/ 2>/dev/null || true
+          cp -f "$SNAPSHOT"/outputs/role_ensemble/* outputs/role_ensemble/ 2>/dev/null || true
+          cp -f "$SNAPSHOT"/outputs/recent_era/* outputs/recent_era/ 2>/dev/null || true
+
+          git add -f \
+            outputs/evolution_best_prediction.csv \
+            outputs/evolution_prediction_history.csv \
+            outputs/evolution_prediction_history_result.txt \
+            outputs/holdout/latest_prediction_report.txt \
+            outputs/role_ensemble/regime_*.json \
+            outputs/role_ensemble/regime_*.txt \
+            outputs/recent_era/recent_role_strategy.* || true
+          if git diff --cached --quiet; then
+            echo "No dual prediction changes"
+            exit 0
+          fi
+          git commit -m "Update LOTO7 dual model prediction [skip ci]"
+          git push origin HEAD:"${GITHUB_REF_NAME}"
+
+      - name: Upload dual prediction artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: loto7-dual-model-prediction
+          path: |
+            outputs/evolution_best_prediction.csv
+            outputs/evolution_prediction_history.csv
+            outputs/evolution_prediction_history_result.txt
+            outputs/holdout/latest_prediction_report.txt
+            outputs/role_ensemble/regime_*.json
+            outputs/role_ensemble/regime_*.txt
+            outputs/recent_era/recent_role_strategy.*
+          if-no-files-found: ignore
