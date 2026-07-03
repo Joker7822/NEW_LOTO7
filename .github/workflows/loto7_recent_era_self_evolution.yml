@@ -1,0 +1,198 @@
+name: LOTO7 Recent Era Self Evolution
+
+on:
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: "Recent era model self-evolution iterations"
+        required: false
+        default: "500"
+      start_year:
+        description: "Recent era start year"
+        required: false
+        default: "2020"
+      apply_model:
+        description: "Apply improved recent era model"
+        required: true
+        type: choice
+        default: "true"
+        options:
+          - "true"
+          - "false"
+  schedule:
+    # JST 03:30 / 15:30
+    - cron: "30 6,18 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: loto7-recent-era-self-evolution-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  recent-era-self-evolution:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Pull latest state before run
+        run: |
+          set -euo pipefail
+          git fetch origin "${GITHUB_REF_NAME}"
+          git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+
+      - name: Prepare recent era baseline
+        run: |
+          set -euo pipefail
+          mkdir -p outputs/recent_era
+          if [ ! -s outputs/recent_era/recent_era_best_model.json ]; then
+            cp -f loto7_best_model.json outputs/recent_era/recent_era_best_model.json
+          fi
+          cp -f outputs/recent_era/recent_era_best_model.json outputs/recent_era/recent_era_baseline_before_run.json
+
+      - name: Detect recent era start draw
+        id: recent_start
+        run: |
+          set -euo pipefail
+          START_YEAR="${{ github.event.inputs.start_year || '2020' }}"
+          DRAW_NO=$(python - <<PY
+from loto7_evolution_trainer import load_draws
+start_year = int("$START_YEAR")
+draws = load_draws('loto7.csv')
+for d in draws:
+    if str(getattr(d, 'date', ''))[:4].isdigit() and int(str(d.date)[:4]) >= start_year:
+        print(d.draw_no)
+        break
+else:
+    raise SystemExit('no draw found for start year')
+PY
+)
+          echo "draw_no=${DRAW_NO}" >> "$GITHUB_OUTPUT"
+          echo "Recent era start year=${START_YEAR} draw=${DRAW_NO}"
+
+      - name: Run recent era model self evolution
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: |
+          set -euo pipefail
+          APPLY_FLAG="--apply"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.apply_model || 'true' }}" != "true" ]; then
+            APPLY_FLAG=""
+          fi
+          python loto7_model_self_evolver.py \
+            --best-model outputs/recent_era/recent_era_best_model.json \
+            --seed-patterns outputs/recent_era/recent_era_best_model.json loto7_best_model.json \
+            --iterations "${{ github.event.inputs.iterations || '500' }}" \
+            --max-targets 0 \
+            --min-train-draws 1 \
+            --holdout-start-draw "${{ steps.recent_start.outputs.draw_no }}" \
+            --parent-pool-size 36 \
+            --random-parents 12 \
+            --exploration-rate 0.38 \
+            --stagnation-patience 45 \
+            --seed "${{ github.run_id }}" \
+            --state outputs/recent_era/recent_era_model_state.json \
+            --history outputs/recent_era/recent_era_model_history.csv \
+            --summary outputs/recent_era/recent_era_model_summary.json \
+            --report outputs/recent_era/recent_era_model_report.txt \
+            --candidate-model outputs/recent_era/recent_era_candidate_model.json \
+            --checkpoint-commit \
+            --checkpoint-branch "${GITHUB_REF_NAME}" \
+            --max-runtime-minutes 320 \
+            --safe-exit-minutes 30 \
+            --min-roi-delta-percent 0.10 \
+            --min-profit-delta 0 \
+            --allow-high-grade-drop \
+            ${APPLY_FLAG}
+
+      - name: Guard recent era model against full collapse
+        if: always()
+        run: |
+          set -euo pipefail
+          python scripts/recent_era_optimizer.py \
+            --csv loto7.csv \
+            --baseline-model outputs/recent_era/recent_era_baseline_before_run.json \
+            --candidate-model outputs/recent_era/recent_era_best_model.json \
+            --best-model outputs/recent_era/recent_era_best_model.json \
+            --summary outputs/recent_era/recent_era_model_guard.json \
+            --report outputs/recent_era/recent_era_model_guard_report.txt \
+            --purchase-count 5 \
+            --unit-cost 300 \
+            --min-train-draws 1 \
+            --holdout-start-draw 2 \
+            --recent-start-year "${{ github.event.inputs.start_year || '2020' }}" \
+            --min-full-roi-delta-percent -10.0 \
+            --min-full-profit-delta -120000 \
+            --min-recent-roi-delta-percent 0.0 \
+            --min-recent-profit-delta 0 \
+            --min-recent-payout-roi-percent 8.0 \
+            --restore-on-fail
+
+      - name: Rebuild dual latest prediction
+        if: always()
+        run: |
+          set -euo pipefail
+          mkdir -p outputs/holdout outputs/role_ensemble outputs/recent_era
+          python scripts/build_dual_model_prediction.py \
+            --csv loto7.csv \
+            --full-model loto7_best_model.json \
+            --recent-model outputs/recent_era/recent_era_best_model.json \
+            --regime-strategy outputs/role_ensemble/regime_strategy.json \
+            --prediction outputs/evolution_best_prediction.csv \
+            --prediction-report outputs/holdout/latest_prediction_report.txt \
+            --purchase-count 5 \
+            --full-count 2 \
+            --recent-count 2 \
+            --overlap-limit 4
+
+      - name: Commit recent era outputs
+        if: always()
+        run: |
+          set -euo pipefail
+          SNAPSHOT="$(mktemp -d)"
+          mkdir -p "$SNAPSHOT/outputs/recent_era" "$SNAPSHOT/outputs/holdout"
+          cp -f outputs/recent_era/* "$SNAPSHOT/outputs/recent_era/" 2>/dev/null || true
+          cp -f outputs/evolution_best_prediction.csv "$SNAPSHOT/outputs/" 2>/dev/null || true
+          cp -f outputs/holdout/latest_prediction_report.txt "$SNAPSHOT/outputs/holdout/" 2>/dev/null || true
+
+          git fetch origin "${GITHUB_REF_NAME}"
+          git reset --hard "origin/${GITHUB_REF_NAME}"
+
+          mkdir -p outputs/recent_era outputs/holdout
+          cp -f "$SNAPSHOT"/outputs/recent_era/* outputs/recent_era/ 2>/dev/null || true
+          cp -f "$SNAPSHOT"/outputs/evolution_best_prediction.csv outputs/evolution_best_prediction.csv 2>/dev/null || true
+          cp -f "$SNAPSHOT"/outputs/holdout/* outputs/holdout/ 2>/dev/null || true
+
+          git add -f outputs/recent_era/* outputs/evolution_best_prediction.csv outputs/holdout/latest_prediction_report.txt || true
+          if git diff --cached --quiet; then
+            echo "No recent era changes"
+            exit 0
+          fi
+          git commit -m "Run LOTO7 recent era self-evolution [skip ci]"
+          git push origin HEAD:"${GITHUB_REF_NAME}"
+
+      - name: Upload recent era artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: loto7-recent-era-self-evolution
+          path: |
+            outputs/recent_era/*
+            outputs/evolution_best_prediction.csv
+            outputs/holdout/latest_prediction_report.txt
+          if-no-files-found: ignore
