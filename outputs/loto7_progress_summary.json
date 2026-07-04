@@ -27,7 +27,7 @@
     }
   ],
   "ml_status": {
-    "started_at": "2026-07-03T19:02:12.702280+00:00",
+    "started_at": "2026-07-04T00:08:16.514502+00:00",
     "label_definitions": {
       "label_4plus": "1 when main_match >= 4",
       "label_5plus": "1 when main_match >= 5"
@@ -43,75 +43,75 @@
     "reports": [
       {
         "model": "meta_logistic",
-        "auc": 0.8882795346833261,
+        "auc": 0.8887307195174494,
         "test_rows": 5267,
         "positive_rate": 0.11866337573571292
       },
       {
         "model": "meta_rf",
-        "auc": 0.8314273158121499,
+        "auc": 0.8308096510124946,
         "test_rows": 5267,
         "positive_rate": 0.11866337573571292
       },
       {
         "model": "xgboost",
-        "auc": 0.8436520465316674,
+        "auc": 0.8460713485566567,
         "test_rows": 5267,
         "positive_rate": 0.11866337573571292
       },
       {
         "model": "lightgbm",
-        "auc": 0.8647083153813012,
+        "auc": 0.8666412753123653,
         "test_rows": 5267,
         "positive_rate": 0.11866337573571292
       },
       {
         "model": "catboost",
-        "auc": 0.8557966393795777,
+        "auc": 0.8553892287806979,
         "test_rows": 5267,
         "positive_rate": 0.11866337573571292
       }
     ],
     "optuna": {
-      "best_value": 0.8930202498922878,
+      "best_value": 0.8940487720809995,
       "model": "logistic",
-      "C": 0.058468552545371345
+      "C": 0.054175525527835625
     },
     "shap": {
       "model": "lightgbm",
       "rows": 17
     },
-    "finished_at": "2026-07-03T19:04:04.444659+00:00",
+    "finished_at": "2026-07-04T00:10:06.851329+00:00",
     "ok": true
   },
   "ml_reports": [
     {
       "model": "meta_logistic",
-      "auc": "0.8882795346833261",
+      "auc": "0.8887307195174494",
       "test_rows": "5267",
       "positive_rate": "0.11866337573571292"
     },
     {
       "model": "meta_rf",
-      "auc": "0.8314273158121499",
+      "auc": "0.8308096510124946",
       "test_rows": "5267",
       "positive_rate": "0.11866337573571292"
     },
     {
       "model": "xgboost",
-      "auc": "0.8436520465316674",
+      "auc": "0.8460713485566567",
       "test_rows": "5267",
       "positive_rate": "0.11866337573571292"
     },
     {
       "model": "lightgbm",
-      "auc": "0.8647083153813012",
+      "auc": "0.8666412753123653",
       "test_rows": "5267",
       "positive_rate": "0.11866337573571292"
     },
     {
       "model": "catboost",
-      "auc": "0.8557966393795777",
+      "auc": "0.8553892287806979",
       "test_rows": "5267",
       "positive_rate": "0.11866337573571292"
     }
