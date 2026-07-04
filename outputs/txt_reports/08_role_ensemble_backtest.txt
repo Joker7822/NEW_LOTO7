@@ -1,13 +1,13 @@
 Role Ensemble Backtest
 ======================
 
-created_at: 2026-07-03T23:33:04.511653+00:00
+created_at: 2026-07-04T07:20:52.262696+00:00
 source: outputs/role_ensemble/role_ensemble_report.txt
 status: FOUND
 LOTO7 Role Ensemble Backtest Report
 ===================================
 
-created_at: 2026-07-03T20:39:17.691050+00:00
+created_at: 2026-07-04T00:06:34.800865+00:00
 status: completed
 model: loto7_best_model.json
 genome_id: g007_0007_2402
@@ -22,40 +22,40 @@ min_train_draws: 1
 expected_tickets_per_system: 3415
 role_ensemble_tickets: 3415
 best_model_tickets: 3415
-duplicates_removed: 0
+duplicates_removed: 6820
 is_ticket_count_valid: True
 
 [Role Ensemble]
-roi_percent: 87.594
-profit: -127100
-grade_hit_count: 141
-high_grade_hit_count: 5
+roi_percent: 89.234
+profit: -110300
+grade_hit_count: 140
+high_grade_hit_count: 8
 max_main_match: 6
-draw_hit_rate_percent: 13.47
-rank_counts: {"1等": 0, "2等": 0, "3等": 1, "4等": 4, "5等": 53, "6等": 83, "外れ": 3274}
+draw_hit_rate_percent: 13.616
+rank_counts: {"1等": 0, "2等": 0, "3等": 1, "4等": 7, "5等": 57, "6等": 75, "外れ": 3275}
 
 [Best Model Top 5]
-roi_percent: 93.997
-profit: -61500
-grade_hit_count: 150
-high_grade_hit_count: 12
+roi_percent: 91.391
+profit: -88200
+grade_hit_count: 148
+high_grade_hit_count: 10
 max_main_match: 6
-draw_hit_rate_percent: 9.37
-rank_counts: {"1等": 0, "2等": 0, "3等": 1, "4等": 11, "5等": 60, "6等": 78, "外れ": 3265}
+draw_hit_rate_percent: 8.931
+rank_counts: {"1等": 0, "2等": 0, "3等": 1, "4等": 9, "5等": 53, "6等": 85, "外れ": 3267}
 
 [Comparison]
 winner: best_model
-roi_percent_delta: -6.403
-profit_delta: -65600
-grade_hit_delta: -9
-high_grade_hit_delta: -7
+roi_percent_delta: -2.157
+profit_delta: -22100
+grade_hit_delta: -8
+high_grade_hit_delta: -2
 max_main_match_delta: 0
 
 [Role Breakdown]
-contrarian: ROI=15.227% / profit=-173700 / grade=27 / high_grade=0 / max_main=4 / ranks={"1等": 0, "2等": 0, "3等": 0, "4等": 0, "5等": 10, "6等": 17, "外れ": 656}
-high_match: ROI=17.911% / profit=-168200 / grade=30 / high_grade=0 / max_main=4 / ranks={"1等": 0, "2等": 0, "3等": 0, "4等": 0, "5等": 14, "6等": 16, "外れ": 653}
-main_best: ROI=369.741% / profit=552700 / grade=33 / high_grade=3 / max_main=6 / ranks={"1等": 0, "2等": 0, "3等": 1, "4等": 2, "5等": 12, "6等": 18, "外れ": 650}
-mid_high: ROI=18.155% / profit=-167700 / grade=29 / high_grade=1 / max_main=5 / ranks={"1等": 0, "2等": 0, "3等": 0, "4等": 1, "5等": 8, "6等": 20, "外れ": 654}
-recent120: ROI=16.935% / profit=-170200 / grade=22 / high_grade=1 / max_main=5 / ranks={"1等": 0, "2等": 0, "3等": 0, "4等": 1, "5等": 9, "6等": 12, "外れ": 661}
+contrarian: ROI=22.45% / profit=-158900 / grade=28 / high_grade=2 / max_main=5 / ranks={"1等": 0, "2等": 0, "3等": 0, "4等": 2, "5等": 14, "6等": 12, "外れ": 655}
+high_match: ROI=15.129% / profit=-173900 / grade=27 / high_grade=0 / max_main=4 / ranks={"1等": 0, "2等": 0, "3等": 0, "4等": 0, "5等": 12, "6等": 15, "外れ": 656}
+main_best: ROI=366.715% / profit=546500 / grade=29 / high_grade=3 / max_main=6 / ranks={"1等": 0, "2等": 0, "3等": 1, "4等": 2, "5等": 8, "6等": 18, "外れ": 654}
+mid_high: ROI=17.765% / profit=-168500 / grade=24 / high_grade=1 / max_main=5 / ranks={"1等": 0, "2等": 0, "3等": 0, "4等": 1, "5等": 10, "6等": 13, "外れ": 659}
+recent120: ROI=24.109% / profit=-155500 / grade=32 / high_grade=2 / max_main=5 / ranks={"1等": 0, "2等": 0, "3等": 0, "4等": 2, "5等": 13, "6等": 17, "外れ": 651}
 
 注意: 過去検証上の比較であり、将来の当せんや利益を保証しません。

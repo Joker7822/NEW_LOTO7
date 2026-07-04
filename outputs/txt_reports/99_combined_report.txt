@@ -1,7 +1,7 @@
 LOTO7 Combined TXT Report
 =========================
 
-created_at: 2026-07-03T23:33:04.511653+00:00
+created_at: 2026-07-04T07:20:52.262696+00:00
 
 
 ################################################################################
@@ -11,13 +11,13 @@ created_at: 2026-07-03T23:33:04.511653+00:00
 Latest Prediction
 =================
 
-created_at: 2026-07-03T23:33:04.511653+00:00
+created_at: 2026-07-04T07:20:52.262696+00:00
 source: outputs/holdout/latest_prediction_report.txt
 status: FOUND
 LOTO7 Latest Prediction Report
 ===============================
 
-作成日時(UTC): 2026-07-03T23:31:10.898778+00:00
+作成日時(UTC): 2026-07-04T04:50:46.114845+00:00
 基準最新回: 第684回
 基準最新抽せん日: 2026-07-03
 予測対象回: 第685回
@@ -56,13 +56,13 @@ TXT: outputs/holdout/latest_prediction_report.txt
 Prediction History Result
 =========================
 
-created_at: 2026-07-03T23:33:04.511653+00:00
+created_at: 2026-07-04T07:20:52.262696+00:00
 source: outputs/evolution_prediction_history_result.txt
 status: FOUND
 LOTO7 Prediction History Result Check
 ====================================
 
-created_at: 2026-07-03T23:31:11.432676+00:00
+created_at: 2026-07-04T04:50:46.795994+00:00
 history_csv: outputs/evolution_prediction_history.csv
 loto7_csv: loto7.csv
 
@@ -115,13 +115,13 @@ actual_main: - / actual_bonus: -
 Full Holdout Report
 ===================
 
-created_at: 2026-07-03T23:33:04.511653+00:00
+created_at: 2026-07-04T07:20:52.262696+00:00
 source: outputs/holdout/holdout_report.txt
 status: FOUND
 LOTO7 Holdout Backtest Report
 ================================
 
-作成日時(UTC): 2026-07-03T19:00:39.037584+00:00
+作成日時(UTC): 2026-07-04T00:06:21.938698+00:00
 状態: 完了
 CSV: loto7.csv
 モデル: loto7_best_model.json
@@ -540,13 +540,13 @@ CSV: loto7.csv
 Recent Era Holdout Report
 =========================
 
-created_at: 2026-07-03T23:33:04.511653+00:00
+created_at: 2026-07-04T07:20:52.262696+00:00
 source: outputs/holdout/recent_era_report.txt
 status: FOUND
 LOTO7 Recent Era Holdout Report
 ===============================
 
-created_at: 2026-07-03T19:00:39.130809+00:00
+created_at: 2026-07-04T00:06:22.042622+00:00
 detail_csv: outputs/holdout/holdout_result.csv
 recent_start_year: 2020
 
@@ -589,7 +589,7 @@ rank_counts: {"1等": 0, "2等": 0, "3等": 0, "4等": 0, "5等": 24, "6等": 29
 Model Selection Report
 ======================
 
-created_at: 2026-07-03T23:33:04.511653+00:00
+created_at: 2026-07-04T07:20:52.262696+00:00
 source: outputs/holdout/model_selection_report.txt
 status: FOUND
 LOTO7 Model Selection Report
@@ -624,20 +624,20 @@ Evolutionスコア: 54604.79
 Model Self Evolution Standalone
 ===============================
 
-created_at: 2026-07-03T23:33:04.511653+00:00
+created_at: 2026-07-04T07:20:52.262696+00:00
 source: outputs/model_self_evolution/standalone_report.txt
 status: FOUND
 LOTO7 Model-Only Self Evolution Report
 ======================================
 
-created_at: 2026-07-03T23:24:48.550854+00:00
-status: safe_exit_at_304.72_minutes
-resume_used: False
-start_iteration: 1
-last_iteration: 50
+created_at: 2026-07-04T04:44:33.577847+00:00
+status: safe_exit_at_313.45_minutes
+resume_used: True
+start_iteration: 51
+last_iteration: 85
 iterations_requested: 1000
-iterations_evaluated: 50
-iterations_evaluated_this_run: 50
+iterations_evaluated: 85
+iterations_evaluated_this_run: 35
 target_draws: 683
 objective: composite_roi_profit_highgrade_exploration
 
@@ -681,20 +681,20 @@ max_main_match: 6
 Model Self Evolution Integrated
 ===============================
 
-created_at: 2026-07-03T23:33:04.511653+00:00
+created_at: 2026-07-04T07:20:52.262696+00:00
 source: outputs/model_self_evolution/report.txt
 status: FOUND
 LOTO7 Model-Only Self Evolution Report
 ======================================
 
-created_at: 2026-07-03T18:54:50.385131+00:00
-status: safe_exit_at_151.27_minutes
-resume_used: False
-start_iteration: 1
-last_iteration: 18
+created_at: 2026-07-04T00:06:10.913473+00:00
+status: completed
+resume_used: True
+start_iteration: 19
+last_iteration: 20
 iterations_requested: 20
-iterations_evaluated: 18
-iterations_evaluated_this_run: 18
+iterations_evaluated: 20
+iterations_evaluated_this_run: 2
 target_draws: 683
 objective: composite_roi_profit_highgrade_exploration
 
@@ -738,13 +738,13 @@ max_main_match: 6
 Role Ensemble Backtest
 ======================
 
-created_at: 2026-07-03T23:33:04.511653+00:00
+created_at: 2026-07-04T07:20:52.262696+00:00
 source: outputs/role_ensemble/role_ensemble_report.txt
 status: FOUND
 LOTO7 Role Ensemble Backtest Report
 ===================================
 
-created_at: 2026-07-03T20:39:17.691050+00:00
+created_at: 2026-07-04T00:06:34.800865+00:00
 status: completed
 model: loto7_best_model.json
 genome_id: g007_0007_2402
@@ -759,41 +759,41 @@ min_train_draws: 1
 expected_tickets_per_system: 3415
 role_ensemble_tickets: 3415
 best_model_tickets: 3415
-duplicates_removed: 0
+duplicates_removed: 6820
 is_ticket_count_valid: True
 
 [Role Ensemble]
-roi_percent: 87.594
-profit: -127100
-grade_hit_count: 141
-high_grade_hit_count: 5
+roi_percent: 89.234
+profit: -110300
+grade_hit_count: 140
+high_grade_hit_count: 8
 max_main_match: 6
-draw_hit_rate_percent: 13.47
-rank_counts: {"1等": 0, "2等": 0, "3等": 1, "4等": 4, "5等": 53, "6等": 83, "外れ": 3274}
+draw_hit_rate_percent: 13.616
+rank_counts: {"1等": 0, "2等": 0, "3等": 1, "4等": 7, "5等": 57, "6等": 75, "外れ": 3275}
 
 [Best Model Top 5]
-roi_percent: 93.997
-profit: -61500
-grade_hit_count: 150
-high_grade_hit_count: 12
+roi_percent: 91.391
+profit: -88200
+grade_hit_count: 148
+high_grade_hit_count: 10
 max_main_match: 6
-draw_hit_rate_percent: 9.37
-rank_counts: {"1等": 0, "2等": 0, "3等": 1, "4等": 11, "5等": 60, "6等": 78, "外れ": 3265}
+draw_hit_rate_percent: 8.931
+rank_counts: {"1等": 0, "2等": 0, "3等": 1, "4等": 9, "5等": 53, "6等": 85, "外れ": 3267}
 
 [Comparison]
 winner: best_model
-roi_percent_delta: -6.403
-profit_delta: -65600
-grade_hit_delta: -9
-high_grade_hit_delta: -7
+roi_percent_delta: -2.157
+profit_delta: -22100
+grade_hit_delta: -8
+high_grade_hit_delta: -2
 max_main_match_delta: 0
 
 [Role Breakdown]
-contrarian: ROI=15.227% / profit=-173700 / grade=27 / high_grade=0 / max_main=4 / ranks={"1等": 0, "2等": 0, "3等": 0, "4等": 0, "5等": 10, "6等": 17, "外れ": 656}
-high_match: ROI=17.911% / profit=-168200 / grade=30 / high_grade=0 / max_main=4 / ranks={"1等": 0, "2等": 0, "3等": 0, "4等": 0, "5等": 14, "6等": 16, "外れ": 653}
-main_best: ROI=369.741% / profit=552700 / grade=33 / high_grade=3 / max_main=6 / ranks={"1等": 0, "2等": 0, "3等": 1, "4等": 2, "5等": 12, "6等": 18, "外れ": 650}
-mid_high: ROI=18.155% / profit=-167700 / grade=29 / high_grade=1 / max_main=5 / ranks={"1等": 0, "2等": 0, "3等": 0, "4等": 1, "5等": 8, "6等": 20, "外れ": 654}
-recent120: ROI=16.935% / profit=-170200 / grade=22 / high_grade=1 / max_main=5 / ranks={"1等": 0, "2等": 0, "3等": 0, "4等": 1, "5等": 9, "6等": 12, "外れ": 661}
+contrarian: ROI=22.45% / profit=-158900 / grade=28 / high_grade=2 / max_main=5 / ranks={"1等": 0, "2等": 0, "3等": 0, "4等": 2, "5等": 14, "6等": 12, "外れ": 655}
+high_match: ROI=15.129% / profit=-173900 / grade=27 / high_grade=0 / max_main=4 / ranks={"1等": 0, "2等": 0, "3等": 0, "4等": 0, "5等": 12, "6等": 15, "外れ": 656}
+main_best: ROI=366.715% / profit=546500 / grade=29 / high_grade=3 / max_main=6 / ranks={"1等": 0, "2等": 0, "3等": 1, "4等": 2, "5等": 8, "6等": 18, "外れ": 654}
+mid_high: ROI=17.765% / profit=-168500 / grade=24 / high_grade=1 / max_main=5 / ranks={"1等": 0, "2等": 0, "3等": 0, "4等": 1, "5等": 10, "6等": 13, "外れ": 659}
+recent120: ROI=24.109% / profit=-155500 / grade=32 / high_grade=2 / max_main=5 / ranks={"1等": 0, "2等": 0, "3等": 0, "4等": 2, "5等": 13, "6等": 17, "外れ": 651}
 
 注意: 過去検証上の比較であり、将来の当せんや利益を保証しません。
 
@@ -805,13 +805,13 @@ recent120: ROI=16.935% / profit=-170200 / grade=22 / high_grade=1 / max_main=5 /
 Role Strategy Optimizer
 =======================
 
-created_at: 2026-07-03T23:33:04.511653+00:00
+created_at: 2026-07-04T07:20:52.262696+00:00
 source: outputs/role_ensemble/role_strategy_report.txt
 status: FOUND
 LOTO7 Role Strategy Optimizer Report
 ====================================
 
-created_at: 2026-07-03T20:39:31.338662+00:00
+created_at: 2026-07-04T00:06:45.995711+00:00
 reason: optimized_from_role_ensemble_backtest_with_main_best_cap
 source_status: completed
 completed_target_draws: 683 / 683
@@ -823,32 +823,32 @@ max_main_best: 1
   "contrarian": 0,
   "high_match": 1,
   "main_best": 1,
-  "mid_high": 2,
-  "recent120": 1
+  "mid_high": 1,
+  "recent120": 2
 }
 
 [Role Sequence]
 1: main_best / 本命: 採用ベストモデル
-2: mid_high / 中高数字補正: 20番台後半〜30番台も押さえる
-3: mid_high / 中高数字補正: 20番台後半〜30番台も押さえる
-4: high_match / 高一致狙い: ペア/3連/最大一致重視
-5: recent120 / 直近寄り: 直近120回/60回の流れ重視
+2: recent120 / 直近寄り: 直近120回/60回の流れ重視
+3: recent120 / 直近寄り: 直近120回/60回の流れ重視
+4: mid_high / 中高数字補正: 20番台後半〜30番台も押さえる
+5: high_match / 高一致狙い: ペア/3連/最大一致重視
 
 [Scores]
 {
-  "contrarian": 56.282315,
-  "high_match": 106.440883,
-  "main_best": 805.490813,
-  "mid_high": 111.050955,
-  "recent120": 94.987916
+  "contrarian": 85.651215,
+  "high_match": 99.255256,
+  "main_best": 796.980184,
+  "mid_high": 107.789818,
+  "recent120": 116.053063
 }
 
 [Role Source Stats]
-contrarian: ROI=15.227% / profit=-173700 / grade=27 / high_grade=0 / max_main=4
-high_match: ROI=17.911% / profit=-168200 / grade=30 / high_grade=0 / max_main=4
-main_best: ROI=369.741% / profit=552700 / grade=33 / high_grade=3 / max_main=6
-mid_high: ROI=18.155% / profit=-167700 / grade=29 / high_grade=1 / max_main=5
-recent120: ROI=16.935% / profit=-170200 / grade=22 / high_grade=1 / max_main=5
+contrarian: ROI=22.45% / profit=-158900 / grade=28 / high_grade=2 / max_main=5
+high_match: ROI=15.129% / profit=-173900 / grade=27 / high_grade=0 / max_main=4
+main_best: ROI=366.715% / profit=546500 / grade=29 / high_grade=3 / max_main=6
+mid_high: ROI=17.765% / profit=-168500 / grade=24 / high_grade=1 / max_main=5
+recent120: ROI=24.109% / profit=-155500 / grade=32 / high_grade=2 / max_main=5
 
 注意: 過去検証上の役割配分最適化であり、将来の当せんや利益を保証しません。
 
@@ -860,13 +860,13 @@ recent120: ROI=16.935% / profit=-170200 / grade=22 / high_grade=1 / max_main=5
 Regime Strategy
 ===============
 
-created_at: 2026-07-03T23:33:04.511653+00:00
+created_at: 2026-07-04T07:20:52.262696+00:00
 source: outputs/role_ensemble/regime_strategy_report.txt
 status: FOUND
 LOTO7 Regime-Based Role Strategy Report
 ========================================
 
-created_at: 2026-07-03T23:31:10.821326+00:00
+created_at: 2026-07-04T04:50:46.028028+00:00
 latest_draw_no: 684
 latest_draw_date: 2026-07-03
 regime: recent_repeat_trend
@@ -933,7 +933,7 @@ regime_strength: 0.664687
 Progress Summary
 ================
 
-created_at: 2026-07-03T23:33:04.511653+00:00
+created_at: 2026-07-04T07:20:52.262696+00:00
 source: outputs/loto7_progress_summary.md
 status: FOUND
 # LOTO7 Progress Summary
@@ -974,11 +974,11 @@ null
 JSON Summary Digest
 ===================
 
-created_at: 2026-07-03T23:33:04.511653+00:00
+created_at: 2026-07-04T07:20:52.262696+00:00
 
 ## outputs/evolution_merged_summary.json
 status: FOUND
-updated_at: 2026-07-03T20:43:58.398633+00:00
+updated_at: 2026-07-04T00:12:18.564181+00:00
 prediction_mode: role_ensemble
 selected_genome_id: g007_0007_2402
 latest_draw_no: 684
@@ -987,7 +987,7 @@ best_model: loto7_best_model.json
 
 ## outputs/run_manifest.json
 status: FOUND
-created_at: 2026-07-03T20:43:58.398633+00:00
+created_at: 2026-07-04T00:12:18.564181+00:00
 kind: loto7_evolution_merge_holdout_rerank_ensemble
 prediction_mode: role_ensemble
 selected_genome_id: g007_0007_2402
@@ -997,17 +997,17 @@ best_model: loto7_best_model.json
 
 ## outputs/holdout/holdout_summary.json
 status: FOUND
-created_at: 2026-07-03T19:00:39.037584+00:00
+created_at: 2026-07-04T00:06:21.938698+00:00
 roi_percent: -6.003
 profit: -61500
 target_draws: 683
-year_summary_repaired_at: 2026-07-03T19:00:39.130200+00:00
+year_summary_repaired_at: 2026-07-04T00:06:22.041982+00:00
 recent_era_summary: {"draw_hit_rate": 0.077612, "draw_hit_rate_percent": 7.761, "max_main_match": 4, "payout_roi": 0.114229, "payout_roi_...
 best_model: loto7_best_model.json
 
 ## outputs/holdout/recent_era_summary.json
 status: FOUND
-created_at: 2026-07-03T19:00:39.130809+00:00
+created_at: 2026-07-04T00:06:22.042622+00:00
 kind: loto7_recent_era_holdout_summary
 recent_era_summary: {"draw_hit_rate": 0.077612, "draw_hit_rate_percent": 7.761, "max_main_match": 4, "payout_roi": 0.114229, "payout_roi_...
 
@@ -1022,32 +1022,32 @@ best_model: loto7_best_model.json
 
 ## outputs/model_self_evolution/standalone_summary.json
 status: FOUND
-created_at: 2026-07-03T23:24:48.550854+00:00
-status: safe_exit_at_304.72_minutes
+created_at: 2026-07-04T04:44:33.577847+00:00
+status: safe_exit_at_313.45_minutes
 target_draws: 683
 best_model: loto7_best_model.json
 
 ## outputs/role_ensemble/role_ensemble_summary.json
 status: FOUND
-created_at: 2026-07-03T20:39:17.691050+00:00
+created_at: 2026-07-04T00:06:34.800865+00:00
 status: completed
 genome_id: g007_0007_2402
 target_draws_total: 683
 completed_target_draws: 683
-role_ensemble: {"draw_count": 683, "draw_hit_count": 92, "draw_hit_rate_percent": 13.47, "grade_hit_count": 141, "high_grade_hit_cou...
-best_model: {"draw_count": 683, "draw_hit_count": 64, "draw_hit_rate_percent": 9.37, "grade_hit_count": 150, "high_grade_hit_coun...
-comparison: {"grade_hit_delta": -9, "high_grade_hit_delta": -7, "max_main_match_delta": 0, "profit_delta": -65600, "roi_percent_d...
-validation: {"best_model_tickets": 3415, "duplicates_removed": 0, "expected_tickets_per_system": 3415, "is_ticket_count_valid": t...
+role_ensemble: {"draw_count": 683, "draw_hit_count": 93, "draw_hit_rate_percent": 13.616, "grade_hit_count": 140, "high_grade_hit_co...
+best_model: {"draw_count": 683, "draw_hit_count": 61, "draw_hit_rate_percent": 8.931, "grade_hit_count": 148, "high_grade_hit_cou...
+comparison: {"grade_hit_delta": -8, "high_grade_hit_delta": -2, "max_main_match_delta": 0, "profit_delta": -22100, "roi_percent_d...
+validation: {"best_model_tickets": 3415, "duplicates_removed": 6820, "expected_tickets_per_system": 3415, "is_ticket_count_valid"...
 
 ## outputs/role_ensemble/role_strategy.json
 status: FOUND
-created_at: 2026-07-03T20:39:31.338662+00:00
+created_at: 2026-07-04T00:06:45.995711+00:00
 kind: loto7_role_strategy
-strategy_counts: {"contrarian": 0, "high_match": 1, "main_best": 1, "mid_high": 2, "recent120": 1}
+strategy_counts: {"contrarian": 0, "high_match": 1, "main_best": 1, "mid_high": 1, "recent120": 2}
 
 ## outputs/role_ensemble/regime_state.json
 status: FOUND
-created_at: 2026-07-03T23:31:10.821326+00:00
+created_at: 2026-07-04T04:50:46.028028+00:00
 kind: loto7_regime_state
 regime: recent_repeat_trend
 regime_strength: 0.664687
@@ -1056,7 +1056,7 @@ final_counts: {"contrarian": 0, "high_match": 2, "main_best": 1, "mid_high": 0, 
 
 ## outputs/role_ensemble/regime_strategy.json
 status: FOUND
-created_at: 2026-07-03T23:31:10.821342+00:00
+created_at: 2026-07-04T04:50:46.028045+00:00
 kind: loto7_regime_role_strategy
 regime: recent_repeat_trend
 regime_strength: 0.664687

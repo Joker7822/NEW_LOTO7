@@ -1,13 +1,13 @@
 Recent Era Holdout Report
 =========================
 
-created_at: 2026-07-03T23:33:04.511653+00:00
+created_at: 2026-07-04T07:20:52.262696+00:00
 source: outputs/holdout/recent_era_report.txt
 status: FOUND
 LOTO7 Recent Era Holdout Report
 ===============================
 
-created_at: 2026-07-03T19:00:39.130809+00:00
+created_at: 2026-07-04T00:06:22.042622+00:00
 detail_csv: outputs/holdout/holdout_result.csv
 recent_start_year: 2020
 

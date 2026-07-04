@@ -1,13 +1,13 @@
 Role Strategy Optimizer
 =======================
 
-created_at: 2026-07-03T23:33:04.511653+00:00
+created_at: 2026-07-04T07:20:52.262696+00:00
 source: outputs/role_ensemble/role_strategy_report.txt
 status: FOUND
 LOTO7 Role Strategy Optimizer Report
 ====================================
 
-created_at: 2026-07-03T20:39:31.338662+00:00
+created_at: 2026-07-04T00:06:45.995711+00:00
 reason: optimized_from_role_ensemble_backtest_with_main_best_cap
 source_status: completed
 completed_target_draws: 683 / 683
@@ -19,31 +19,31 @@ max_main_best: 1
   "contrarian": 0,
   "high_match": 1,
   "main_best": 1,
-  "mid_high": 2,
-  "recent120": 1
+  "mid_high": 1,
+  "recent120": 2
 }
 
 [Role Sequence]
 1: main_best / 本命: 採用ベストモデル
-2: mid_high / 中高数字補正: 20番台後半〜30番台も押さえる
-3: mid_high / 中高数字補正: 20番台後半〜30番台も押さえる
-4: high_match / 高一致狙い: ペア/3連/最大一致重視
-5: recent120 / 直近寄り: 直近120回/60回の流れ重視
+2: recent120 / 直近寄り: 直近120回/60回の流れ重視
+3: recent120 / 直近寄り: 直近120回/60回の流れ重視
+4: mid_high / 中高数字補正: 20番台後半〜30番台も押さえる
+5: high_match / 高一致狙い: ペア/3連/最大一致重視
 
 [Scores]
 {
-  "contrarian": 56.282315,
-  "high_match": 106.440883,
-  "main_best": 805.490813,
-  "mid_high": 111.050955,
-  "recent120": 94.987916
+  "contrarian": 85.651215,
+  "high_match": 99.255256,
+  "main_best": 796.980184,
+  "mid_high": 107.789818,
+  "recent120": 116.053063
 }
 
 [Role Source Stats]
-contrarian: ROI=15.227% / profit=-173700 / grade=27 / high_grade=0 / max_main=4
-high_match: ROI=17.911% / profit=-168200 / grade=30 / high_grade=0 / max_main=4
-main_best: ROI=369.741% / profit=552700 / grade=33 / high_grade=3 / max_main=6
-mid_high: ROI=18.155% / profit=-167700 / grade=29 / high_grade=1 / max_main=5
-recent120: ROI=16.935% / profit=-170200 / grade=22 / high_grade=1 / max_main=5
+contrarian: ROI=22.45% / profit=-158900 / grade=28 / high_grade=2 / max_main=5
+high_match: ROI=15.129% / profit=-173900 / grade=27 / high_grade=0 / max_main=4
+main_best: ROI=366.715% / profit=546500 / grade=29 / high_grade=3 / max_main=6
+mid_high: ROI=17.765% / profit=-168500 / grade=24 / high_grade=1 / max_main=5
+recent120: ROI=24.109% / profit=-155500 / grade=32 / high_grade=2 / max_main=5
 
 注意: 過去検証上の役割配分最適化であり、将来の当せんや利益を保証しません。
