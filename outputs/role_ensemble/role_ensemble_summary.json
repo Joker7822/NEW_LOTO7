@@ -34,7 +34,7 @@
     "winner": "best_model"
   },
   "completed_target_draws": 683,
-  "created_at": "2026-07-04T11:06:24.194300+00:00",
+  "created_at": "2026-07-04T15:17:28.621481+00:00",
   "csv": "loto7.csv",
   "first_target_draw_no": 2,
   "genome_id": "g048_0048_8272",
@@ -208,7 +208,7 @@
   "unit_cost": 300,
   "validation": {
     "best_model_tickets": 3415,
-    "duplicates_removed": 6830,
+    "duplicates_removed": 0,
     "expected_tickets_per_system": 3415,
     "is_ticket_count_valid": true,
     "role_ensemble_tickets": 3415
