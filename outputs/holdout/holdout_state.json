@@ -693,12 +693,12 @@
     "holdout_end_draw": null,
     "holdout_start_draw": 2,
     "min_train_draws": 1,
-    "model_id": "g007_0007_2402",
-    "model_score": 60288.21,
+    "model_id": "g048_0048_8272",
+    "model_score": 58590.51,
     "output": "outputs/holdout/holdout_result.csv",
     "purchase_count": 5,
     "unit_cost": 300
   },
   "total_targets": 683,
-  "updated_at": "2026-07-04T00:06:21.909717+00:00"
+  "updated_at": "2026-07-04T09:12:11.611805+00:00"
 }
