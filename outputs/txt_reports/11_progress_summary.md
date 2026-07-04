@@ -1,7 +1,7 @@
 Progress Summary
 ================
 
-created_at: 2026-07-04T07:20:52.262696+00:00
+created_at: 2026-07-04T11:50:09.097493+00:00
 source: outputs/loto7_progress_summary.md
 status: FOUND
 # LOTO7 Progress Summary
@@ -28,8 +28,8 @@ null
 ```
 
 ## ML reports
-- {'model': 'meta_logistic', 'auc': '0.8882795346833261', 'test_rows': '5267', 'positive_rate': '0.11866337573571292'}
-- {'model': 'meta_rf', 'auc': '0.8314273158121499', 'test_rows': '5267', 'positive_rate': '0.11866337573571292'}
-- {'model': 'xgboost', 'auc': '0.8436520465316674', 'test_rows': '5267', 'positive_rate': '0.11866337573571292'}
-- {'model': 'lightgbm', 'auc': '0.8647083153813012', 'test_rows': '5267', 'positive_rate': '0.11866337573571292'}
-- {'model': 'catboost', 'auc': '0.8557966393795777', 'test_rows': '5267', 'positive_rate': '0.11866337573571292'}
+- {'model': 'meta_logistic', 'auc': '0.8887307195174494', 'test_rows': '5267', 'positive_rate': '0.11866337573571292'}
+- {'model': 'meta_rf', 'auc': '0.8308096510124946', 'test_rows': '5267', 'positive_rate': '0.11866337573571292'}
+- {'model': 'xgboost', 'auc': '0.8460713485566567', 'test_rows': '5267', 'positive_rate': '0.11866337573571292'}
+- {'model': 'lightgbm', 'auc': '0.8666412753123653', 'test_rows': '5267', 'positive_rate': '0.11866337573571292'}
+- {'model': 'catboost', 'auc': '0.8553892287806979', 'test_rows': '5267', 'positive_rate': '0.11866337573571292'}
