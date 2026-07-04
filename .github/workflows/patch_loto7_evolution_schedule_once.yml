@@ -1,10 +1,10 @@
 name: Patch LOTO7 Evolution Schedule Once
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - ".github/workflows/patch_loto7_evolution_schedule_once.yml"
-  workflow_dispatch:
 
 permissions:
   contents: write
@@ -26,21 +26,28 @@ jobs:
       - name: Patch loto7_evolution schedule to 8 runs per day
         run: |
           set -euo pipefail
-          python - <<'PY'
-from pathlib import Path
-path = Path('.github/workflows/loto7_evolution.yml')
-text = path.read_text(encoding='utf-8')
-old = '    - cron: "0 15,23,7 * * *"'
-new = '    # JST 09:00 / 12:00 / 15:00 / 18:00 / 21:00 / 00:00 / 03:00 / 06:00\n    - cron: "0 0,3,6,9,12,15,18,21 * * *"'
-if new in text:
-    print('[OK] schedule is already patched')
-elif old in text:
-    text = text.replace(old, new, 1)
-    path.write_text(text, encoding='utf-8')
-    print('[OK] patched schedule to 8 runs per day')
-else:
-    raise SystemExit('target cron line not found')
-PY
+          file=".github/workflows/loto7_evolution.yml"
+          tmp="${file}.tmp"
+          old='    - cron: "0 15,23,7 * * *"'
+          new='    - cron: "0 0,3,6,9,12,15,18,21 * * *"'
+
+          if grep -Fq "$new" "$file"; then
+            echo "[OK] schedule is already patched"
+          elif grep -Fq "$old" "$file"; then
+            awk '
+              $0 == "    - cron: \"0 15,23,7 * * *\"" {
+                print "    # JST 09:00 / 12:00 / 15:00 / 18:00 / 21:00 / 00:00 / 03:00 / 06:00"
+                print "    - cron: \"0 0,3,6,9,12,15,18,21 * * *\""
+                next
+              }
+              { print }
+            ' "$file" > "$tmp"
+            mv "$tmp" "$file"
+            echo "[OK] patched schedule to 8 runs per day"
+          else
+            echo "target cron line not found" >&2
+            exit 1
+          fi
 
       - name: Remove one-shot patch workflow
         run: |
