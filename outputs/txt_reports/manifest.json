@@ -1,6 +1,6 @@
 {
   "combined": "outputs/txt_reports/99_combined_report.txt",
-  "created_at": "2026-07-04T11:50:09.097493+00:00",
+  "created_at": "2026-07-04T17:32:51.530888+00:00",
   "index": "outputs/txt_reports/00_INDEX.txt",
   "json_summaries": [
     {
@@ -40,7 +40,7 @@
           "total_tickets": 3415,
           "unit_cost": 300
         },
-        "updated_at": "2026-07-04T11:08:50.470865+00:00"
+        "updated_at": "2026-07-04T15:19:55.565812+00:00"
       }
     },
     {
@@ -48,7 +48,7 @@
       "source": "outputs/run_manifest.json",
       "summary": {
         "best_model": "loto7_best_model.json",
-        "created_at": "2026-07-04T11:08:50.470865+00:00",
+        "created_at": "2026-07-04T15:19:55.565812+00:00",
         "kind": "loto7_evolution_merge_holdout_rerank_ensemble",
         "latest_draw_no": 684,
         "prediction_mode": "role_ensemble",
@@ -89,7 +89,7 @@
       "source": "outputs/holdout/holdout_summary.json",
       "summary": {
         "best_model": "loto7_best_model.json",
-        "created_at": "2026-07-04T11:06:12.650293+00:00",
+        "created_at": "2026-07-04T15:17:15.565795+00:00",
         "profit": -79500,
         "recent_era_summary": {
           "draw_hit_rate": 0.074627,
@@ -121,14 +121,14 @@
         },
         "roi_percent": -7.76,
         "target_draws": 683,
-        "year_summary_repaired_at": "2026-07-04T11:06:12.769701+00:00"
+        "year_summary_repaired_at": "2026-07-04T15:17:15.674033+00:00"
       }
     },
     {
       "exists": true,
       "source": "outputs/holdout/recent_era_summary.json",
       "summary": {
-        "created_at": "2026-07-04T11:06:12.770410+00:00",
+        "created_at": "2026-07-04T15:17:15.674752+00:00",
         "kind": "loto7_recent_era_holdout_summary",
         "recent_era_summary": {
           "draw_hit_rate": 0.074627,
@@ -205,8 +205,8 @@
       "source": "outputs/model_self_evolution/standalone_summary.json",
       "summary": {
         "best_model": "loto7_best_model.json",
-        "created_at": "2026-07-04T11:06:01.299124+00:00",
-        "status": "safe_exit_at_297.61_minutes",
+        "created_at": "2026-07-04T16:14:37.422309+00:00",
+        "status": "safe_exit_at_302.62_minutes",
         "target_draws": 683
       }
     },
@@ -248,7 +248,7 @@
           "winner": "best_model"
         },
         "completed_target_draws": 683,
-        "created_at": "2026-07-04T11:06:24.194300+00:00",
+        "created_at": "2026-07-04T15:17:28.621481+00:00",
         "genome_id": "g048_0048_8272",
         "role_ensemble": {
           "draw_count": 683,
@@ -279,7 +279,7 @@
         "target_draws_total": 683,
         "validation": {
           "best_model_tickets": 3415,
-          "duplicates_removed": 6830,
+          "duplicates_removed": 0,
           "expected_tickets_per_system": 3415,
           "is_ticket_count_valid": true,
           "role_ensemble_tickets": 3415
@@ -290,7 +290,7 @@
       "exists": true,
       "source": "outputs/role_ensemble/role_strategy.json",
       "summary": {
-        "created_at": "2026-07-04T11:06:35.111683+00:00",
+        "created_at": "2026-07-04T15:17:41.138176+00:00",
         "kind": "loto7_role_strategy",
         "strategy_counts": {
           "contrarian": 0,
@@ -305,7 +305,7 @@
       "exists": true,
       "source": "outputs/role_ensemble/regime_state.json",
       "summary": {
-        "created_at": "2026-07-04T11:12:04.129435+00:00",
+        "created_at": "2026-07-04T16:20:58.664442+00:00",
         "final_counts": {
           "contrarian": 0,
           "high_match": 2,
@@ -323,7 +323,7 @@
       "exists": true,
       "source": "outputs/role_ensemble/regime_strategy.json",
       "summary": {
-        "created_at": "2026-07-04T11:12:04.129458+00:00",
+        "created_at": "2026-07-04T16:20:58.664459+00:00",
         "kind": "loto7_regime_role_strategy",
         "regime": "recent_repeat_trend",
         "regime_strength": 0.664687,
@@ -392,7 +392,7 @@
       "title": "Model Selection Report"
     },
     {
-      "bytes": 1194,
+      "bytes": 1195,
       "description": "専用workflowの自己進化レポート。長時間探索の最新状態。",
       "exists": true,
       "order": "06",
@@ -401,7 +401,7 @@
       "title": "Model Self Evolution Standalone"
     },
     {
-      "bytes": 1181,
+      "bytes": 1197,
       "description": "統合workflow内の軽量自己進化レポート。",
       "exists": true,
       "order": "07",
@@ -410,7 +410,7 @@
       "title": "Model Self Evolution Integrated"
     },
     {
-      "bytes": 2253,
+      "bytes": 2250,
       "description": "role_ensemble と best_model top5 の比較、役割別成績。",
       "exists": true,
       "order": "08",
