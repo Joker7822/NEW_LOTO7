@@ -27,7 +27,7 @@
     }
   ],
   "ml_status": {
-    "started_at": "2026-07-04T00:08:16.514502+00:00",
+    "started_at": "2026-07-04T09:13:58.045479+00:00",
     "label_definitions": {
       "label_4plus": "1 when main_match >= 4",
       "label_5plus": "1 when main_match >= 5"
@@ -73,15 +73,15 @@
       }
     ],
     "optuna": {
-      "best_value": 0.8940487720809995,
+      "best_value": 0.8937771650150796,
       "model": "logistic",
-      "C": 0.054175525527835625
+      "C": 0.060124652925571134
     },
     "shap": {
       "model": "lightgbm",
       "rows": 17
     },
-    "finished_at": "2026-07-04T00:10:06.851329+00:00",
+    "finished_at": "2026-07-04T09:15:51.882130+00:00",
     "ok": true
   },
   "ml_reports": [
