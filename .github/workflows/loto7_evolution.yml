@@ -30,7 +30,8 @@ on:
         default: "true"
         options: ["true", "false"]
   schedule:
-    - cron: "0 15,23,7 * * *"
+    # JST 09:00 / 12:00 / 15:00 / 18:00 / 21:00 / 00:00 / 03:00 / 06:00
+    - cron: "0 0,3,6,9,12,15,18,21 * * *"
 
 permissions:
   contents: write
@@ -314,7 +315,7 @@ jobs:
 
   role-strategy-optimizer:
     needs: role-ensemble-backtest
-    if: ${{ !cancelled() && needs.role-ensemble-backtest.result == 'success' }}
+    if: ${{ !cancelled() && needs['role-ensemble-backtest'].result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -341,7 +342,8 @@ jobs:
             --output outputs/role_ensemble/role_strategy.json \
             --report outputs/role_ensemble/role_strategy_report.txt \
             --purchase-count 5 \
-            --min-completed-draws 80
+            --min-completed-draws 80 \
+            --max-main-best 1
       - name: Commit role strategy outputs
         if: always()
         run: |
@@ -362,7 +364,7 @@ jobs:
 
   final-prediction:
     needs: role-strategy-optimizer
-    if: ${{ !cancelled() && needs.role-strategy-optimizer.result == 'success' }}
+    if: ${{ !cancelled() && needs['role-strategy-optimizer'].result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
