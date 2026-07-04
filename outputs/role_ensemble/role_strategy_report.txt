@@ -1,43 +1,43 @@
 LOTO7 Role Strategy Optimizer Report
 ====================================
 
-created_at: 2026-07-04T00:06:45.995711+00:00
+created_at: 2026-07-04T09:56:09.726712+00:00
 reason: optimized_from_role_ensemble_backtest_with_main_best_cap
 source_status: completed
 completed_target_draws: 683 / 683
-genome_id: g007_0007_2402
+genome_id: g048_0048_8272
 max_main_best: 1
 
 [Strategy Counts]
 {
   "contrarian": 0,
-  "high_match": 1,
+  "high_match": 2,
   "main_best": 1,
   "mid_high": 1,
-  "recent120": 2
+  "recent120": 1
 }
 
 [Role Sequence]
 1: main_best / 本命: 採用ベストモデル
-2: recent120 / 直近寄り: 直近120回/60回の流れ重視
-3: recent120 / 直近寄り: 直近120回/60回の流れ重視
-4: mid_high / 中高数字補正: 20番台後半〜30番台も押さえる
-5: high_match / 高一致狙い: ペア/3連/最大一致重視
+2: high_match / 高一致狙い: ペア/3連/最大一致重視
+3: high_match / 高一致狙い: ペア/3連/最大一致重視
+4: recent120 / 直近寄り: 直近120回/60回の流れ重視
+5: mid_high / 中高数字補正: 20番台後半〜30番台も押さえる
 
 [Scores]
 {
-  "contrarian": 85.651215,
-  "high_match": 99.255256,
-  "main_best": 796.980184,
-  "mid_high": 107.789818,
-  "recent120": 116.053063
+  "contrarian": 53.27653,
+  "high_match": 135.603136,
+  "main_best": 785.066243,
+  "mid_high": 97.636084,
+  "recent120": 103.120447
 }
 
 [Role Source Stats]
-contrarian: ROI=22.45% / profit=-158900 / grade=28 / high_grade=2 / max_main=5
-high_match: ROI=15.129% / profit=-173900 / grade=27 / high_grade=0 / max_main=4
-main_best: ROI=366.715% / profit=546500 / grade=29 / high_grade=3 / max_main=6
-mid_high: ROI=17.765% / profit=-168500 / grade=24 / high_grade=1 / max_main=5
-recent120: ROI=24.109% / profit=-155500 / grade=32 / high_grade=2 / max_main=5
+contrarian: ROI=14.3% / profit=-175600 / grade=25 / high_grade=0 / max_main=4
+high_match: ROI=24.939% / profit=-153800 / grade=34 / high_grade=1 / max_main=5
+main_best: ROI=361.493% / profit=535800 / grade=28 / high_grade=2 / max_main=6
+mid_high: ROI=17.228% / profit=-169600 / grade=31 / high_grade=0 / max_main=4
+recent120: ROI=19.912% / profit=-164100 / grade=26 / high_grade=1 / max_main=5
 
 注意: 過去検証上の役割配分最適化であり、将来の当せんや利益を保証しません。
