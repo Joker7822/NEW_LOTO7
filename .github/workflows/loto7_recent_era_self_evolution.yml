@@ -85,21 +85,11 @@ jobs:
           START_YEAR: ${{ steps.inputs.outputs.start_year }}
         run: |
           set -euo pipefail
-          DRAW_NO=$(python - <<'PY'
-          import os
-          from loto7_evolution_trainer import load_draws
-
-          start_year = int(os.environ.get('START_YEAR') or '2020')
-          draws = load_draws('loto7.csv')
-          for d in draws:
-              raw_date = str(getattr(d, 'date', '') or '')
-              if raw_date[:4].isdigit() and int(raw_date[:4]) >= start_year:
-                  print(d.draw_no)
-                  break
-          else:
-              raise SystemExit(f'no draw found for start year: {start_year}')
-          PY
-          )
+          DRAW_NO=$(python -c "import os; from loto7_evolution_trainer import load_draws; sy=int(os.environ.get('START_YEAR') or '2020'); draws=load_draws('loto7.csv'); matches=[d.draw_no for d in draws if str(getattr(d, 'date', '') or '')[:4].isdigit() and int(str(getattr(d, 'date', '') or '')[:4]) >= sy]; print(matches[0] if matches else '')")
+          if [ -z "$DRAW_NO" ]; then
+            echo "no draw found for start year: ${START_YEAR}" >&2
+            exit 1
+          fi
           echo "draw_no=${DRAW_NO}" >> "$GITHUB_OUTPUT"
           echo "Recent era start year=${START_YEAR} draw=${DRAW_NO}"
 
