@@ -1,20 +1,20 @@
 Model Self Evolution Standalone
 ===============================
 
-created_at: 2026-07-05T07:43:51.200604+00:00
+created_at: 2026-07-05T11:52:44.538927+00:00
 source: outputs/model_self_evolution/standalone_report.txt
 status: FOUND
 LOTO7 Model-Only Self Evolution Report
 ======================================
 
-created_at: 2026-07-04T11:06:01.299124+00:00
-status: safe_exit_at_297.61_minutes
+created_at: 2026-07-05T11:32:09.972075+00:00
+status: safe_exit_at_303.95_minutes
 resume_used: True
-start_iteration: 86
-last_iteration: 125
+start_iteration: 126
+last_iteration: 152
 iterations_requested: 1000
-iterations_evaluated: 125
-iterations_evaluated_this_run: 40
+iterations_evaluated: 152
+iterations_evaluated_this_run: 27
 target_draws: 683
 objective: composite_roi_profit_highgrade_exploration
 
