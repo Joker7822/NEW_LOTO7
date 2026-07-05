@@ -128,12 +128,12 @@ jobs:
             --allow-high-grade-drop \
             ${APPLY_FLAG}
 
-      - name: Guard recent era model with recent-era priority
+      - name: Guard recent era dedicated model
         env:
           START_YEAR: ${{ steps.inputs.outputs.start_year }}
         run: |
           set -euo pipefail
-          python scripts/recent_era_optimizer.py \
+          python scripts/recent_era_dedicated_guard.py \
             --csv loto7.csv \
             --baseline-model outputs/recent_era/recent_era_baseline_before_run.json \
             --candidate-model outputs/recent_era/recent_era_best_model.json \
@@ -145,8 +145,6 @@ jobs:
             --min-train-draws 1 \
             --holdout-start-draw 2 \
             --recent-start-year "$START_YEAR" \
-            --min-full-roi-delta-percent -100.0 \
-            --min-full-profit-delta -999999999 \
             --min-recent-roi-delta-percent 0.0 \
             --min-recent-profit-delta 0 \
             --min-recent-payout-roi-percent 8.0 \
