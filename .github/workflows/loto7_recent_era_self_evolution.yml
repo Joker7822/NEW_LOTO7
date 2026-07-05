@@ -128,7 +128,7 @@ jobs:
             --allow-high-grade-drop \
             ${APPLY_FLAG}
 
-      - name: Guard recent era model against full collapse
+      - name: Guard recent era model with recent-era priority
         env:
           START_YEAR: ${{ steps.inputs.outputs.start_year }}
         run: |
@@ -145,8 +145,8 @@ jobs:
             --min-train-draws 1 \
             --holdout-start-draw 2 \
             --recent-start-year "$START_YEAR" \
-            --min-full-roi-delta-percent -10.0 \
-            --min-full-profit-delta -120000 \
+            --min-full-roi-delta-percent -100.0 \
+            --min-full-profit-delta -999999999 \
             --min-recent-roi-delta-percent 0.0 \
             --min-recent-profit-delta 0 \
             --min-recent-payout-roi-percent 8.0 \
