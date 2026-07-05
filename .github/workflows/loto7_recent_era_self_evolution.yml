@@ -19,9 +19,6 @@ on:
         options:
           - "true"
           - "false"
-  schedule:
-    # JST 03:30 / 15:30
-    - cron: "30 6,18 * * *"
 
 permissions:
   contents: write
@@ -60,9 +57,9 @@ jobs:
         id: inputs
         run: |
           set -euo pipefail
-          ITERATIONS="${{ github.event.inputs.iterations }}"
-          START_YEAR="${{ github.event.inputs.start_year }}"
-          APPLY_MODEL="${{ github.event.inputs.apply_model }}"
+          ITERATIONS="${{ inputs.iterations }}"
+          START_YEAR="${{ inputs.start_year }}"
+          APPLY_MODEL="${{ inputs.apply_model }}"
 
           if [ -z "$ITERATIONS" ]; then ITERATIONS="500"; fi
           if [ -z "$START_YEAR" ]; then START_YEAR="2020"; fi
@@ -89,20 +86,20 @@ jobs:
         run: |
           set -euo pipefail
           DRAW_NO=$(python - <<'PY'
-import os
-from loto7_evolution_trainer import load_draws
+          import os
+          from loto7_evolution_trainer import load_draws
 
-start_year = int(os.environ.get('START_YEAR') or '2020')
-draws = load_draws('loto7.csv')
-for d in draws:
-    raw_date = str(getattr(d, 'date', '') or '')
-    if raw_date[:4].isdigit() and int(raw_date[:4]) >= start_year:
-        print(d.draw_no)
-        break
-else:
-    raise SystemExit(f'no draw found for start year: {start_year}')
-PY
-)
+          start_year = int(os.environ.get('START_YEAR') or '2020')
+          draws = load_draws('loto7.csv')
+          for d in draws:
+              raw_date = str(getattr(d, 'date', '') or '')
+              if raw_date[:4].isdigit() and int(raw_date[:4]) >= start_year:
+                  print(d.draw_no)
+                  break
+          else:
+              raise SystemExit(f'no draw found for start year: {start_year}')
+          PY
+          )
           echo "draw_no=${DRAW_NO}" >> "$GITHUB_OUTPUT"
           echo "Recent era start year=${START_YEAR} draw=${DRAW_NO}"
 
