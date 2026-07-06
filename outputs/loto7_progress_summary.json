@@ -21,9 +21,9 @@
   "best_models": [
     {
       "source_file": "loto7_best_model.json",
-      "score": 58590.51,
-      "id": "g048_0048_8272",
-      "generation": 48
+      "score": 71271.89,
+      "id": "g228_0228_2057",
+      "generation": 228
     }
   ],
   "ml_status": {
