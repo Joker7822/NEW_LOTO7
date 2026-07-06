@@ -81,6 +81,20 @@ jobs:
             --report outputs/role_ensemble/regime_strategy_report.txt \
             --purchase-count 5
 
+      - name: Build Recent Era model comparison
+        run: |
+          set -euo pipefail
+          mkdir -p outputs/recent_era
+          python scripts/build_recent_era_model_comparison.py \
+            --csv loto7.csv \
+            --full-model loto7_best_model.json \
+            --recent-model outputs/recent_era/recent_era_best_model.json \
+            --summary outputs/recent_era/recent_era_model_comparison_summary.json \
+            --report outputs/recent_era/recent_era_model_comparison_report.txt \
+            --recent-start-year 2020 \
+            --purchase-count 5 \
+            --unit-cost 300
+
       - name: Build dual model prediction
         run: |
           set -euo pipefail
@@ -126,6 +140,7 @@ jobs:
           cp -f outputs/role_ensemble/regime_*.json "$SNAPSHOT/outputs/role_ensemble/" 2>/dev/null || true
           cp -f outputs/role_ensemble/regime_*.txt "$SNAPSHOT/outputs/role_ensemble/" 2>/dev/null || true
           cp -f outputs/recent_era/recent_role_strategy.* "$SNAPSHOT/outputs/recent_era/" 2>/dev/null || true
+          cp -f outputs/recent_era/recent_era_model_comparison_* "$SNAPSHOT/outputs/recent_era/" 2>/dev/null || true
 
           git fetch origin "${GITHUB_REF_NAME}"
           git reset --hard "origin/${GITHUB_REF_NAME}"
@@ -145,7 +160,8 @@ jobs:
             outputs/holdout/latest_prediction_report.txt \
             outputs/role_ensemble/regime_*.json \
             outputs/role_ensemble/regime_*.txt \
-            outputs/recent_era/recent_role_strategy.* || true
+            outputs/recent_era/recent_role_strategy.* \
+            outputs/recent_era/recent_era_model_comparison_* || true
           if git diff --cached --quiet; then
             echo "No dual prediction changes"
             exit 0
@@ -166,4 +182,5 @@ jobs:
             outputs/role_ensemble/regime_*.json
             outputs/role_ensemble/regime_*.txt
             outputs/recent_era/recent_role_strategy.*
+            outputs/recent_era/recent_era_model_comparison_*
           if-no-files-found: ignore
