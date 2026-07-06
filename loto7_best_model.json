@@ -1,34 +1,4 @@
 {
-  "baseline_metrics": {
-    "evolution_score": 54604.79,
-    "genome_id": "g334_0334_4175",
-    "grade_hit_count": 148,
-    "high_grade_hit_count": 10,
-    "max_bonus_match": 2,
-    "max_main_match": 6,
-    "missing_prize_draw_count": 0,
-    "missing_prize_draws": [],
-    "path": "loto7_best_model.json",
-    "profit": -88200,
-    "purchase_count": 5,
-    "rank_counts": {
-      "1等": 0,
-      "2等": 0,
-      "3等": 1,
-      "4等": 9,
-      "5等": 53,
-      "6等": 85,
-      "外れ": 3267
-    },
-    "roi": 0.913909,
-    "roi_percent": 91.391,
-    "target_draws": 683,
-    "total_cost": 1024500,
-    "total_payout": 936300,
-    "total_tickets": 3415,
-    "unit_cost": 300
-  },
-  "csv": "loto7.csv",
   "genome": {
     "best_rank_count": 12,
     "consecutive_penalty": 0.3623574832250292,
@@ -54,16 +24,36 @@
     "target_sum_min": 108,
     "triple_weight": 0.018700599039030055
   },
-  "kind": "loto7_model_only_self_evolution",
-  "notes": [
-    "Only Genome/model JSON is self-evolved.",
-    "Parent-pool diversity and composite exploration score are used before strict adoption.",
-    "This does not guarantee future lottery winnings or profit."
+  "merged_from": [
+    "loto7_best_model.json"
   ],
-  "objective_score": 58590.51,
+  "prediction_mode": "role_ensemble",
   "purchase_count": 5,
+  "role_sequence": [
+    {
+      "label": "本命: 採用ベストモデル",
+      "role": "main_best"
+    },
+    {
+      "label": "高一致狙い: ペア/3連/最大一致重視",
+      "role": "high_match"
+    },
+    {
+      "label": "高一致狙い: ペア/3連/最大一致重視",
+      "role": "high_match"
+    },
+    {
+      "label": "直近寄り: 直近120回/60回の流れ重視",
+      "role": "recent120"
+    },
+    {
+      "label": "直近寄り: 直近120回/60回の流れ重視",
+      "role": "recent120"
+    }
+  ],
+  "role_strategy": "outputs/role_ensemble/regime_strategy.json",
   "selected_holdout": {
-    "evolution_score": 0.0,
+    "evolution_score": 58590.51,
     "genome_id": "g048_0048_8272",
     "grade_hit_count": 147,
     "high_grade_hit_count": 12,
@@ -71,7 +61,7 @@
     "max_main_match": 6,
     "missing_prize_draw_count": 0,
     "missing_prize_draws": [],
-    "path": "candidate_48",
+    "path": "loto7_best_model.json",
     "profit": -79500,
     "purchase_count": 5,
     "rank_counts": {
@@ -91,7 +81,9 @@
     "total_tickets": 3415,
     "unit_cost": 300
   },
-  "selection_mode": "model_only_holdout_roi_with_exploration_score",
-  "source": "model_self_evolver",
-  "updated_at": "2026-07-06T11:50:30.561817+00:00"
+  "selection_mode": "holdout_roi",
+  "selection_reason": "holdout再ランキング: ROI → 最大本数字一致数 → 1等→2等→3等→4等→5等→6等 → Evolutionスコア",
+  "selection_sort_description": "ROI → 最大本数字一致数 → 1等→2等→3等→4等→5等→6等 → Evolutionスコア",
+  "source_model": "loto7_best_model.json",
+  "updated_at": "2026-07-06T13:36:04.720304+00:00"
 }
