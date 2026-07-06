@@ -1,11 +1,11 @@
 JSON Summary Digest
 ===================
 
-created_at: 2026-07-06T18:24:39.016728+00:00
+created_at: 2026-07-06T23:35:57.996928+00:00
 
 ## outputs/evolution_merged_summary.json
 status: FOUND
-updated_at: 2026-07-06T13:36:04.720304+00:00
+updated_at: 2026-07-06T20:09:31.476510+00:00
 prediction_mode: role_ensemble
 selected_genome_id: g048_0048_8272
 latest_draw_no: 684
@@ -14,7 +14,7 @@ best_model: loto7_best_model.json
 
 ## outputs/run_manifest.json
 status: FOUND
-created_at: 2026-07-06T13:36:04.720304+00:00
+created_at: 2026-07-06T20:09:31.476510+00:00
 kind: loto7_evolution_merge_holdout_rerank_ensemble
 prediction_mode: role_ensemble
 selected_genome_id: g048_0048_8272
@@ -24,17 +24,17 @@ best_model: loto7_best_model.json
 
 ## outputs/holdout/holdout_summary.json
 status: FOUND
-created_at: 2026-07-06T13:33:16.980585+00:00
+created_at: 2026-07-06T20:07:02.063518+00:00
 roi_percent: -7.76
 profit: -79500
 target_draws: 683
-year_summary_repaired_at: 2026-07-06T13:33:17.075573+00:00
+year_summary_repaired_at: 2026-07-06T20:07:02.169413+00:00
 recent_era_summary: {"draw_hit_rate": 0.074627, "draw_hit_rate_percent": 7.463, "max_main_match": 5, "payout_roi": 0.127562, "payout_roi_...
 best_model: loto7_best_model.json
 
 ## outputs/holdout/recent_era_summary.json
 status: FOUND
-created_at: 2026-07-06T13:33:17.076365+00:00
+created_at: 2026-07-06T20:07:02.170109+00:00
 kind: loto7_recent_era_holdout_summary
 recent_era_summary: {"draw_hit_rate": 0.074627, "draw_hit_rate_percent": 7.463, "max_main_match": 5, "payout_roi": 0.127562, "payout_roi_...
 
@@ -49,14 +49,14 @@ best_model: loto7_best_model.json
 
 ## outputs/model_self_evolution/standalone_summary.json
 status: FOUND
-created_at: 2026-07-06T17:24:25.264533+00:00
-status: safe_exit_at_290.12_minutes
+created_at: 2026-07-06T11:50:30.562381+00:00
+status: safe_exit_at_291.45_minutes
 target_draws: 683
 best_model: loto7_best_model.json
 
 ## outputs/role_ensemble/role_ensemble_summary.json
 status: FOUND
-created_at: 2026-07-06T13:33:30.407815+00:00
+created_at: 2026-07-06T20:07:14.901119+00:00
 status: completed
 genome_id: g048_0048_8272
 target_draws_total: 683
@@ -68,13 +68,13 @@ validation: {"best_model_tickets": 3415, "duplicates_removed": 0, "expected_tick
 
 ## outputs/role_ensemble/role_strategy.json
 status: FOUND
-created_at: 2026-07-06T13:33:43.855801+00:00
+created_at: 2026-07-06T20:07:26.952300+00:00
 kind: loto7_role_strategy
 strategy_counts: {"contrarian": 0, "high_match": 1, "main_best": 1, "mid_high": 1, "recent120": 2}
 
 ## outputs/role_ensemble/regime_state.json
 status: FOUND
-created_at: 2026-07-06T18:18:21.548026+00:00
+created_at: 2026-07-06T20:59:42.329161+00:00
 kind: loto7_regime_state
 regime: recent_repeat_trend
 regime_strength: 0.664687
@@ -83,7 +83,7 @@ final_counts: {"contrarian": 0, "high_match": 2, "main_best": 1, "mid_high": 0, 
 
 ## outputs/role_ensemble/regime_strategy.json
 status: FOUND
-created_at: 2026-07-06T18:18:21.548052+00:00
+created_at: 2026-07-06T20:59:42.329184+00:00
 kind: loto7_regime_role_strategy
 regime: recent_repeat_trend
 regime_strength: 0.664687
