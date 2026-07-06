@@ -1,6 +1,6 @@
 {
   "combined": "outputs/txt_reports/99_combined_report.txt",
-  "created_at": "2026-07-06T08:45:51.889618+00:00",
+  "created_at": "2026-07-06T14:04:43.776782+00:00",
   "index": "outputs/txt_reports/00_INDEX.txt",
   "json_summaries": [
     {
@@ -40,7 +40,7 @@
           "total_tickets": 3415,
           "unit_cost": 300
         },
-        "updated_at": "2026-07-06T02:52:04.504819+00:00"
+        "updated_at": "2026-07-06T13:36:04.720304+00:00"
       }
     },
     {
@@ -48,7 +48,7 @@
       "source": "outputs/run_manifest.json",
       "summary": {
         "best_model": "loto7_best_model.json",
-        "created_at": "2026-07-06T02:52:04.504819+00:00",
+        "created_at": "2026-07-06T13:36:04.720304+00:00",
         "kind": "loto7_evolution_merge_holdout_rerank_ensemble",
         "latest_draw_no": 684,
         "prediction_mode": "role_ensemble",
@@ -89,7 +89,7 @@
       "source": "outputs/holdout/holdout_summary.json",
       "summary": {
         "best_model": "loto7_best_model.json",
-        "created_at": "2026-07-06T02:49:38.177782+00:00",
+        "created_at": "2026-07-06T13:33:16.980585+00:00",
         "profit": -79500,
         "recent_era_summary": {
           "draw_hit_rate": 0.074627,
@@ -121,14 +121,14 @@
         },
         "roi_percent": -7.76,
         "target_draws": 683,
-        "year_summary_repaired_at": "2026-07-06T02:49:38.314465+00:00"
+        "year_summary_repaired_at": "2026-07-06T13:33:17.075573+00:00"
       }
     },
     {
       "exists": true,
       "source": "outputs/holdout/recent_era_summary.json",
       "summary": {
-        "created_at": "2026-07-06T02:49:38.315509+00:00",
+        "created_at": "2026-07-06T13:33:17.076365+00:00",
         "kind": "loto7_recent_era_holdout_summary",
         "recent_era_summary": {
           "draw_hit_rate": 0.074627,
@@ -205,8 +205,8 @@
       "source": "outputs/model_self_evolution/standalone_summary.json",
       "summary": {
         "best_model": "loto7_best_model.json",
-        "created_at": "2026-07-06T02:59:26.297019+00:00",
-        "status": "safe_exit_at_307.74_minutes",
+        "created_at": "2026-07-06T11:50:30.562381+00:00",
+        "status": "safe_exit_at_291.45_minutes",
         "target_draws": 683
       }
     },
@@ -248,7 +248,7 @@
           "winner": "best_model"
         },
         "completed_target_draws": 683,
-        "created_at": "2026-07-06T02:49:49.807678+00:00",
+        "created_at": "2026-07-06T13:33:30.407815+00:00",
         "genome_id": "g048_0048_8272",
         "role_ensemble": {
           "draw_count": 683,
@@ -290,7 +290,7 @@
       "exists": true,
       "source": "outputs/role_ensemble/role_strategy.json",
       "summary": {
-        "created_at": "2026-07-06T02:50:01.325505+00:00",
+        "created_at": "2026-07-06T13:33:43.855801+00:00",
         "kind": "loto7_role_strategy",
         "strategy_counts": {
           "contrarian": 0,
@@ -305,7 +305,7 @@
       "exists": true,
       "source": "outputs/role_ensemble/regime_state.json",
       "summary": {
-        "created_at": "2026-07-06T03:58:48.850803+00:00",
+        "created_at": "2026-07-06T13:39:07.797900+00:00",
         "final_counts": {
           "contrarian": 0,
           "high_match": 2,
@@ -323,7 +323,7 @@
       "exists": true,
       "source": "outputs/role_ensemble/regime_strategy.json",
       "summary": {
-        "created_at": "2026-07-06T03:58:48.850822+00:00",
+        "created_at": "2026-07-06T13:39:07.797919+00:00",
         "kind": "loto7_regime_role_strategy",
         "regime": "recent_repeat_trend",
         "regime_strength": 0.664687,
