@@ -1,6 +1,6 @@
 confidence_rank,base_latest_draw_no,base_latest_date,prediction_draw_no,combo_index,numbers,model_id,model_score,source_model,prediction_method,ensemble_score,support_models,created_at
-1,684,2026-07-03,685,1,06 09 12 17 22 35 36,g048_0048_8272:main_best,58590.51,loto7_best_model.json,role_ensemble,26.91,本命: 採用ベストモデル,2026-07-06T19:54:07.364500+00:00
-2,684,2026-07-03,685,2,01 08 12 14 33 35 36,g048_0048_8272:high_match,58590.51,loto7_best_model.json,role_ensemble,13.77,高一致狙い: ペア/3連/最大一致重視,2026-07-06T19:54:07.364500+00:00
-3,684,2026-07-03,685,3,07 08 09 14 22 29 36,g048_0048_8272:high_match,58590.51,loto7_best_model.json,role_ensemble,13.35,高一致狙い: ペア/3連/最大一致重視,2026-07-06T19:54:07.364500+00:00
-4,684,2026-07-03,685,4,06 08 09 12 22 29 33,g048_0048_8272:recent120,58590.51,loto7_best_model.json,role_ensemble,10.87,直近寄り: 直近120回/60回の流れ重視,2026-07-06T19:54:07.364500+00:00
-5,684,2026-07-03,685,5,06 09 12 17 22 33 36,g048_0048_8272:recent120,58590.51,loto7_best_model.json,role_ensemble,13.35,直近寄り: 直近120回/60回の流れ重視,2026-07-06T19:54:07.364500+00:00
+1,684,2026-07-03,685,1,06 07 09 12 22 33 35,g048_0048_8272,58590.51,loto7_best_model.json,dual_full_period,30.0,全期間型: best_model,2026-07-06T19:59:09.132579+00:00
+2,684,2026-07-03,685,2,06 08 09 12 18 22 29,g048_0048_8272,58590.51,loto7_best_model.json,dual_full_period,29.0,全期間型: best_model,2026-07-06T19:59:09.132579+00:00
+3,684,2026-07-03,685,3,06 08 09 12 18 22 35,g008_0008_7711,16596.85,outputs/recent_era/recent_era_best_model.json,dual_recent_era,18.0,Recent Era型: 2020年以降専用モデル,2026-07-06T19:59:09.132579+00:00
+4,684,2026-07-03,685,4,06 07 09 12 22 29 36,g008_0008_7711,16596.85,outputs/recent_era/recent_era_best_model.json,dual_recent_era,17.0,Recent Era型: 2020年以降専用モデル,2026-07-06T19:59:09.132579+00:00
+5,684,2026-07-03,685,5,06 09 12 17 22 35 36,g048_0048_8272:main_best,58590.51,loto7_best_model.json,dual_regime,26.91,Regime型: 本命: 採用ベストモデル,2026-07-06T19:59:09.431165+00:00
