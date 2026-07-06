@@ -150,6 +150,21 @@ jobs:
             --min-recent-payout-roi-percent 8.0 \
             --restore-on-fail
 
+      - name: Build Recent Era model comparison
+        env:
+          START_YEAR: ${{ steps.inputs.outputs.start_year }}
+        run: |
+          set -euo pipefail
+          python scripts/build_recent_era_model_comparison.py \
+            --csv loto7.csv \
+            --full-model loto7_best_model.json \
+            --recent-model outputs/recent_era/recent_era_best_model.json \
+            --summary outputs/recent_era/recent_era_model_comparison_summary.json \
+            --report outputs/recent_era/recent_era_model_comparison_report.txt \
+            --recent-start-year "$START_YEAR" \
+            --purchase-count 5 \
+            --unit-cost 300
+
       - name: Rebuild dual latest prediction
         run: |
           set -euo pipefail
