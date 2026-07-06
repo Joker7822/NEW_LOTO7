@@ -52,64 +52,68 @@
   "best_model_after_guard": "loto7_best_model.json",
   "candidate": {
     "full": {
-      "grade_hit_count": 147,
-      "high_grade_hit_count": 12,
+      "grade_hit_count": 166,
+      "high_grade_hit_count": 16,
       "max_bonus_match": 2,
       "max_main_match": 6,
       "missing_prize_draw_count": 0,
-      "profit": -79500,
+      "profit": 68200,
       "rank_counts": {
         "1等": 0,
         "2等": 0,
         "3等": 1,
-        "4等": 11,
-        "5等": 49,
-        "6等": 86,
-        "外れ": 3268
+        "4等": 15,
+        "5等": 60,
+        "6等": 90,
+        "外れ": 3249
       },
-      "roi": 0.922401,
-      "roi_percent": 92.24,
+      "roi": 1.066569,
+      "roi_percent": 106.657,
       "target_draws": 683,
       "total_cost": 1024500,
-      "total_payout": 945000,
+      "total_payout": 1092700,
       "total_tickets": 3415
     },
-    "model_id": "g048_0048_8272",
+    "model_id": "g228_0228_2057",
     "path": "loto7_best_model.json",
     "recent": {
-      "grade_hit_count": 55,
-      "high_grade_hit_count": 1,
+      "grade_hit_count": 67,
+      "high_grade_hit_count": 2,
       "max_bonus_match": 2,
       "max_main_match": 5,
       "missing_prize_draw_count": 0,
-      "profit": -438400,
+      "profit": -418800,
       "rank_counts": {
         "1等": 0,
         "2等": 0,
         "3等": 0,
-        "4等": 1,
-        "5等": 21,
-        "6等": 33,
-        "外れ": 1620
+        "4等": 2,
+        "5等": 30,
+        "6等": 35,
+        "外れ": 1608
       },
-      "roi": 0.127562,
-      "roi_percent": 12.756,
+      "roi": 0.166567,
+      "roi_percent": 16.657,
       "target_draws": 335,
       "total_cost": 502500,
-      "total_payout": 64100,
+      "total_payout": 83700,
       "total_tickets": 1675
     }
   },
-  "created_at": "2026-07-06T11:56:32.592200+00:00",
+  "created_at": "2026-07-06T18:18:21.423652+00:00",
   "csv": "loto7.csv",
   "decision": {
     "accepted": true,
     "reasons": [
-      "same model id; no recent era restoration needed"
+      "full ok: roi_delta=14.417pt profit_delta=147700",
+      "recent roi ok: delta=3.901pt",
+      "recent profit ok: delta=19600",
+      "recent roi floor ok: 16.657% >= 8.000%",
+      "recent high-grade ok: delta=1"
     ],
     "restore_on_fail": true,
     "restored_baseline": false,
-    "same_model": true,
+    "same_model": false,
     "thresholds": {
       "allow_recent_high_grade_drop": false,
       "min_full_profit_delta": 0,
