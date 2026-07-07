@@ -1,37 +1,37 @@
 Model Self Evolution Integrated
 ===============================
 
-created_at: 2026-07-07T18:27:33.718045+00:00
+created_at: 2026-07-07T23:28:17.580880+00:00
 source: outputs/model_self_evolution/report.txt
 status: FOUND
 LOTO7 Model-Only Self Evolution Report
 ======================================
 
-created_at: 2026-07-07T17:07:42.550401+00:00
-status: completed
-resume_used: True
-start_iteration: 17
-last_iteration: 20
+created_at: 2026-07-07T19:57:32.236269+00:00
+status: safe_exit_at_133.30_minutes
+resume_used: False
+start_iteration: 1
+last_iteration: 4
 iterations_requested: 20
-iterations_evaluated: 20
+iterations_evaluated: 4
 iterations_evaluated_this_run: 4
 target_draws: 683
 objective: composite_roi_profit_highgrade_exploration
 
 [Baseline]
-objective_score: 58590.51
-roi_percent: 92.24
-profit: -79500
-grade_hit_count: 147
-high_grade_hit_count: 12
+objective_score: 71271.89
+roi_percent: 106.657
+profit: 68200
+grade_hit_count: 166
+high_grade_hit_count: 16
 max_main_match: 6
 
 [Best Candidate]
-objective_score: 58590.51
-roi_percent: 92.24
-profit: -79500
-grade_hit_count: 147
-high_grade_hit_count: 12
+objective_score: 71271.89
+roi_percent: 106.657
+profit: 68200
+grade_hit_count: 166
+high_grade_hit_count: 16
 max_main_match: 6
 
 [Adoption]
@@ -43,8 +43,8 @@ max_main_match: 6
   "min_profit_delta": 0,
   "min_roi_delta_percent": 0.1,
   "reasons": [
-    "profit -79500 -> -79500",
-    "roi not improved enough 0.922401 -> 0.922401"
+    "profit 68200 -> 68200",
+    "roi not improved enough 1.066569 -> 1.066569"
   ]
 }
 
