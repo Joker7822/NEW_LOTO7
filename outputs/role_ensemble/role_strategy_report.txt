@@ -1,10 +1,10 @@
 LOTO7 Role Strategy Optimizer Report
 ====================================
 
-created_at: 2026-07-07T14:29:36.803077+00:00
+created_at: 2026-07-07T17:08:17.726343+00:00
 reason: optimized_from_role_ensemble_backtest_with_main_best_cap
-source_status: safe_exit_at_290.54_minutes
-completed_target_draws: 465 / 683
+source_status: completed
+completed_target_draws: 683 / 683
 genome_id: g228_0228_2057
 max_main_best: 1
 
@@ -21,23 +21,23 @@ max_main_best: 1
 1: main_best / 本命: 採用ベストモデル
 2: recent120 / 直近寄り: 直近120回/60回の流れ重視
 3: recent120 / 直近寄り: 直近120回/60回の流れ重視
-4: high_match / 高一致狙い: ペア/3連/最大一致重視
-5: mid_high / 中高数字補正: 20番台後半〜30番台も押さえる
+4: mid_high / 中高数字補正: 20番台後半〜30番台も押さえる
+5: high_match / 高一致狙い: ペア/3連/最大一致重視
 
 [Scores]
 {
-  "contrarian": 41.78219,
-  "high_match": 115.121255,
-  "main_best": 126.170292,
-  "mid_high": 86.858718,
-  "recent120": 1207.689443
+  "contrarian": 85.651215,
+  "high_match": 99.255256,
+  "main_best": 796.980184,
+  "mid_high": 107.789818,
+  "recent120": 116.053063
 }
 
 [Role Source Stats]
-contrarian: ROI=10.538% / profit=-124800 / grade=12 / high_grade=0 / max_main=4
-high_match: ROI=18.208% / profit=-114100 / grade=14 / high_grade=1 / max_main=5
-main_best: ROI=23.728% / profit=-106400 / grade=21 / high_grade=1 / max_main=5
-mid_high: ROI=13.692% / profit=-120400 / grade=17 / high_grade=0 / max_main=4
-recent120: ROI=587.168% / profit=679600 / grade=19 / high_grade=2 / max_main=6
+contrarian: ROI=22.45% / profit=-158900 / grade=28 / high_grade=2 / max_main=5
+high_match: ROI=15.129% / profit=-173900 / grade=27 / high_grade=0 / max_main=4
+main_best: ROI=366.715% / profit=546500 / grade=29 / high_grade=3 / max_main=6
+mid_high: ROI=17.765% / profit=-168500 / grade=24 / high_grade=1 / max_main=5
+recent120: ROI=24.109% / profit=-155500 / grade=32 / high_grade=2 / max_main=5
 
 注意: 過去検証上の役割配分最適化であり、将来の当せんや利益を保証しません。
