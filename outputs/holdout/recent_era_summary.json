@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-07-07T17:07:56.389192+00:00",
+  "created_at": "2026-07-07T19:57:45.841096+00:00",
   "detail_csv": "outputs/holdout/holdout_result.csv",
   "kind": "loto7_recent_era_holdout_summary",
   "recent_era_summary": {
