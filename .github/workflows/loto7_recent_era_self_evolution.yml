@@ -19,6 +19,9 @@ on:
         options:
           - "true"
           - "false"
+  schedule:
+    # JST 03:30 / 09:30 / 15:30 / 21:30
+    - cron: "30 0,6,12,18 * * *"
 
 permissions:
   contents: write
