@@ -54,10 +54,10 @@
     "target_sum_min": 86,
     "triple_weight": 0.057644000333898764
   },
-  "kind": "loto7_model_only_self_evolution",
+  "kind": "loto7_recent_era_model_only_self_evolution",
   "notes": [
-    "Only Genome/model JSON is self-evolved.",
-    "Parent-pool diversity and composite exploration score are used before strict adoption.",
+    "Recent Era dedicated model JSON is self-evolved from 2020+ holdout targets.",
+    "This model is allowed to sacrifice full-period ROI because it is used only for recent-era prediction slots.",
     "This does not guarantee future lottery winnings or profit."
   ],
   "objective_score": 16596.85,
@@ -91,7 +91,7 @@
     "total_tickets": 1675,
     "unit_cost": 300
   },
-  "selection_mode": "model_only_holdout_roi_with_exploration_score",
-  "source": "model_self_evolver",
-  "updated_at": "2026-07-06T03:57:22.608188+00:00"
+  "selection_mode": "recent_era_holdout_roi_with_exploration_score",
+  "source": "recent_era_model_self_evolver",
+  "updated_at": "2026-07-05T04:58:07.397491+00:00"
 }

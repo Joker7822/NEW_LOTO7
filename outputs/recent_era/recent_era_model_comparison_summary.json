@@ -1,13 +1,13 @@
 {
-  "created_at": "2026-07-07T04:57:45.954518+00:00",
+  "created_at": "2026-07-06T21:01:19.445659+00:00",
   "csv": "loto7.csv",
   "delta_recent_minus_full": {
-    "grade_hit_count_delta": -2,
+    "grade_hit_count_delta": 5,
     "high_grade_hit_count_delta": 3,
-    "max_main_match_delta": 1,
-    "profit_delta": 387700,
-    "roi_percent_delta": 77.154,
-    "total_payout_delta": 387700
+    "max_main_match_delta": 0,
+    "profit_delta": 21800,
+    "roi_percent_delta": 4.339,
+    "total_payout_delta": 21800
   },
   "full_period_model_recent_era": {
     "metrics": {
@@ -45,29 +45,29 @@
   "purchase_count": 5,
   "recent_era_dedicated_model": {
     "metrics": {
-      "grade_hit_count": 53,
+      "grade_hit_count": 60,
       "high_grade_hit_count": 4,
       "max_bonus_match": 2,
-      "max_main_match": 6,
+      "max_main_match": 5,
       "missing_prize_draw_count": 0,
-      "profit": -50700,
+      "profit": -416600,
       "rank_counts": {
         "1等": 0,
         "2等": 0,
-        "3等": 1,
-        "4等": 3,
-        "5等": 11,
-        "6等": 38,
-        "外れ": 1622
+        "3等": 0,
+        "4等": 4,
+        "5等": 13,
+        "6等": 43,
+        "外れ": 1615
       },
-      "roi": 0.899104,
-      "roi_percent": 89.91,
+      "roi": 0.170945,
+      "roi_percent": 17.095,
       "target_draws": 335,
       "total_cost": 502500,
-      "total_payout": 451800,
+      "total_payout": 85900,
       "total_tickets": 1675
     },
-    "model_id": "g168_0168_4117",
+    "model_id": "g008_0008_7711",
     "path": "outputs/recent_era/recent_era_best_model.json"
   },
   "recent_start_year": 2020,
