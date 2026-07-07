@@ -1,7 +1,7 @@
 LOTO7 Recent Era Model Comparison
 ===================================
 
-created_at: 2026-07-07T00:44:47.746808+00:00
+created_at: 2026-07-07T01:43:32.801083+00:00
 recent_start_year: 2020
 target_draws: 335
 
@@ -16,22 +16,22 @@ max_main_match: 5
 rank_counts: {"1等": 0, "2等": 0, "3等": 0, "4等": 1, "5等": 21, "6等": 33, "外れ": 1620}
 
 [Recent Era dedicated model]
-model_id: g008_0008_7711
-roi_percent: 17.095
-profit: -416600
-total_payout: 85900
-grade_hit_count: 60
+model_id: g168_0168_4117
+roi_percent: 89.91
+profit: -50700
+total_payout: 451800
+grade_hit_count: 53
 high_grade_hit_count: 4
-max_main_match: 5
-rank_counts: {"1等": 0, "2等": 0, "3等": 0, "4等": 4, "5等": 13, "6等": 43, "外れ": 1615}
+max_main_match: 6
+rank_counts: {"1等": 0, "2等": 0, "3等": 1, "4等": 3, "5等": 11, "6等": 38, "外れ": 1622}
 
 [Delta: recent dedicated - full-period model on Recent Era]
-roi_percent_delta: 4.339
-profit_delta: 21800
-total_payout_delta: 21800
-grade_hit_count_delta: 5
+roi_percent_delta: 77.154
+profit_delta: 387700
+total_payout_delta: 387700
+grade_hit_count_delta: -2
 high_grade_hit_count_delta: 3
-max_main_match_delta: 0
+max_main_match_delta: 1
 
 Note: outputs/holdout/holdout_summary.json remains the full-period model summary.
 注意: 過去検証上の比較であり、将来の当せんや利益を保証しません。
