@@ -1,13 +1,13 @@
 Full Holdout Report
 ===================
 
-created_at: 2026-07-08T12:02:08.030054+00:00
+created_at: 2026-07-08T17:57:23.353518+00:00
 source: outputs/holdout/holdout_report.txt
 status: FOUND
 LOTO7 Holdout Backtest Report
 ================================
 
-作成日時(UTC): 2026-07-08T08:32:35.636071+00:00
+作成日時(UTC): 2026-07-08T17:34:37.263223+00:00
 状態: 完了
 CSV: loto7.csv
 モデル: loto7_best_model.json
