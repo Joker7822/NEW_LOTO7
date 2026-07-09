@@ -1,6 +1,6 @@
 # LOTO7 Complete AI Dashboard
 
-- generated_at: 2026-07-09T17:43:11.140309+00:00
+- generated_at: 2026-07-09T23:27:47.122295+00:00
 - candidates: 1987
 - ROI window: 100
 - ROI: -0.534
