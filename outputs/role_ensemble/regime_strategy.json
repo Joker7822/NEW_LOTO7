@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-07-10T15:17:22.960976+00:00",
+  "created_at": "2026-07-10T10:30:03.630139+00:00",
   "kind": "loto7_regime_role_strategy",
   "notes": [
     "Regime-based strategy adjusts Role Strategy Optimizer output using recent draw state.",
@@ -8,7 +8,7 @@
   ],
   "purchase_count": 5,
   "regime": "recent_repeat_trend",
-  "regime_strength": 0.600806,
+  "regime_strength": 0.664687,
   "role_sequence": [
     {
       "label": "本命: 採用ベストモデル",
@@ -32,13 +32,13 @@
     }
   ],
   "scores": {
-    "balanced": 2.5484,
-    "consecutive_trend": 5.7328,
-    "contrarian_gap_trend": 1.20843,
-    "high_variance_trend": 6.19446,
-    "low_balanced_trend": 10.63375,
-    "mid_high_trend": -20.0489,
-    "recent_repeat_trend": 14.4039
+    "balanced": 2.446264,
+    "consecutive_trend": 3.7,
+    "contrarian_gap_trend": 1.213605,
+    "high_variance_trend": 6.06186,
+    "low_balanced_trend": 10.246535,
+    "mid_high_trend": -19.20696,
+    "recent_repeat_trend": 15.6137
   },
   "source": "detect_loto7_regime.py",
   "source_base_strategy": "outputs/recent_era/recent_role_strategy.json",
