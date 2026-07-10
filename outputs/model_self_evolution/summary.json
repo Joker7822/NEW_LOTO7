@@ -7,8 +7,8 @@
     "min_profit_delta": 0,
     "min_roi_delta_percent": 0.1,
     "reasons": [
-      "profit 68200 -> 68200",
-      "roi not improved enough 1.066569 -> 1.066569"
+      "profit 66700 -> 66700",
+      "roi not improved enough 1.065010 -> 1.065010"
     ]
   },
   "baseline_metrics": {
@@ -21,7 +21,7 @@
     "missing_prize_draw_count": 0,
     "missing_prize_draws": [],
     "path": "loto7_best_model.json",
-    "profit": 68200,
+    "profit": 66700,
     "purchase_count": 5,
     "rank_counts": {
       "1等": 0,
@@ -30,17 +30,17 @@
       "4等": 15,
       "5等": 60,
       "6等": 90,
-      "外れ": 3249
+      "外れ": 3254
     },
-    "roi": 1.066569,
-    "roi_percent": 106.657,
-    "target_draws": 683,
-    "total_cost": 1024500,
+    "roi": 1.06501,
+    "roi_percent": 106.501,
+    "target_draws": 684,
+    "total_cost": 1026000,
     "total_payout": 1092700,
-    "total_tickets": 3415,
+    "total_tickets": 3420,
     "unit_cost": 300
   },
-  "baseline_objective_score": 71271.89,
+  "baseline_objective_score": 71254.8,
   "best_metrics": {
     "evolution_score": 71271.89,
     "genome_id": "g228_0228_2057",
@@ -51,7 +51,7 @@
     "missing_prize_draw_count": 0,
     "missing_prize_draws": [],
     "path": "loto7_best_model.json",
-    "profit": 68200,
+    "profit": 66700,
     "purchase_count": 5,
     "rank_counts": {
       "1等": 0,
@@ -60,31 +60,31 @@
       "4等": 15,
       "5等": 60,
       "6等": 90,
-      "外れ": 3249
+      "外れ": 3254
     },
-    "roi": 1.066569,
-    "roi_percent": 106.657,
-    "target_draws": 683,
-    "total_cost": 1024500,
+    "roi": 1.06501,
+    "roi_percent": 106.501,
+    "target_draws": 684,
+    "total_cost": 1026000,
     "total_payout": 1092700,
-    "total_tickets": 3415,
+    "total_tickets": 3420,
     "unit_cost": 300
   },
   "best_model": "loto7_best_model.json",
-  "best_objective_score": 71271.89,
+  "best_objective_score": 71254.8,
   "candidate_model": "outputs/model_self_evolution/best_candidate_model.json",
-  "created_at": "2026-07-10T09:40:20.508880+00:00",
+  "created_at": "2026-07-10T14:13:16.280001+00:00",
   "exploration_rate": 0.25,
-  "iterations_evaluated": 4,
-  "iterations_evaluated_this_run": 3,
+  "iterations_evaluated": 7,
+  "iterations_evaluated_this_run": 7,
   "iterations_requested": 20,
-  "last_iteration": 4,
+  "last_iteration": 7,
   "objective": "composite_roi_profit_highgrade_exploration",
   "parent_pool_size": 24,
   "random_parents": 6,
-  "resume_used": true,
-  "start_iteration": 2,
+  "resume_used": false,
+  "start_iteration": 1,
   "state": "outputs/model_self_evolution/state.json",
-  "status": "safe_exit_at_179.91_minutes",
-  "target_draws": 683
+  "status": "safe_exit_at_146.31_minutes",
+  "target_draws": 684
 }
