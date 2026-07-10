@@ -1,6 +1,6 @@
 {
   "combined": "outputs/txt_reports/99_combined_report.txt",
-  "created_at": "2026-07-09T23:44:03.437311+00:00",
+  "created_at": "2026-07-10T07:57:54.688949+00:00",
   "index": "outputs/txt_reports/00_INDEX.txt",
   "json_summaries": [
     {
@@ -40,7 +40,7 @@
           "total_tickets": 3415,
           "unit_cost": 300
         },
-        "updated_at": "2026-07-09T21:08:38.483064+00:00"
+        "updated_at": "2026-07-10T05:26:43.922333+00:00"
       }
     },
     {
@@ -48,7 +48,7 @@
       "source": "outputs/run_manifest.json",
       "summary": {
         "best_model": "loto7_best_model.json",
-        "created_at": "2026-07-09T21:08:38.483064+00:00",
+        "created_at": "2026-07-10T05:26:43.922333+00:00",
         "kind": "loto7_evolution_merge_holdout_rerank_ensemble",
         "latest_draw_no": 684,
         "prediction_mode": "role_ensemble",
@@ -89,7 +89,7 @@
       "source": "outputs/holdout/holdout_summary.json",
       "summary": {
         "best_model": "loto7_best_model.json",
-        "created_at": "2026-07-09T23:22:14.082064+00:00",
+        "created_at": "2026-07-10T04:49:22.314322+00:00",
         "profit": 68200,
         "recent_era_summary": {
           "draw_hit_rate": 0.092537,
@@ -121,14 +121,14 @@
         },
         "roi_percent": 6.657,
         "target_draws": 683,
-        "year_summary_repaired_at": "2026-07-09T23:22:14.186225+00:00"
+        "year_summary_repaired_at": "2026-07-10T04:49:22.424808+00:00"
       }
     },
     {
       "exists": true,
       "source": "outputs/holdout/recent_era_summary.json",
       "summary": {
-        "created_at": "2026-07-09T23:22:14.186947+00:00",
+        "created_at": "2026-07-10T04:49:22.425552+00:00",
         "kind": "loto7_recent_era_holdout_summary",
         "recent_era_summary": {
           "draw_hit_rate": 0.092537,
@@ -248,7 +248,7 @@
           "winner": "best_model"
         },
         "completed_target_draws": 683,
-        "created_at": "2026-07-09T23:22:26.100071+00:00",
+        "created_at": "2026-07-10T04:49:36.942747+00:00",
         "genome_id": "g228_0228_2057",
         "role_ensemble": {
           "draw_count": 683,
@@ -290,7 +290,7 @@
       "exists": true,
       "source": "outputs/role_ensemble/role_strategy.json",
       "summary": {
-        "created_at": "2026-07-09T23:22:36.753700+00:00",
+        "created_at": "2026-07-10T04:49:48.990657+00:00",
         "kind": "loto7_role_strategy",
         "strategy_counts": {
           "contrarian": 0,
@@ -305,7 +305,7 @@
       "exists": true,
       "source": "outputs/role_ensemble/regime_state.json",
       "summary": {
-        "created_at": "2026-07-09T21:31:40.051193+00:00",
+        "created_at": "2026-07-10T05:27:27.339753+00:00",
         "final_counts": {
           "contrarian": 0,
           "high_match": 2,
@@ -323,7 +323,7 @@
       "exists": true,
       "source": "outputs/role_ensemble/regime_strategy.json",
       "summary": {
-        "created_at": "2026-07-09T21:31:40.051215+00:00",
+        "created_at": "2026-07-10T05:27:27.339772+00:00",
         "kind": "loto7_regime_role_strategy",
         "regime": "recent_repeat_trend",
         "regime_strength": 0.664687,
@@ -401,7 +401,7 @@
       "title": "Model Self Evolution Standalone"
     },
     {
-      "bytes": 1199,
+      "bytes": 1197,
       "description": "統合workflow内の軽量自己進化レポート。",
       "exists": true,
       "order": "07",
