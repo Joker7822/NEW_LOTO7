@@ -690,7 +690,7 @@
   "completed_target_draws": 684,
   "csv": "loto7.csv",
   "detail_row_count": 6840,
-  "duplicates_removed": 4590,
+  "duplicates_removed": 0,
   "genome_id": "g228_0228_2057",
   "holdout_end_draw": null,
   "holdout_start_draw": 2,
@@ -706,5 +706,5 @@
   "summary": "outputs/role_ensemble/role_ensemble_summary.json",
   "target_draws_total": 684,
   "unit_cost": 300,
-  "updated_at": "2026-07-10T21:58:33.704935+00:00"
+  "updated_at": "2026-07-10T23:41:50.902039+00:00"
 }
