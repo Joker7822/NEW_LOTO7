@@ -1,6 +1,6 @@
 {
-  "completed_target_draws": 335,
-  "created_at": "2026-07-10T03:09:31.099785+00:00",
+  "completed_target_draws": 336,
+  "created_at": "2026-07-11T02:07:22.338863+00:00",
   "kind": "loto7_recent_era_role_strategy",
   "max_main_best": 1,
   "notes": [
@@ -34,14 +34,14 @@
   ],
   "roles": {
     "contrarian": {
-      "draw_count": 335,
+      "draw_count": 336,
       "draw_hit_count": 16,
-      "draw_hit_rate_percent": 4.776,
+      "draw_hit_rate_percent": 4.762,
       "grade_hit_count": 16,
       "high_grade_hit_count": 2,
       "max_bonus_match": 2,
       "max_main_match": 5,
-      "profit": -73300,
+      "profit": -73600,
       "rank_counts": {
         "1等": 0,
         "2等": 0,
@@ -49,24 +49,24 @@
         "4等": 2,
         "5等": 5,
         "6等": 9,
-        "外れ": 319
+        "外れ": 320
       },
-      "roi": 0.270647,
-      "roi_percent": 27.065,
-      "ticket_hit_rate_percent": 4.776,
-      "total_cost": 100500,
+      "roi": 0.269841,
+      "roi_percent": 26.984,
+      "ticket_hit_rate_percent": 4.762,
+      "total_cost": 100800,
       "total_payout": 27200,
-      "total_tickets": 335
+      "total_tickets": 336
     },
     "high_match": {
-      "draw_count": 335,
+      "draw_count": 336,
       "draw_hit_count": 12,
-      "draw_hit_rate_percent": 3.582,
+      "draw_hit_rate_percent": 3.571,
       "grade_hit_count": 12,
       "high_grade_hit_count": 0,
       "max_bonus_match": 2,
       "max_main_match": 4,
-      "profit": -86700,
+      "profit": -87000,
       "rank_counts": {
         "1等": 0,
         "2等": 0,
@@ -74,24 +74,24 @@
         "4等": 0,
         "5等": 6,
         "6等": 6,
-        "外れ": 323
+        "外れ": 324
       },
-      "roi": 0.137313,
-      "roi_percent": 13.731,
-      "ticket_hit_rate_percent": 3.582,
-      "total_cost": 100500,
+      "roi": 0.136905,
+      "roi_percent": 13.69,
+      "ticket_hit_rate_percent": 3.571,
+      "total_cost": 100800,
       "total_payout": 13800,
-      "total_tickets": 335
+      "total_tickets": 336
     },
     "main_best": {
-      "draw_count": 335,
+      "draw_count": 336,
       "draw_hit_count": 10,
-      "draw_hit_rate_percent": 2.985,
+      "draw_hit_rate_percent": 2.976,
       "grade_hit_count": 10,
       "high_grade_hit_count": 0,
       "max_bonus_match": 2,
       "max_main_match": 4,
-      "profit": -90700,
+      "profit": -91000,
       "rank_counts": {
         "1等": 0,
         "2等": 0,
@@ -99,24 +99,24 @@
         "4等": 0,
         "5等": 2,
         "6等": 8,
-        "外れ": 325
+        "外れ": 326
       },
-      "roi": 0.097512,
-      "roi_percent": 9.751,
-      "ticket_hit_rate_percent": 2.985,
-      "total_cost": 100500,
+      "roi": 0.097222,
+      "roi_percent": 9.722,
+      "ticket_hit_rate_percent": 2.976,
+      "total_cost": 100800,
       "total_payout": 9800,
-      "total_tickets": 335
+      "total_tickets": 336
     },
     "mid_high": {
-      "draw_count": 335,
+      "draw_count": 336,
       "draw_hit_count": 7,
-      "draw_hit_rate_percent": 2.09,
+      "draw_hit_rate_percent": 2.083,
       "grade_hit_count": 7,
       "high_grade_hit_count": 0,
       "max_bonus_match": 2,
       "max_main_match": 4,
-      "profit": -92600,
+      "profit": -92900,
       "rank_counts": {
         "1等": 0,
         "2等": 0,
@@ -124,24 +124,24 @@
         "4等": 0,
         "5等": 4,
         "6等": 3,
-        "外れ": 328
+        "外れ": 329
       },
-      "roi": 0.078607,
-      "roi_percent": 7.861,
-      "ticket_hit_rate_percent": 2.09,
-      "total_cost": 100500,
+      "roi": 0.078373,
+      "roi_percent": 7.837,
+      "ticket_hit_rate_percent": 2.083,
+      "total_cost": 100800,
       "total_payout": 7900,
-      "total_tickets": 335
+      "total_tickets": 336
     },
     "recent120": {
-      "draw_count": 335,
+      "draw_count": 336,
       "draw_hit_count": 17,
-      "draw_hit_rate_percent": 5.075,
+      "draw_hit_rate_percent": 5.06,
       "grade_hit_count": 17,
       "high_grade_hit_count": 0,
       "max_bonus_match": 2,
       "max_main_match": 4,
-      "profit": -81000,
+      "profit": -81300,
       "rank_counts": {
         "1等": 0,
         "2等": 0,
@@ -149,22 +149,22 @@
         "4等": 0,
         "5等": 9,
         "6等": 8,
-        "外れ": 318
+        "外れ": 319
       },
-      "roi": 0.19403,
-      "roi_percent": 19.403,
-      "ticket_hit_rate_percent": 5.075,
-      "total_cost": 100500,
+      "roi": 0.193452,
+      "roi_percent": 19.345,
+      "ticket_hit_rate_percent": 5.06,
+      "total_cost": 100800,
       "total_payout": 19500,
-      "total_tickets": 335
+      "total_tickets": 336
     }
   },
   "scores": {
-    "contrarian": 416.836672,
-    "high_match": 161.119872,
-    "main_best": 97.116155,
-    "mid_high": 106.961215,
-    "recent120": 215.213093
+    "contrarian": 416.603181,
+    "high_match": 160.989929,
+    "main_best": 97.020567,
+    "mid_high": 106.883555,
+    "recent120": 215.030964
   },
   "source": "outputs/role_ensemble/role_ensemble_backtest.csv",
   "start_year": 2020,
