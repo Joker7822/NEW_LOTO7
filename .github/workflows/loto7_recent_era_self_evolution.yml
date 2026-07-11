@@ -76,7 +76,7 @@ jobs:
       - name: Prepare recent era baseline
         run: |
           set -euo pipefail
-          mkdir -p outputs/recent_era
+          mkdir -p outputs/recent_era outputs/super_recent
           if [ ! -s outputs/recent_era/recent_era_best_model.json ]; then
             cp -f loto7_best_model.json outputs/recent_era/recent_era_best_model.json
           fi
@@ -96,6 +96,18 @@ jobs:
           echo "draw_no=${DRAW_NO}" >> "$GITHUB_OUTPUT"
           echo "Recent era start year=${START_YEAR} draw=${DRAW_NO}"
 
+      - name: Detect super recent start draw
+        id: super_start
+        run: |
+          set -euo pipefail
+          DRAW_NO=$(python -c "from loto7_evolution_trainer import load_draws; draws=load_draws('loto7.csv'); matches=[d.draw_no for d in draws if str(getattr(d, 'date', '') or '')[:4].isdigit() and int(str(getattr(d, 'date', '') or '')[:4]) >= 2023]; print(matches[0] if matches else '')")
+          if [ -z "$DRAW_NO" ]; then
+            echo "no draw found for super recent start year: 2023" >&2
+            exit 1
+          fi
+          echo "draw_no=${DRAW_NO}" >> "$GITHUB_OUTPUT"
+          echo "Super Recent start year=2023 draw=${DRAW_NO}"
+
       - name: Run recent era model self evolution
         env:
           PYTHONUNBUFFERED: "1"
@@ -109,23 +121,23 @@ jobs:
           fi
           python loto7_model_self_evolver.py \
             --best-model outputs/recent_era/recent_era_best_model.json \
-            --seed-patterns outputs/recent_era/recent_era_best_model.json loto7_best_model.json \
+            --seed-patterns outputs/recent_era/recent_era_best_model.json outputs/super_recent/super_recent_best_model.json loto7_best_model.json \
             --iterations "$ITERATIONS" \
             --max-targets 0 \
             --min-train-draws 1 \
             --holdout-start-draw "${{ steps.recent_start.outputs.draw_no }}" \
-            --parent-pool-size 36 \
-            --random-parents 12 \
-            --exploration-rate 0.38 \
-            --stagnation-patience 45 \
+            --parent-pool-size 40 \
+            --random-parents 14 \
+            --exploration-rate 0.42 \
+            --stagnation-patience 40 \
             --seed "${{ github.run_id }}" \
             --state outputs/recent_era/recent_era_model_state.json \
             --history outputs/recent_era/recent_era_model_history.csv \
             --summary outputs/recent_era/recent_era_model_summary.json \
             --report outputs/recent_era/recent_era_model_report.txt \
             --candidate-model outputs/recent_era/recent_era_candidate_model.json \
-            --max-runtime-minutes 320 \
-            --safe-exit-minutes 30 \
+            --max-runtime-minutes 155 \
+            --safe-exit-minutes 15 \
             --min-roi-delta-percent 0.10 \
             --min-profit-delta 0 \
             --allow-high-grade-drop \
@@ -153,6 +165,120 @@ jobs:
             --min-recent-payout-roi-percent 8.0 \
             --restore-on-fail
 
+      - name: Adaptive safety guard for recent era model
+        env:
+          START_YEAR: ${{ steps.inputs.outputs.start_year }}
+        run: |
+          set -euo pipefail
+          python scripts/adaptive_model_safety_guard.py \
+            --csv loto7.csv \
+            --baseline-model outputs/recent_era/recent_era_baseline_before_run.json \
+            --candidate-model outputs/recent_era/recent_era_best_model.json \
+            --best-model outputs/recent_era/recent_era_best_model.json \
+            --summary outputs/recent_era/recent_era_adaptive_safety_guard.json \
+            --report outputs/recent_era/recent_era_adaptive_safety_guard_report.txt \
+            --prediction-history outputs/evolution_prediction_history.csv \
+            --focus-start-year "$START_YEAR" \
+            --walk-forward-periods "2020:2022,2023:" \
+            --purchase-count 5 \
+            --unit-cost 300 \
+            --min-focus-roi-percent 8.0 \
+            --min-focus-roi-delta-percent -0.25 \
+            --min-focus-profit-delta -5000 \
+            --min-walk-forward-roi-percent 1.0 \
+            --max-walk-forward-roi-drop-percent -80.0 \
+            --max-history-exact-duplicates 2 \
+            --max-history-max-overlap 6 \
+            --restore-on-fail
+
+      - name: Prepare super recent baseline
+        run: |
+          set -euo pipefail
+          mkdir -p outputs/super_recent
+          if [ ! -s outputs/super_recent/super_recent_best_model.json ]; then
+            cp -f outputs/recent_era/recent_era_best_model.json outputs/super_recent/super_recent_best_model.json
+          fi
+          cp -f outputs/super_recent/super_recent_best_model.json outputs/super_recent/super_recent_baseline_before_run.json
+
+      - name: Run super recent 2023+ model self evolution
+        env:
+          PYTHONUNBUFFERED: "1"
+          APPLY_MODEL: ${{ steps.inputs.outputs.apply_model }}
+          ITERATIONS: ${{ steps.inputs.outputs.iterations }}
+        run: |
+          set -euo pipefail
+          APPLY_FLAG="--apply"
+          if [ "$APPLY_MODEL" != "true" ]; then
+            APPLY_FLAG=""
+          fi
+          python loto7_model_self_evolver.py \
+            --best-model outputs/super_recent/super_recent_best_model.json \
+            --seed-patterns outputs/super_recent/super_recent_best_model.json outputs/recent_era/recent_era_best_model.json loto7_best_model.json \
+            --iterations "$ITERATIONS" \
+            --max-targets 0 \
+            --min-train-draws 1 \
+            --holdout-start-draw "${{ steps.super_start.outputs.draw_no }}" \
+            --parent-pool-size 44 \
+            --random-parents 16 \
+            --exploration-rate 0.48 \
+            --stagnation-patience 36 \
+            --seed "${{ github.run_id }}2023" \
+            --state outputs/super_recent/super_recent_model_state.json \
+            --history outputs/super_recent/super_recent_model_history.csv \
+            --summary outputs/super_recent/super_recent_model_summary.json \
+            --report outputs/super_recent/super_recent_model_report.txt \
+            --candidate-model outputs/super_recent/super_recent_candidate_model.json \
+            --max-runtime-minutes 140 \
+            --safe-exit-minutes 15 \
+            --min-roi-delta-percent 0.10 \
+            --min-profit-delta 0 \
+            --allow-high-grade-drop \
+            ${APPLY_FLAG}
+
+      - name: Guard super recent dedicated model
+        run: |
+          set -euo pipefail
+          python scripts/recent_era_dedicated_guard.py \
+            --csv loto7.csv \
+            --baseline-model outputs/super_recent/super_recent_baseline_before_run.json \
+            --candidate-model outputs/super_recent/super_recent_best_model.json \
+            --best-model outputs/super_recent/super_recent_best_model.json \
+            --summary outputs/super_recent/super_recent_model_guard.json \
+            --report outputs/super_recent/super_recent_model_guard_report.txt \
+            --purchase-count 5 \
+            --unit-cost 300 \
+            --min-train-draws 1 \
+            --holdout-start-draw 2 \
+            --recent-start-year 2023 \
+            --min-recent-roi-delta-percent 0.0 \
+            --min-recent-profit-delta 0 \
+            --min-recent-payout-roi-percent 8.0 \
+            --restore-on-fail
+
+      - name: Adaptive safety guard for super recent model
+        run: |
+          set -euo pipefail
+          python scripts/adaptive_model_safety_guard.py \
+            --csv loto7.csv \
+            --baseline-model outputs/super_recent/super_recent_baseline_before_run.json \
+            --candidate-model outputs/super_recent/super_recent_best_model.json \
+            --best-model outputs/super_recent/super_recent_best_model.json \
+            --summary outputs/super_recent/super_recent_adaptive_safety_guard.json \
+            --report outputs/super_recent/super_recent_adaptive_safety_guard_report.txt \
+            --prediction-history outputs/evolution_prediction_history.csv \
+            --focus-start-year 2023 \
+            --walk-forward-periods "2023:2024,2025:" \
+            --purchase-count 5 \
+            --unit-cost 300 \
+            --min-focus-roi-percent 8.0 \
+            --min-focus-roi-delta-percent -0.25 \
+            --min-focus-profit-delta -5000 \
+            --min-walk-forward-roi-percent 1.0 \
+            --max-walk-forward-roi-drop-percent -80.0 \
+            --max-history-exact-duplicates 2 \
+            --max-history-max-overlap 6 \
+            --restore-on-fail
+
       - name: Build Recent Era model comparison
         env:
           START_YEAR: ${{ steps.inputs.outputs.start_year }}
@@ -167,47 +293,64 @@ jobs:
             --recent-start-year "$START_YEAR" \
             --purchase-count 5 \
             --unit-cost 300
+          python scripts/build_recent_era_model_comparison.py \
+            --csv loto7.csv \
+            --full-model loto7_best_model.json \
+            --recent-model outputs/super_recent/super_recent_best_model.json \
+            --summary outputs/super_recent/super_recent_model_comparison_summary.json \
+            --report outputs/super_recent/super_recent_model_comparison_report.txt \
+            --recent-start-year 2023 \
+            --purchase-count 5 \
+            --unit-cost 300
 
-      - name: Rebuild dual latest prediction
+      - name: Rebuild adaptive latest prediction
         run: |
           set -euo pipefail
-          mkdir -p outputs/holdout outputs/role_ensemble outputs/recent_era
+          mkdir -p outputs/holdout outputs/role_ensemble outputs/recent_era outputs/super_recent
           python scripts/build_dual_model_prediction.py \
             --csv loto7.csv \
             --full-model loto7_best_model.json \
             --recent-model outputs/recent_era/recent_era_best_model.json \
+            --super-recent-model outputs/super_recent/super_recent_best_model.json \
             --regime-strategy outputs/role_ensemble/regime_strategy.json \
+            --prediction-history outputs/evolution_prediction_history.csv \
             --prediction outputs/evolution_best_prediction.csv \
             --prediction-report outputs/holdout/latest_prediction_report.txt \
             --purchase-count 5 \
             --full-count 2 \
-            --recent-count 2 \
-            --overlap-limit 4
+            --recent-count 1 \
+            --super-recent-count 1 \
+            --strict-overlap-limit 4 \
+            --history-overlap-limit 6 \
+            --diversity-weight 1.15 \
+            --first-prize-weight 1.25
 
       - name: Commit recent era outputs
         if: always()
         run: |
           set -euo pipefail
           SNAPSHOT="$(mktemp -d)"
-          mkdir -p "$SNAPSHOT/outputs/recent_era" "$SNAPSHOT/outputs/holdout"
+          mkdir -p "$SNAPSHOT/outputs/recent_era" "$SNAPSHOT/outputs/super_recent" "$SNAPSHOT/outputs/holdout"
           cp -f outputs/recent_era/* "$SNAPSHOT/outputs/recent_era/" 2>/dev/null || true
+          cp -f outputs/super_recent/* "$SNAPSHOT/outputs/super_recent/" 2>/dev/null || true
           cp -f outputs/evolution_best_prediction.csv "$SNAPSHOT/outputs/" 2>/dev/null || true
           cp -f outputs/holdout/latest_prediction_report.txt "$SNAPSHOT/outputs/holdout/" 2>/dev/null || true
 
           git fetch origin "${GITHUB_REF_NAME}"
           git reset --hard "origin/${GITHUB_REF_NAME}"
 
-          mkdir -p outputs/recent_era outputs/holdout
+          mkdir -p outputs/recent_era outputs/super_recent outputs/holdout
           cp -f "$SNAPSHOT"/outputs/recent_era/* outputs/recent_era/ 2>/dev/null || true
+          cp -f "$SNAPSHOT"/outputs/super_recent/* outputs/super_recent/ 2>/dev/null || true
           cp -f "$SNAPSHOT"/outputs/evolution_best_prediction.csv outputs/evolution_best_prediction.csv 2>/dev/null || true
           cp -f "$SNAPSHOT"/outputs/holdout/* outputs/holdout/ 2>/dev/null || true
 
-          git add -f outputs/recent_era/* outputs/evolution_best_prediction.csv outputs/holdout/latest_prediction_report.txt || true
+          git add -f outputs/recent_era/* outputs/super_recent/* outputs/evolution_best_prediction.csv outputs/holdout/latest_prediction_report.txt || true
           if git diff --cached --quiet; then
-            echo "No recent era changes"
+            echo "No recent/super recent changes"
             exit 0
           fi
-          git commit -m "Run LOTO7 recent era self-evolution [skip ci]"
+          git commit -m "Run LOTO7 recent and super recent self-evolution [skip ci]"
           git push origin HEAD:"${GITHUB_REF_NAME}"
 
       - name: Upload recent era artifacts
@@ -217,6 +360,7 @@ jobs:
           name: loto7-recent-era-self-evolution
           path: |
             outputs/recent_era/*
+            outputs/super_recent/*
             outputs/evolution_best_prediction.csv
             outputs/holdout/latest_prediction_report.txt
           if-no-files-found: ignore
