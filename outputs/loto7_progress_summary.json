@@ -27,7 +27,7 @@
     }
   ],
   "ml_status": {
-    "started_at": "2026-07-10T14:15:23.760579+00:00",
+    "started_at": "2026-07-10T21:59:50.986814+00:00",
     "label_definitions": {
       "label_4plus": "1 when main_match >= 4",
       "label_5plus": "1 when main_match >= 5"
@@ -43,77 +43,77 @@
     "reports": [
       {
         "model": "meta_logistic",
-        "auc": 0.8887307195174494,
-        "test_rows": 5267,
-        "positive_rate": 0.11866337573571292
+        "auc": 0.8892017836034423,
+        "test_rows": 5266,
+        "positive_rate": 0.11849601215343715
       },
       {
         "model": "meta_rf",
-        "auc": 0.8308096510124946,
-        "test_rows": 5267,
-        "positive_rate": 0.11866337573571292
+        "auc": 0.8338031932522454,
+        "test_rows": 5266,
+        "positive_rate": 0.11849601215343715
       },
       {
         "model": "xgboost",
-        "auc": 0.8460713485566567,
-        "test_rows": 5267,
-        "positive_rate": 0.11866337573571292
+        "auc": 0.8481151056684232,
+        "test_rows": 5266,
+        "positive_rate": 0.11849601215343715
       },
       {
         "model": "lightgbm",
-        "auc": 0.8666412753123653,
-        "test_rows": 5267,
-        "positive_rate": 0.11866337573571292
+        "auc": 0.8711836396226207,
+        "test_rows": 5266,
+        "positive_rate": 0.11849601215343715
       },
       {
         "model": "catboost",
-        "auc": 0.8553892287806979,
-        "test_rows": 5267,
-        "positive_rate": 0.11866337573571292
+        "auc": 0.8528654895657265,
+        "test_rows": 5266,
+        "positive_rate": 0.11849601215343715
       }
     ],
     "optuna": {
-      "best_value": 0.8941935372684187,
+      "best_value": 0.8949098393707398,
       "model": "logistic",
-      "C": 0.05014543087127504
+      "C": 0.05273337089946995
     },
     "shap": {
       "model": "lightgbm",
       "rows": 17
     },
-    "finished_at": "2026-07-10T14:16:26.671569+00:00",
+    "finished_at": "2026-07-10T22:01:42.766250+00:00",
     "ok": true
   },
   "ml_reports": [
     {
       "model": "meta_logistic",
-      "auc": "0.8887307195174494",
-      "test_rows": "5267",
-      "positive_rate": "0.11866337573571292"
+      "auc": "0.8892017836034423",
+      "test_rows": "5266",
+      "positive_rate": "0.11849601215343715"
     },
     {
       "model": "meta_rf",
-      "auc": "0.8308096510124946",
-      "test_rows": "5267",
-      "positive_rate": "0.11866337573571292"
+      "auc": "0.8338031932522454",
+      "test_rows": "5266",
+      "positive_rate": "0.11849601215343715"
     },
     {
       "model": "xgboost",
-      "auc": "0.8460713485566567",
-      "test_rows": "5267",
-      "positive_rate": "0.11866337573571292"
+      "auc": "0.8481151056684232",
+      "test_rows": "5266",
+      "positive_rate": "0.11849601215343715"
     },
     {
       "model": "lightgbm",
-      "auc": "0.8666412753123653",
-      "test_rows": "5267",
-      "positive_rate": "0.11866337573571292"
+      "auc": "0.8711836396226207",
+      "test_rows": "5266",
+      "positive_rate": "0.11849601215343715"
     },
     {
       "model": "catboost",
-      "auc": "0.8553892287806979",
-      "test_rows": "5267",
-      "positive_rate": "0.11866337573571292"
+      "auc": "0.8528654895657265",
+      "test_rows": "5266",
+      "positive_rate": "0.11849601215343715"
     }
   ]
 }
