@@ -50,7 +50,7 @@ jobs:
       - name: Optimize recent era role strategy
         run: |
           set -euo pipefail
-          mkdir -p outputs/recent_era outputs/role_ensemble
+          mkdir -p outputs/recent_era outputs/super_recent outputs/role_ensemble
           if [ -s outputs/role_ensemble/role_ensemble_backtest.csv ]; then
             python scripts/optimize_recent_era_role_strategy.py \
               --input outputs/role_ensemble/role_ensemble_backtest.csv \
@@ -68,7 +68,7 @@ jobs:
       - name: Detect regime with recent era role strategy
         run: |
           set -euo pipefail
-          mkdir -p outputs/role_ensemble outputs/recent_era
+          mkdir -p outputs/role_ensemble outputs/recent_era outputs/super_recent
           BASE_STRATEGY="outputs/recent_era/recent_role_strategy.json"
           if [ ! -s "$BASE_STRATEGY" ]; then
             BASE_STRATEGY="outputs/role_ensemble/role_strategy.json"
@@ -81,10 +81,10 @@ jobs:
             --report outputs/role_ensemble/regime_strategy_report.txt \
             --purchase-count 5
 
-      - name: Build Recent Era model comparison
+      - name: Build model comparison reports
         run: |
           set -euo pipefail
-          mkdir -p outputs/recent_era
+          mkdir -p outputs/recent_era outputs/super_recent
           python scripts/build_recent_era_model_comparison.py \
             --csv loto7.csv \
             --full-model loto7_best_model.json \
@@ -94,22 +94,41 @@ jobs:
             --recent-start-year 2020 \
             --purchase-count 5 \
             --unit-cost 300
+          if [ -s outputs/super_recent/super_recent_best_model.json ]; then
+            python scripts/build_recent_era_model_comparison.py \
+              --csv loto7.csv \
+              --full-model loto7_best_model.json \
+              --recent-model outputs/super_recent/super_recent_best_model.json \
+              --summary outputs/super_recent/super_recent_model_comparison_summary.json \
+              --report outputs/super_recent/super_recent_model_comparison_report.txt \
+              --recent-start-year 2023 \
+              --purchase-count 5 \
+              --unit-cost 300
+          else
+            echo "::warning::super recent model not found; comparison skipped"
+          fi
 
-      - name: Build dual model prediction
+      - name: Build adaptive dual model prediction
         run: |
           set -euo pipefail
-          mkdir -p outputs/holdout outputs/recent_era outputs/role_ensemble
+          mkdir -p outputs/holdout outputs/recent_era outputs/super_recent outputs/role_ensemble
           python scripts/build_dual_model_prediction.py \
             --csv loto7.csv \
             --full-model loto7_best_model.json \
             --recent-model outputs/recent_era/recent_era_best_model.json \
+            --super-recent-model outputs/super_recent/super_recent_best_model.json \
             --regime-strategy outputs/role_ensemble/regime_strategy.json \
+            --prediction-history outputs/evolution_prediction_history.csv \
             --prediction outputs/evolution_best_prediction.csv \
             --prediction-report outputs/holdout/latest_prediction_report.txt \
             --purchase-count 5 \
             --full-count 2 \
-            --recent-count 2 \
-            --overlap-limit 4
+            --recent-count 1 \
+            --super-recent-count 1 \
+            --strict-overlap-limit 4 \
+            --history-overlap-limit 6 \
+            --diversity-weight 1.15 \
+            --first-prize-weight 1.25
 
       - name: Update cumulative prediction history
         run: |
@@ -132,7 +151,7 @@ jobs:
         run: |
           set -euo pipefail
           SNAPSHOT="$(mktemp -d)"
-          mkdir -p "$SNAPSHOT/outputs/holdout" "$SNAPSHOT/outputs/role_ensemble" "$SNAPSHOT/outputs/recent_era"
+          mkdir -p "$SNAPSHOT/outputs/holdout" "$SNAPSHOT/outputs/role_ensemble" "$SNAPSHOT/outputs/recent_era" "$SNAPSHOT/outputs/super_recent"
           cp -f outputs/evolution_best_prediction.csv "$SNAPSHOT/outputs/" 2>/dev/null || true
           cp -f outputs/evolution_prediction_history.csv "$SNAPSHOT/outputs/" 2>/dev/null || true
           cp -f outputs/evolution_prediction_history_result.txt "$SNAPSHOT/outputs/" 2>/dev/null || true
@@ -141,17 +160,19 @@ jobs:
           cp -f outputs/role_ensemble/regime_*.txt "$SNAPSHOT/outputs/role_ensemble/" 2>/dev/null || true
           cp -f outputs/recent_era/recent_role_strategy.* "$SNAPSHOT/outputs/recent_era/" 2>/dev/null || true
           cp -f outputs/recent_era/recent_era_model_comparison_* "$SNAPSHOT/outputs/recent_era/" 2>/dev/null || true
+          cp -f outputs/super_recent/super_recent_model_comparison_* "$SNAPSHOT/outputs/super_recent/" 2>/dev/null || true
 
           git fetch origin "${GITHUB_REF_NAME}"
           git reset --hard "origin/${GITHUB_REF_NAME}"
 
-          mkdir -p outputs/holdout outputs/role_ensemble outputs/recent_era
+          mkdir -p outputs/holdout outputs/role_ensemble outputs/recent_era outputs/super_recent
           cp -f "$SNAPSHOT"/outputs/evolution_best_prediction.csv outputs/evolution_best_prediction.csv 2>/dev/null || true
           cp -f "$SNAPSHOT"/outputs/evolution_prediction_history.csv outputs/evolution_prediction_history.csv 2>/dev/null || true
           cp -f "$SNAPSHOT"/outputs/evolution_prediction_history_result.txt outputs/evolution_prediction_history_result.txt 2>/dev/null || true
           cp -f "$SNAPSHOT"/outputs/holdout/* outputs/holdout/ 2>/dev/null || true
           cp -f "$SNAPSHOT"/outputs/role_ensemble/* outputs/role_ensemble/ 2>/dev/null || true
           cp -f "$SNAPSHOT"/outputs/recent_era/* outputs/recent_era/ 2>/dev/null || true
+          cp -f "$SNAPSHOT"/outputs/super_recent/* outputs/super_recent/ 2>/dev/null || true
 
           git add -f \
             outputs/evolution_best_prediction.csv \
@@ -161,12 +182,13 @@ jobs:
             outputs/role_ensemble/regime_*.json \
             outputs/role_ensemble/regime_*.txt \
             outputs/recent_era/recent_role_strategy.* \
-            outputs/recent_era/recent_era_model_comparison_* || true
+            outputs/recent_era/recent_era_model_comparison_* \
+            outputs/super_recent/super_recent_model_comparison_* || true
           if git diff --cached --quiet; then
             echo "No dual prediction changes"
             exit 0
           fi
-          git commit -m "Update LOTO7 dual model prediction [skip ci]"
+          git commit -m "Update LOTO7 adaptive dual model prediction [skip ci]"
           git push origin HEAD:"${GITHUB_REF_NAME}"
 
       - name: Upload dual prediction artifacts
@@ -183,4 +205,5 @@ jobs:
             outputs/role_ensemble/regime_*.txt
             outputs/recent_era/recent_role_strategy.*
             outputs/recent_era/recent_era_model_comparison_*
+            outputs/super_recent/super_recent_model_comparison_*
           if-no-files-found: ignore
