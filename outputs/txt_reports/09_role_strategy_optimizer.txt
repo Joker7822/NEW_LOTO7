@@ -1,13 +1,13 @@
 Role Strategy Optimizer
 =======================
 
-created_at: 2026-07-11T11:28:39.015777+00:00
+created_at: 2026-07-11T17:28:41.004670+00:00
 source: outputs/role_ensemble/role_strategy_report.txt
 status: FOUND
 LOTO7 Role Strategy Optimizer Report
 ====================================
 
-created_at: 2026-07-11T10:50:17.898396+00:00
+created_at: 2026-07-11T16:02:22.832759+00:00
 reason: optimized_from_role_ensemble_backtest_with_main_best_cap
 source_status: completed
 completed_target_draws: 684 / 684
