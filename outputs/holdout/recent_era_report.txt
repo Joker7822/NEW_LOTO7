@@ -1,7 +1,7 @@
 LOTO7 Recent Era Holdout Report
 ===============================
 
-created_at: 2026-07-11T04:22:01.894854+00:00
+created_at: 2026-07-11T07:56:49.639124+00:00
 detail_csv: outputs/holdout/holdout_result.csv
 recent_start_year: 2020
 
