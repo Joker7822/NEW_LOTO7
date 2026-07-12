@@ -1,7 +1,7 @@
 LOTO7 Adaptive Model Safety Guard
 =================================
 
-created_at: 2026-07-12T13:05:30.883187+00:00
+created_at: 2026-07-12T19:11:19.754547+00:00
 focus_start_year: 2023
 accepted: True
 restored_baseline: False
@@ -68,7 +68,7 @@ restored_baseline: False
     "avg_max_overlap": 5.8,
     "exact_duplicates": 1,
     "high_overlap_count": 3,
-    "history_ticket_count": 16,
+    "history_ticket_count": 17,
     "max_overlap": 7,
     "penalty": 1795.0,
     "ticket_count": 5,
@@ -84,7 +84,7 @@ restored_baseline: False
     "avg_max_overlap": 5.8,
     "exact_duplicates": 1,
     "high_overlap_count": 3,
-    "history_ticket_count": 16,
+    "history_ticket_count": 17,
     "max_overlap": 7,
     "penalty": 1795.0,
     "ticket_count": 5,
