@@ -1,6 +1,6 @@
 {
   "best_model": "loto7_best_model.json",
-  "created_at": "2026-07-12T06:23:52.883583+00:00",
+  "created_at": "2026-07-12T09:13:25.241348+00:00",
   "csv": "loto7.csv",
   "kind": "loto7_evolution_merge_holdout_rerank_ensemble",
   "latest_draw_date": "2026-07-10",
