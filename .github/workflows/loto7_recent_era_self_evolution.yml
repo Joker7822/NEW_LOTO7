@@ -266,6 +266,8 @@ jobs:
             --summary outputs/super_recent/super_recent_adaptive_safety_guard.json \
             --report outputs/super_recent/super_recent_adaptive_safety_guard_report.txt \
             --prediction-history outputs/evolution_prediction_history.csv \
+            --reference-model outputs/recent_era/recent_era_best_model.json \
+            --require-independent-from-reference \
             --focus-start-year 2023 \
             --walk-forward-periods "2023:2024,2025:" \
             --purchase-count 5 \
@@ -307,6 +309,19 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p outputs/holdout outputs/role_ensemble outputs/recent_era outputs/super_recent
+          SUPER_COUNT=$(python - <<'PY'
+          import json
+          from pathlib import Path
+          def model_id(path):
+              payload=json.loads(Path(path).read_text(encoding='utf-8'))
+              raw=payload.get('genome', payload)
+              return str(raw.get('id', ''))
+          recent=model_id('outputs/recent_era/recent_era_best_model.json')
+          super_recent=model_id('outputs/super_recent/super_recent_best_model.json')
+          print(1 if recent and super_recent and recent != super_recent else 0)
+          PY
+          )
+          echo "super_recent_count=${SUPER_COUNT}"
           python scripts/build_dual_model_prediction.py \
             --csv loto7.csv \
             --full-model loto7_best_model.json \
@@ -319,11 +334,16 @@ jobs:
             --purchase-count 5 \
             --full-count 2 \
             --recent-count 1 \
-            --super-recent-count 1 \
+            --super-recent-count "$SUPER_COUNT" \
             --strict-overlap-limit 4 \
             --history-overlap-limit 6 \
             --diversity-weight 1.15 \
             --first-prize-weight 1.25
+          python scripts/enforce_prediction_constraints.py \
+            --prediction outputs/evolution_best_prediction.csv \
+            --report outputs/holdout/latest_prediction_report.txt \
+            --max-number-usage 4 \
+            --max-pair-overlap 4
 
       - name: Commit recent era outputs
         if: always()
