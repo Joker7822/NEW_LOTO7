@@ -8,15 +8,19 @@
     "model_id": "g070_0070_3390",
     "path": "outputs/recent_era/recent_era_best_model.json"
   },
-  "created_at": "2026-07-13T12:43:04.848759+00:00",
+  "created_at": "2026-07-13T17:58:50.844319+00:00",
   "csv": "loto7.csv",
   "decision": {
-    "accepted": true,
+    "accepted": false,
     "reasons": [
-      "same model id; safety guard keeps current model"
+      "same model id detected; full safety checks were still executed",
+      "focus window ok: roi=92.024% roi_delta=0.000pt profit_delta=0",
+      "high-grade/max-main ok: high_delta=0 max_main_delta=0",
+      "walk-forward 2020:2022 ok: candidate_roi=20.130% baseline_roi=20.130% delta=0.000pt",
+      "walk-forward 2023: ok: candidate_roi=152.857% baseline_roi=152.857% delta=0.000pt"
     ],
     "restore_on_fail": true,
-    "restored_baseline": false,
+    "restored_baseline": true,
     "same_model": true,
     "thresholds": {
       "allow_high_grade_drop": false,
@@ -28,9 +32,12 @@
       "min_focus_profit_delta": -5000,
       "min_focus_roi_delta_percent": -0.25,
       "min_focus_roi_percent": 8.0,
-      "min_walk_forward_roi_percent": 1.0
+      "min_walk_forward_roi_percent": 1.0,
+      "require_independent_from_reference": false
     },
-    "warnings": []
+    "warnings": [
+      "history max overlap exceeded: 7 > 6"
+    ]
   },
   "focus_baseline": {
     "grade_hit_count": 64,
@@ -80,10 +87,11 @@
   },
   "focus_end_year": null,
   "focus_start_year": 2020,
+  "independent_from_reference": null,
   "kind": "loto7_adaptive_model_safety_guard",
   "notes": [
-    "Focus-window improvement, walk-forward stability, and operational-history overlap are all considered before keeping the candidate.",
-    "This guard is conservative against overfitting and repeated real-operation losing patterns.",
+    "Same-model candidates do not bypass focus, walk-forward, or operational-history checks.",
+    "Super Recent can require a model ID different from the Recent Era reference model.",
     "This does not guarantee lottery winnings or profit."
   ],
   "operational_history": {
@@ -122,6 +130,7 @@
     "history_path": "outputs/evolution_prediction_history.csv"
   },
   "purchase_count": 5,
+  "reference_model": null,
   "unit_cost": 300,
   "walk_forward": {
     "2020:2022": {

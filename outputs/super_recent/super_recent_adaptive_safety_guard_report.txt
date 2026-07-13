@@ -1,16 +1,22 @@
 LOTO7 Adaptive Model Safety Guard
 =================================
 
-created_at: 2026-07-13T15:05:39.286266+00:00
+created_at: 2026-07-13T20:34:43.354743+00:00
 focus_start_year: 2023
-accepted: True
-restored_baseline: False
+accepted: False
+restored_baseline: True
+independent_from_reference: False
 
 [Reasons]
-- same model id; safety guard keeps current model
+- same model id detected; full safety checks were still executed
+- focus window ok: roi=152.857% roi_delta=0.000pt profit_delta=0
+- high-grade/max-main ok: high_delta=0 max_main_delta=0
+- walk-forward 2023:2024 ok: candidate_roi=12.885% baseline_roi=12.885% delta=0.000pt
+- walk-forward 2025: ok: candidate_roi=339.487% baseline_roi=339.487% delta=0.000pt
 
 [Warnings]
-- none
+- model id is not independent from the reference model
+- history max overlap exceeded: 7 > 6
 
 [Focus Baseline]
 {
