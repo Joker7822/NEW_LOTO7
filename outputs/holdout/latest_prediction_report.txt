@@ -1,7 +1,7 @@
 LOTO7 Latest Prediction Report
 ===============================
 
-作成日時(UTC): 2026-07-13T15:30:47.631448+00:00
+作成日時(UTC): 2026-07-13T15:57:39.310043+00:00
 基準最新回: 第685回
 基準最新抽せん日: 2026-07-10
 予測対象回: 第686回
@@ -19,7 +19,7 @@ LOTO7 Latest Prediction Report
 1位 / 1口目: 01 06 09 12 22 26 35
 2位 / 2口目: 06 09 12 17 22 29 36
 3位 / 3口目: 01 08 12 16 24 33 36
-4位 / 4口目: 06 16 17 22 24 33 35
+4位 / 4口目: 09 12 13 19 22 26 36
 5位 / 5口目: 01 07 12 16 20 22 35
 
 [読み方]
@@ -31,3 +31,12 @@ CSV: outputs/evolution_best_prediction.csv
 TXT: outputs/holdout/latest_prediction_report.txt
 
 注意: 宝くじはランダム性が高く、この予測は当せんや利益を保証するものではありません。
+
+[Global Number Usage Guard]
+max_number_usage: 4
+max_pair_overlap: 4
+super_recent_independent: false
+super_recent_note: Recent Eraと異なるモデルIDが採用されるまでSuper Recent独立枠は使用しません。
+changes: 1
+- ticket 5: 12 -> 04
+final_usage: 01=3, 04=1, 06=2, 07=1, 08=1, 09=3, 12=4, 13=1, 16=2, 17=1, 19=1, 20=1, 22=4, 24=1, 26=2, 29=1, 33=1, 35=2, 36=3
