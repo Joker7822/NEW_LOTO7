@@ -1,14 +1,14 @@
 LOTO7 Model-Only Self Evolution Report
 ======================================
 
-created_at: 2026-07-12T16:57:48.245237+00:00
-status: safe_exit_at_174.94_minutes
-resume_used: False
-start_iteration: 1
-last_iteration: 22
+created_at: 2026-07-12T22:04:42.894857+00:00
+status: safe_exit_at_146.72_minutes
+resume_used: True
+start_iteration: 23
+last_iteration: 43
 iterations_requested: 500
-iterations_evaluated: 22
-iterations_evaluated_this_run: 22
+iterations_evaluated: 43
+iterations_evaluated_this_run: 21
 target_draws: 336
 objective: composite_roi_profit_highgrade_exploration
 
