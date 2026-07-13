@@ -378,7 +378,7 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-      - name: Pull latest role strategy
+      - name: Pull latest model and role strategy
         run: |
           set -euo pipefail
           git fetch origin "${GITHUB_REF_NAME}"
@@ -386,6 +386,7 @@ jobs:
       - name: Detect regime using latest role strategy
         run: |
           set -euo pipefail
+          mkdir -p outputs/holdout outputs/role_ensemble outputs/recent_era outputs/super_recent
           python scripts/detect_loto7_regime.py \
             --csv loto7.csv \
             --base-strategy outputs/role_ensemble/role_strategy.json \
@@ -393,25 +394,51 @@ jobs:
             --strategy-output outputs/role_ensemble/regime_strategy.json \
             --report outputs/role_ensemble/regime_strategy_report.txt \
             --purchase-count 5
-      - name: Build final latest prediction from adopted best model
+      - name: Build final adaptive prediction
         run: |
           set -euo pipefail
-          python merge_evolution_shards.py \
+          mkdir -p outputs/holdout outputs/role_ensemble outputs/recent_era outputs/super_recent
+          if [ ! -s outputs/recent_era/recent_era_best_model.json ]; then
+            cp -f loto7_best_model.json outputs/recent_era/recent_era_best_model.json
+          fi
+          if [ ! -s outputs/super_recent/super_recent_best_model.json ]; then
+            cp -f outputs/recent_era/recent_era_best_model.json outputs/super_recent/super_recent_best_model.json
+          fi
+          SUPER_COUNT=$(python - <<'PY'
+          import json
+          from pathlib import Path
+          def model_id(path):
+              payload=json.loads(Path(path).read_text(encoding='utf-8'))
+              raw=payload.get('genome', payload)
+              return str(raw.get('id', ''))
+          recent=model_id('outputs/recent_era/recent_era_best_model.json')
+          super_recent=model_id('outputs/super_recent/super_recent_best_model.json')
+          print(1 if recent and super_recent and recent != super_recent else 0)
+          PY
+          )
+          echo "super_recent_count=${SUPER_COUNT}"
+          python scripts/build_dual_model_prediction.py \
             --csv loto7.csv \
-            --purchase-count 5 \
-            --min-models 1 \
-            --selection-holdout-start-draw 2 \
-            --selection-min-train-draws 1 \
-            --selection-mode holdout_roi \
-            --patterns loto7_best_model.json \
-            --prediction-mode role_ensemble \
-            --role-strategy outputs/role_ensemble/regime_strategy.json \
-            --ensemble-candidates-per-model 12 \
-            --ensemble-overlap-limit 4 \
-            --best-model loto7_best_model.json \
+            --full-model loto7_best_model.json \
+            --recent-model outputs/recent_era/recent_era_best_model.json \
+            --super-recent-model outputs/super_recent/super_recent_best_model.json \
+            --regime-strategy outputs/role_ensemble/regime_strategy.json \
+            --prediction-history outputs/evolution_prediction_history.csv \
             --prediction outputs/evolution_best_prediction.csv \
-            --summary outputs/evolution_merged_summary.json \
-            --manifest outputs/run_manifest.json
+            --prediction-report outputs/holdout/latest_prediction_report.txt \
+            --purchase-count 5 \
+            --full-count 2 \
+            --recent-count 1 \
+            --super-recent-count "$SUPER_COUNT" \
+            --strict-overlap-limit 4 \
+            --history-overlap-limit 6 \
+            --diversity-weight 1.15 \
+            --first-prize-weight 1.25
+          python scripts/enforce_prediction_constraints.py \
+            --prediction outputs/evolution_best_prediction.csv \
+            --report outputs/holdout/latest_prediction_report.txt \
+            --max-number-usage 4 \
+            --max-pair-overlap 4
       - name: Update cumulative prediction history
         run: |
           set -euo pipefail
@@ -426,7 +453,7 @@ jobs:
             --history outputs/evolution_prediction_history.csv \
             --csv loto7.csv \
             --output outputs/evolution_prediction_history_result.txt
-      - name: Commit final prediction outputs
+      - name: Commit final adaptive prediction outputs
         if: always()
         run: |
           set -euo pipefail
@@ -436,8 +463,6 @@ jobs:
           cp -f outputs/evolution_best_prediction.csv "$SNAPSHOT/outputs/" 2>/dev/null || true
           cp -f outputs/evolution_prediction_history.csv "$SNAPSHOT/outputs/" 2>/dev/null || true
           cp -f outputs/evolution_prediction_history_result.txt "$SNAPSHOT/outputs/" 2>/dev/null || true
-          cp -f outputs/evolution_merged_summary.json "$SNAPSHOT/outputs/" 2>/dev/null || true
-          cp -f outputs/run_manifest.json "$SNAPSHOT/outputs/" 2>/dev/null || true
           cp -f outputs/holdout/latest_prediction_report.txt "$SNAPSHOT/outputs/holdout/" 2>/dev/null || true
           cp -f outputs/role_ensemble/regime_*.json "$SNAPSHOT/outputs/role_ensemble/" 2>/dev/null || true
           cp -f outputs/role_ensemble/regime_*.txt "$SNAPSHOT/outputs/role_ensemble/" 2>/dev/null || true
@@ -445,12 +470,21 @@ jobs:
           git reset --hard "origin/${GITHUB_REF_NAME}"
           mkdir -p outputs/holdout outputs/role_ensemble
           cp -f "$SNAPSHOT/loto7_best_model.json" loto7_best_model.json 2>/dev/null || true
-          cp -f "$SNAPSHOT"/outputs/* outputs/ 2>/dev/null || true
+          cp -f "$SNAPSHOT"/outputs/evolution_best_prediction.csv outputs/evolution_best_prediction.csv 2>/dev/null || true
+          cp -f "$SNAPSHOT"/outputs/evolution_prediction_history.csv outputs/evolution_prediction_history.csv 2>/dev/null || true
+          cp -f "$SNAPSHOT"/outputs/evolution_prediction_history_result.txt outputs/evolution_prediction_history_result.txt 2>/dev/null || true
           cp -f "$SNAPSHOT"/outputs/holdout/* outputs/holdout/ 2>/dev/null || true
           cp -f "$SNAPSHOT"/outputs/role_ensemble/* outputs/role_ensemble/ 2>/dev/null || true
-          git add -f loto7_best_model.json outputs/evolution_best_prediction.csv outputs/evolution_prediction_history.csv outputs/evolution_prediction_history_result.txt outputs/evolution_merged_summary.json outputs/run_manifest.json outputs/holdout/latest_prediction_report.txt outputs/role_ensemble/regime_*.json outputs/role_ensemble/regime_*.txt || true
+          git add -f \
+            loto7_best_model.json \
+            outputs/evolution_best_prediction.csv \
+            outputs/evolution_prediction_history.csv \
+            outputs/evolution_prediction_history_result.txt \
+            outputs/holdout/latest_prediction_report.txt \
+            outputs/role_ensemble/regime_*.json \
+            outputs/role_ensemble/regime_*.txt || true
           if git diff --cached --quiet; then echo "No final prediction changes"; exit 0; fi
-          git commit -m "Update LOTO7 final prediction with latest role strategy [skip ci]"
+          git commit -m "Update LOTO7 final adaptive prediction [skip ci]"
           git push origin HEAD:"${GITHUB_REF_NAME}"
       - uses: actions/upload-artifact@v4
         if: always()
@@ -461,8 +495,6 @@ jobs:
             outputs/evolution_best_prediction.csv
             outputs/evolution_prediction_history.csv
             outputs/evolution_prediction_history_result.txt
-            outputs/evolution_merged_summary.json
-            outputs/run_manifest.json
             outputs/holdout/latest_prediction_report.txt
             outputs/role_ensemble/regime_*.json
             outputs/role_ensemble/regime_*.txt
