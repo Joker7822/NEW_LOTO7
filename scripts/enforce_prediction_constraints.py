@@ -132,18 +132,29 @@ def main() -> int:
         if any(overlap(ticket, other) > args.max_pair_overlap for other in tickets[:i]):
             raise SystemExit("pair overlap violation remains")
 
+    super_recent_independent = any(
+        "super_recent" in str(row.get("prediction_method") or "").lower()
+        for row in rows
+    )
+
     report = Path(args.report)
     report.parent.mkdir(parents=True, exist_ok=True)
     with report.open("a", encoding="utf-8") as stream:
         stream.write("\n[Global Number Usage Guard]\n")
         stream.write(f"max_number_usage: {args.max_number_usage}\n")
         stream.write(f"max_pair_overlap: {args.max_pair_overlap}\n")
+        stream.write(f"super_recent_independent: {str(super_recent_independent).lower()}\n")
+        if not super_recent_independent:
+            stream.write("super_recent_note: Recent Eraと異なるモデルIDが採用されるまでSuper Recent独立枠は使用しません。\n")
         stream.write(f"changes: {len(changes)}\n")
         for index, old, new in changes:
             stream.write(f"- ticket {index + 1}: {old:02d} -> {new:02d}\n")
         stream.write("final_usage: " + ", ".join(f"{n:02d}={count}" for n, count in sorted(final_counts.items())) + "\n")
 
-    print(f"[OK] enforced prediction constraints; changes={len(changes)}")
+    print(
+        f"[OK] enforced prediction constraints; changes={len(changes)} "
+        f"super_recent_independent={super_recent_independent}"
+    )
     return 0
 
 
