@@ -1,7 +1,7 @@
 LOTO7 Recent Era Model Comparison
 ===================================
 
-created_at: 2026-07-13T10:47:33.412948+00:00
+created_at: 2026-07-13T12:04:43.834525+00:00
 recent_start_year: 2020
 target_draws: 336
 
