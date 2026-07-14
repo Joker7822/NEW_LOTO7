@@ -1,29 +1,36 @@
 LOTO7 Latest Prediction Report
 ===============================
 
-作成日時(UTC): 2026-07-14T10:27:13.673518+00:00
+作成日時(UTC): 2026-07-14T10:59:51.109833+00:00
 基準最新回: 第685回
 基準最新抽せん日: 2026-07-10
 予測対象回: 第686回
 
 [採用モデル]
-先頭モデルID: g228_0228_2057
-先頭モデルスコア: 71271.89
-使用元モデル数: 2
-予測方式: adaptive_multi_model_finalized
-採用基準: 全期間型 + Recent Era + Super Recent独立時のみ + Regime / 重複削減・履歴抑制・多様性補正
+モデルID: g228_0228_2057
+モデルスコア: 71271.89
+採用元shardモデル: loto7_best_model.json
+統合対象モデル数: 3
+必要最小モデル数: 1
+採用基準: Adaptive Prediction: 全期間型 + Recent Era + Super Recent 2023+ + Regime / 重複削減・履歴抑制・多様性・1等狙い補正
+予測方式: adaptive_dual_super_recent
 
-[最新予測 5口: 正規化相対スコア順]
-1位 / 1口目: 06 09 12 17 22 26 33 / 相対スコア=0.95 / 方式=dual_full_period
-2位 / 2口目: 01 06 09 12 22 29 36 / 相対スコア=0.90 / 方式=dual_full_period
-3位 / 3口目: 07 08 10 16 22 33 35 / 相対スコア=0.85 / 方式=dual_recent_era
-4位 / 4口目: 09 12 13 19 22 26 36 / 相対スコア=0.80 / 方式=dual_regime
-5位 / 5口目: 01 07 12 14 16 20 35 / 相対スコア=0.75 / 方式=dual_regime_usage_guard
+[最新予測 5口: 信頼度の高い順]
+1位 / 1口目: 06 09 12 17 22 26 35
+2位 / 2口目: 01 06 09 12 22 33 36
+3位 / 3口目: 01 10 16 17 22 35 36
+4位 / 4口目: 01 07 12 16 20 22 35
+5位 / 5口目: 09 12 13 19 22 26 36
 
-[相対スコアの意味]
-0.95から順に統一した5口内の相対順位スコアです。
-当せん確率や期待収益率を表す数値ではありません。
-CSVのensemble_scoreと予測履歴の信頼度には、この共通尺度を使用します。
+[読み方]
+1位がこのモデル内で最も信頼度が高い組み合わせです。
+信頼度順位は、採用Genomeが生成した候補のスコア順を保持しています。
+
+[出力ファイル]
+CSV: outputs/evolution_best_prediction.csv
+TXT: outputs/holdout/latest_prediction_report.txt
+
+注意: 宝くじはランダム性が高く、この予測は当せんや利益を保証するものではありません。
 
 [Global Number Usage Guard]
 max_number_usage: 4
@@ -31,11 +38,5 @@ max_pair_overlap: 4
 super_recent_independent: false
 super_recent_note: Recent Eraと異なるモデルIDが採用されるまでSuper Recent独立枠は使用しません。
 changes: 1
-- ticket 5: 22 -> 14
-final_usage: 01=2, 06=2, 07=2, 08=1, 09=3, 10=1, 12=4, 13=1, 14=1, 16=2, 17=1, 19=1, 20=1, 22=4, 26=2, 29=1, 33=2, 35=2, 36=2
-
-[出力ファイル]
-CSV: outputs/evolution_best_prediction.csv
-TXT: outputs/holdout/latest_prediction_report.txt
-
-注意: 宝くじはランダム性が高く、この予測は当せんや利益を保証するものではありません。
+- ticket 5: 22 -> 02
+final_usage: 01=3, 02=1, 06=2, 07=1, 09=3, 10=1, 12=4, 13=1, 16=2, 17=2, 19=1, 20=1, 22=4, 26=2, 33=1, 35=3, 36=3
