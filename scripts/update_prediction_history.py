@@ -7,6 +7,9 @@ Output format:
 
 One row represents one target draw. When the same draw date or draw number already
 exists, it is replaced by the latest prediction set.
+
+The history confidence fields use only a normalized 0-1 relative score. Raw
+model scores or strategy-specific ensemble scores are never copied directly.
 """
 
 from __future__ import annotations
@@ -88,8 +91,17 @@ def target_draw(row: Dict[str, str], draw_dates: Dict[int, str]) -> Tuple[str, s
     raise ValueError("latest prediction row has no usable target draw date")
 
 
+def fallback_confidence(rank: int) -> float:
+    return max(0.50, 0.95 - (rank - 1) * 0.05)
+
+
 def confidence_for(row: Dict[str, str], rank: int) -> str:
-    for field in ("confidence", "confidence_score", "ensemble_score", "model_score", "score"):
+    """Return a normalized 0-1 relative confidence.
+
+    Values outside the 0-1 range are strategy/model scores on incompatible
+    scales, so they are ignored and replaced by the rank-based shared scale.
+    """
+    for field in ("normalized_confidence", "confidence", "confidence_score", "ensemble_score"):
         raw = str(row.get(field, "")).strip()
         if not raw:
             continue
@@ -97,9 +109,10 @@ def confidence_for(row: Dict[str, str], rank: int) -> str:
             value = float(raw)
         except ValueError:
             continue
-        if value > 0:
+        if 0.0 < value <= 1.0:
             return f"{value:.3f}".rstrip("0").rstrip(".")
-    value = max(0.0, 0.97 - (rank - 1) * 0.01)
+
+    value = fallback_confidence(rank)
     return f"{value:.3f}".rstrip("0").rstrip(".")
 
 
@@ -155,13 +168,18 @@ def main() -> int:
 
     fields = output_fields(max_predictions)
     history_path.parent.mkdir(parents=True, exist_ok=True)
-    with history_path.open("w", encoding="utf-8-sig", newline="") as f:
+    temp = history_path.with_suffix(history_path.suffix + ".tmp")
+    with temp.open("w", encoding="utf-8-sig", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fields)
         writer.writeheader()
         for row in combined:
             writer.writerow({field: row.get(field, "") for field in fields})
+    temp.replace(history_path)
 
-    print(f"updated {history_path}: draw_date={draw_date} draw={draw_label} rows={len(combined)} predictions={min(len(latest_rows), max_predictions)}")
+    print(
+        f"updated {history_path}: draw_date={draw_date} draw={draw_label} "
+        f"rows={len(combined)} predictions={min(len(latest_rows), max_predictions)}"
+    )
     return 0
 
 
