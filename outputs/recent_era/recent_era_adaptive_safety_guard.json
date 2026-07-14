@@ -5,23 +5,22 @@
   },
   "best_model_after_guard": "outputs/recent_era/recent_era_best_model.json",
   "candidate": {
-    "model_id": "g070_0070_3390",
+    "model_id": "g117_0117_8038",
     "path": "outputs/recent_era/recent_era_best_model.json"
   },
-  "created_at": "2026-07-14T12:13:45.010381+00:00",
+  "created_at": "2026-07-14T17:45:23.802573+00:00",
   "csv": "loto7.csv",
   "decision": {
     "accepted": false,
     "reasons": [
-      "same model id detected; full safety checks were still executed",
-      "focus window ok: roi=92.024% roi_delta=0.000pt profit_delta=0",
-      "high-grade/max-main ok: high_delta=0 max_main_delta=0",
-      "walk-forward 2020:2022 ok: candidate_roi=20.130% baseline_roi=20.130% delta=0.000pt",
-      "walk-forward 2023: ok: candidate_roi=152.857% baseline_roi=152.857% delta=0.000pt"
+      "focus window ok: roi=92.242% roi_delta=0.218pt profit_delta=1100",
+      "high-grade/max-main ok: high_delta=1 max_main_delta=0",
+      "walk-forward 2020:2022 ok: candidate_roi=14.892% baseline_roi=20.130% delta=-5.238pt",
+      "walk-forward 2023: ok: candidate_roi=157.692% baseline_roi=152.857% delta=4.835pt"
     ],
     "restore_on_fail": true,
     "restored_baseline": true,
-    "same_model": true,
+    "same_model": false,
     "thresholds": {
       "allow_high_grade_drop": false,
       "allow_high_grade_drop_if_max_main_delta": 1,
@@ -63,26 +62,26 @@
     "total_tickets": 1680
   },
   "focus_candidate": {
-    "grade_hit_count": 64,
-    "high_grade_hit_count": 4,
+    "grade_hit_count": 59,
+    "high_grade_hit_count": 5,
     "max_bonus_match": 2,
     "max_main_match": 6,
     "missing_prize_draw_count": 0,
-    "profit": -40200,
+    "profit": -39100,
     "rank_counts": {
       "1等": 0,
       "2等": 0,
       "3等": 1,
-      "4等": 3,
-      "5等": 23,
-      "6等": 37,
-      "外れ": 1616
+      "4等": 4,
+      "5等": 21,
+      "6等": 33,
+      "外れ": 1621
     },
-    "roi": 0.920238,
-    "roi_percent": 92.024,
+    "roi": 0.922421,
+    "roi_percent": 92.242,
     "target_draws": 336,
     "total_cost": 504000,
-    "total_payout": 463800,
+    "total_payout": 464900,
     "total_tickets": 1680
   },
   "focus_end_year": null,
@@ -122,9 +121,9 @@
       "tickets": [
         "06 07 09 12 22 33 35",
         "01 06 09 12 17 22 36",
-        "06 08 09 12 16 22 24",
-        "01 06 08 09 10 22 35",
-        "06 07 10 12 16 17 22"
+        "06 08 09 12 16 18 22",
+        "01 06 08 09 14 22 35",
+        "06 07 08 12 14 22 36"
       ]
     },
     "history_path": "outputs/evolution_prediction_history.csv"
@@ -158,26 +157,26 @@
         "total_tickets": 770
       },
       "candidate": {
-        "grade_hit_count": 26,
-        "high_grade_hit_count": 3,
+        "grade_hit_count": 21,
+        "high_grade_hit_count": 2,
         "max_bonus_match": 2,
         "max_main_match": 5,
         "missing_prize_draw_count": 0,
-        "profit": -184500,
+        "profit": -196600,
         "rank_counts": {
           "1等": 0,
           "2等": 0,
           "3等": 0,
-          "4等": 3,
+          "4等": 2,
           "5等": 8,
-          "6等": 15,
-          "外れ": 744
+          "6等": 11,
+          "外れ": 749
         },
-        "roi": 0.201299,
-        "roi_percent": 20.13,
+        "roi": 0.148918,
+        "roi_percent": 14.892,
         "target_draws": 154,
         "total_cost": 231000,
-        "total_payout": 46500,
+        "total_payout": 34400,
         "total_tickets": 770
       },
       "target_draws": 154
@@ -208,25 +207,25 @@
       },
       "candidate": {
         "grade_hit_count": 38,
-        "high_grade_hit_count": 1,
+        "high_grade_hit_count": 3,
         "max_bonus_match": 2,
         "max_main_match": 6,
         "missing_prize_draw_count": 0,
-        "profit": 144300,
+        "profit": 157500,
         "rank_counts": {
           "1等": 0,
           "2等": 0,
           "3等": 1,
-          "4等": 0,
-          "5等": 15,
+          "4等": 2,
+          "5等": 13,
           "6等": 22,
           "外れ": 872
         },
-        "roi": 1.528571,
-        "roi_percent": 152.857,
+        "roi": 1.576923,
+        "roi_percent": 157.692,
         "target_draws": 182,
         "total_cost": 273000,
-        "total_payout": 417300,
+        "total_payout": 430500,
         "total_tickets": 910
       },
       "target_draws": 182
