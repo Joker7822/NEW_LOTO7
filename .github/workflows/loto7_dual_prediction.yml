@@ -3,26 +3,28 @@ name: LOTO7 Dual Model Prediction
 on:
   workflow_dispatch:
   workflow_run:
+    # Evolution Trainer already builds the final adaptive prediction itself.
+    # Trigger this workflow only when a standalone model family is updated.
     workflows:
-      - LOTO7 Evolution Trainer
       - LOTO7 Model Self Evolution
       - LOTO7 Recent Era Self Evolution
     types:
       - completed
-  schedule:
-    # JST 04:10 / 16:10
-    - cron: "10 7,19 * * *"
 
 permissions:
   contents: write
 
+# GitHub concurrency keeps at most one pending run per group and replaces an
+# older pending run with a newer request. A run-specific group prevents that
+# implicit cancellation. Duplicate trigger sources are removed above to keep
+# actual parallelism low.
 concurrency:
-  group: loto7-dual-prediction-${{ github.ref_name }}
+  group: loto7-dual-prediction-${{ github.ref_name }}-${{ github.run_id }}
   cancel-in-progress: false
 
 jobs:
   dual-prediction:
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -167,7 +169,7 @@ jobs:
             --csv loto7.csv \
             --output outputs/evolution_prediction_history_result.txt
 
-      - name: Commit dual prediction outputs
+      - name: Commit dual prediction outputs with retry
         if: always()
         run: |
           set -euo pipefail
@@ -183,34 +185,48 @@ jobs:
           cp -f outputs/recent_era/recent_era_model_comparison_* "$SNAPSHOT/outputs/recent_era/" 2>/dev/null || true
           cp -f outputs/super_recent/super_recent_model_comparison_* "$SNAPSHOT/outputs/super_recent/" 2>/dev/null || true
 
-          git fetch origin "${GITHUB_REF_NAME}"
-          git reset --hard "origin/${GITHUB_REF_NAME}"
+          for ATTEMPT in 1 2 3 4; do
+            echo "commit attempt=${ATTEMPT}"
+            git fetch origin "${GITHUB_REF_NAME}"
+            git reset --hard "origin/${GITHUB_REF_NAME}"
 
-          mkdir -p outputs/holdout outputs/role_ensemble outputs/recent_era outputs/super_recent
-          cp -f "$SNAPSHOT"/outputs/evolution_best_prediction.csv outputs/evolution_best_prediction.csv 2>/dev/null || true
-          cp -f "$SNAPSHOT"/outputs/evolution_prediction_history.csv outputs/evolution_prediction_history.csv 2>/dev/null || true
-          cp -f "$SNAPSHOT"/outputs/evolution_prediction_history_result.txt outputs/evolution_prediction_history_result.txt 2>/dev/null || true
-          cp -f "$SNAPSHOT"/outputs/holdout/* outputs/holdout/ 2>/dev/null || true
-          cp -f "$SNAPSHOT"/outputs/role_ensemble/* outputs/role_ensemble/ 2>/dev/null || true
-          cp -f "$SNAPSHOT"/outputs/recent_era/* outputs/recent_era/ 2>/dev/null || true
-          cp -f "$SNAPSHOT"/outputs/super_recent/* outputs/super_recent/ 2>/dev/null || true
+            mkdir -p outputs/holdout outputs/role_ensemble outputs/recent_era outputs/super_recent
+            cp -f "$SNAPSHOT"/outputs/evolution_best_prediction.csv outputs/evolution_best_prediction.csv 2>/dev/null || true
+            cp -f "$SNAPSHOT"/outputs/evolution_prediction_history.csv outputs/evolution_prediction_history.csv 2>/dev/null || true
+            cp -f "$SNAPSHOT"/outputs/evolution_prediction_history_result.txt outputs/evolution_prediction_history_result.txt 2>/dev/null || true
+            cp -f "$SNAPSHOT"/outputs/holdout/* outputs/holdout/ 2>/dev/null || true
+            cp -f "$SNAPSHOT"/outputs/role_ensemble/* outputs/role_ensemble/ 2>/dev/null || true
+            cp -f "$SNAPSHOT"/outputs/recent_era/* outputs/recent_era/ 2>/dev/null || true
+            cp -f "$SNAPSHOT"/outputs/super_recent/* outputs/super_recent/ 2>/dev/null || true
 
-          git add -f \
-            outputs/evolution_best_prediction.csv \
-            outputs/evolution_prediction_history.csv \
-            outputs/evolution_prediction_history_result.txt \
-            outputs/holdout/latest_prediction_report.txt \
-            outputs/role_ensemble/regime_*.json \
-            outputs/role_ensemble/regime_*.txt \
-            outputs/recent_era/recent_role_strategy.* \
-            outputs/recent_era/recent_era_model_comparison_* \
-            outputs/super_recent/super_recent_model_comparison_* || true
-          if git diff --cached --quiet; then
-            echo "No dual prediction changes"
-            exit 0
-          fi
-          git commit -m "Update LOTO7 adaptive dual model prediction [skip ci]"
-          git push origin HEAD:"${GITHUB_REF_NAME}"
+            git add -f \
+              outputs/evolution_best_prediction.csv \
+              outputs/evolution_prediction_history.csv \
+              outputs/evolution_prediction_history_result.txt \
+              outputs/holdout/latest_prediction_report.txt \
+              outputs/role_ensemble/regime_*.json \
+              outputs/role_ensemble/regime_*.txt \
+              outputs/recent_era/recent_role_strategy.* \
+              outputs/recent_era/recent_era_model_comparison_* \
+              outputs/super_recent/super_recent_model_comparison_* || true
+
+            if git diff --cached --quiet; then
+              echo "No dual prediction changes"
+              exit 0
+            fi
+
+            git commit -m "Update LOTO7 adaptive dual model prediction [skip ci]"
+            if git push origin HEAD:"${GITHUB_REF_NAME}"; then
+              echo "push succeeded on attempt=${ATTEMPT}"
+              exit 0
+            fi
+
+            echo "::warning::push conflict on attempt=${ATTEMPT}; retrying from latest origin"
+            sleep $((ATTEMPT * 10))
+          done
+
+          echo "::error::failed to commit dual prediction outputs after retries"
+          exit 1
 
       - name: Upload dual prediction artifacts
         uses: actions/upload-artifact@v4
