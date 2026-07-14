@@ -14,13 +14,12 @@ on:
 permissions:
   contents: write
 
-# GitHub concurrency keeps at most one pending run per group and replaces an
-# older pending run with a newer request. A run-specific group prevents that
-# implicit cancellation. Duplicate trigger sources are removed above to keep
-# actual parallelism low.
+# Keep prediction runs serialized while retaining the full waiting queue.
+# queue: max prevents a newer waiting request from replacing an older one.
 concurrency:
-  group: loto7-dual-prediction-${{ github.ref_name }}-${{ github.run_id }}
+  group: loto7-dual-prediction-${{ github.ref_name }}
   cancel-in-progress: false
+  queue: max
 
 jobs:
   dual-prediction:
