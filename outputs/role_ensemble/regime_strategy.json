@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-07-14T09:16:01.150212+00:00",
+  "created_at": "2026-07-14T10:27:13.579505+00:00",
   "kind": "loto7_regime_role_strategy",
   "notes": [
     "Regime-based strategy adjusts Role Strategy Optimizer output using recent draw state.",
@@ -41,7 +41,7 @@
     "recent_repeat_trend": 14.4039
   },
   "source": "detect_loto7_regime.py",
-  "source_base_strategy": "outputs/recent_era/recent_role_strategy.json",
+  "source_base_strategy": "outputs/role_ensemble/role_strategy.json",
   "source_regime_state": "outputs/role_ensemble/regime_state.json",
   "strategy_counts": {
     "contrarian": 0,
