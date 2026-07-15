@@ -1,31 +1,46 @@
 LOTO7 Adaptive Model Safety Guard
 =================================
 
-created_at: 2026-07-15T13:22:19.259956+00:00
+created_at: 2026-07-15T18:53:00.547639+00:00
 focus_start_year: 2023
 accepted: False
 restored_baseline: True
 independent_from_reference: False
 
 [Reasons]
-- same model id detected; full safety checks were still executed
-- focus window ok: roi=152.857% roi_delta=0.000pt profit_delta=0
+- nested summary unavailable; soft check skipped
+- same model id detected; all safety checks still executed
+- focus window ok: roi=152.857% delta=0.000pt profit_delta=0
 - high-grade/max-main ok: high_delta=0 max_main_delta=0
-- walk-forward 2023:2024 ok: candidate_roi=12.885% baseline_roi=12.885% delta=0.000pt
-- walk-forward 2025: ok: candidate_roi=339.487% baseline_roi=339.487% delta=0.000pt
+- walk-forward 2023:2024 ok: candidate=12.885% baseline=12.885% delta=0.000pt
+- walk-forward 2025: ok: candidate=339.487% baseline=339.487% delta=0.000pt
+- top1-removed ROI ok: candidate=13.993% baseline=13.993% delta=0.000pt
+- top2-removed ROI ok: candidate=12.527% baseline=12.527% delta=0.000pt
+- bootstrap p05 ROI ok: candidate=11.225% baseline=11.225% delta=0.000pt
+- worst-year ROI ok: candidate=8.205% baseline=8.205% delta=0.000pt
+- top1 payout concentration ok: candidate=0.908 allowed=0.958
 
 [Warnings]
-- model id is not independent from the reference model
+- model is not independent from the reference model
 - history max overlap exceeded: 7 > 6
 
-[Focus Baseline]
+[Focus Baseline Robust Metrics]
 {
+  "bootstrap_roi_percent_p05": 11.225,
+  "bootstrap_roi_percent_p50": 151.575,
+  "bootstrap_roi_percent_p95": 430.051,
+  "cvar20_profit_per_draw": -1500.0,
   "grade_hit_count": 38,
   "high_grade_hit_count": 1,
+  "largest_draw_payout": 379100,
   "max_bonus_match": 2,
   "max_main_match": 6,
+  "median_year_roi_percent": 15.906,
   "missing_prize_draw_count": 0,
+  "payout_hhi": 0.825734,
+  "positive_year_count": 1,
   "profit": 144300,
+  "profit_roi_percent": 52.857,
   "rank_counts": {
     "1等": 0,
     "2等": 0,
@@ -36,21 +51,35 @@ independent_from_reference: False
     "外れ": 872
   },
   "roi": 1.528571,
+  "roi_excluding_top1_percent": 13.993,
+  "roi_excluding_top2_percent": 12.527,
   "roi_percent": 152.857,
   "target_draws": 182,
+  "top1_payout_share": 0.908459,
   "total_cost": 273000,
   "total_payout": 417300,
-  "total_tickets": 910
+  "total_tickets": 910,
+  "worst_year_roi_percent": 8.205,
+  "year_count": 4
 }
 
-[Focus Candidate]
+[Focus Candidate Robust Metrics]
 {
+  "bootstrap_roi_percent_p05": 11.225,
+  "bootstrap_roi_percent_p50": 151.575,
+  "bootstrap_roi_percent_p95": 430.051,
+  "cvar20_profit_per_draw": -1500.0,
   "grade_hit_count": 38,
   "high_grade_hit_count": 1,
+  "largest_draw_payout": 379100,
   "max_bonus_match": 2,
   "max_main_match": 6,
+  "median_year_roi_percent": 15.906,
   "missing_prize_draw_count": 0,
+  "payout_hhi": 0.825734,
+  "positive_year_count": 1,
   "profit": 144300,
+  "profit_roi_percent": 52.857,
   "rank_counts": {
     "1等": 0,
     "2等": 0,
@@ -61,11 +90,16 @@ independent_from_reference: False
     "外れ": 872
   },
   "roi": 1.528571,
+  "roi_excluding_top1_percent": 13.993,
+  "roi_excluding_top2_percent": 12.527,
   "roi_percent": 152.857,
   "target_draws": 182,
+  "top1_payout_share": 0.908459,
   "total_cost": 273000,
   "total_payout": 417300,
-  "total_tickets": 910
+  "total_tickets": 910,
+  "worst_year_roi_percent": 8.205,
+  "year_count": 4
 }
 
 [Operational History]
@@ -109,12 +143,21 @@ independent_from_reference: False
 {
   "2023:2024": {
     "baseline": {
+      "bootstrap_roi_percent_p05": 8.234,
+      "bootstrap_roi_percent_p50": 13.237,
+      "bootstrap_roi_percent_p95": 19.593,
+      "cvar20_profit_per_draw": -1500.0,
       "grade_hit_count": 18,
       "high_grade_hit_count": 0,
+      "largest_draw_payout": 3000,
       "max_bonus_match": 2,
       "max_main_match": 4,
+      "median_year_roi_percent": 12.884,
       "missing_prize_draw_count": 0,
+      "payout_hhi": 0.080617,
+      "positive_year_count": 0,
       "profit": -135900,
+      "profit_roi_percent": -87.115,
       "rank_counts": {
         "1等": 0,
         "2等": 0,
@@ -125,19 +168,33 @@ independent_from_reference: False
         "外れ": 502
       },
       "roi": 0.128846,
+      "roi_excluding_top1_percent": 10.962,
+      "roi_excluding_top2_percent": 9.231,
       "roi_percent": 12.885,
       "target_draws": 104,
+      "top1_payout_share": 0.149254,
       "total_cost": 156000,
       "total_payout": 20100,
-      "total_tickets": 520
+      "total_tickets": 520,
+      "worst_year_roi_percent": 8.205,
+      "year_count": 2
     },
     "candidate": {
+      "bootstrap_roi_percent_p05": 8.234,
+      "bootstrap_roi_percent_p50": 13.237,
+      "bootstrap_roi_percent_p95": 19.593,
+      "cvar20_profit_per_draw": -1500.0,
       "grade_hit_count": 18,
       "high_grade_hit_count": 0,
+      "largest_draw_payout": 3000,
       "max_bonus_match": 2,
       "max_main_match": 4,
+      "median_year_roi_percent": 12.884,
       "missing_prize_draw_count": 0,
+      "payout_hhi": 0.080617,
+      "positive_year_count": 0,
       "profit": -135900,
+      "profit_roi_percent": -87.115,
       "rank_counts": {
         "1等": 0,
         "2等": 0,
@@ -148,22 +205,36 @@ independent_from_reference: False
         "外れ": 502
       },
       "roi": 0.128846,
+      "roi_excluding_top1_percent": 10.962,
+      "roi_excluding_top2_percent": 9.231,
       "roi_percent": 12.885,
       "target_draws": 104,
+      "top1_payout_share": 0.149254,
       "total_cost": 156000,
       "total_payout": 20100,
-      "total_tickets": 520
+      "total_tickets": 520,
+      "worst_year_roi_percent": 8.205,
+      "year_count": 2
     },
     "target_draws": 104
   },
   "2025:": {
     "baseline": {
+      "bootstrap_roi_percent_p05": 10.256,
+      "bootstrap_roi_percent_p50": 338.034,
+      "bootstrap_roi_percent_p95": 989.453,
+      "cvar20_profit_per_draw": -1500.0,
       "grade_hit_count": 20,
       "high_grade_hit_count": 1,
+      "largest_draw_payout": 379100,
       "max_bonus_match": 2,
       "max_main_match": 6,
+      "median_year_roi_percent": 484.038,
       "missing_prize_draw_count": 0,
+      "payout_hhi": 0.911214,
+      "positive_year_count": 1,
       "profit": 280200,
+      "profit_roi_percent": 239.487,
       "rank_counts": {
         "1等": 0,
         "2等": 0,
@@ -174,19 +245,33 @@ independent_from_reference: False
         "外れ": 370
       },
       "roi": 3.394872,
+      "roi_excluding_top1_percent": 15.47,
+      "roi_excluding_top2_percent": 12.051,
       "roi_percent": 339.487,
       "target_draws": 78,
+      "top1_payout_share": 0.954431,
       "total_cost": 117000,
       "total_payout": 397200,
-      "total_tickets": 390
+      "total_tickets": 390,
+      "worst_year_roi_percent": 14.248,
+      "year_count": 2
     },
     "candidate": {
+      "bootstrap_roi_percent_p05": 10.256,
+      "bootstrap_roi_percent_p50": 338.034,
+      "bootstrap_roi_percent_p95": 989.453,
+      "cvar20_profit_per_draw": -1500.0,
       "grade_hit_count": 20,
       "high_grade_hit_count": 1,
+      "largest_draw_payout": 379100,
       "max_bonus_match": 2,
       "max_main_match": 6,
+      "median_year_roi_percent": 484.038,
       "missing_prize_draw_count": 0,
+      "payout_hhi": 0.911214,
+      "positive_year_count": 1,
       "profit": 280200,
+      "profit_roi_percent": 239.487,
       "rank_counts": {
         "1等": 0,
         "2等": 0,
@@ -197,14 +282,22 @@ independent_from_reference: False
         "外れ": 370
       },
       "roi": 3.394872,
+      "roi_excluding_top1_percent": 15.47,
+      "roi_excluding_top2_percent": 12.051,
       "roi_percent": 339.487,
       "target_draws": 78,
+      "top1_payout_share": 0.954431,
       "total_cost": 117000,
       "total_payout": 397200,
-      "total_tickets": 390
+      "total_tickets": 390,
+      "worst_year_roi_percent": 14.248,
+      "year_count": 2
     },
     "target_draws": 78
   }
 }
 
-注意: 過去検証と運用履歴上の安全ガードであり、将来の当せんや利益を保証しません。
+[Nested Walk Forward]
+{}
+
+注意: 過去検証上の安全ガードであり、将来の当せんや利益を保証しません。
