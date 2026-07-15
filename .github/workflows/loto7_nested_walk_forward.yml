@@ -78,6 +78,7 @@ jobs:
             --seed "${{ github.run_id }}" \
             --max-runtime-minutes-per-fold 28 \
             --bootstrap-samples 300
+          cp -f outputs/validation/recent/nested_walk_forward_summary.json outputs/validation/nested_walk_forward_summary.json
           python scripts/promote_nested_candidate.py \
             --csv loto7.csv \
             --baseline-model outputs/recent_era/recent_era_best_model.json \
@@ -132,24 +133,45 @@ jobs:
             tests.test_prediction_output_consistency \
             tests.test_robust_validation_and_portfolio -v
 
-      - name: Commit nested validation and promoted models
+      - name: Commit nested summaries and promoted models
         if: always()
         run: |
           set -euo pipefail
           SNAPSHOT="$(mktemp -d)"
-          mkdir -p "$SNAPSHOT/outputs/validation" "$SNAPSHOT/outputs/recent_era" "$SNAPSHOT/outputs/super_recent"
-          cp -a outputs/validation/. "$SNAPSHOT/outputs/validation/" 2>/dev/null || true
+          mkdir -p \
+            "$SNAPSHOT/outputs/validation/recent" \
+            "$SNAPSHOT/outputs/validation/super_recent" \
+            "$SNAPSHOT/outputs/recent_era" \
+            "$SNAPSHOT/outputs/super_recent"
+          cp -f outputs/validation/nested_walk_forward_summary.json "$SNAPSHOT/outputs/validation/" 2>/dev/null || true
+          for FILE in nested_walk_forward_summary.json nested_walk_forward_report.txt promotion_decision.json promotion_report.txt; do
+            cp -f "outputs/validation/recent/$FILE" "$SNAPSHOT/outputs/validation/recent/" 2>/dev/null || true
+            cp -f "outputs/validation/super_recent/$FILE" "$SNAPSHOT/outputs/validation/super_recent/" 2>/dev/null || true
+          done
           cp -f outputs/recent_era/recent_era_best_model.json "$SNAPSHOT/outputs/recent_era/" 2>/dev/null || true
           cp -f outputs/super_recent/super_recent_best_model.json "$SNAPSHOT/outputs/super_recent/" 2>/dev/null || true
 
           for ATTEMPT in 1 2 3 4; do
             git fetch origin "${GITHUB_REF_NAME}"
             git reset --hard "origin/${GITHUB_REF_NAME}"
-            mkdir -p outputs/validation outputs/recent_era outputs/super_recent
-            cp -a "$SNAPSHOT/outputs/validation/." outputs/validation/ 2>/dev/null || true
+            mkdir -p outputs/validation/recent outputs/validation/super_recent outputs/recent_era outputs/super_recent
+            cp -f "$SNAPSHOT/outputs/validation/nested_walk_forward_summary.json" outputs/validation/ 2>/dev/null || true
+            cp -f "$SNAPSHOT/outputs/validation/recent/"* outputs/validation/recent/ 2>/dev/null || true
+            cp -f "$SNAPSHOT/outputs/validation/super_recent/"* outputs/validation/super_recent/ 2>/dev/null || true
             cp -f "$SNAPSHOT/outputs/recent_era/"* outputs/recent_era/ 2>/dev/null || true
             cp -f "$SNAPSHOT/outputs/super_recent/"* outputs/super_recent/ 2>/dev/null || true
-            git add -f outputs/validation outputs/recent_era/recent_era_best_model.json outputs/super_recent/super_recent_best_model.json || true
+            git add -f \
+              outputs/validation/nested_walk_forward_summary.json \
+              outputs/validation/recent/nested_walk_forward_summary.json \
+              outputs/validation/recent/nested_walk_forward_report.txt \
+              outputs/validation/recent/promotion_decision.json \
+              outputs/validation/recent/promotion_report.txt \
+              outputs/validation/super_recent/nested_walk_forward_summary.json \
+              outputs/validation/super_recent/nested_walk_forward_report.txt \
+              outputs/validation/super_recent/promotion_decision.json \
+              outputs/validation/super_recent/promotion_report.txt \
+              outputs/recent_era/recent_era_best_model.json \
+              outputs/super_recent/super_recent_best_model.json || true
             if git diff --cached --quiet; then
               echo "No nested validation changes"
               exit 0
