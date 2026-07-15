@@ -1,0 +1,60 @@
+{
+  "average_pair_overlap": 2.0,
+  "candidate_pool_counts": {
+    "full": 230,
+    "recent": 233,
+    "regime": 202,
+    "super": 0
+  },
+  "constraints": {
+    "exact_history_duplicates_allowed": false,
+    "history_overlap_limit": 6,
+    "max_number_usage": 4,
+    "max_pair_overlap": 4
+  },
+  "created_at": "2026-07-15T14:15:53.827917+00:00",
+  "effective_super_recent_count": 0,
+  "history_ticket_count": 17,
+  "max_number_usage": 4,
+  "max_pair_overlap": 4,
+  "number_usage": {
+    "1": 2,
+    "10": 1,
+    "12": 3,
+    "13": 1,
+    "16": 2,
+    "17": 2,
+    "18": 1,
+    "19": 1,
+    "20": 1,
+    "22": 4,
+    "24": 1,
+    "26": 1,
+    "29": 1,
+    "33": 2,
+    "35": 2,
+    "36": 2,
+    "6": 2,
+    "7": 1,
+    "8": 2,
+    "9": 3
+  },
+  "objective_score": 563.884059,
+  "pair_coverage_count": 91,
+  "post_selection_number_replacements": 0,
+  "prediction_draw_no": 686,
+  "source_counts": {
+    "full": 2,
+    "recent": 1,
+    "regime": 2
+  },
+  "source_quotas": {
+    "full": 2,
+    "recent": 1,
+    "regime": 2,
+    "super": 0
+  },
+  "super_recent_independent": false,
+  "triple_coverage_count": 169,
+  "unique_number_count": 20
+}
