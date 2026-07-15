@@ -4,10 +4,11 @@ on:
   workflow_dispatch:
   workflow_run:
     # Evolution Trainer already builds the final adaptive prediction itself.
-    # Trigger this workflow only when a standalone model family is updated.
+    # Rebuild after standalone evolution or sealed nested promotion.
     workflows:
       - LOTO7 Model Self Evolution
       - LOTO7 Recent Era Self Evolution
+      - LOTO7 Nested Walk Forward Validation
     types:
       - completed
 
@@ -15,7 +16,6 @@ permissions:
   contents: write
 
 # Keep prediction runs serialized while retaining the full waiting queue.
-# queue: max prevents a newer waiting request from replacing an older one.
 concurrency:
   group: loto7-dual-prediction-${{ github.ref_name }}
   cancel-in-progress: false
@@ -109,7 +109,7 @@ jobs:
             echo "::warning::super recent model not found; comparison skipped"
           fi
 
-      - name: Build adaptive dual model prediction
+      - name: Build optimized five-ticket portfolio
         run: |
           set -euo pipefail
           mkdir -p outputs/holdout outputs/recent_era outputs/super_recent outputs/role_ensemble
@@ -138,14 +138,19 @@ jobs:
             --prediction-history outputs/evolution_prediction_history.csv \
             --prediction outputs/evolution_best_prediction.csv \
             --prediction-report outputs/holdout/latest_prediction_report.txt \
+            --portfolio-summary outputs/holdout/latest_portfolio_summary.json \
             --purchase-count 5 \
             --full-count 2 \
             --recent-count 1 \
             --super-recent-count "$SUPER_COUNT" \
             --strict-overlap-limit 4 \
+            --max-number-usage 4 \
             --history-overlap-limit 6 \
             --diversity-weight 1.15 \
-            --first-prize-weight 1.25
+            --first-prize-weight 1.25 \
+            --candidates-per-source 240 \
+            --candidates-per-step 100 \
+            --beam-width 320
           python scripts/enforce_prediction_constraints.py \
             --prediction outputs/evolution_best_prediction.csv \
             --report outputs/holdout/latest_prediction_report.txt \
@@ -178,6 +183,7 @@ jobs:
           cp -f outputs/evolution_prediction_history.csv "$SNAPSHOT/outputs/" 2>/dev/null || true
           cp -f outputs/evolution_prediction_history_result.txt "$SNAPSHOT/outputs/" 2>/dev/null || true
           cp -f outputs/holdout/latest_prediction_report.txt "$SNAPSHOT/outputs/holdout/" 2>/dev/null || true
+          cp -f outputs/holdout/latest_portfolio_summary.json "$SNAPSHOT/outputs/holdout/" 2>/dev/null || true
           cp -f outputs/role_ensemble/regime_*.json "$SNAPSHOT/outputs/role_ensemble/" 2>/dev/null || true
           cp -f outputs/role_ensemble/regime_*.txt "$SNAPSHOT/outputs/role_ensemble/" 2>/dev/null || true
           cp -f outputs/recent_era/recent_role_strategy.* "$SNAPSHOT/outputs/recent_era/" 2>/dev/null || true
@@ -188,7 +194,6 @@ jobs:
             echo "commit attempt=${ATTEMPT}"
             git fetch origin "${GITHUB_REF_NAME}"
             git reset --hard "origin/${GITHUB_REF_NAME}"
-
             mkdir -p outputs/holdout outputs/role_ensemble outputs/recent_era outputs/super_recent
             cp -f "$SNAPSHOT"/outputs/evolution_best_prediction.csv outputs/evolution_best_prediction.csv 2>/dev/null || true
             cp -f "$SNAPSHOT"/outputs/evolution_prediction_history.csv outputs/evolution_prediction_history.csv 2>/dev/null || true
@@ -197,33 +202,29 @@ jobs:
             cp -f "$SNAPSHOT"/outputs/role_ensemble/* outputs/role_ensemble/ 2>/dev/null || true
             cp -f "$SNAPSHOT"/outputs/recent_era/* outputs/recent_era/ 2>/dev/null || true
             cp -f "$SNAPSHOT"/outputs/super_recent/* outputs/super_recent/ 2>/dev/null || true
-
             git add -f \
               outputs/evolution_best_prediction.csv \
               outputs/evolution_prediction_history.csv \
               outputs/evolution_prediction_history_result.txt \
               outputs/holdout/latest_prediction_report.txt \
+              outputs/holdout/latest_portfolio_summary.json \
               outputs/role_ensemble/regime_*.json \
               outputs/role_ensemble/regime_*.txt \
               outputs/recent_era/recent_role_strategy.* \
               outputs/recent_era/recent_era_model_comparison_* \
               outputs/super_recent/super_recent_model_comparison_* || true
-
             if git diff --cached --quiet; then
               echo "No dual prediction changes"
               exit 0
             fi
-
-            git commit -m "Update LOTO7 adaptive dual model prediction [skip ci]"
+            git commit -m "Update LOTO7 optimized five-ticket portfolio [skip ci]"
             if git push origin HEAD:"${GITHUB_REF_NAME}"; then
               echo "push succeeded on attempt=${ATTEMPT}"
               exit 0
             fi
-
             echo "::warning::push conflict on attempt=${ATTEMPT}; retrying from latest origin"
             sleep $((ATTEMPT * 10))
           done
-
           echo "::error::failed to commit dual prediction outputs after retries"
           exit 1
 
@@ -237,6 +238,7 @@ jobs:
             outputs/evolution_prediction_history.csv
             outputs/evolution_prediction_history_result.txt
             outputs/holdout/latest_prediction_report.txt
+            outputs/holdout/latest_portfolio_summary.json
             outputs/role_ensemble/regime_*.json
             outputs/role_ensemble/regime_*.txt
             outputs/recent_era/recent_role_strategy.*
