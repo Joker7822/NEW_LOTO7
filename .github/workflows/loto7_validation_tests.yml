@@ -1,0 +1,53 @@
+name: LOTO7 Validation Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "scripts/build_dual_model_prediction.py"
+      - "scripts/enforce_prediction_constraints.py"
+      - "scripts/robust_model_metrics.py"
+      - "scripts/adaptive_model_safety_guard.py"
+      - "scripts/nested_walk_forward_validation.py"
+      - "scripts/promote_nested_candidate.py"
+      - "tests/test_prediction_output_consistency.py"
+      - "tests/test_robust_validation_and_portfolio.py"
+      - ".github/workflows/loto7_nested_walk_forward.yml"
+      - ".github/workflows/loto7_validation_tests.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: loto7-validation-tests-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  validation-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Compile changed Python modules
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            scripts/build_dual_model_prediction.py \
+            scripts/enforce_prediction_constraints.py \
+            scripts/robust_model_metrics.py \
+            scripts/adaptive_model_safety_guard.py \
+            scripts/nested_walk_forward_validation.py \
+            scripts/promote_nested_candidate.py \
+            tests/test_prediction_output_consistency.py \
+            tests/test_robust_validation_and_portfolio.py
+      - name: Run focused validation tests
+        run: |
+          set -euo pipefail
+          python -m unittest \
+            tests.test_prediction_output_consistency \
+            tests.test_robust_validation_and_portfolio -v
