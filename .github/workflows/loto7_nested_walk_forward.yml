@@ -42,7 +42,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Pull latest model candidates
+      - name: Pull latest guarded candidates
         run: |
           set -euo pipefail
           git fetch origin "${GITHUB_REF_NAME}"
@@ -61,10 +61,14 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p outputs/validation/recent
-          CANDIDATE="outputs/recent_era/recent_era_candidate_model.json"
+          CANDIDATE="outputs/recent_era/recent_era_guarded_candidate_model.json"
+          if [ ! -s "$CANDIDATE" ]; then
+            CANDIDATE="outputs/recent_era/recent_era_candidate_model.json"
+          fi
           if [ ! -s "$CANDIDATE" ]; then
             CANDIDATE="outputs/recent_era/recent_era_best_model.json"
           fi
+          echo "Recent nested candidate=${CANDIDATE}"
           python scripts/nested_walk_forward_validation.py \
             --csv loto7.csv \
             --seed-model "$CANDIDATE" \
@@ -97,10 +101,14 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p outputs/validation/super_recent
-          CANDIDATE="outputs/super_recent/super_recent_candidate_model.json"
+          CANDIDATE="outputs/super_recent/super_recent_guarded_candidate_model.json"
+          if [ ! -s "$CANDIDATE" ]; then
+            CANDIDATE="outputs/super_recent/super_recent_candidate_model.json"
+          fi
           if [ ! -s "$CANDIDATE" ]; then
             CANDIDATE="outputs/super_recent/super_recent_best_model.json"
           fi
+          echo "Super Recent nested candidate=${CANDIDATE}"
           python scripts/nested_walk_forward_validation.py \
             --csv loto7.csv \
             --seed-model "$CANDIDATE" \
