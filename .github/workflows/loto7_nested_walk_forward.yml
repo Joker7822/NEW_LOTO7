@@ -1,0 +1,172 @@
+name: LOTO7 Nested Walk Forward Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: "Evolution iterations per sealed fold"
+        required: false
+        default: "40"
+  workflow_run:
+    workflows:
+      - LOTO7 Recent Era Self Evolution
+    types:
+      - completed
+
+permissions:
+  contents: write
+
+concurrency:
+  group: loto7-nested-walk-forward-${{ github.ref_name }}
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  nested-validation:
+    if: ${{ github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Pull latest model candidates
+        run: |
+          set -euo pipefail
+          git fetch origin "${GITHUB_REF_NAME}"
+          git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+
+      - name: Resolve iterations
+        id: settings
+        run: |
+          ITERATIONS="${{ inputs.iterations }}"
+          if [ -z "$ITERATIONS" ]; then ITERATIONS="40"; fi
+          echo "iterations=${ITERATIONS}" >> "$GITHUB_OUTPUT"
+
+      - name: Run Recent Era sealed nested folds
+        env:
+          ITERATIONS: ${{ steps.settings.outputs.iterations }}
+        run: |
+          set -euo pipefail
+          mkdir -p outputs/validation/recent
+          CANDIDATE="outputs/recent_era/recent_era_candidate_model.json"
+          if [ ! -s "$CANDIDATE" ]; then
+            CANDIDATE="outputs/recent_era/recent_era_best_model.json"
+          fi
+          python scripts/nested_walk_forward_validation.py \
+            --csv loto7.csv \
+            --seed-model "$CANDIDATE" \
+            --output-dir outputs/validation/recent/folds \
+            --summary outputs/validation/recent/nested_walk_forward_summary.json \
+            --report outputs/validation/recent/nested_walk_forward_report.txt \
+            --folds "2021:2022:2023,2022:2023:2024,2023:2024:2025" \
+            --iterations "$ITERATIONS" \
+            --purchase-count 5 \
+            --unit-cost 300 \
+            --seed "${{ github.run_id }}" \
+            --max-runtime-minutes-per-fold 28 \
+            --bootstrap-samples 300
+          python scripts/promote_nested_candidate.py \
+            --csv loto7.csv \
+            --baseline-model outputs/recent_era/recent_era_best_model.json \
+            --candidate-model "$CANDIDATE" \
+            --best-model outputs/recent_era/recent_era_best_model.json \
+            --nested-summary outputs/validation/recent/nested_walk_forward_summary.json \
+            --decision outputs/validation/recent/promotion_decision.json \
+            --report outputs/validation/recent/promotion_report.txt \
+            --focus-start-year 2020 \
+            --purchase-count 5 \
+            --unit-cost 300
+
+      - name: Run Super Recent sealed nested folds
+        env:
+          ITERATIONS: ${{ steps.settings.outputs.iterations }}
+        run: |
+          set -euo pipefail
+          mkdir -p outputs/validation/super_recent
+          CANDIDATE="outputs/super_recent/super_recent_candidate_model.json"
+          if [ ! -s "$CANDIDATE" ]; then
+            CANDIDATE="outputs/super_recent/super_recent_best_model.json"
+          fi
+          python scripts/nested_walk_forward_validation.py \
+            --csv loto7.csv \
+            --seed-model "$CANDIDATE" \
+            --output-dir outputs/validation/super_recent/folds \
+            --summary outputs/validation/super_recent/nested_walk_forward_summary.json \
+            --report outputs/validation/super_recent/nested_walk_forward_report.txt \
+            --folds "2021:2022:2023,2022:2023:2024,2023:2024:2025" \
+            --iterations "$ITERATIONS" \
+            --purchase-count 5 \
+            --unit-cost 300 \
+            --seed "${{ github.run_id }}2023" \
+            --max-runtime-minutes-per-fold 28 \
+            --bootstrap-samples 300
+          python scripts/promote_nested_candidate.py \
+            --csv loto7.csv \
+            --baseline-model outputs/super_recent/super_recent_best_model.json \
+            --candidate-model "$CANDIDATE" \
+            --best-model outputs/super_recent/super_recent_best_model.json \
+            --nested-summary outputs/validation/super_recent/nested_walk_forward_summary.json \
+            --decision outputs/validation/super_recent/promotion_decision.json \
+            --report outputs/validation/super_recent/promotion_report.txt \
+            --focus-start-year 2023 \
+            --purchase-count 5 \
+            --unit-cost 300
+
+      - name: Run validation tests
+        run: |
+          set -euo pipefail
+          python -m unittest \
+            tests.test_prediction_output_consistency \
+            tests.test_robust_validation_and_portfolio -v
+
+      - name: Commit nested validation and promoted models
+        if: always()
+        run: |
+          set -euo pipefail
+          SNAPSHOT="$(mktemp -d)"
+          mkdir -p "$SNAPSHOT/outputs/validation" "$SNAPSHOT/outputs/recent_era" "$SNAPSHOT/outputs/super_recent"
+          cp -a outputs/validation/. "$SNAPSHOT/outputs/validation/" 2>/dev/null || true
+          cp -f outputs/recent_era/recent_era_best_model.json "$SNAPSHOT/outputs/recent_era/" 2>/dev/null || true
+          cp -f outputs/super_recent/super_recent_best_model.json "$SNAPSHOT/outputs/super_recent/" 2>/dev/null || true
+
+          for ATTEMPT in 1 2 3 4; do
+            git fetch origin "${GITHUB_REF_NAME}"
+            git reset --hard "origin/${GITHUB_REF_NAME}"
+            mkdir -p outputs/validation outputs/recent_era outputs/super_recent
+            cp -a "$SNAPSHOT/outputs/validation/." outputs/validation/ 2>/dev/null || true
+            cp -f "$SNAPSHOT/outputs/recent_era/"* outputs/recent_era/ 2>/dev/null || true
+            cp -f "$SNAPSHOT/outputs/super_recent/"* outputs/super_recent/ 2>/dev/null || true
+            git add -f outputs/validation outputs/recent_era/recent_era_best_model.json outputs/super_recent/super_recent_best_model.json || true
+            if git diff --cached --quiet; then
+              echo "No nested validation changes"
+              exit 0
+            fi
+            git commit -m "Update LOTO7 sealed nested validation [skip ci]"
+            if git push origin HEAD:"${GITHUB_REF_NAME}"; then exit 0; fi
+            sleep $((ATTEMPT * 10))
+          done
+          exit 1
+
+      - name: Upload nested validation artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: loto7-nested-walk-forward
+          path: |
+            outputs/validation/**
+            outputs/recent_era/recent_era_best_model.json
+            outputs/super_recent/super_recent_best_model.json
+          if-no-files-found: ignore
