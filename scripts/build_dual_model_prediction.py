@@ -1,41 +1,33 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""Build the final five-ticket LOTO7 portfolio in one optimization pass.
+
+Candidate tickets are generated independently from the full-period, Recent Era,
+Super Recent and regime models.  A beam search then selects all five tickets as
+one portfolio under hard overlap and number-usage constraints.
+
+Unlike the legacy flow, selected tickets are never repaired by replacing a
+number after selection.  Every final ticket is an original model candidate.
 """
-scripts/build_dual_model_prediction.py
-
-Adaptive Multi-Model Prediction
-
-5口を以下の構成で生成する。
-  - 全期間型 best model
-  - Recent Era専用モデル
-  - Super Recent 2023+ 専用モデル
-  - Regime Strategy補正枠
-
-追加改善:
-  - 5口間の重複削減
-  - 実運用履歴との高重複/完全一致を減点
-  - 数字プール多様性を加点
-  - 1等狙いのため、合計値/奇偶/レンジ/分散のバランスを加点
-
-注意:
-  宝くじはランダム性が高く、当せんや利益を保証しない。
-"""
-
 from __future__ import annotations
 
 import argparse
 import csv
 import datetime as dt
+import json
 import re
 import sys
+from collections import Counter
+from dataclasses import dataclass
+from itertools import combinations
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Set, Tuple
+from typing import Dict, FrozenSet, List, Optional, Sequence, Set, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from loto7_evolution_trainer import Genome, Draw, generate_tickets, load_draws  # noqa: E402
+from loto7_evolution_trainer import Draw, Genome, generate_tickets, load_draws  # noqa: E402
 from merge_evolution_shards import (  # noqa: E402
     fmt_ticket,
     load_model,
@@ -47,6 +39,31 @@ from merge_evolution_shards import (  # noqa: E402
 )
 
 Ticket = Tuple[int, ...]
+Pair = Tuple[int, int]
+Triple = Tuple[int, int, int]
+
+
+@dataclass(frozen=True)
+class Candidate:
+    ticket: Ticket
+    source: str
+    model_id: str
+    model_score: float
+    source_model: str
+    method: str
+    support: str
+    individual_score: float
+    raw_rank: int
+    created_at: str
+
+
+@dataclass
+class BeamState:
+    score: float
+    selected: Tuple[Candidate, ...]
+    usage: Counter[int]
+    pair_coverage: FrozenSet[Pair]
+    triple_coverage: FrozenSet[Triple]
 
 
 def now_iso() -> str:
@@ -61,34 +78,31 @@ def load_required_model(path: str) -> Dict[str, object]:
 
 
 def load_optional_model(path: str, fallback: Dict[str, object]) -> Tuple[Dict[str, object], bool]:
-    p = Path(path)
-    if not p.exists() or p.stat().st_size <= 0:
+    model_path = Path(path)
+    if not model_path.exists() or model_path.stat().st_size <= 0:
         return fallback, True
-    item = load_model(p)
-    if item is None:
-        return fallback, True
-    return item, False
+    item = load_model(model_path)
+    return (item, False) if item is not None else (fallback, True)
 
 
 def parse_ticket(text: object) -> Optional[Ticket]:
-    nums = [int(x) for x in re.findall(r"\d+", str(text or ""))]
-    if len(nums) < 7:
+    numbers = [int(value) for value in re.findall(r"\d+", str(text or ""))]
+    if len(numbers) < 7:
         return None
-    nums = nums[:7]
-    if any(n < 1 or n > 37 for n in nums):
+    numbers = numbers[:7]
+    if len(set(numbers)) != 7 or any(number < 1 or number > 37 for number in numbers):
         return None
-    return ticket_key(nums)
+    return ticket_key(numbers)
 
 
 def load_history_tickets(path: str) -> List[Ticket]:
-    p = Path(path)
-    if not p.exists() or p.stat().st_size <= 0:
+    file_path = Path(path)
+    if not file_path.exists() or file_path.stat().st_size <= 0:
         return []
-    tickets: List[Ticket] = []
+    output: List[Ticket] = []
     seen: Set[Ticket] = set()
-    with p.open("r", encoding="utf-8-sig", newline="") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
+    with file_path.open("r", encoding="utf-8-sig", newline="") as stream:
+        for row in csv.DictReader(stream):
             for key, value in row.items():
                 if not str(key or "").startswith("予測"):
                     continue
@@ -96,224 +110,253 @@ def load_history_tickets(path: str) -> List[Ticket]:
                 if ticket is None or ticket in seen:
                     continue
                 seen.add(ticket)
-                tickets.append(ticket)
-    return tickets
+                output.append(ticket)
+    return output
 
 
-def max_overlap(ticket: Ticket, others: Sequence[Ticket]) -> int:
-    if not others:
-        return 0
-    s = set(ticket)
-    return max(len(s & set(o)) for o in others)
-
-
-def avg_overlap(ticket: Ticket, others: Sequence[Ticket]) -> float:
-    if not others:
-        return 0.0
-    s = set(ticket)
-    return sum(len(s & set(o)) for o in others) / float(len(others))
+def overlap(a: Ticket, b: Ticket) -> int:
+    return len(set(a) & set(b))
 
 
 def diversity_score(ticket: Ticket, latest: Draw) -> float:
-    nums = tuple(sorted(ticket))
-    total = sum(nums)
-    odd = sum(1 for n in nums if n % 2)
-    low = sum(1 for n in nums if n <= 18)
-    high = sum(1 for n in nums if n >= 25)
-    bins = [0, 0, 0, 0]
-    for n in nums:
-        if n <= 9:
-            bins[0] += 1
-        elif n <= 19:
-            bins[1] += 1
-        elif n <= 29:
-            bins[2] += 1
-        else:
-            bins[3] += 1
-    span = nums[-1] - nums[0]
-    consecutive_pairs = sum(1 for a, b in zip(nums, nums[1:]) if b == a + 1)
-    latest_overlap = len(set(nums) & set(latest.main))
-
-    score = 0.0
-    # 数字プール多様性: 4つの帯域に分散しているほど良い。
-    score += sum(1.2 for b in bins if b > 0)
-    score -= max(0, max(bins) - 3) * 1.1
-    score += 1.4 if 2 <= low <= 5 else -1.0
-    score += 1.2 if 2 <= high <= 4 else -0.8
-    score += 1.0 if 24 <= span <= 36 else -0.8
-
-    # 1等狙い強化: 過去に多いバランス型レンジを重視しつつ、固まりすぎを避ける。
-    score += 2.4 if 105 <= total <= 175 else -abs(total - 140) * 0.035
-    score += 2.0 if 3 <= odd <= 4 else -1.2
-    score -= max(0, consecutive_pairs - 2) * 0.9
-    score += 1.0 if 1 <= latest_overlap <= 3 else -1.0
-    return score
-
-
-def ticket_score(
-    ticket: Ticket,
-    *,
-    raw_rank: int,
-    used: Sequence[Ticket],
-    history: Sequence[Ticket],
-    latest: Draw,
-    strict_overlap_limit: int,
-    history_overlap_limit: int,
-    diversity_weight: float,
-    first_prize_weight: float,
-) -> float:
-    score = 100.0 - raw_rank * 0.10
-    used_max = max_overlap(ticket, used)
-    hist_max = max_overlap(ticket, history)
-    hist_avg = avg_overlap(ticket, history)
-
-    score += diversity_score(ticket, latest) * diversity_weight
-    score += diversity_score(ticket, latest) * first_prize_weight * 0.55
-
-    if used_max > strict_overlap_limit:
-        score -= (used_max - strict_overlap_limit) * 70.0
-    else:
-        score += (strict_overlap_limit - used_max) * 8.0
-
-    if ticket in history:
-        score -= 250.0
-    if hist_max > history_overlap_limit:
-        score -= (hist_max - history_overlap_limit) * 80.0
-    score -= max(0.0, hist_avg - 4.0) * 12.0
-    return score
-
-
-def pick_adaptive_tickets(
-    genome: Genome,
-    draws: Sequence[Draw],
-    count: int,
-    used: Set[Ticket],
-    *,
-    history: Sequence[Ticket],
-    strict_overlap_limit: int,
-    history_overlap_limit: int,
-    diversity_weight: float,
-    first_prize_weight: float,
-) -> List[Ticket]:
-    if count <= 0:
-        return []
-    latest = draws[-1]
-    raw = [ticket_key(t) for t in generate_tickets(draws, genome, max(160, count * 80))]
-    candidates: List[Tuple[float, Ticket]] = []
-    seen: Set[Ticket] = set()
-    used_list = list(used)
-    for idx, key in enumerate(raw):
-        if key in seen or key in used:
-            continue
-        seen.add(key)
-        score = ticket_score(
-            key,
-            raw_rank=idx,
-            used=used_list,
-            history=history,
-            latest=latest,
-            strict_overlap_limit=strict_overlap_limit,
-            history_overlap_limit=history_overlap_limit,
-            diversity_weight=diversity_weight,
-            first_prize_weight=first_prize_weight,
-        )
-        candidates.append((score, key))
-    candidates.sort(key=lambda item: item[0], reverse=True)
-
-    selected: List[Ticket] = []
-    for _score, key in candidates:
-        all_prev = list(used) + selected
-        if all(len(set(key) & set(prev)) <= strict_overlap_limit for prev in all_prev):
-            selected.append(key)
-            used.add(key)
-        if len(selected) >= count:
-            break
-
-    # 必要数に届かない場合だけ段階的に緩和する。
-    if len(selected) < count:
-        relaxed_limit = min(6, strict_overlap_limit + 1)
-        for _score, key in candidates:
-            if key in used:
-                continue
-            all_prev = list(used) + selected
-            if all(len(set(key) & set(prev)) <= relaxed_limit for prev in all_prev):
-                selected.append(key)
-                used.add(key)
-            if len(selected) >= count:
-                break
-
-    if len(selected) < count:
-        for _score, key in candidates:
-            if key in used:
-                continue
-            selected.append(key)
-            used.add(key)
-            if len(selected) >= count:
-                break
-
-    return selected[:count]
-
-
-def make_row(
-    *,
-    rank: int,
-    ticket: Ticket,
-    genome: Genome,
-    source_model: str,
-    method: str,
-    support: str,
-    base_latest_draw_no: int,
-    base_latest_date: str,
-    created_at: str,
-    score: float,
-) -> Dict[str, object]:
-    return {
-        "confidence_rank": rank,
-        "base_latest_draw_no": base_latest_draw_no,
-        "base_latest_date": base_latest_date,
-        "prediction_draw_no": base_latest_draw_no + 1,
-        "combo_index": rank,
-        "numbers": fmt_ticket(ticket),
-        "model_id": genome.id,
-        "model_score": round(float(getattr(genome, "score", 0.0)), 6),
-        "source_model": source_model,
-        "prediction_method": method,
-        "ensemble_score": round(score, 6),
-        "support_models": support,
-        "created_at": created_at,
+    total = sum(ticket)
+    odd = sum(1 for number in ticket if number % 2)
+    span = ticket[-1] - ticket[0]
+    latest_overlap = len(set(ticket) & set(latest.main))
+    consecutive = sum(1 for left, right in zip(ticket, ticket[1:]) if right == left + 1)
+    bands = {
+        0 if number <= 9 else 1 if number <= 19 else 2 if number <= 29 else 3
+        for number in ticket
     }
+    low = sum(1 for number in ticket if number <= 18)
+    high = sum(1 for number in ticket if number >= 25)
+    return (
+        len(bands) * 1.5
+        + (2.5 if 105 <= total <= 175 else -abs(total - 140) * 0.035)
+        + (2.0 if 3 <= odd <= 4 else -1.2)
+        + (1.2 if 24 <= span <= 36 else -0.8)
+        + (1.0 if 2 <= low <= 5 else -0.8)
+        + (1.0 if 2 <= high <= 4 else -0.6)
+        + (0.8 if 1 <= latest_overlap <= 3 else -0.8)
+        - max(0, consecutive - 2) * 1.0
+    )
 
 
-def append_model_rows(
+def history_penalty(ticket: Ticket, history: Sequence[Ticket], history_overlap_limit: int) -> float:
+    if not history:
+        return 0.0
+    overlaps = [overlap(ticket, previous) for previous in history]
+    maximum = max(overlaps)
+    average = sum(overlaps) / len(overlaps)
+    penalty = max(0, maximum - history_overlap_limit) * 75.0
+    penalty += max(0.0, average - 4.0) * 10.0
+    return penalty
+
+
+def model_candidate_pool(
     *,
-    rows: List[Dict[str, object]],
-    tickets: Sequence[Ticket],
     genome: Genome,
+    source: str,
     source_model: str,
     method: str,
     support: str,
-    latest: Draw,
+    draws: Sequence[Draw],
+    history: Sequence[Ticket],
+    candidate_count: int,
+    history_overlap_limit: int,
+    diversity_weight: float,
+    first_prize_weight: float,
     created_at: str,
-    base_score: float,
-) -> None:
-    for ticket in tickets:
-        rows.append(
-            make_row(
-                rank=len(rows) + 1,
+) -> List[Candidate]:
+    raw_tickets = generate_tickets(draws, genome, max(20, candidate_count))
+    output: List[Candidate] = []
+    seen: Set[Ticket] = set()
+    latest = draws[-1]
+    history_set = set(history)
+    for rank, raw_ticket in enumerate(raw_tickets):
+        ticket = ticket_key(raw_ticket)
+        if ticket in seen or ticket in history_set:
+            continue
+        seen.add(ticket)
+        balance = diversity_score(ticket, latest)
+        score = 100.0 - rank * 0.12
+        score += balance * diversity_weight
+        score += balance * first_prize_weight * 0.55
+        score -= history_penalty(ticket, history, history_overlap_limit)
+        output.append(
+            Candidate(
                 ticket=ticket,
-                genome=genome,
+                source=source,
+                model_id=genome.id,
+                model_score=float(getattr(genome, "score", 0.0)),
                 source_model=source_model,
                 method=method,
                 support=support,
-                base_latest_draw_no=latest.draw_no,
-                base_latest_date=latest.date,
+                individual_score=score,
+                raw_rank=rank,
                 created_at=created_at,
-                score=base_score - len(rows),
             )
         )
+    output.sort(key=lambda candidate: candidate.individual_score, reverse=True)
+    return output[:candidate_count]
 
 
-def build_rows(args: argparse.Namespace) -> Tuple[List[Dict[str, object]], Genome, str]:
+def regime_candidate_pool(
+    *,
+    genome: Genome,
+    source_model: str,
+    draws: Sequence[Draw],
+    history: Sequence[Ticket],
+    strategy_path: str,
+    candidate_count: int,
+    history_overlap_limit: int,
+    diversity_weight: float,
+    first_prize_weight: float,
+    created_at: str,
+) -> List[Candidate]:
+    base_roles = load_role_strategy(strategy_path, 5)
+    if not base_roles:
+        base_roles = ["main_best", "high_match", "recent120", "mid_high", "contrarian"]
+    roles = [base_roles[index % len(base_roles)] for index in range(candidate_count)]
+    rows = make_role_ensemble_prediction_rows(
+        genome,
+        source_model,
+        draws,
+        candidate_count,
+        6,
+        role_sequence=roles,
+    )
+    latest = draws[-1]
+    history_set = set(history)
+    output: List[Candidate] = []
+    seen: Set[Ticket] = set()
+    for rank, row in enumerate(rows):
+        ticket = parse_ticket(row.get("numbers"))
+        if ticket is None or ticket in seen or ticket in history_set:
+            continue
+        seen.add(ticket)
+        balance = diversity_score(ticket, latest)
+        score = 98.0 - rank * 0.10
+        score += balance * diversity_weight
+        score += balance * first_prize_weight * 0.55
+        score -= history_penalty(ticket, history, history_overlap_limit)
+        output.append(
+            Candidate(
+                ticket=ticket,
+                source="regime",
+                model_id=str(row.get("model_id") or genome.id),
+                model_score=float(row.get("model_score") or getattr(genome, "score", 0.0)),
+                source_model=str(row.get("source_model") or source_model),
+                method=f"portfolio_{row.get('prediction_method') or 'regime'}",
+                support=f"Regime候補 / {row.get('support_models', '')}",
+                individual_score=score,
+                raw_rank=rank,
+                created_at=str(row.get("created_at") or created_at),
+            )
+        )
+    output.sort(key=lambda candidate: candidate.individual_score, reverse=True)
+    return output[:candidate_count]
+
+
+def _candidate_pairs(ticket: Ticket) -> FrozenSet[Pair]:
+    return frozenset(combinations(ticket, 2))
+
+
+def _candidate_triples(ticket: Ticket) -> FrozenSet[Triple]:
+    return frozenset(combinations(ticket, 3))
+
+
+def select_portfolio(
+    pools: Dict[str, Sequence[Candidate]],
+    quotas: Dict[str, int],
+    *,
+    max_number_usage: int,
+    max_pair_overlap: int,
+    beam_width: int,
+    candidates_per_step: int,
+) -> Tuple[List[Candidate], Dict[str, object]]:
+    source_sequence: List[str] = []
+    for source, count in sorted(quotas.items(), key=lambda item: (len(pools.get(item[0], [])), item[0])):
+        source_sequence.extend([source] * max(0, count))
+    if not source_sequence:
+        raise SystemExit("portfolio quotas selected zero tickets")
+
+    states = [BeamState(0.0, tuple(), Counter(), frozenset(), frozenset())]
+    for position, source in enumerate(source_sequence):
+        candidates = list(pools.get(source, []))[:candidates_per_step]
+        if not candidates:
+            raise SystemExit(f"no candidates available for required source: {source}")
+        expanded: List[BeamState] = []
+        for state in states:
+            selected_tickets = [item.ticket for item in state.selected]
+            for candidate in candidates:
+                if candidate.ticket in selected_tickets:
+                    continue
+                pair_overlaps = [overlap(candidate.ticket, previous) for previous in selected_tickets]
+                if pair_overlaps and max(pair_overlaps) > max_pair_overlap:
+                    continue
+                next_usage = state.usage.copy()
+                valid = True
+                unique_new = 0
+                repeated_core_penalty = 0.0
+                for number in candidate.ticket:
+                    if next_usage[number] == 0:
+                        unique_new += 1
+                    next_usage[number] += 1
+                    if next_usage[number] > max_number_usage:
+                        valid = False
+                        break
+                    if next_usage[number] >= 3:
+                        repeated_core_penalty += (next_usage[number] - 2) * 2.5
+                if not valid:
+                    continue
+
+                pairs = _candidate_pairs(candidate.ticket)
+                triples = _candidate_triples(candidate.ticket)
+                new_pairs = len(pairs - state.pair_coverage)
+                new_triples = len(triples - state.triple_coverage)
+                overlap_penalty = sum(value * value for value in pair_overlaps) * 1.4
+                increment = candidate.individual_score
+                increment += unique_new * 2.2
+                increment += new_pairs * 0.08 + new_triples * 0.02
+                increment -= overlap_penalty + repeated_core_penalty
+                expanded.append(
+                    BeamState(
+                        score=state.score + increment,
+                        selected=state.selected + (candidate,),
+                        usage=next_usage,
+                        pair_coverage=state.pair_coverage | pairs,
+                        triple_coverage=state.triple_coverage | triples,
+                    )
+                )
+        if not expanded:
+            raise SystemExit(f"portfolio search exhausted at position={position + 1} source={source}")
+        expanded.sort(key=lambda state: state.score, reverse=True)
+        states = expanded[: max(1, beam_width)]
+
+    best = max(states, key=lambda state: state.score)
+    selected = list(best.selected)
+    selected.sort(key=lambda candidate: candidate.individual_score, reverse=True)
+    tickets = [candidate.ticket for candidate in selected]
+    overlaps = [overlap(left, right) for left, right in combinations(tickets, 2)]
+    summary = {
+        "objective_score": round(best.score, 6),
+        "source_quotas": quotas,
+        "source_counts": dict(Counter(candidate.source for candidate in selected)),
+        "candidate_pool_counts": {source: len(pool) for source, pool in pools.items()},
+        "unique_number_count": len(set(number for ticket in tickets for number in ticket)),
+        "max_number_usage": max(best.usage.values()) if best.usage else 0,
+        "number_usage": {str(number): count for number, count in sorted(best.usage.items())},
+        "max_pair_overlap": max(overlaps) if overlaps else 0,
+        "average_pair_overlap": round(sum(overlaps) / len(overlaps), 3) if overlaps else 0.0,
+        "pair_coverage_count": len(best.pair_coverage),
+        "triple_coverage_count": len(best.triple_coverage),
+        "post_selection_number_replacements": 0,
+    }
+    return selected, summary
+
+
+def build_rows(args: argparse.Namespace) -> Tuple[List[Dict[str, object]], Genome, str, Dict[str, object]]:
     draws = load_draws(args.csv)
     if not draws:
         raise SystemExit(f"no draws loaded: {args.csv}")
@@ -328,157 +371,126 @@ def build_rows(args: argparse.Namespace) -> Tuple[List[Dict[str, object]], Genom
     super_item, super_fallback = load_optional_model(args.super_recent_model, recent_item)
     super_genome: Genome = super_item["genome"]  # type: ignore[assignment]
 
-    rows: List[Dict[str, object]] = []
-    used: Set[Ticket] = set()
+    effective_super_count = args.super_recent_count
+    super_independent = bool(not super_fallback and super_genome.id != recent_genome.id)
+    if args.require_super_independent and not super_independent:
+        effective_super_count = 0
 
-    full_tickets = pick_adaptive_tickets(
-        full_genome,
-        draws,
-        args.full_count,
-        used,
-        history=history,
-        strict_overlap_limit=args.strict_overlap_limit,
-        history_overlap_limit=args.history_overlap_limit,
-        diversity_weight=args.diversity_weight,
-        first_prize_weight=args.first_prize_weight,
-    )
-    append_model_rows(
-        rows=rows,
-        tickets=full_tickets,
-        genome=full_genome,
-        source_model=str(full_item.get("path") or args.full_model),
-        method="dual_full_period",
-        support="全期間型: best_model / diversity+1等狙い補正",
-        latest=latest,
-        created_at=created_at,
-        base_score=30.0,
-    )
+    regime_count = args.purchase_count - args.full_count - args.recent_count - effective_super_count
+    if regime_count < 0:
+        raise SystemExit("full/recent/super counts exceed purchase count")
+    quotas = {
+        "full": args.full_count,
+        "recent": args.recent_count,
+        "super": effective_super_count,
+        "regime": regime_count,
+    }
 
-    recent_tickets = pick_adaptive_tickets(
-        recent_genome,
-        draws,
-        args.recent_count,
-        used,
-        history=history,
-        strict_overlap_limit=args.strict_overlap_limit,
-        history_overlap_limit=args.history_overlap_limit,
-        diversity_weight=args.diversity_weight,
-        first_prize_weight=args.first_prize_weight,
-    )
-    recent_support = "Recent Era型: 2020年以降専用モデル / 履歴重複抑制" if not recent_fallback else "Recent Era型: fallback to full-period model"
-    append_model_rows(
-        rows=rows,
-        tickets=recent_tickets,
-        genome=recent_genome,
-        source_model=str(recent_item.get("path") or args.recent_model),
-        method="dual_recent_era",
-        support=recent_support,
-        latest=latest,
-        created_at=created_at,
-        base_score=22.0,
-    )
-
-    super_tickets = pick_adaptive_tickets(
-        super_genome,
-        draws,
-        args.super_recent_count,
-        used,
-        history=history,
-        strict_overlap_limit=args.strict_overlap_limit,
-        history_overlap_limit=args.history_overlap_limit,
-        diversity_weight=args.diversity_weight * 1.15,
-        first_prize_weight=args.first_prize_weight * 1.20,
-    )
-    if super_tickets:
-        super_support = "Super Recent型: 2023年以降専用モデル / 直近追従+1等狙い" if not super_fallback else "Super Recent型: fallback to Recent Era model"
-        append_model_rows(
-            rows=rows,
-            tickets=super_tickets,
-            genome=super_genome,
-            source_model=str(super_item.get("path") or args.super_recent_model),
-            method="dual_super_recent",
-            support=super_support,
-            latest=latest,
-            created_at=created_at,
-            base_score=19.0,
-        )
-
-    regime_needed = max(0, args.purchase_count - len(rows))
-    if regime_needed > 0:
-        role_sequence = load_role_strategy(args.regime_strategy, regime_needed)
-        regime_rows = make_role_ensemble_prediction_rows(
-            full_genome,
-            str(full_item.get("path") or args.full_model),
-            draws,
-            max(1, regime_needed * 3),
-            args.strict_overlap_limit,
-            role_sequence=role_sequence,
-        )
-        candidates: List[Tuple[float, Dict[str, object], Ticket]] = []
-        for idx, r in enumerate(regime_rows):
-            nums = parse_ticket(r.get("numbers", ""))
-            if nums is None or nums in used:
-                continue
-            score = ticket_score(
-                nums,
-                raw_rank=idx,
-                used=list(used),
-                history=history,
-                latest=latest,
-                strict_overlap_limit=args.strict_overlap_limit,
-                history_overlap_limit=args.history_overlap_limit,
-                diversity_weight=args.diversity_weight * 1.2,
-                first_prize_weight=args.first_prize_weight,
-            )
-            candidates.append((score, dict(r), nums))
-        candidates.sort(key=lambda item: item[0], reverse=True)
-        for score, r, nums in candidates:
-            if any(len(set(nums) & set(prev)) > args.strict_overlap_limit for prev in used):
-                continue
-            used.add(nums)
-            row = dict(r)
-            row["confidence_rank"] = len(rows) + 1
-            row["combo_index"] = len(rows) + 1
-            row["prediction_method"] = "dual_regime"
-            row["ensemble_score"] = round(score, 6)
-            row["support_models"] = f"Regime型: {row.get('support_models', '')} / 重複削減補正"
-            rows.append(row)
-            if len(rows) >= args.purchase_count:
-                break
-
-    if len(rows) < args.purchase_count:
-        fallback = pick_adaptive_tickets(
-            full_genome,
-            draws,
-            args.purchase_count - len(rows),
-            used,
+    pools: Dict[str, Sequence[Candidate]] = {
+        "full": model_candidate_pool(
+            genome=full_genome,
+            source="full",
+            source_model=str(full_item.get("path") or args.full_model),
+            method="portfolio_full_period",
+            support="全期間型候補 / 5口セット一括最適化",
+            draws=draws,
             history=history,
-            strict_overlap_limit=args.strict_overlap_limit,
+            candidate_count=args.candidates_per_source,
             history_overlap_limit=args.history_overlap_limit,
             diversity_weight=args.diversity_weight,
             first_prize_weight=args.first_prize_weight,
-        )
-        append_model_rows(
-            rows=rows,
-            tickets=fallback,
+            created_at=created_at,
+        ),
+        "recent": model_candidate_pool(
+            genome=recent_genome,
+            source="recent",
+            source_model=str(recent_item.get("path") or args.recent_model),
+            method="portfolio_recent_era",
+            support=("Recent Era候補 / 5口セット一括最適化" if not recent_fallback else "Recent fallback候補"),
+            draws=draws,
+            history=history,
+            candidate_count=args.candidates_per_source,
+            history_overlap_limit=args.history_overlap_limit,
+            diversity_weight=args.diversity_weight * 1.05,
+            first_prize_weight=args.first_prize_weight,
+            created_at=created_at,
+        ),
+        "super": model_candidate_pool(
+            genome=super_genome,
+            source="super",
+            source_model=str(super_item.get("path") or args.super_recent_model),
+            method="portfolio_super_recent",
+            support="Super Recent独立候補 / 5口セット一括最適化",
+            draws=draws,
+            history=history,
+            candidate_count=args.candidates_per_source,
+            history_overlap_limit=args.history_overlap_limit,
+            diversity_weight=args.diversity_weight * 1.12,
+            first_prize_weight=args.first_prize_weight * 1.15,
+            created_at=created_at,
+        ) if effective_super_count > 0 else [],
+        "regime": regime_candidate_pool(
             genome=full_genome,
             source_model=str(full_item.get("path") or args.full_model),
-            method="dual_fallback",
-            support="補完: 全期間型best_model / adaptive diversity",
-            latest=latest,
+            draws=draws,
+            history=history,
+            strategy_path=args.regime_strategy,
+            candidate_count=args.candidates_per_source,
+            history_overlap_limit=args.history_overlap_limit,
+            diversity_weight=args.diversity_weight * 1.10,
+            first_prize_weight=args.first_prize_weight,
             created_at=created_at,
-            base_score=10.0,
+        ),
+    }
+
+    selected, portfolio_summary = select_portfolio(
+        pools,
+        quotas,
+        max_number_usage=args.max_number_usage,
+        max_pair_overlap=args.strict_overlap_limit,
+        beam_width=args.beam_width,
+        candidates_per_step=args.candidates_per_step,
+    )
+    rows: List[Dict[str, object]] = []
+    for rank, candidate in enumerate(selected, start=1):
+        rows.append(
+            {
+                "confidence_rank": rank,
+                "base_latest_draw_no": latest.draw_no,
+                "base_latest_date": latest.date,
+                "prediction_draw_no": latest.draw_no + 1,
+                "combo_index": rank,
+                "numbers": fmt_ticket(candidate.ticket),
+                "model_id": candidate.model_id,
+                "model_score": round(candidate.model_score, 6),
+                "source_model": candidate.source_model,
+                "prediction_method": candidate.method,
+                "ensemble_score": round(candidate.individual_score, 6),
+                "support_models": candidate.support + " / post-selection replacement=0",
+                "created_at": candidate.created_at,
+            }
         )
 
-    rows = rows[: args.purchase_count]
-    for i, row in enumerate(rows, start=1):
-        row["confidence_rank"] = i
-        row["combo_index"] = i
-    return rows, full_genome, str(full_item.get("path") or args.full_model)
+    portfolio_summary.update(
+        {
+            "created_at": created_at,
+            "prediction_draw_no": latest.draw_no + 1,
+            "super_recent_independent": super_independent,
+            "effective_super_recent_count": effective_super_count,
+            "history_ticket_count": len(history),
+            "constraints": {
+                "max_number_usage": args.max_number_usage,
+                "max_pair_overlap": args.strict_overlap_limit,
+                "history_overlap_limit": args.history_overlap_limit,
+                "exact_history_duplicates_allowed": False,
+            },
+        }
+    )
+    return rows, full_genome, str(full_item.get("path") or args.full_model), portfolio_summary
 
 
 def main(argv: Optional[List[str]] = None) -> int:
-    parser = argparse.ArgumentParser(description="Build LOTO7 adaptive dual/super-recent model prediction.")
+    parser = argparse.ArgumentParser(description="Build an optimized five-ticket LOTO7 portfolio.")
     parser.add_argument("--csv", default="loto7.csv")
     parser.add_argument("--full-model", default="loto7_best_model.json")
     parser.add_argument("--recent-model", default="outputs/recent_era/recent_era_best_model.json")
@@ -487,44 +499,46 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--prediction-history", default="outputs/evolution_prediction_history.csv")
     parser.add_argument("--prediction", default="outputs/evolution_best_prediction.csv")
     parser.add_argument("--prediction-report", default="outputs/holdout/latest_prediction_report.txt")
+    parser.add_argument("--portfolio-summary", default="outputs/holdout/latest_portfolio_summary.json")
     parser.add_argument("--purchase-count", type=int, default=5)
     parser.add_argument("--full-count", type=int, default=2)
     parser.add_argument("--recent-count", type=int, default=1)
     parser.add_argument("--super-recent-count", type=int, default=1)
-    parser.add_argument("--overlap-limit", type=int, default=4, help="Backward-compatible alias for --strict-overlap-limit.")
+    parser.add_argument("--require-super-independent", action="store_true", default=True)
+    parser.add_argument("--allow-super-fallback", dest="require_super_independent", action="store_false")
+    parser.add_argument("--overlap-limit", type=int, default=4)
     parser.add_argument("--strict-overlap-limit", type=int, default=None)
+    parser.add_argument("--max-number-usage", type=int, default=4)
     parser.add_argument("--history-overlap-limit", type=int, default=6)
     parser.add_argument("--diversity-weight", type=float, default=1.0)
     parser.add_argument("--first-prize-weight", type=float, default=1.0)
+    parser.add_argument("--candidates-per-source", type=int, default=240)
+    parser.add_argument("--candidates-per-step", type=int, default=100)
+    parser.add_argument("--beam-width", type=int, default=320)
     args = parser.parse_args(argv)
 
     if args.strict_overlap_limit is None:
         args.strict_overlap_limit = args.overlap_limit
-    if args.purchase_count <= 0:
-        raise SystemExit("--purchase-count must be positive")
-    if args.full_count < 0 or args.recent_count < 0 or args.super_recent_count < 0:
-        raise SystemExit("full/recent/super_recent counts must be non-negative")
-    if args.full_count + args.recent_count + args.super_recent_count > args.purchase_count:
-        raise SystemExit("full_count + recent_count + super_recent_count must be <= purchase_count")
+    if args.purchase_count <= 0 or args.full_count < 0 or args.recent_count < 0 or args.super_recent_count < 0:
+        raise SystemExit("invalid purchase/source counts")
 
-    rows, full_genome, source_model = build_rows(args)
+    rows, full_genome, source_model, portfolio_summary = build_rows(args)
     write_prediction(args.prediction, rows)
     write_prediction_report(
         args.prediction_report,
         rows,
         full_genome,
         source_model,
-        model_count=3,
+        model_count=len({str(row.get("model_id")) for row in rows}),
         min_models=1,
-        selection_reason="Adaptive Prediction: 全期間型 + Recent Era + Super Recent 2023+ + Regime / 重複削減・履歴抑制・多様性・1等狙い補正",
-        prediction_mode="adaptive_dual_super_recent",
+        selection_reason="候補全体から5口セットをビームサーチ最適化 / 選択後の数字置換なし",
+        prediction_mode="optimized_five_ticket_portfolio",
         role_strategy_path=args.regime_strategy,
     )
-    print(f"[OK] prediction={args.prediction}")
-    print(f"[OK] report={args.prediction_report}")
-    print(f"[OK] full_model={args.full_model}")
-    print(f"[OK] recent_model={args.recent_model}")
-    print(f"[OK] super_recent_model={args.super_recent_model}")
+    summary_path = Path(args.portfolio_summary)
+    summary_path.parent.mkdir(parents=True, exist_ok=True)
+    summary_path.write_text(json.dumps(portfolio_summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(json.dumps(portfolio_summary, ensure_ascii=False, indent=2, sort_keys=True))
     return 0
 
 
