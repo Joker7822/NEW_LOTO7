@@ -2,9 +2,10 @@
 # -*- coding: utf-8 -*-
 """Promote a LOTO7 candidate only after true nested validation.
 
-This is the second stage of model adoption.  The normal evolution workflow may
-produce a candidate, but this script copies it to the production best-model
-path only when sealed nested folds and robust payout diagnostics pass.
+This is the second stage of model adoption. The normal evolution workflow may
+produce a candidate, but this script promotes it only when sealed nested folds
+and robust payout diagnostics pass. A candidate already stored at the target
+path is handled without copying the file onto itself.
 """
 from __future__ import annotations
 
@@ -14,7 +15,7 @@ import json
 import shutil
 import sys
 from pathlib import Path
-from typing import Dict, List, Sequence
+from typing import Dict, List
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
@@ -77,6 +78,7 @@ def write_report(path: str, payload: Dict[str, object]) -> None:
         f"candidate_model_id: {payload.get('candidate_model_id')}",
         f"baseline_model_id: {payload.get('baseline_model_id')}",
         f"promoted: {decision.get('promoted')}",
+        f"copy_performed: {decision.get('copy_performed')}",
         "",
         "[Reasons]",
     ]
@@ -209,9 +211,17 @@ def main() -> int:
         reasons.append(f"top1 payout share ok: {candidate_share:.3f}")
 
     promoted = False
+    copy_performed = False
     if passed:
-        Path(args.best_model).parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(args.candidate_model, args.best_model)
+        target = Path(args.best_model)
+        source = Path(args.candidate_model)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if source.resolve() != target.resolve():
+            shutil.copyfile(source, target)
+            copy_performed = True
+            reasons.append("candidate copied to production best-model path")
+        else:
+            reasons.append("candidate already stored at production best-model path; copy skipped")
         promoted = True
 
     payload: Dict[str, object] = {
@@ -229,12 +239,15 @@ def main() -> int:
         "nested_summary": nested,
         "decision": {
             "promoted": promoted,
+            "copy_performed": copy_performed,
+            "same_source_and_target": Path(args.candidate_model).resolve() == Path(args.best_model).resolve(),
             "reasons": reasons,
             "warnings": warnings,
         },
         "notes": [
             "Production promotion requires sealed nested folds and robust payout diagnostics.",
             "No promotion occurs when the nested summary belongs to a different model ID.",
+            "Same source and target paths are handled without a SameFileError.",
         ],
     }
     output = Path(args.decision)
