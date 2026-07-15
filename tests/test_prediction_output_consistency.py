@@ -16,9 +16,12 @@ from scripts.update_prediction_history import confidence_for
 
 class PredictionOutputConsistencyTests(unittest.TestCase):
     def test_relative_confidence_uses_shared_scale(self):
+        # Production outputs are serialized to two decimal places. Compare the
+        # serialized scale instead of raw binary floating-point representations
+        # such as 0.8999999999999999.
         self.assertEqual(
-            [relative_confidence(index) for index in range(5)],
-            [0.95, 0.90, 0.85, 0.80, 0.75],
+            [f"{relative_confidence(index):.2f}" for index in range(5)],
+            ["0.95", "0.90", "0.85", "0.80", "0.75"],
         )
 
     def test_history_never_uses_raw_model_or_unscaled_strategy_score(self):
