@@ -1,5 +1,6 @@
 name: Snapshot Generation 4 Run Status
 
+# snapshot-request: 2026-07-16T11:50:00Z
 on:
   push:
     branches:
