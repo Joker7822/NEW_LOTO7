@@ -1,11 +1,15 @@
-name: LOTO7 Dual Model Prediction
+name: LOTO7 Generation 4 Prediction
 
 on:
   workflow_dispatch:
+    inputs:
+      null_simulations:
+        description: "Number of null-strategy simulations"
+        required: false
+        default: "180"
   workflow_run:
-    # Evolution Trainer already builds the final adaptive prediction itself.
-    # Rebuild after standalone evolution or sealed nested promotion.
     workflows:
+      - LOTO7 Evolution Trainer
       - LOTO7 Model Self Evolution
       - LOTO7 Recent Era Self Evolution
       - LOTO7 Nested Walk Forward Validation
@@ -15,22 +19,24 @@ on:
 permissions:
   contents: write
 
-# Keep prediction runs serialized while retaining the full waiting queue.
 concurrency:
-  group: loto7-dual-prediction-${{ github.ref_name }}
+  group: loto7-generation4-${{ github.event.workflow_run.head_branch || github.ref_name }}
   cancel-in-progress: false
   queue: max
 
 jobs:
-  dual-prediction:
+  generation4:
     if: ${{ github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 120
+    env:
+      TARGET_BRANCH: ${{ github.event.workflow_run.head_branch || github.ref_name }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ env.TARGET_BRANCH }}
 
       - name: Configure git
         run: |
@@ -42,16 +48,34 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Pull latest outputs
+      - name: Pull latest state
         run: |
           set -euo pipefail
-          git fetch origin "${GITHUB_REF_NAME}"
-          git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+          git fetch origin "${TARGET_BRANCH}"
+          git pull --rebase --autostash origin "${TARGET_BRANCH}"
 
-      - name: Optimize recent era role strategy
+      - name: Prepare model inputs
         run: |
           set -euo pipefail
-          mkdir -p outputs/recent_era outputs/super_recent outputs/role_ensemble
+          mkdir -p outputs/generation4 outputs/holdout outputs/recent_era outputs/super_recent outputs/role_ensemble
+          if [ ! -s outputs/recent_era/recent_era_best_model.json ]; then
+            cp -f loto7_best_model.json outputs/recent_era/recent_era_best_model.json
+          fi
+          if [ ! -s outputs/super_recent/super_recent_best_model.json ]; then
+            cp -f outputs/recent_era/recent_era_best_model.json outputs/super_recent/super_recent_best_model.json
+          fi
+
+      - name: Resolve settings
+        id: settings
+        run: |
+          set -euo pipefail
+          NULL_SIMULATIONS="${{ inputs.null_simulations }}"
+          if [ -z "${NULL_SIMULATIONS}" ]; then NULL_SIMULATIONS="180"; fi
+          echo "null_simulations=${NULL_SIMULATIONS}" >> "$GITHUB_OUTPUT"
+
+      - name: Optimize role strategy
+        run: |
+          set -euo pipefail
           if [ -s outputs/role_ensemble/role_ensemble_backtest.csv ]; then
             python scripts/optimize_recent_era_role_strategy.py \
               --input outputs/role_ensemble/role_ensemble_backtest.csv \
@@ -62,18 +86,9 @@ jobs:
               --unit-cost 300 \
               --max-main-best 1 \
               --min-completed-draws 80
-          else
-            echo "::warning::role_ensemble_backtest.csv not found; skipping recent era role strategy"
           fi
-
-      - name: Detect regime with recent era role strategy
-        run: |
-          set -euo pipefail
-          mkdir -p outputs/role_ensemble outputs/recent_era outputs/super_recent
           BASE_STRATEGY="outputs/recent_era/recent_role_strategy.json"
-          if [ ! -s "$BASE_STRATEGY" ]; then
-            BASE_STRATEGY="outputs/role_ensemble/role_strategy.json"
-          fi
+          if [ ! -s "$BASE_STRATEGY" ]; then BASE_STRATEGY="outputs/role_ensemble/role_strategy.json"; fi
           python scripts/detect_loto7_regime.py \
             --csv loto7.csv \
             --base-strategy "$BASE_STRATEGY" \
@@ -82,166 +97,183 @@ jobs:
             --report outputs/role_ensemble/regime_strategy_report.txt \
             --purchase-count 5
 
-      - name: Build model comparison reports
+      - name: Calculate generation fingerprint
+        id: fingerprint
         run: |
           set -euo pipefail
-          mkdir -p outputs/recent_era outputs/super_recent
-          python scripts/build_recent_era_model_comparison.py \
-            --csv loto7.csv \
-            --full-model loto7_best_model.json \
-            --recent-model outputs/recent_era/recent_era_best_model.json \
-            --summary outputs/recent_era/recent_era_model_comparison_summary.json \
-            --report outputs/recent_era/recent_era_model_comparison_report.txt \
-            --recent-start-year 2020 \
-            --purchase-count 5 \
-            --unit-cost 300
-          if [ -s outputs/super_recent/super_recent_best_model.json ]; then
-            python scripts/build_recent_era_model_comparison.py \
-              --csv loto7.csv \
-              --full-model loto7_best_model.json \
-              --recent-model outputs/super_recent/super_recent_best_model.json \
-              --summary outputs/super_recent/super_recent_model_comparison_summary.json \
-              --report outputs/super_recent/super_recent_model_comparison_report.txt \
-              --recent-start-year 2023 \
-              --purchase-count 5 \
-              --unit-cost 300
-          else
-            echo "::warning::super recent model not found; comparison skipped"
-          fi
-
-      - name: Build optimized five-ticket portfolio
-        run: |
-          set -euo pipefail
-          mkdir -p outputs/holdout outputs/recent_era outputs/super_recent outputs/role_ensemble
-          SUPER_COUNT=$(python - <<'PY'
-          import json
-          from pathlib import Path
-          def model_id(path):
-              p=Path(path)
-              if not p.exists():
-                  return ''
-              payload=json.loads(p.read_text(encoding='utf-8'))
-              raw=payload.get('genome', payload)
-              return str(raw.get('id', ''))
-          recent=model_id('outputs/recent_era/recent_era_best_model.json')
-          super_recent=model_id('outputs/super_recent/super_recent_best_model.json')
-          print(1 if recent and super_recent and recent != super_recent else 0)
-          PY
+          FILES=(
+            loto7.csv
+            loto7_best_model.json
+            outputs/recent_era/recent_era_best_model.json
+            outputs/super_recent/super_recent_best_model.json
+            outputs/role_ensemble/regime_strategy.json
+            outputs/evolution_prediction_history.csv
+            scripts/build_generation4_prediction.py
+            scripts/generation4_core.py
+            scripts/null_strategy_league.py
+            scripts/update_generation4_shadow_history.py
+            scripts/seal_generation4_prediction.py
           )
-          echo "super_recent_count=${SUPER_COUNT}"
-          python scripts/build_dual_model_prediction.py \
+          if [ -s outputs/generation4/shadow_history.csv ]; then FILES+=(outputs/generation4/shadow_history.csv); fi
+          FINGERPRINT=$(sha256sum "${FILES[@]}" | sha256sum | awk '{print $1}')
+          PREVIOUS=""
+          if [ -s outputs/generation4/latest_input_fingerprint.txt ]; then
+            PREVIOUS=$(tr -d '[:space:]' < outputs/generation4/latest_input_fingerprint.txt)
+          fi
+          SKIP=false
+          if [ "${GITHUB_EVENT_NAME}" != "workflow_dispatch" ] && [ "$FINGERPRINT" = "$PREVIOUS" ]; then SKIP=true; fi
+          echo "value=${FINGERPRINT}" >> "$GITHUB_OUTPUT"
+          echo "skip=${SKIP}" >> "$GITHUB_OUTPUT"
+          echo "fingerprint=${FINGERPRINT} previous=${PREVIOUS} skip=${SKIP}"
+
+      - name: Skip duplicate generation
+        if: steps.fingerprint.outputs.skip == 'true'
+        run: echo "Generation 4 inputs are unchanged; skipping duplicate run."
+
+      - name: Run null strategy league and PBO
+        if: steps.fingerprint.outputs.skip != 'true'
+        run: |
+          set -euo pipefail
+          python scripts/null_strategy_league.py \
+            --csv loto7.csv \
+            --model loto7_best_model.json \
+            --summary outputs/generation4/null_strategy_league_summary.json \
+            --report outputs/generation4/null_strategy_league_report.txt \
+            --start-year 2020 \
+            --simulations "${{ steps.settings.outputs.null_simulations }}" \
+            --purchase-count 5 \
+            --unit-cost 300 \
+            --seed "${GITHUB_RUN_ID}"
+
+      - name: Build complete generation 4 prediction
+        if: steps.fingerprint.outputs.skip != 'true'
+        run: |
+          set -euo pipefail
+          python scripts/build_generation4_prediction.py \
             --csv loto7.csv \
             --full-model loto7_best_model.json \
             --recent-model outputs/recent_era/recent_era_best_model.json \
             --super-recent-model outputs/super_recent/super_recent_best_model.json \
             --regime-strategy outputs/role_ensemble/regime_strategy.json \
             --prediction-history outputs/evolution_prediction_history.csv \
+            --shadow-history outputs/generation4/shadow_history.csv \
+            --null-league-summary outputs/generation4/null_strategy_league_summary.json \
             --prediction outputs/evolution_best_prediction.csv \
             --prediction-report outputs/holdout/latest_prediction_report.txt \
-            --portfolio-summary outputs/holdout/latest_portfolio_summary.json \
+            --summary outputs/generation4/latest_generation4_summary.json \
+            --shadow-output outputs/generation4/latest_shadow_predictions.json \
             --purchase-count 5 \
-            --full-count 2 \
-            --recent-count 1 \
-            --super-recent-count "$SUPER_COUNT" \
-            --strict-overlap-limit 4 \
+            --candidates-per-source 220 \
+            --candidates-per-step 80 \
+            --beam-width 220 \
             --max-number-usage 4 \
+            --max-pair-overlap 4 \
             --history-overlap-limit 6 \
-            --diversity-weight 1.15 \
-            --first-prize-weight 1.25 \
-            --candidates-per-source 240 \
-            --candidates-per-step 100 \
-            --beam-width 320
+            --conformal-alpha 0.20 \
+            --minimum-conformal-hits 4
           python scripts/enforce_prediction_constraints.py \
             --prediction outputs/evolution_best_prediction.csv \
             --report outputs/holdout/latest_prediction_report.txt \
             --max-number-usage 4 \
             --max-pair-overlap 4
 
-      - name: Update cumulative prediction history
+      - name: Update live and shadow histories
+        if: steps.fingerprint.outputs.skip != 'true'
         run: |
           set -euo pipefail
           python scripts/update_prediction_history.py \
             --latest outputs/evolution_best_prediction.csv \
             --history outputs/evolution_prediction_history.csv \
             --csv loto7.csv
-
-      - name: Check cumulative prediction history results
-        run: |
-          set -euo pipefail
           python scripts/check_prediction_history_results.py \
             --history outputs/evolution_prediction_history.csv \
             --csv loto7.csv \
             --output outputs/evolution_prediction_history_result.txt
+          python scripts/update_generation4_shadow_history.py \
+            --csv loto7.csv \
+            --latest-shadow outputs/generation4/latest_shadow_predictions.json \
+            --history outputs/generation4/shadow_history.csv \
+            --summary outputs/generation4/champion_challenger_summary.json \
+            --report outputs/generation4/champion_challenger_report.txt \
+            --challenger generation4 \
+            --champion beam_baseline \
+            --promotion-threshold 20 \
+            --min-evaluated-draws 30
 
-      - name: Commit dual prediction outputs with retry
-        if: always()
+      - name: Seal prediction manifest
+        if: steps.fingerprint.outputs.skip != 'true'
         run: |
           set -euo pipefail
-          SNAPSHOT="$(mktemp -d)"
-          mkdir -p "$SNAPSHOT/outputs/holdout" "$SNAPSHOT/outputs/role_ensemble" "$SNAPSHOT/outputs/recent_era" "$SNAPSHOT/outputs/super_recent"
-          cp -f outputs/evolution_best_prediction.csv "$SNAPSHOT/outputs/" 2>/dev/null || true
-          cp -f outputs/evolution_prediction_history.csv "$SNAPSHOT/outputs/" 2>/dev/null || true
-          cp -f outputs/evolution_prediction_history_result.txt "$SNAPSHOT/outputs/" 2>/dev/null || true
-          cp -f outputs/holdout/latest_prediction_report.txt "$SNAPSHOT/outputs/holdout/" 2>/dev/null || true
-          cp -f outputs/holdout/latest_portfolio_summary.json "$SNAPSHOT/outputs/holdout/" 2>/dev/null || true
-          cp -f outputs/role_ensemble/regime_*.json "$SNAPSHOT/outputs/role_ensemble/" 2>/dev/null || true
-          cp -f outputs/role_ensemble/regime_*.txt "$SNAPSHOT/outputs/role_ensemble/" 2>/dev/null || true
-          cp -f outputs/recent_era/recent_role_strategy.* "$SNAPSHOT/outputs/recent_era/" 2>/dev/null || true
-          cp -f outputs/recent_era/recent_era_model_comparison_* "$SNAPSHOT/outputs/recent_era/" 2>/dev/null || true
-          cp -f outputs/super_recent/super_recent_model_comparison_* "$SNAPSHOT/outputs/super_recent/" 2>/dev/null || true
+          python scripts/seal_generation4_prediction.py \
+            --prediction outputs/evolution_best_prediction.csv \
+            --summary outputs/generation4/latest_generation4_summary.json \
+            --shadow outputs/generation4/latest_shadow_predictions.json \
+            --dataset loto7.csv \
+            --full-model loto7_best_model.json \
+            --recent-model outputs/recent_era/recent_era_best_model.json \
+            --super-model outputs/super_recent/super_recent_best_model.json
 
+      - name: Validate generation 4 outputs
+        if: steps.fingerprint.outputs.skip != 'true'
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            scripts/generation4_core.py \
+            scripts/build_generation4_prediction.py \
+            scripts/null_strategy_league.py \
+            scripts/update_generation4_shadow_history.py \
+            scripts/seal_generation4_prediction.py
+          python -m unittest \
+            tests.test_prediction_output_consistency \
+            tests.test_robust_validation_and_portfolio \
+            tests.test_generation4_pipeline -v
+          echo "${{ steps.fingerprint.outputs.value }}" > outputs/generation4/latest_input_fingerprint.txt
+
+      - name: Commit generation 4 outputs with retry
+        if: steps.fingerprint.outputs.skip != 'true' && success()
+        run: |
+          set -euo pipefail
+          SNAPSHOT=$(mktemp -d)
+          mkdir -p "$SNAPSHOT/outputs/generation4" "$SNAPSHOT/outputs/holdout" "$SNAPSHOT/outputs/role_ensemble"
+          cp -a outputs/generation4/. "$SNAPSHOT/outputs/generation4/"
+          cp -f outputs/evolution_best_prediction.csv outputs/evolution_prediction_history.csv \
+            outputs/evolution_prediction_history_result.txt "$SNAPSHOT/outputs/"
+          cp -f outputs/holdout/latest_prediction_report.txt "$SNAPSHOT/outputs/holdout/"
+          cp -f outputs/role_ensemble/regime_*.json outputs/role_ensemble/regime_*.txt \
+            "$SNAPSHOT/outputs/role_ensemble/" 2>/dev/null || true
           for ATTEMPT in 1 2 3 4; do
-            echo "commit attempt=${ATTEMPT}"
-            git fetch origin "${GITHUB_REF_NAME}"
-            git reset --hard "origin/${GITHUB_REF_NAME}"
-            mkdir -p outputs/holdout outputs/role_ensemble outputs/recent_era outputs/super_recent
-            cp -f "$SNAPSHOT"/outputs/evolution_best_prediction.csv outputs/evolution_best_prediction.csv 2>/dev/null || true
-            cp -f "$SNAPSHOT"/outputs/evolution_prediction_history.csv outputs/evolution_prediction_history.csv 2>/dev/null || true
-            cp -f "$SNAPSHOT"/outputs/evolution_prediction_history_result.txt outputs/evolution_prediction_history_result.txt 2>/dev/null || true
-            cp -f "$SNAPSHOT"/outputs/holdout/* outputs/holdout/ 2>/dev/null || true
-            cp -f "$SNAPSHOT"/outputs/role_ensemble/* outputs/role_ensemble/ 2>/dev/null || true
-            cp -f "$SNAPSHOT"/outputs/recent_era/* outputs/recent_era/ 2>/dev/null || true
-            cp -f "$SNAPSHOT"/outputs/super_recent/* outputs/super_recent/ 2>/dev/null || true
-            git add -f \
-              outputs/evolution_best_prediction.csv \
-              outputs/evolution_prediction_history.csv \
-              outputs/evolution_prediction_history_result.txt \
-              outputs/holdout/latest_prediction_report.txt \
-              outputs/holdout/latest_portfolio_summary.json \
-              outputs/role_ensemble/regime_*.json \
-              outputs/role_ensemble/regime_*.txt \
-              outputs/recent_era/recent_role_strategy.* \
-              outputs/recent_era/recent_era_model_comparison_* \
-              outputs/super_recent/super_recent_model_comparison_* || true
+            git fetch origin "${TARGET_BRANCH}"
+            git reset --hard "origin/${TARGET_BRANCH}"
+            mkdir -p outputs/generation4 outputs/holdout outputs/role_ensemble
+            cp -a "$SNAPSHOT/outputs/generation4/." outputs/generation4/
+            cp -f "$SNAPSHOT/outputs/evolution_best_prediction.csv" outputs/evolution_best_prediction.csv
+            cp -f "$SNAPSHOT/outputs/evolution_prediction_history.csv" outputs/evolution_prediction_history.csv
+            cp -f "$SNAPSHOT/outputs/evolution_prediction_history_result.txt" outputs/evolution_prediction_history_result.txt
+            cp -f "$SNAPSHOT/outputs/holdout/latest_prediction_report.txt" outputs/holdout/latest_prediction_report.txt
+            cp -f "$SNAPSHOT/outputs/role_ensemble/"* outputs/role_ensemble/ 2>/dev/null || true
+            git add -f outputs/generation4 outputs/evolution_best_prediction.csv \
+              outputs/evolution_prediction_history.csv outputs/evolution_prediction_history_result.txt \
+              outputs/holdout/latest_prediction_report.txt outputs/role_ensemble/regime_*.json \
+              outputs/role_ensemble/regime_*.txt || true
             if git diff --cached --quiet; then
-              echo "No dual prediction changes"
+              echo "No generation 4 output changes"
               exit 0
             fi
-            git commit -m "Update LOTO7 optimized five-ticket portfolio [skip ci]"
-            if git push origin HEAD:"${GITHUB_REF_NAME}"; then
-              echo "push succeeded on attempt=${ATTEMPT}"
-              exit 0
-            fi
-            echo "::warning::push conflict on attempt=${ATTEMPT}; retrying from latest origin"
+            git commit -m "Update LOTO7 generation 4 sealed prediction [skip ci]"
+            if git push origin HEAD:"${TARGET_BRANCH}"; then exit 0; fi
             sleep $((ATTEMPT * 10))
           done
-          echo "::error::failed to commit dual prediction outputs after retries"
           exit 1
 
-      - name: Upload dual prediction artifacts
+      - name: Upload generation 4 artifacts
+        if: always() && steps.fingerprint.outputs.skip != 'true'
         uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: loto7-dual-model-prediction
+          name: loto7-generation4
           path: |
             outputs/evolution_best_prediction.csv
             outputs/evolution_prediction_history.csv
             outputs/evolution_prediction_history_result.txt
             outputs/holdout/latest_prediction_report.txt
-            outputs/holdout/latest_portfolio_summary.json
-            outputs/role_ensemble/regime_*.json
-            outputs/role_ensemble/regime_*.txt
-            outputs/recent_era/recent_role_strategy.*
-            outputs/recent_era/recent_era_model_comparison_*
-            outputs/super_recent/super_recent_model_comparison_*
-          if-no-files-found: ignore
+            outputs/generation4/**
+          if-no-files-found: error
