@@ -1,4 +1,4 @@
-name: LOTO7 Generation 4 Full Run
+name: LOTO7 Generation 4 Production
 
 on:
   workflow_dispatch:
@@ -7,11 +7,19 @@ on:
         description: "Number of null-strategy simulations"
         required: false
         default: "180"
+  workflow_run:
+    workflows:
+      - LOTO7 Evolution Trainer
+      - LOTO7 Model Self Evolution
+      - LOTO7 Nested Walk Forward Validation
+    types:
+      - completed
   push:
     branches:
       - main
     paths:
       - ".github/workflows/loto7_generation4_run.yml"
+      - "config/repository_layout.json"
       - "scripts/generation4_core.py"
       - "scripts/build_generation4_prediction.py"
       - "scripts/null_strategy_league.py"
@@ -27,11 +35,12 @@ env:
   TARGET_BRANCH: main
 
 concurrency:
-  group: loto7-generation4-full-${{ github.run_id }}
-  cancel-in-progress: false
+  group: loto7-generation4-production-main
+  cancel-in-progress: true
 
 jobs:
   generation4-full-run:
+    if: ${{ github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
     runs-on: ubuntu-latest
     timeout-minutes: 180
 
