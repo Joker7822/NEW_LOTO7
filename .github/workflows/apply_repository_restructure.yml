@@ -1,6 +1,6 @@
 name: Apply Repository Restructure
 
-# apply-request: 2026-07-17-r2
+# apply-request: 2026-07-17-r3
 on:
   workflow_dispatch:
   push:
@@ -52,6 +52,64 @@ jobs:
             scripts/restructure_repository.py
           python -m py_compile scripts/restructure_repository.py scripts/check_repository_architecture.py
           python scripts/restructure_repository.py --apply
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          quick = Path('.github/workflows/loto7_quick_finish.yml')
+          text = quick.read_text(encoding='utf-8')
+          old = 'outputs/evolution_best_prediction.csv'
+          new = 'outputs/diagnostics/quick_finish/evolution_best_prediction.csv'
+          text = text.replace(old, new)
+          command = '          python merge_evolution_shards.py \\\n'
+          mkdir = '          mkdir -p outputs/diagnostics/quick_finish\n'
+          if mkdir not in text and command in text:
+              text = text.replace(command, mkdir + command, 1)
+          quick.write_text(text, encoding='utf-8')
+
+          temporary = [
+              Path('outputs/generation4/current_run_snapshot.json'),
+              Path('outputs/generation4/current_run_snapshot.txt'),
+              Path('outputs/generation4/dispatch_requested.txt'),
+          ]
+          for path in temporary:
+              path.unlink(missing_ok=True)
+
+          ignore = Path('.gitignore')
+          ignore_text = ignore.read_text(encoding='utf-8')
+          entries = [
+              'outputs/generation4/current_run_snapshot.json',
+              'outputs/generation4/current_run_snapshot.txt',
+              'outputs/generation4/dispatch_requested.txt',
+          ]
+          for entry in entries:
+              if entry not in ignore_text.splitlines():
+                  ignore_text += entry + '\n'
+          ignore.write_text(ignore_text, encoding='utf-8')
+
+          report = Path('docs/architecture/repository_restructure_report.json')
+          payload = json.loads(report.read_text(encoding='utf-8'))
+          changed = set(payload.get('changed_paths', []))
+          changed.update({
+              '.github/workflows/loto7_quick_finish.yml',
+              '.gitignore',
+              'outputs/generation4/current_run_snapshot.json',
+              'outputs/generation4/current_run_snapshot.txt',
+              'outputs/generation4/dispatch_requested.txt',
+          })
+          payload['changed_paths'] = sorted(changed)
+          payload['quick_finish_prediction_output'] = new
+          payload['temporary_execution_outputs_removed'] = True
+          report.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+
+          markdown = Path('docs/architecture/repository_restructure_report.md')
+          md = markdown.read_text(encoding='utf-8')
+          if 'Quick Finish prediction isolated' not in md:
+              md += '\n- Quick Finish prediction isolated under `outputs/diagnostics/quick_finish/`\n'
+              md += '- Temporary execution-control outputs removed and ignored\n'
+          markdown.write_text(md, encoding='utf-8')
+          PY
 
       - name: Validate workflow YAML
         run: |
