@@ -113,6 +113,7 @@ jobs:
             scripts/null_strategy_league.py
             scripts/update_generation4_shadow_history.py
             scripts/seal_generation4_prediction.py
+            scripts/finalize_generation4_report.py
           )
           if [ -s outputs/generation4/shadow_history.csv ]; then FILES+=(outputs/generation4/shadow_history.csv); fi
           FINGERPRINT=$(sha256sum "${FILES[@]}" | sha256sum | awk '{print $1}')
@@ -176,6 +177,10 @@ jobs:
             --report outputs/holdout/latest_prediction_report.txt \
             --max-number-usage 4 \
             --max-pair-overlap 4
+          python scripts/finalize_generation4_report.py \
+            --prediction outputs/evolution_best_prediction.csv \
+            --summary outputs/generation4/latest_generation4_summary.json \
+            --report outputs/holdout/latest_prediction_report.txt
 
       - name: Update live and shadow histories
         if: steps.fingerprint.outputs.skip != 'true'
@@ -204,7 +209,7 @@ jobs:
         if: steps.fingerprint.outputs.skip != 'true'
         run: |
           set -euo pipefail
-          python scripts/seal_generation4_prediction.py \
+          GITHUB_SHA="$(git rev-parse HEAD)" python scripts/seal_generation4_prediction.py \
             --prediction outputs/evolution_best_prediction.csv \
             --summary outputs/generation4/latest_generation4_summary.json \
             --shadow outputs/generation4/latest_shadow_predictions.json \
@@ -222,7 +227,8 @@ jobs:
             scripts/build_generation4_prediction.py \
             scripts/null_strategy_league.py \
             scripts/update_generation4_shadow_history.py \
-            scripts/seal_generation4_prediction.py
+            scripts/seal_generation4_prediction.py \
+            scripts/finalize_generation4_report.py
           python -m unittest \
             tests.test_prediction_output_consistency \
             tests.test_robust_validation_and_portfolio \
