@@ -30,9 +30,9 @@
   "beam_baseline_portfolio": {
     "average_pair_overlap": 2.2,
     "candidate_pool_counts": {
-      "full": 212,
-      "recent": 213,
-      "regime": 184,
+      "full": 210,
+      "recent": 214,
+      "regime": 182,
       "super": 0
     },
     "max_number_usage": 4,
@@ -58,7 +58,7 @@
       "8": 1,
       "9": 3
     },
-    "objective_score": 592.212279,
+    "objective_score": 588.214632,
     "pair_coverage_count": 90,
     "post_selection_number_replacements": 0,
     "source_counts": {
@@ -218,9 +218,9 @@
   "generation4_portfolio": {
     "average_pair_overlap": 1.9,
     "candidate_pool_counts": {
-      "full": 212,
-      "recent": 213,
-      "regime": 184,
+      "full": 210,
+      "recent": 214,
+      "regime": 182,
       "super": 0
     },
     "max_number_usage": 4,
@@ -249,16 +249,16 @@
     },
     "objective_components": {
       "conformal": 33.0,
-      "dpp_logdet": 5.713548,
+      "dpp_logdet": 5.702675,
       "entropy": 2.906664,
       "hypergraph": 102.684502,
       "hypergraph_pair": 75.73652,
       "hypergraph_triple": 76.994234,
       "overlap_penalty": 3.416667,
-      "quality": 7.00069,
-      "total": 50.935999
+      "quality": 6.991325,
+      "total": 50.894018
     },
-    "objective_score": 50.935999,
+    "objective_score": 50.894018,
     "post_selection_number_replacements": 0,
     "selector": "dpp_hypergraph_beam_search_v1",
     "source_counts": {
@@ -282,9 +282,9 @@
   ],
   "null_strategy_league": {
     "available": true,
-    "model_percentile": 0.455556,
+    "model_percentile": 0.372222,
     "passed": false,
-    "pbo": 0.4,
+    "pbo": 0.7,
     "summary_path": "outputs/generation4/null_strategy_league_summary.json"
   },
   "prediction_draw_no": 686,
