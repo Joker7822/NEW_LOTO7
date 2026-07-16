@@ -12,9 +12,16 @@ on:
       - "scripts/adaptive_model_safety_guard.py"
       - "scripts/nested_walk_forward_validation.py"
       - "scripts/promote_nested_candidate.py"
+      - "scripts/generation4_core.py"
+      - "scripts/build_generation4_prediction.py"
+      - "scripts/null_strategy_league.py"
+      - "scripts/update_generation4_shadow_history.py"
+      - "scripts/seal_generation4_prediction.py"
       - "tests/test_prediction_output_consistency.py"
       - "tests/test_robust_validation_and_portfolio.py"
+      - "tests/test_generation4_pipeline.py"
       - ".github/workflows/loto7_nested_walk_forward.yml"
+      - ".github/workflows/loto7_dual_prediction.yml"
       - ".github/workflows/loto7_validation_tests.yml"
 
 permissions:
@@ -27,13 +34,13 @@ concurrency:
 jobs:
   validation-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Compile changed Python modules
+      - name: Compile prediction modules
         run: |
           set -euo pipefail
           python -m py_compile \
@@ -43,11 +50,18 @@ jobs:
             scripts/adaptive_model_safety_guard.py \
             scripts/nested_walk_forward_validation.py \
             scripts/promote_nested_candidate.py \
+            scripts/generation4_core.py \
+            scripts/build_generation4_prediction.py \
+            scripts/null_strategy_league.py \
+            scripts/update_generation4_shadow_history.py \
+            scripts/seal_generation4_prediction.py \
             tests/test_prediction_output_consistency.py \
-            tests/test_robust_validation_and_portfolio.py
+            tests/test_robust_validation_and_portfolio.py \
+            tests/test_generation4_pipeline.py
       - name: Run focused validation tests
         run: |
           set -euo pipefail
           python -m unittest \
             tests.test_prediction_output_consistency \
-            tests.test_robust_validation_and_portfolio -v
+            tests.test_robust_validation_and_portfolio \
+            tests.test_generation4_pipeline -v
