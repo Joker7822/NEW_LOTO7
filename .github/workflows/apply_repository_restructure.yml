@@ -1,6 +1,6 @@
 name: Apply Repository Restructure
 
-# apply-request: 2026-07-17-r5-bundle
+# apply-request: 2026-07-17-r6-hidden-bundle
 on:
   workflow_dispatch:
   push:
@@ -145,7 +145,6 @@ jobs:
           import subprocess
           from pathlib import Path
 
-          root = Path('.')
           bundle = Path('repository_restructure_bundle')
           files_dir = bundle / 'files'
           files_dir.mkdir(parents=True, exist_ok=True)
@@ -187,6 +186,7 @@ jobs:
         with:
           name: repository-restructure-validated-bundle
           path: repository_restructure_bundle/**
+          include-hidden-files: true
           if-no-files-found: error
 
       - name: Upload architecture reports
