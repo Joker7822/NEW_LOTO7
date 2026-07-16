@@ -61,3 +61,16 @@ Thumbs.db
 # Browser drivers / binaries
 chromedriver.exe
 geckodriver.exe
+
+# Repository architecture: transient and reproducible local files
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+*.pyc
+*.tmp
+outputs/**/folds/
+outputs/**/tmp/
+outputs/**/.tmp/
+outputs/generation4/current_run_snapshot.json
+outputs/generation4/current_run_snapshot.txt
+outputs/generation4/dispatch_requested.txt
