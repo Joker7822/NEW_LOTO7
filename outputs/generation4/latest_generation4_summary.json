@@ -30,9 +30,9 @@
   "beam_baseline_portfolio": {
     "average_pair_overlap": 2.2,
     "candidate_pool_counts": {
-      "full": 210,
-      "recent": 214,
-      "regime": 182,
+      "full": 212,
+      "recent": 213,
+      "regime": 184,
       "super": 0
     },
     "max_number_usage": 4,
@@ -40,26 +40,25 @@
     "number_usage": {
       "1": 2,
       "10": 2,
-      "12": 2,
-      "13": 1,
+      "12": 3,
       "16": 2,
       "17": 2,
+      "18": 1,
       "19": 1,
-      "20": 1,
-      "22": 4,
-      "24": 1,
+      "22": 3,
+      "24": 2,
       "26": 1,
       "29": 1,
-      "33": 3,
+      "33": 2,
       "35": 2,
       "36": 2,
-      "6": 3,
+      "6": 4,
       "7": 1,
-      "8": 1,
-      "9": 3
+      "8": 2,
+      "9": 2
     },
-    "objective_score": 588.214632,
-    "pair_coverage_count": 90,
+    "objective_score": 575.977338,
+    "pair_coverage_count": 88,
     "post_selection_number_replacements": 0,
     "source_counts": {
       "full": 1,
@@ -72,8 +71,8 @@
       "regime": 2,
       "super": 0
     },
-    "triple_coverage_count": 170,
-    "unique_number_count": 19
+    "triple_coverage_count": 168,
+    "unique_number_count": 18
   },
   "change_point": {
     "aggregate_distance": 0.038863462,
@@ -216,49 +215,47 @@
     "super": 0.0
   },
   "generation4_portfolio": {
-    "average_pair_overlap": 1.9,
+    "average_pair_overlap": 2.1,
     "candidate_pool_counts": {
-      "full": 210,
-      "recent": 214,
-      "regime": 182,
+      "full": 212,
+      "recent": 213,
+      "regime": 184,
       "super": 0
     },
-    "max_number_usage": 4,
+    "max_number_usage": 3,
     "max_pair_overlap": 3,
     "number_usage": {
       "1": 2,
       "10": 2,
-      "12": 2,
+      "12": 3,
       "13": 1,
+      "14": 2,
       "16": 1,
       "17": 2,
-      "18": 1,
       "19": 1,
-      "20": 1,
-      "22": 4,
+      "22": 3,
       "24": 1,
       "26": 1,
-      "29": 1,
-      "33": 3,
+      "33": 2,
       "35": 2,
-      "36": 2,
-      "6": 2,
+      "36": 3,
+      "6": 3,
       "7": 2,
       "8": 2,
       "9": 2
     },
     "objective_components": {
       "conformal": 33.0,
-      "dpp_logdet": 5.702675,
-      "entropy": 2.906664,
-      "hypergraph": 102.684502,
-      "hypergraph_pair": 75.73652,
-      "hypergraph_triple": 76.994234,
-      "overlap_penalty": 3.416667,
-      "quality": 6.991325,
-      "total": 50.894018
+      "dpp_logdet": 5.671228,
+      "entropy": 2.822205,
+      "hypergraph": 100.470863,
+      "hypergraph_pair": 74.017348,
+      "hypergraph_triple": 75.581473,
+      "overlap_penalty": 3.916667,
+      "quality": 6.828377,
+      "total": 49.844018
     },
-    "objective_score": 50.894018,
+    "objective_score": 49.844018,
     "post_selection_number_replacements": 0,
     "selector": "dpp_hypergraph_beam_search_v1",
     "source_counts": {
@@ -272,7 +269,7 @@
       "regime": 2,
       "super": 0
     },
-    "unique_number_count": 20
+    "unique_number_count": 18
   },
   "kind": "loto7_generation4_complete",
   "notes": [
@@ -282,9 +279,9 @@
   ],
   "null_strategy_league": {
     "available": true,
-    "model_percentile": 0.372222,
+    "model_percentile": 0.45,
     "passed": false,
-    "pbo": 0.7,
+    "pbo": 0.3,
     "summary_path": "outputs/generation4/null_strategy_league_summary.json"
   },
   "prediction_draw_no": 686,
