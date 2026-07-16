@@ -1,11 +1,11 @@
 # NEW_LOTO7 Repository Structure Audit
 
-Generated: `2026-07-16T22:40:45.938478+00:00`
+Generated: `2026-07-16T22:43:09.591245+00:00`
 
 ## Summary
 
 - Tracked files: **273**
-- Workflows: **12**
+- Workflows: **11**
 - Python implementation/CLI files: **55**
 - Test files: **4**
 - Tracked files under `outputs/`: **172**
@@ -15,10 +15,10 @@ Generated: `2026-07-16T22:40:45.938478+00:00`
 
 | Location | Files |
 |---|---:|
-| `.github` | 12 |
+| `.github` | 11 |
 | `<root>` | 45 |
 | `config` | 1 |
-| `docs` | 11 |
+| `docs` | 12 |
 | `outputs` | 172 |
 | `patches` | 1 |
 | `scripts` | 27 |
@@ -38,8 +38,7 @@ Generated: `2026-07-16T22:40:45.938478+00:00`
 | `LOTO7 Recent Era Self Evolution`<br>`.github/workflows/loto7_recent_era_self_evolution.yml` | workflow_dispatch, schedule | 306 | - |
 | `LOTO7 TXT Reports`<br>`.github/workflows/loto7_txt_reports.yml` | workflow_dispatch, push, schedule | 67 | - |
 | `LOTO7 Validation Tests`<br>`.github/workflows/loto7_validation_tests.yml` | workflow_dispatch, push | 73 | - |
-| `Repository Structure Audit`<br>`.github/workflows/repository_structure_audit.yml` | workflow_dispatch, push | 90 | - |
-| `Verify Repository Architecture Once`<br>`.github/workflows/verify_repository_architecture_once.yml` | workflow_dispatch, push | 96 | - |
+| `Repository Structure Audit`<br>`.github/workflows/repository_structure_audit.yml` | workflow_dispatch, push | 91 | - |
 
 ## Highest-priority findings
 

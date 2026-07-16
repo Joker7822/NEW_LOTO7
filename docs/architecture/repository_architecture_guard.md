@@ -1,12 +1,12 @@
 # Repository Architecture Guard
 
-Generated: `2026-07-16T22:40:45.487062+00:00`
+Generated: `2026-07-16T22:43:09.506278+00:00`
 
 Status: **pass**
 
 ## Summary
 
-- Workflows: **12**
+- Workflows: **11**
 - Root Python files: **29**
 - Tracked output files: **172**
 - Errors: **0**

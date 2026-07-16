@@ -1,7 +1,7 @@
 {
   "canonical_production_workflow": ".github/workflows/loto7_generation4_run.yml",
   "config": "config/repository_layout.json",
-  "created_at": "2026-07-16T22:40:45.487062+00:00",
+  "created_at": "2026-07-16T22:43:09.506278+00:00",
   "errors": [],
   "production_writers": {
     "outputs/evolution_best_prediction.csv": [
@@ -55,7 +55,7 @@
     "Root still contains 29 Python modules; retain as compatibility layer until Phase 2 migration",
     "outputs/ contains 172 tracked files; reproducible diagnostics should move to Actions artifacts"
   ],
-  "workflow_count": 12,
+  "workflow_count": 11,
   "workflow_names": {
     "Backfill LOTO7 prize amounts": [
       ".github/workflows/backfill-loto7-prizes.yml"
@@ -89,9 +89,6 @@
     ],
     "Repository Structure Audit": [
       ".github/workflows/repository_structure_audit.yml"
-    ],
-    "Verify Repository Architecture Once": [
-      ".github/workflows/verify_repository_architecture_once.yml"
     ]
   }
 }

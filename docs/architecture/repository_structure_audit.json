@@ -1,20 +1,20 @@
 {
   "category_counts": {
-    "documentation": 11,
+    "documentation": 12,
     "generated_output": 172,
     "other": 7,
     "root_data_or_report": 11,
     "root_python": 29,
     "script": 27,
     "test": 4,
-    "workflow": 12
+    "workflow": 11
   },
-  "created_at": "2026-07-16T22:40:45.938478+00:00",
+  "created_at": "2026-07-16T22:43:09.591245+00:00",
   "directory_file_counts": {
-    ".github": 12,
+    ".github": 11,
     "<root>": 45,
     "config": 1,
-    "docs": 11,
+    "docs": 12,
     "outputs": 172,
     "patches": 1,
     "scripts": 27,
@@ -189,16 +189,16 @@
       "path": "merge_evolution_shards.py"
     },
     {
-      "bytes": 40586,
-      "path": "docs/architecture/repository_structure_audit.json"
-    },
-    {
       "bytes": 39771,
       "path": "outputs/model_self_evolution/standalone_state.json"
     },
     {
       "bytes": 39244,
       "path": "loto7_evolution_trainer.py"
+    },
+    {
+      "bytes": 38743,
+      "path": "docs/architecture/repository_structure_audit.json"
     },
     {
       "bytes": 31625,
@@ -395,14 +395,14 @@
   "suffix_counts": {
     ".csv": 27,
     ".diff": 1,
-    ".json": 84,
+    ".json": 85,
     ".md": 17,
     ".pt": 2,
     ".py": 59,
     ".sh": 1,
     ".sha256": 17,
     ".txt": 52,
-    ".yml": 12,
+    ".yml": 11,
     "<none>": 1
   },
   "test_file_count": 4,
@@ -581,7 +581,7 @@
     "outputs/validation/super_recent/promotion_decision.json",
     "outputs/validation/super_recent/promotion_report.txt"
   ],
-  "workflow_count": 12,
+  "workflow_count": 11,
   "workflow_referenced_python": [
     "holdout_evaluator.py",
     "loto7_complete_ai_system.py",
@@ -620,9 +620,9 @@
     "tests/test_robust_validation_and_portfolio.py"
   ],
   "workflow_trigger_counts": {
-    "push": 8,
+    "push": 7,
     "schedule": 4,
-    "workflow_dispatch": 12,
+    "workflow_dispatch": 11,
     "workflow_run": 2
   },
   "workflows": [
@@ -906,27 +906,9 @@
     },
     {
       "contains_nonstandard_concurrency_queue": false,
-      "line_count": 90,
+      "line_count": 91,
       "name": "Repository Structure Audit",
       "path": ".github/workflows/repository_structure_audit.yml",
-      "referenced_paths": [
-        "scripts/audit_repository_structure.py",
-        "scripts/check_repository_architecture.py",
-        "docs/architecture/repository_architecture_guard.json",
-        "docs/architecture/repository_architecture_guard.md",
-        "docs/architecture/repository_structure_audit.json",
-        "docs/architecture/repository_structure_audit.md"
-      ],
-      "triggers": [
-        "workflow_dispatch",
-        "push"
-      ]
-    },
-    {
-      "contains_nonstandard_concurrency_queue": false,
-      "line_count": 96,
-      "name": "Verify Repository Architecture Once",
-      "path": ".github/workflows/verify_repository_architecture_once.yml",
       "referenced_paths": [
         "scripts/audit_repository_structure.py",
         "scripts/check_repository_architecture.py",
