@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "production_workflow": ".github/workflows/loto7_generation4_run.yml",
+  "production_workflow_name": "LOTO7 Generation 4 Production",
+  "forbidden_workflows": [
+    ".github/workflows/loto7_dual_prediction.yml",
+    ".github/workflows/trigger_generation4_once.yml",
+    ".github/workflows/monitor_generation4_once.yml",
+    ".github/workflows/snapshot_generation4_status.yml"
+  ],
+  "production_outputs": [
+    "outputs/evolution_best_prediction.csv",
+    "outputs/evolution_prediction_history.csv",
+    "outputs/evolution_prediction_history_result.txt",
+    "outputs/holdout/latest_prediction_report.txt"
+  ],
+  "sealed_evidence": [
+    "outputs/generation4/latest_sealed_manifest.json",
+    "outputs/generation4/sealed_index.json",
+    "outputs/generation4/sealed/"
+  ],
+  "workflow_run_sources": [
+    "LOTO7 Evolution Trainer",
+    "LOTO7 Model Self Evolution",
+    "LOTO7 Nested Walk Forward Validation"
+  ],
+  "root_python_policy": {
+    "status": "compatibility_layer",
+    "target": "src/loto7",
+    "migration_rule": "Move implementations only with import-compatible wrappers and dedicated regression tests."
+  },
+  "output_classes": {
+    "production": [
+      "outputs/evolution_best_prediction.csv",
+      "outputs/evolution_prediction_history.csv",
+      "outputs/evolution_prediction_history_result.txt",
+      "outputs/holdout/latest_prediction_report.txt"
+    ],
+    "evidence": [
+      "outputs/generation4/latest_sealed_manifest.json",
+      "outputs/generation4/sealed_index.json",
+      "outputs/generation4/sealed/"
+    ],
+    "state": [
+      "outputs/model_self_evolution/",
+      "outputs/recent_era/",
+      "outputs/super_recent/",
+      "outputs/validation/"
+    ],
+    "diagnostics": [
+      "outputs/holdout/",
+      "outputs/role_ensemble/",
+      "outputs/ml_stack/",
+      "outputs/deep_ai/",
+      "outputs/complete_ai/",
+      "outputs/txt_reports/"
+    ]
+  }
+}
