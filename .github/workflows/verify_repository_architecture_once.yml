@@ -1,0 +1,96 @@
+name: Verify Repository Architecture Once
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/verify_repository_architecture_once.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: verify-repository-architecture-once
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate architecture and tests
+        id: validation
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet pyyaml
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+          for path in sorted(Path('.github/workflows').glob('*.y*ml')):
+              with path.open(encoding='utf-8') as stream:
+                  yaml.safe_load(stream)
+              print(f'[YAML OK] {path}')
+          PY
+          python -m py_compile \
+            scripts/check_repository_architecture.py \
+            scripts/audit_repository_structure.py
+          python scripts/check_repository_architecture.py \
+            --json docs/architecture/repository_architecture_guard.json \
+            --markdown docs/architecture/repository_architecture_guard.md
+          python -m unittest \
+            tests.test_prediction_output_consistency \
+            tests.test_robust_validation_and_portfolio \
+            tests.test_generation4_pipeline -v
+          python scripts/audit_repository_structure.py \
+            --json docs/architecture/repository_structure_audit.json \
+            --markdown docs/architecture/repository_structure_audit.md
+          python - <<'PY'
+          import json
+          from datetime import datetime, timezone
+          from pathlib import Path
+          guard = json.loads(Path('docs/architecture/repository_architecture_guard.json').read_text(encoding='utf-8'))
+          payload = {
+              'created_at': datetime.now(timezone.utc).isoformat(),
+              'status': 'success',
+              'architecture_guard_status': guard.get('status'),
+              'architecture_errors': guard.get('errors', []),
+              'architecture_warnings': guard.get('warnings', []),
+              'yaml_validation': 'success',
+              'focused_tests': 'success',
+              'canonical_production_workflow': guard.get('canonical_production_workflow'),
+              'production_writers': guard.get('production_writers', {}),
+              'workflow_count': guard.get('workflow_count'),
+              'root_python_count': guard.get('root_python_count'),
+              'tracked_output_count': guard.get('tracked_output_count'),
+          }
+          Path('docs/architecture/final_restructure_validation.json').write_text(
+              json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + '\n', encoding='utf-8'
+          )
+          PY
+
+      - name: Commit final validation reports
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git pull --rebase --autostash origin main
+          git add -f \
+            docs/architecture/final_restructure_validation.json \
+            docs/architecture/repository_architecture_guard.json \
+            docs/architecture/repository_architecture_guard.md \
+            docs/architecture/repository_structure_audit.json \
+            docs/architecture/repository_structure_audit.md
+          git commit -m "Validate restructured repository architecture [skip ci]"
+          git push origin HEAD:main
