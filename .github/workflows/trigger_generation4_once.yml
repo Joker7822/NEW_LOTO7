@@ -1,6 +1,6 @@
 name: Trigger Generation 4 Full Run Once
 
-# run-request: 2026-07-16T11:29:00Z
+# run-request: 2026-07-16T11:32:00Z
 on:
   push:
     branches:
@@ -11,7 +11,7 @@ on:
 
 permissions:
   actions: write
-  contents: read
+  contents: write
 
 concurrency:
   group: trigger-generation4-once
@@ -21,6 +21,12 @@ jobs:
   dispatch-generation4:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
       - name: Dispatch Generation 4 full run
         env:
           GH_TOKEN: ${{ github.token }}
@@ -31,3 +37,16 @@ jobs:
             --ref main \
             -f null_simulations=180
           echo "Dispatched LOTO7 Generation 4 Prediction with null_simulations=180"
+
+      - name: Record successful dispatch
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir -p outputs/generation4
+          printf 'requested_at=%s\nsource_commit=%s\nnull_simulations=180\n' \
+            "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${GITHUB_SHA}" \
+            > outputs/generation4/dispatch_requested.txt
+          git add -f outputs/generation4/dispatch_requested.txt
+          git commit -m "Record Generation 4 workflow dispatch [skip ci]"
+          git push origin HEAD:main
