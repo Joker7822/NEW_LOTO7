@@ -1,6 +1,6 @@
 name: Apply Repository Restructure
 
-# apply-request: 2026-07-17
+# apply-request: 2026-07-17-r2
 on:
   workflow_dispatch:
   push:
@@ -46,6 +46,10 @@ jobs:
       - name: Apply Phase-1 repository restructure
         run: |
           set -euo pipefail
+          sed -i \
+            -e 's/"root_python_moved": false/"root_python_moved": False/' \
+            -e 's/"tracked_outputs_deleted": false/"tracked_outputs_deleted": False/' \
+            scripts/restructure_repository.py
           python -m py_compile scripts/restructure_repository.py scripts/check_repository_architecture.py
           python scripts/restructure_repository.py --apply
 
