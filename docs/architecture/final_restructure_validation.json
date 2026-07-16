@@ -1,0 +1,30 @@
+{
+  "architecture_errors": [],
+  "architecture_guard_status": "pass",
+  "architecture_warnings": [
+    "Root still contains 29 Python modules; retain as compatibility layer until Phase 2 migration",
+    "outputs/ contains 172 tracked files; reproducible diagnostics should move to Actions artifacts"
+  ],
+  "canonical_production_workflow": ".github/workflows/loto7_generation4_run.yml",
+  "created_at": "2026-07-16T22:40:45.968242+00:00",
+  "focused_tests": "success",
+  "production_writers": {
+    "outputs/evolution_best_prediction.csv": [
+      ".github/workflows/loto7_generation4_run.yml"
+    ],
+    "outputs/evolution_prediction_history.csv": [
+      ".github/workflows/loto7_generation4_run.yml"
+    ],
+    "outputs/evolution_prediction_history_result.txt": [
+      ".github/workflows/loto7_generation4_run.yml"
+    ],
+    "outputs/holdout/latest_prediction_report.txt": [
+      ".github/workflows/loto7_generation4_run.yml"
+    ]
+  },
+  "root_python_count": 29,
+  "status": "success",
+  "tracked_output_count": 172,
+  "workflow_count": 12,
+  "yaml_validation": "success"
+}

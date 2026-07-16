@@ -1,25 +1,27 @@
 # NEW_LOTO7 Repository Structure Audit
 
-Generated: `2026-07-16T12:01:51.856953+00:00`
+Generated: `2026-07-16T22:40:45.938478+00:00`
 
 ## Summary
 
-- Tracked files: **241**
-- Workflows: **15**
-- Python implementation/CLI files: **54**
+- Tracked files: **273**
+- Workflows: **12**
+- Python implementation/CLI files: **55**
 - Test files: **4**
-- Tracked files under `outputs/`: **150**
+- Tracked files under `outputs/`: **172**
 - Root Python files: **29**
 
 ## Directory distribution
 
 | Location | Files |
 |---|---:|
-| `.github` | 15 |
+| `.github` | 12 |
 | `<root>` | 45 |
-| `outputs` | 150 |
+| `config` | 1 |
+| `docs` | 11 |
+| `outputs` | 172 |
 | `patches` | 1 |
-| `scripts` | 26 |
+| `scripts` | 27 |
 | `tests` | 4 |
 
 ## Workflows
@@ -28,19 +30,16 @@ Generated: `2026-07-16T12:01:51.856953+00:00`
 |---|---|---:|---|
 | `Backfill LOTO7 prize amounts`<br>`.github/workflows/backfill-loto7-prizes.yml` | workflow_dispatch, push | 66 | - |
 | `LOTO7 Smoke Test`<br>`.github/workflows/loto7-smoke.yml` | workflow_dispatch, push | 114 | - |
-| `LOTO7 Generation 4 Prediction`<br>`.github/workflows/loto7_dual_prediction.yml` | workflow_dispatch, workflow_run | 285 | non-standard `queue` key |
-| `LOTO7 Evolution Trainer`<br>`.github/workflows/loto7_evolution.yml` | workflow_dispatch, schedule | 616 | - |
-| `LOTO7 Generation 4 Full Run`<br>`.github/workflows/loto7_generation4_run.yml` | workflow_dispatch, push | 255 | - |
-| `LOTO7 Model Self Evolution`<br>`.github/workflows/loto7_model_self_evolution.yml` | workflow_dispatch, push, schedule | 219 | - |
-| `LOTO7 Nested Walk Forward Validation`<br>`.github/workflows/loto7_nested_walk_forward.yml` | workflow_dispatch, workflow_run | 202 | non-standard `queue` key |
-| `LOTO7 Quick Finish Check`<br>`.github/workflows/loto7_quick_finish.yml` | workflow_dispatch | 248 | - |
-| `LOTO7 Recent Era Self Evolution`<br>`.github/workflows/loto7_recent_era_self_evolution.yml` | workflow_dispatch, schedule | 307 | non-standard `queue` key |
+| `LOTO7 Evolution Trainer`<br>`.github/workflows/loto7_evolution.yml` | workflow_dispatch, schedule | 478 | - |
+| `LOTO7 Generation 4 Production`<br>`.github/workflows/loto7_generation4_run.yml` | workflow_dispatch, workflow_run, push | 264 | - |
+| `LOTO7 Model Self Evolution`<br>`.github/workflows/loto7_model_self_evolution.yml` | workflow_dispatch, push, schedule | 196 | - |
+| `LOTO7 Nested Walk Forward Validation`<br>`.github/workflows/loto7_nested_walk_forward.yml` | workflow_dispatch, workflow_run | 201 | - |
+| `LOTO7 Quick Finish Check`<br>`.github/workflows/loto7_quick_finish.yml` | workflow_dispatch | 249 | - |
+| `LOTO7 Recent Era Self Evolution`<br>`.github/workflows/loto7_recent_era_self_evolution.yml` | workflow_dispatch, schedule | 306 | - |
 | `LOTO7 TXT Reports`<br>`.github/workflows/loto7_txt_reports.yml` | workflow_dispatch, push, schedule | 67 | - |
-| `LOTO7 Validation Tests`<br>`.github/workflows/loto7_validation_tests.yml` | workflow_dispatch, push | 69 | - |
-| `Monitor Generation 4 Full Run Once`<br>`.github/workflows/monitor_generation4_once.yml` | workflow_dispatch, push | 84 | - |
-| `Repository Structure Audit`<br>`.github/workflows/repository_structure_audit.yml` | workflow_dispatch, push | 74 | - |
-| `Snapshot Generation 4 Run Status`<br>`.github/workflows/snapshot_generation4_status.yml` | workflow_dispatch, push | 46 | - |
-| `Trigger Generation 4 Full Run Once`<br>`.github/workflows/trigger_generation4_once.yml` | workflow_dispatch, push | 54 | - |
+| `LOTO7 Validation Tests`<br>`.github/workflows/loto7_validation_tests.yml` | workflow_dispatch, push | 73 | - |
+| `Repository Structure Audit`<br>`.github/workflows/repository_structure_audit.yml` | workflow_dispatch, push | 90 | - |
+| `Verify Repository Architecture Once`<br>`.github/workflows/verify_repository_architecture_once.yml` | workflow_dispatch, push | 96 | - |
 
 ## Highest-priority findings
 
@@ -52,19 +51,13 @@ Root contains 29 Python files.
 
 ### P0 — tracked_generated_outputs
 
-Repository tracks 150 files under outputs/.
+Repository tracks 172 files under outputs/.
 
 **Recommended action:** Separate immutable prediction evidence from reproducible intermediate outputs; retain only latest, sealed, and compact history files.
 
-### P0 — invalid_workflow_concurrency_key
-
-.github/workflows/loto7_dual_prediction.yml, .github/workflows/loto7_nested_walk_forward.yml, .github/workflows/loto7_recent_era_self_evolution.yml
-
-**Recommended action:** Remove non-standard concurrency.queue keys and use documented group/cancel-in-progress only.
-
 ### P1 — possibly_orphaned_python
 
-14 Python files have no detected workflow/import reference.
+16 Python files have no detected workflow/import reference.
 
 **Recommended action:** Review before archiving; static detection can miss dynamic calls.
 
@@ -99,6 +92,8 @@ State, reports, model candidates and sealed evidence share outputs/.
 - `loto7_self_evolver.py`
 - `loto7_train_from_backtest.py`
 - `resumable_loto7_backtest.py`
+- `scripts/build_latest_prediction_from_best_model.py`
+- `scripts/optimize_recent_era_role_strategy.py`
 - `sitecustomize.py`
 - `summarize_backtest_results.py`
 - `validate_evolution_resume.py`
@@ -114,18 +109,18 @@ State, reports, model candidates and sealed evidence share outputs/.
 | `outputs/ml_stack/loto7_memorybank_mb5.csv` | 379234 |
 | `outputs/holdout/holdout_result.csv` | 324540 |
 | `outputs/complete_ai/complete_ai_candidates.csv` | 236135 |
-| `outputs/recent_era/recent_era_model_history.csv` | 188427 |
+| `outputs/recent_era/recent_era_model_history.csv` | 194143 |
 | `outputs/ml_stack/loto7_memorybank_mb6.csv` | 142957 |
 | `loto7.csv` | 135323 |
-| `outputs/model_self_evolution/history.csv` | 132316 |
+| `outputs/model_self_evolution/history.csv` | 134293 |
 | `outputs/deep_ai/ppo_policy.pt` | 108727 |
 | `outputs/model_self_evolution/standalone_history.csv` | 77989 |
-| `outputs/txt_reports/99_combined_report.txt` | 54329 |
+| `outputs/super_recent/super_recent_model_history.csv` | 63251 |
+| `outputs/txt_reports/99_combined_report.txt` | 54331 |
 | `loto7_advanced_optimizer.py` | 52640 |
-| `outputs/super_recent/super_recent_model_history.csv` | 52076 |
-| `outputs/super_recent/super_recent_model_state.json` | 46447 |
-| `outputs/generation4/null_strategy_league_summary.json` | 46319 |
-| `outputs/recent_era/recent_era_model_state.json` | 42959 |
+| `outputs/super_recent/super_recent_model_state.json` | 46714 |
+| `outputs/generation4/null_strategy_league_summary.json` | 46332 |
+| `outputs/recent_era/recent_era_model_state.json` | 42919 |
 | `merge_evolution_shards.py` | 42620 |
 
 > Static-reference detection is conservative. A file listed as possibly unreferenced must be reviewed before deletion.
