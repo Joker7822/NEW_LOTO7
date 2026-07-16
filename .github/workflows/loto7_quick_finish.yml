@@ -156,6 +156,7 @@ jobs:
         continue-on-error: true
         run: |
           set -euo pipefail
+          mkdir -p outputs/diagnostics/quick_finish
           python merge_evolution_shards.py \
             --csv loto7.csv \
             --purchase-count 5 \
@@ -166,7 +167,7 @@ jobs:
             --ensemble-candidates-per-model 10 \
             --ensemble-overlap-limit 4 \
             --best-model loto7_best_model.json \
-            --prediction outputs/evolution_best_prediction.csv \
+            --prediction outputs/diagnostics/quick_finish/evolution_best_prediction.csv \
             --summary outputs/evolution_merged_summary.json \
             --manifest outputs/run_manifest.json
 
@@ -212,7 +213,7 @@ jobs:
           git add -f \
             loto7.csv \
             loto7_best_model.json \
-            outputs/evolution_best_prediction.csv \
+            outputs/diagnostics/quick_finish/evolution_best_prediction.csv \
             outputs/evolution_merged_summary.json \
             outputs/run_manifest.json \
             outputs/holdout/*.csv \
@@ -236,7 +237,7 @@ jobs:
           name: loto7-quick-finish-outputs
           path: |
             loto7_best_model.json
-            outputs/evolution_best_prediction.csv
+            outputs/diagnostics/quick_finish/evolution_best_prediction.csv
             outputs/evolution_merged_summary.json
             outputs/run_manifest.json
             outputs/holdout/*.csv
