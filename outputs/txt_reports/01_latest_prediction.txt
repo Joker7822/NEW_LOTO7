@@ -1,7 +1,7 @@
 Latest Prediction
 =================
 
-created_at: 2026-07-16T06:40:20.150355+00:00
+created_at: 2026-07-16T11:58:25.392196+00:00
 source: outputs/holdout/latest_prediction_report.txt
 status: FOUND
 LOTO7 Generation 4 Latest Prediction
@@ -16,8 +16,8 @@ selection_integrity: original_model_candidates / post-selection replacement=0
 
 [最新予測 5口]
 1位 / 1口目: 01 07 08 09 12 35 36 / 相対スコア=0.95 / 方式=generation4_recent
-2位 / 2口目: 06 07 13 14 22 33 36 / 相対スコア=0.90 / 方式=portfolio_regime_high_match
-3位 / 3口目: 06 09 12 17 22 26 33 / 相対スコア=0.85 / 方式=generation4_full
+2位 / 2口目: 06 09 12 17 22 26 33 / 相対スコア=0.90 / 方式=generation4_full
+3位 / 3口目: 06 07 13 14 22 33 36 / 相対スコア=0.85 / 方式=portfolio_regime_high_match
 4位 / 4口目: 01 10 12 14 19 22 35 / 相対スコア=0.80 / 方式=portfolio_regime_high_match
 5位 / 5口目: 06 08 10 16 17 24 36 / 相対スコア=0.75 / 方式=generation4_recent
 
@@ -29,12 +29,12 @@ conformal_pool_size: 24
 conformal_pool: [1, 4, 6, 7, 8, 9, 10, 12, 13, 14, 15, 17, 18, 19, 20, 22, 26, 29, 30, 31, 33, 34, 35, 36]
 conformal_empirical_coverage: 0.645604
 null_league_passed: False
-null_model_percentile: 0.383333
+null_model_percentile: 0.416667
 null_pbo: 0.4
 
 [Portfolio Objective]
-objective_score: 49.743452
-dpp_logdet: 5.645188
+objective_score: 49.844018
+dpp_logdet: 5.671228
 hypergraph_score: 100.470863
 conformal_hits: 33.0
 unique_number_count: 18

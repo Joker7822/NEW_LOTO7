@@ -1,6 +1,6 @@
 {
   "combined": "outputs/txt_reports/99_combined_report.txt",
-  "created_at": "2026-07-16T06:40:20.150355+00:00",
+  "created_at": "2026-07-16T11:58:25.392196+00:00",
   "index": "outputs/txt_reports/00_INDEX.txt",
   "json_summaries": [
     {
@@ -89,7 +89,7 @@
       "source": "outputs/holdout/holdout_summary.json",
       "summary": {
         "best_model": "loto7_best_model.json",
-        "created_at": "2026-07-16T05:02:45.850726+00:00",
+        "created_at": "2026-07-16T07:59:09.273154+00:00",
         "profit": 66700,
         "recent_era_summary": {
           "draw_hit_rate": 0.092262,
@@ -121,14 +121,14 @@
         },
         "roi_percent": 6.501,
         "target_draws": 684,
-        "year_summary_repaired_at": "2026-07-16T05:02:45.960729+00:00"
+        "year_summary_repaired_at": "2026-07-16T07:59:09.343556+00:00"
       }
     },
     {
       "exists": true,
       "source": "outputs/holdout/recent_era_summary.json",
       "summary": {
-        "created_at": "2026-07-16T05:02:45.961506+00:00",
+        "created_at": "2026-07-16T07:59:09.343962+00:00",
         "kind": "loto7_recent_era_holdout_summary",
         "recent_era_summary": {
           "draw_hit_rate": 0.092262,
@@ -248,7 +248,7 @@
           "winner": "best_model"
         },
         "completed_target_draws": 684,
-        "created_at": "2026-07-16T05:02:55.837565+00:00",
+        "created_at": "2026-07-16T07:59:27.530926+00:00",
         "genome_id": "g228_0228_2057",
         "role_ensemble": {
           "draw_count": 684,
@@ -290,7 +290,7 @@
       "exists": true,
       "source": "outputs/role_ensemble/role_strategy.json",
       "summary": {
-        "created_at": "2026-07-16T05:03:10.035467+00:00",
+        "created_at": "2026-07-16T07:59:40.118610+00:00",
         "kind": "loto7_role_strategy",
         "strategy_counts": {
           "contrarian": 0,
@@ -305,7 +305,7 @@
       "exists": true,
       "source": "outputs/role_ensemble/regime_state.json",
       "summary": {
-        "created_at": "2026-07-16T05:08:22.114590+00:00",
+        "created_at": "2026-07-16T11:27:21.738479+00:00",
         "final_counts": {
           "contrarian": 0,
           "high_match": 2,
@@ -323,7 +323,7 @@
       "exists": true,
       "source": "outputs/role_ensemble/regime_strategy.json",
       "summary": {
-        "created_at": "2026-07-16T05:08:22.114610+00:00",
+        "created_at": "2026-07-16T11:27:21.738498+00:00",
         "kind": "loto7_regime_role_strategy",
         "regime": "recent_repeat_trend",
         "regime_strength": 0.600806,
