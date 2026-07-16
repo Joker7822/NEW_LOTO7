@@ -1,14 +1,14 @@
 LOTO7 Null Strategy League
 ==========================
 
-created_at: 2026-07-16T11:58:57.796019+00:00
+created_at: 2026-07-16T12:01:15.792315+00:00
 model: loto7_best_model.json
 target_draws: 336
 null_simulations: 180
 model_roi: 16.607
 model_top1_removed_roi: 14.325
-null_exceedance_rate: 0.45
-pbo: 0.7
+null_exceedance_rate: 0.355556
+pbo: 0.6
 passed: False
 
 この検査は多数試行で偶然高く見える戦略を検出するための診断です。

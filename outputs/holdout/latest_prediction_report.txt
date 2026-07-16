@@ -23,8 +23,8 @@ conformal_pool_size: 24
 conformal_pool: [1, 4, 6, 7, 8, 9, 10, 12, 13, 14, 15, 17, 18, 19, 20, 22, 26, 29, 30, 31, 33, 34, 35, 36]
 conformal_empirical_coverage: 0.645604
 null_league_passed: False
-null_model_percentile: 0.45
-null_pbo: 0.7
+null_model_percentile: 0.355556
+null_pbo: 0.6
 
 [Portfolio Objective]
 objective_score: 49.844018

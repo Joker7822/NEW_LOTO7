@@ -1,3 +1,4 @@
-requested_at=2026-07-16T11:35:30Z
-source_commit=0fccf10f9966ec854cf147bd055831ddd08cb055
+requested_at=2026-07-16T11:42:22Z
+source_commit=a4af74fe0db260478a8d6c6e9ae28ca5660e60e2
+workflow=loto7_generation4_run.yml
 null_simulations=180

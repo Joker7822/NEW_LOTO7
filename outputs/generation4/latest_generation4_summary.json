@@ -279,9 +279,9 @@
   ],
   "null_strategy_league": {
     "available": true,
-    "model_percentile": 0.45,
+    "model_percentile": 0.355556,
     "passed": false,
-    "pbo": 0.7,
+    "pbo": 0.6,
     "summary_path": "outputs/generation4/null_strategy_league_summary.json"
   },
   "prediction_draw_no": 686,
