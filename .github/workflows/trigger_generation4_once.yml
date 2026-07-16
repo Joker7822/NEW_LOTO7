@@ -1,0 +1,32 @@
+name: Trigger Generation 4 Full Run Once
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/trigger_generation4_once.yml"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: trigger-generation4-once
+  cancel-in-progress: true
+
+jobs:
+  dispatch-generation4:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch Generation 4 full run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow run loto7_dual_prediction.yml \
+            --repo "${GITHUB_REPOSITORY}" \
+            --ref main \
+            -f null_simulations=180
+          echo "Dispatched LOTO7 Generation 4 Prediction with null_simulations=180"
