@@ -1,5 +1,6 @@
 name: Apply Repository Restructure
 
+# apply-request: 2026-07-17
 on:
   workflow_dispatch:
   push:
