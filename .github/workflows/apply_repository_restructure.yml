@@ -1,0 +1,118 @@
+name: Apply Repository Restructure
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/apply_repository_restructure.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-repository-restructure-main
+  cancel-in-progress: true
+
+jobs:
+  restructure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Pull latest main
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git reset --hard origin/main
+
+      - name: Apply Phase-1 repository restructure
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/restructure_repository.py scripts/check_repository_architecture.py
+          python scripts/restructure_repository.py --apply
+
+      - name: Validate workflow YAML
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet pyyaml
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+          for path in sorted(Path('.github/workflows').glob('*.y*ml')):
+              with path.open(encoding='utf-8') as stream:
+                  yaml.safe_load(stream)
+              print(f'[OK] {path}')
+          PY
+
+      - name: Run architecture guard and focused tests
+        run: |
+          set -euo pipefail
+          git diff --check
+          python scripts/check_repository_architecture.py
+          python -m unittest \
+            tests.test_prediction_output_consistency \
+            tests.test_robust_validation_and_portfolio \
+            tests.test_generation4_pipeline -v
+
+      - name: Refresh repository structure audit
+        run: |
+          set -euo pipefail
+          python scripts/audit_repository_structure.py \
+            --json docs/architecture/repository_structure_audit.json \
+            --markdown docs/architecture/repository_structure_audit.md
+
+      - name: Commit restructured repository
+        run: |
+          set -euo pipefail
+          SNAPSHOT="$(mktemp -d)"
+          cp -a . "$SNAPSHOT/repo"
+          for ATTEMPT in 1 2 3 4; do
+            git fetch origin main
+            git reset --hard origin/main
+            rsync -a --delete \
+              --exclude .git/ \
+              --exclude outputs/generation4/sealed/ \
+              "$SNAPSHOT/repo/" ./
+            git add -A
+            if git diff --cached --quiet; then
+              echo "No repository restructuring changes"
+              exit 0
+            fi
+            git commit -m "Restructure NEW_LOTO7 repository architecture"
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            sleep $((ATTEMPT * 5))
+          done
+          exit 1
+
+      - name: Upload architecture reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: repository-restructure-reports
+          path: |
+            docs/architecture/repository_restructure_report.json
+            docs/architecture/repository_restructure_report.md
+            docs/architecture/repository_architecture_guard.json
+            docs/architecture/repository_architecture_guard.md
+            docs/architecture/repository_structure_audit.json
+            docs/architecture/repository_structure_audit.md
+          if-no-files-found: error
