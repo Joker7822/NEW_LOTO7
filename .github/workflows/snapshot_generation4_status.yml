@@ -1,0 +1,45 @@
+name: Snapshot Generation 4 Run Status
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/snapshot_generation4_status.yml"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Capture latest full-run status
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p outputs/generation4
+          RUN_ID="$(gh run list --repo "${GITHUB_REPOSITORY}" --workflow loto7_generation4_run.yml --event workflow_dispatch --branch main --limit 1 --json databaseId --jq '.[0].databaseId')"
+          test -n "$RUN_ID"
+          gh run view "$RUN_ID" --repo "${GITHUB_REPOSITORY}" \
+            --json databaseId,workflowName,status,conclusion,createdAt,updatedAt,headSha,url,jobs \
+            > outputs/generation4/current_run_snapshot.json
+          printf 'run_id=%s\nsnapshot_at=%s\n' "$RUN_ID" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            > outputs/generation4/current_run_snapshot.txt
+      - name: Commit snapshot
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git reset --hard origin/main
+          git add -f outputs/generation4/current_run_snapshot.json outputs/generation4/current_run_snapshot.txt
+          git commit -m "Snapshot Generation 4 run status [skip ci]"
+          git push origin HEAD:main
