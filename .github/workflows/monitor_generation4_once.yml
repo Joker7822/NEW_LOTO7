@@ -1,6 +1,6 @@
 name: Monitor Generation 4 Full Run Once
 
-# monitor-request: 2026-07-16T11:38:00Z
+# monitor-request: 2026-07-16T11:42:00Z
 on:
   push:
     branches:
@@ -20,7 +20,7 @@ concurrency:
 jobs:
   monitor-generation4:
     runs-on: ubuntu-latest
-    timeout-minutes: 125
+    timeout-minutes: 185
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -28,7 +28,7 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Find and monitor latest Generation 4 dispatch
+      - name: Find and monitor latest valid Generation 4 dispatch
         id: monitor
         env:
           GH_TOKEN: ${{ github.token }}
@@ -37,14 +37,14 @@ jobs:
           mkdir -p outputs/generation4
           RUN_ID="$(gh run list \
             --repo "${GITHUB_REPOSITORY}" \
-            --workflow loto7_dual_prediction.yml \
+            --workflow loto7_generation4_run.yml \
             --event workflow_dispatch \
             --branch main \
             --limit 1 \
             --json databaseId \
             --jq '.[0].databaseId')"
           if [ -z "$RUN_ID" ] || [ "$RUN_ID" = "null" ]; then
-            echo "No Generation 4 workflow_dispatch run found" >&2
+            echo "No valid Generation 4 workflow_dispatch run found" >&2
             exit 1
           fi
           echo "run_id=${RUN_ID}" >> "$GITHUB_OUTPUT"
@@ -56,7 +56,7 @@ jobs:
             --repo "${GITHUB_REPOSITORY}" \
             --json databaseId,workflowName,status,conclusion,createdAt,updatedAt,headSha,url,jobs \
             > outputs/generation4/full_run_status.json
-          printf 'run_id=%s\nwatch_exit=%s\nmonitored_at=%s\n' \
+          printf 'run_id=%s\nworkflow=loto7_generation4_run.yml\nwatch_exit=%s\nmonitored_at=%s\n' \
             "$RUN_ID" "$WATCH_EXIT" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             > outputs/generation4/full_run_status.txt
           echo "watch_exit=${WATCH_EXIT}" >> "$GITHUB_OUTPUT"
@@ -68,13 +68,13 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch origin main
-          git pull --rebase --autostash origin main
+          git reset --hard origin/main
           git add -f outputs/generation4/full_run_status.json outputs/generation4/full_run_status.txt
           if git diff --cached --quiet; then
             echo "No monitor status changes"
             exit 0
           fi
-          git commit -m "Record Generation 4 full-run status [skip ci]"
+          git commit -m "Record valid Generation 4 full-run status [skip ci]"
           git push origin HEAD:main
 
       - name: Require successful Generation 4 conclusion
