@@ -17,6 +17,7 @@ on:
       - "scripts/null_strategy_league.py"
       - "scripts/update_generation4_shadow_history.py"
       - "scripts/seal_generation4_prediction.py"
+      - "scripts/finalize_generation4_report.py"
       - "tests/test_prediction_output_consistency.py"
       - "tests/test_robust_validation_and_portfolio.py"
       - "tests/test_generation4_pipeline.py"
@@ -55,6 +56,7 @@ jobs:
             scripts/null_strategy_league.py \
             scripts/update_generation4_shadow_history.py \
             scripts/seal_generation4_prediction.py \
+            scripts/finalize_generation4_report.py \
             tests/test_prediction_output_consistency.py \
             tests/test_robust_validation_and_portfolio.py \
             tests/test_generation4_pipeline.py
