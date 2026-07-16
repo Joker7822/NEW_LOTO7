@@ -1,0 +1,255 @@
+name: LOTO7 Generation 4 Full Run
+
+on:
+  workflow_dispatch:
+    inputs:
+      null_simulations:
+        description: "Number of null-strategy simulations"
+        required: false
+        default: "180"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/loto7_generation4_run.yml"
+      - "scripts/generation4_core.py"
+      - "scripts/build_generation4_prediction.py"
+      - "scripts/null_strategy_league.py"
+      - "scripts/update_generation4_shadow_history.py"
+      - "scripts/seal_generation4_prediction.py"
+      - "scripts/finalize_generation4_report.py"
+      - "tests/test_generation4_pipeline.py"
+
+permissions:
+  contents: write
+
+env:
+  TARGET_BRANCH: main
+
+concurrency:
+  group: loto7-generation4-full-${{ github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  generation4-full-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Pull latest state
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git reset --hard origin/main
+
+      - name: Prepare inputs
+        run: |
+          set -euo pipefail
+          mkdir -p outputs/generation4 outputs/holdout outputs/recent_era outputs/super_recent outputs/role_ensemble
+          if [ ! -s outputs/recent_era/recent_era_best_model.json ]; then
+            cp -f loto7_best_model.json outputs/recent_era/recent_era_best_model.json
+          fi
+          if [ ! -s outputs/super_recent/super_recent_best_model.json ]; then
+            cp -f outputs/recent_era/recent_era_best_model.json outputs/super_recent/super_recent_best_model.json
+          fi
+          if [ ! -s outputs/role_ensemble/regime_strategy.json ]; then
+            BASE_STRATEGY="outputs/recent_era/recent_role_strategy.json"
+            if [ ! -s "$BASE_STRATEGY" ]; then BASE_STRATEGY="outputs/role_ensemble/role_strategy.json"; fi
+            python scripts/detect_loto7_regime.py \
+              --csv loto7.csv \
+              --base-strategy "$BASE_STRATEGY" \
+              --output outputs/role_ensemble/regime_state.json \
+              --strategy-output outputs/role_ensemble/regime_strategy.json \
+              --report outputs/role_ensemble/regime_strategy_report.txt \
+              --purchase-count 5
+          fi
+
+      - name: Compile Generation 4 modules
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            scripts/generation4_core.py \
+            scripts/build_generation4_prediction.py \
+            scripts/null_strategy_league.py \
+            scripts/update_generation4_shadow_history.py \
+            scripts/seal_generation4_prediction.py \
+            scripts/finalize_generation4_report.py \
+            tests/test_generation4_pipeline.py
+
+      - name: Run Generation 4 tests
+        run: |
+          set -euo pipefail
+          python -m unittest \
+            tests.test_prediction_output_consistency \
+            tests.test_robust_validation_and_portfolio \
+            tests.test_generation4_pipeline -v
+
+      - name: Resolve null simulations
+        id: settings
+        run: |
+          VALUE="${{ inputs.null_simulations }}"
+          if [ -z "$VALUE" ]; then VALUE="180"; fi
+          echo "null_simulations=$VALUE" >> "$GITHUB_OUTPUT"
+
+      - name: Run null strategy league and PBO
+        run: |
+          set -euo pipefail
+          python scripts/null_strategy_league.py \
+            --csv loto7.csv \
+            --model loto7_best_model.json \
+            --summary outputs/generation4/null_strategy_league_summary.json \
+            --report outputs/generation4/null_strategy_league_report.txt \
+            --start-year 2020 \
+            --simulations "${{ steps.settings.outputs.null_simulations }}" \
+            --purchase-count 5 \
+            --unit-cost 300 \
+            --seed "${GITHUB_RUN_ID}"
+
+      - name: Build Generation 4 prediction
+        run: |
+          set -euo pipefail
+          python scripts/build_generation4_prediction.py \
+            --csv loto7.csv \
+            --full-model loto7_best_model.json \
+            --recent-model outputs/recent_era/recent_era_best_model.json \
+            --super-recent-model outputs/super_recent/super_recent_best_model.json \
+            --regime-strategy outputs/role_ensemble/regime_strategy.json \
+            --prediction-history outputs/evolution_prediction_history.csv \
+            --shadow-history outputs/generation4/shadow_history.csv \
+            --null-league-summary outputs/generation4/null_strategy_league_summary.json \
+            --prediction outputs/evolution_best_prediction.csv \
+            --prediction-report outputs/holdout/latest_prediction_report.txt \
+            --summary outputs/generation4/latest_generation4_summary.json \
+            --shadow-output outputs/generation4/latest_shadow_predictions.json \
+            --purchase-count 5 \
+            --candidates-per-source 220 \
+            --candidates-per-step 80 \
+            --beam-width 220 \
+            --max-number-usage 4 \
+            --max-pair-overlap 4 \
+            --history-overlap-limit 6 \
+            --conformal-alpha 0.20 \
+            --minimum-conformal-hits 4
+
+          python scripts/enforce_prediction_constraints.py \
+            --prediction outputs/evolution_best_prediction.csv \
+            --report outputs/holdout/latest_prediction_report.txt \
+            --max-number-usage 4 \
+            --max-pair-overlap 4
+
+          python scripts/finalize_generation4_report.py \
+            --prediction outputs/evolution_best_prediction.csv \
+            --summary outputs/generation4/latest_generation4_summary.json \
+            --report outputs/holdout/latest_prediction_report.txt
+
+      - name: Update histories and e-process
+        run: |
+          set -euo pipefail
+          python scripts/update_prediction_history.py \
+            --latest outputs/evolution_best_prediction.csv \
+            --history outputs/evolution_prediction_history.csv \
+            --csv loto7.csv
+
+          python scripts/check_prediction_history_results.py \
+            --history outputs/evolution_prediction_history.csv \
+            --csv loto7.csv \
+            --output outputs/evolution_prediction_history_result.txt
+
+          python scripts/update_generation4_shadow_history.py \
+            --csv loto7.csv \
+            --latest-shadow outputs/generation4/latest_shadow_predictions.json \
+            --history outputs/generation4/shadow_history.csv \
+            --summary outputs/generation4/champion_challenger_summary.json \
+            --report outputs/generation4/champion_challenger_report.txt \
+            --challenger generation4 \
+            --champion beam_baseline \
+            --promotion-threshold 20 \
+            --min-evaluated-draws 30
+
+      - name: Seal prediction
+        run: |
+          set -euo pipefail
+          GITHUB_SHA="$(git rev-parse HEAD)" python scripts/seal_generation4_prediction.py \
+            --prediction outputs/evolution_best_prediction.csv \
+            --summary outputs/generation4/latest_generation4_summary.json \
+            --shadow outputs/generation4/latest_shadow_predictions.json \
+            --dataset loto7.csv \
+            --full-model loto7_best_model.json \
+            --recent-model outputs/recent_era/recent_era_best_model.json \
+            --super-model outputs/super_recent/super_recent_best_model.json
+
+      - name: Verify required outputs
+        run: |
+          set -euo pipefail
+          test -s outputs/evolution_best_prediction.csv
+          test -s outputs/holdout/latest_prediction_report.txt
+          test -s outputs/generation4/latest_generation4_summary.json
+          test -s outputs/generation4/null_strategy_league_summary.json
+          test -s outputs/generation4/latest_shadow_predictions.json
+          test -s outputs/generation4/champion_challenger_summary.json
+          test -s outputs/generation4/latest_sealed_manifest.json
+
+      - name: Commit Generation 4 outputs
+        run: |
+          set -euo pipefail
+          SNAPSHOT="$(mktemp -d)"
+          mkdir -p "$SNAPSHOT/outputs/generation4" "$SNAPSHOT/outputs/holdout" "$SNAPSHOT/outputs/role_ensemble"
+          cp -a outputs/generation4/. "$SNAPSHOT/outputs/generation4/"
+          cp -f outputs/evolution_best_prediction.csv outputs/evolution_prediction_history.csv \
+            outputs/evolution_prediction_history_result.txt "$SNAPSHOT/outputs/"
+          cp -f outputs/holdout/latest_prediction_report.txt "$SNAPSHOT/outputs/holdout/"
+          cp -f outputs/role_ensemble/regime_*.json outputs/role_ensemble/regime_*.txt \
+            "$SNAPSHOT/outputs/role_ensemble/" 2>/dev/null || true
+
+          for ATTEMPT in 1 2 3 4; do
+            git fetch origin main
+            git reset --hard origin/main
+            mkdir -p outputs/generation4 outputs/holdout outputs/role_ensemble
+            cp -a "$SNAPSHOT/outputs/generation4/." outputs/generation4/
+            cp -f "$SNAPSHOT/outputs/evolution_best_prediction.csv" outputs/evolution_best_prediction.csv
+            cp -f "$SNAPSHOT/outputs/evolution_prediction_history.csv" outputs/evolution_prediction_history.csv
+            cp -f "$SNAPSHOT/outputs/evolution_prediction_history_result.txt" outputs/evolution_prediction_history_result.txt
+            cp -f "$SNAPSHOT/outputs/holdout/latest_prediction_report.txt" outputs/holdout/latest_prediction_report.txt
+            cp -f "$SNAPSHOT/outputs/role_ensemble/"* outputs/role_ensemble/ 2>/dev/null || true
+            git add -f outputs/generation4 outputs/evolution_best_prediction.csv \
+              outputs/evolution_prediction_history.csv outputs/evolution_prediction_history_result.txt \
+              outputs/holdout/latest_prediction_report.txt outputs/role_ensemble/regime_*.json \
+              outputs/role_ensemble/regime_*.txt || true
+            if git diff --cached --quiet; then
+              echo "No Generation 4 output changes"
+              exit 0
+            fi
+            git commit -m "Complete LOTO7 Generation 4 full run [skip ci]"
+            if git push origin HEAD:main; then exit 0; fi
+            sleep $((ATTEMPT * 10))
+          done
+          exit 1
+
+      - name: Upload Generation 4 artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: loto7-generation4-full-run
+          path: |
+            outputs/evolution_best_prediction.csv
+            outputs/evolution_prediction_history.csv
+            outputs/evolution_prediction_history_result.txt
+            outputs/holdout/latest_prediction_report.txt
+            outputs/generation4/**
+          if-no-files-found: error
