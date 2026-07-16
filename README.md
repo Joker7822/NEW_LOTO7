@@ -1,351 +1,202 @@
 # NEW_LOTO7
 
-LOTO7 のデータ更新、進化型モデル探索、walk-forward holdout検証、合議制予測、ML拡張、完全AI分析、管理付き自己進化AIをまとめて実行するリポジトリです。
+LOTO7のデータ更新、モデル進化、独立検証、5口ポートフォリオ最適化、実運用履歴、SHA-256封印予測を管理するリポジトリです。
 
-> 注意: 宝くじはランダム性が高く、このリポジトリの予測・バックテスト・自己進化結果は、将来の当せんや利益を保証するものではありません。
+> 宝くじはランダム性が高く、本リポジトリの予測・バックテスト・自己進化結果は、将来の当せんや利益を保証しません。
 
----
-
-## 現在の全体像
-
-このリポジトリは、現在以下の流れで動きます。
+## 現在の本番構成
 
 ```text
-scrape
-  ↓
-evolve
-  ↓
-holdout
-  ↓
-ml-stack
-  ↓
-complete-ai
-  ↓
-monitor
-  ↓
-self-evolve
+データ更新・モデル進化
+        ↓
+Recent / Super候補生成
+        ↓
+Nested Walk-Forward・Robust昇格判定
+        ↓
+Generation 4 Production
+        ↓
+Null Strategy League / PBO
+Conformal数字プール
+Change-Point検出
+動的モデル配分
+DPP + Hypergraph 5口最適化
+        ↓
+予測履歴・Champion / Challenger・e-process
+        ↓
+SHA-256封印・成果物保存
 ```
 
-中心となるGitHub Actionsは次の1本です。
+本番予測の所有workflowは次の1本です。
 
 ```text
-.github/workflows/loto7_evolution.yml
+.github/workflows/loto7_generation4_run.yml
+name: LOTO7 Generation 4 Production
 ```
 
-以前は自己進化やTXTレポート集約を別workflowに分けていましたが、現在は `LOTO7 Evolution Trainer` に統合済みです。
+Evolution系workflowはモデル・状態・検証結果を生成しますが、本番5口を直接更新しません。
 
----
+## Workflow所有権
 
-## 主要機能
+| Workflow | 役割 |
+|---|---|
+| `LOTO7 Evolution Trainer` | CSV更新、全期間モデル進化、holdout、role・ML診断 |
+| `LOTO7 Model Self Evolution` | 全期間モデルの独立自己進化と安全ガード |
+| `LOTO7 Recent Era Self Evolution` | Recent / Super Recent候補生成 |
+| `LOTO7 Nested Walk Forward Validation` | sealed fold検証と候補昇格 |
+| `LOTO7 Generation 4 Production` | 本番5口、履歴、e-process、封印予測 |
+| `LOTO7 Quick Finish Check` | 診断専用。試験予測は本番出力と分離 |
+| `LOTO7 Validation Tests` | 回帰テスト、未来リーク、構造ガード |
+| `Repository Structure Audit` | リポジトリ構造と所有権の継続監査 |
+
+詳細は以下を参照してください。
+
+```text
+docs/architecture/REPOSITORY_LAYOUT.md
+docs/architecture/WORKFLOW_OWNERSHIP.md
+docs/architecture/OUTPUT_RETENTION.md
+config/repository_layout.json
+```
+
+## Generation 4の主要機能
 
 | 機能 | 内容 |
 |---|---|
-| CSV更新 | `scrapingloto7.py` で `loto7.csv` を更新 |
-| 進化型モデル探索 | 8 shard 並列でモデル候補を世代交代・交叉・突然変異 |
-| precision学習 | 高等級・近似一致を重視する `loto7_precision_evolution_trainer.py` |
-| holdout再ランキング | 第2回から最新回まで未来リークなしで検証 |
-| 合議制予測 | 8 shard の候補モデルを再スコアリングして5口を出力 |
-| ML拡張 | MemoryBank / MetaClassifier / LightGBM / CatBoost / XGBoost / Optuna / SHAP |
-| complete-ai | Meta Ensemble / Master Champion / ROI / Bayesian / Monte Carlo / MCTS / Dashboard |
-| monitor | 進捗サマリーを `outputs/loto7_progress_summary.*` に出力 |
-| self-evolve | 診断・改善案生成・安全判定・PR作成まで実施 |
-| TXT集約 | `outputs/txt_reports/` に主要 `.txt/.md` を一括コピー |
+| Nested Walk-Forward | 学習・選定・評価期間を分離したsealed検証 |
+| Robust ROI | 最大払戻除外、期間中央値、下方リスクを評価 |
+| Null Strategy League | ランダム・頻出・休眠・直近・バランス戦略と比較 |
+| PBO | 多数試行によるバックテスト過学習を診断 |
+| Conformal Pool | 過去データだけで候補数字集合を校正 |
+| Change-Point | 直近分布と基準期間の変化を検出 |
+| Dynamic Weighting | Full / Recent / Super / Regime配分を動的調整 |
+| DPP | 似過ぎた候補を避け、5口の多様性を評価 |
+| Hypergraph | ペア・トリプル被覆を5口全体で最適化 |
+| Champion / Challenger | 旧方式と第4世代をシャドー比較 |
+| e-process | 実抽せんを逐次確認しながら昇格証拠を蓄積 |
+| SHA-256 seal | 抽せん前予測、モデル、データ、実行情報を固定 |
 
----
-
-## GitHub Actions
-
-### LOTO7 Evolution Trainer
+## 本番出力
 
 ```text
-Actions > LOTO7 Evolution Trainer > Run workflow
-```
-
-このworkflowが現在のメインです。
-
-### 手動実行オプション
-
-| 入力 | 内容 | 既定値 |
-|---|---|---|
-| `evolution_mode` | `recommended` / `full_power` / `custom` | `recommended` |
-| `generations` | custom時の世代数 | `60` |
-| `population` | custom時の個体数 | `120` |
-| `max_targets` | custom時の検証対象数 | `160` |
-| `target_stride` | 検証間隔 | `2` |
-| `workers` | shard内worker数 | `2` |
-| `reset_state` | stateを削除して最初から実行 | `false` |
-| `run_ml_stack` | ML拡張を実行 | `true` |
-| `run_complete_ai` | complete-aiを実行 | `true` |
-| `run_self_evolve` | 自己進化AIを実行 | `true` |
-| `create_self_evolution_pr` | 改善案がある場合にPR作成 | `true` |
-
-### 定期実行
-
-```text
-UTC 15:00 / 23:00 / 07:00
-JST 00:00 / 08:00 / 16:00
-```
-
-自己進化PRの乱発防止のため、schedule実行では UTC 23:00 の回だけ self-evolve を実行します。
-
----
-
-## 自己進化AI
-
-自己進化AIは以下のファイルで管理します。
-
-```text
-loto7_self_evolver.py
-loto7_self_evolution_config.json
-```
-
-### 自己進化の段階
-
-| Lv | 内容 | 状態 |
-|---:|---|---|
-| Lv1 | 進化型モデル学習結果を読む | 実装済み |
-| Lv2 | 評価基準・precision scoringを調整 | 実装済み |
-| Lv3 | 弱点診断と改善案生成 | 実装済み |
-| Lv4 | 安全な設定変更として候補適用 | 実装済み |
-| Lv5 | smoke testで検証 | 実装済み |
-| Lv6 | 改善ブランチ・PR作成 | 実装済み |
-
-### 安全設計
-
-- mainへ直接pushしない
-- 任意コード生成はしない
-- 変更対象は安全なJSON設定に限定
-- 実質差分がない場合は `decision: no_op`
-- 時刻差分だけの重複PRは作成しない
-- `ready_for_pull_request=true` の時だけPR作成対象
-
-### 自己進化出力
-
-```text
-outputs/self_evolution/diagnosis.json
-outputs/self_evolution/proposal.json
-outputs/self_evolution/adoption_decision.json
-outputs/self_evolution/comparison_report.txt
-outputs/self_evolution/applied_config.json
-outputs/self_evolution/pr_body.md
-outputs/self_evolution/pr_summary.txt
-```
-
----
-
-## TXTレポート一括確認
-
-主要な `.txt` / `.md` レポートは、以下の専用フォルダに集約します。
-
-```text
-outputs/txt_reports/
-```
-
-### 主なファイル
-
-| ファイル | 内容 |
-|---|---|
-| `outputs/txt_reports/00_index.txt` | 一覧・おすすめ確認順 |
-| `outputs/txt_reports/10_pr_summary.txt` | 自己進化PR/採用判断の要約 |
-| `outputs/txt_reports/20_self_evolution_report.txt` | 自己進化AIの診断・改善案 |
-| `outputs/txt_reports/30_latest_prediction_report.txt` | 最新予測5口 |
-| `outputs/txt_reports/40_model_selection_report.txt` | 採用モデルと候補ランキング |
-| `outputs/txt_reports/50_holdout_report.txt` | holdoutバックテスト概要 |
-| `outputs/txt_reports/60_progress_summary.txt` | 学習進捗サマリー |
-| `outputs/txt_reports/all_reports.txt` | 主要TXTの一括結合版 |
-| `outputs/txt_reports/README.txt` | フォルダ説明 |
-
-### 手動生成
-
-```bash
-bash scripts/collect_txt_reports.sh outputs/txt_reports
-```
-
-PRが作成される場合は、self-evolve job内で自動的に `outputs/txt_reports/` が作成され、PRブランチにも含まれます。
-
----
-
-## 現在の代表的な成績
-
-直近のholdout再ランキングでは、以下のような結果が出ています。
-
-| 項目 | 値 |
-|---|---:|
-| 検証対象 | 第2回〜第682回相当 |
-| 処理済み対象回数 | 681 |
-| 総購入口数 | 3405 |
-| 総購入額 | 1,021,500円 |
-| 総払戻額 | 596,400円 |
-| 総収支 | -425,100円 |
-| ROI | 58.385% |
-| 最大本数字一致 | 6 |
-| 当選回数 | 99 |
-| 当選口数 | 149 |
-| 3等 | 1 |
-| 4等 | 6 |
-| 5等 | 55 |
-| 6等 | 87 |
-
-詳細は以下を確認してください。
-
-```text
-outputs/holdout/holdout_report.txt
-outputs/txt_reports/50_holdout_report.txt
-```
-
----
-
-## 最新予測レポート
-
-最新予測は以下に出力されます。
-
-```text
-outputs/holdout/latest_prediction_report.txt
 outputs/evolution_best_prediction.csv
-outputs/txt_reports/30_latest_prediction_report.txt
+outputs/evolution_prediction_history.csv
+outputs/evolution_prediction_history_result.txt
+outputs/holdout/latest_prediction_report.txt
 ```
 
-例:
+封印証跡は以下へ保存します。
 
 ```text
-1位: 06 07 09 12 22 33 35
-2位: 01 06 09 12 22 26 29
-3位: 06 08 09 12 18 22 34
-4位: 01 09 10 12 18 22 35
-5位: 07 09 10 12 22 29 34
+outputs/generation4/latest_sealed_manifest.json
+outputs/generation4/sealed_index.json
+outputs/generation4/sealed/
 ```
 
----
+Quick Finishの試験予測は本番出力を上書きしません。
 
-## 重要ファイル
+```text
+outputs/diagnostics/quick_finish/evolution_best_prediction.csv
+```
+
+## 実行方法
+
+### 本番第4世代予測
+
+```text
+Actions
+→ LOTO7 Generation 4 Production
+→ Run workflow
+→ null_simulations: 180
+```
+
+モデル進化・Nested検証の成功後にも自動起動します。新しいモデル状態が到着した場合は、固定concurrency groupにより古い予測実行を置き換え、最新状態を優先します。
+
+### 全期間モデル進化
+
+```text
+Actions
+→ LOTO7 Evolution Trainer
+→ Run workflow
+```
+
+### Recent / Super候補生成
+
+```text
+Actions
+→ LOTO7 Recent Era Self Evolution
+→ Run workflow
+```
+
+### Nested検証
+
+```text
+Actions
+→ LOTO7 Nested Walk Forward Validation
+→ Run workflow
+```
+
+### 軽量診断
+
+```text
+Actions
+→ LOTO7 Quick Finish Check
+→ Run workflow
+```
+
+## テスト
+
+```bash
+python -m unittest \
+  tests.test_prediction_output_consistency \
+  tests.test_robust_validation_and_portfolio \
+  tests.test_generation4_pipeline -v
+```
+
+構造所有権の確認:
+
+```bash
+python scripts/check_repository_architecture.py
+```
+
+構造監査レポートの生成:
+
+```bash
+python scripts/audit_repository_structure.py \
+  --json docs/architecture/repository_structure_audit.json \
+  --markdown docs/architecture/repository_structure_audit.md
+```
+
+## ディレクトリ構成
+
+```text
+.github/workflows/   Actions orchestration
+config/              構造・運用ポリシー
+scripts/             CLI、検証、レポート、保守ツール
+tests/               回帰・リーク・構造テスト
+docs/architecture/   設計、所有権、監査結果
+outputs/              production / evidence / state / diagnostics
+root *.py             既存import互換レイヤー
+```
+
+ルートPythonは既存workflowとresume stateの互換性を守るため、Phase 1では移動していません。Phase 2で互換wrapperを維持しながら`src/loto7/`へ段階移行します。
+
+## 主要ファイル
 
 | ファイル | 内容 |
 |---|---|
-| `loto7.csv` | LOTO7抽せんデータ |
-| `scrapingloto7.py` | CSV更新 |
-| `loto7_evolution_trainer.py` | 進化型モデル探索本体 |
-| `loto7_precision_evolution_trainer.py` | precision scoring強化版 |
-| `merge_evolution_shards.py` | shard統合・holdout再ランキング・合議制予測 |
-| `holdout_evaluator.py` | full-period holdout検証 |
-| `loto7_ml_stack.py` | ML拡張スタック |
-| `loto7_complete_ai_system.py` | complete-ai統合分析 |
-| `loto7_progress_monitor.py` | 進捗サマリー作成 |
-| `loto7_self_evolver.py` | 自己進化AI制御 |
-| `loto7_self_evolution_config.json` | 自己進化設定 |
-| `scripts/collect_txt_reports.sh` | TXTレポート集約 |
-| `.github/workflows/loto7_evolution.yml` | 統合workflow |
+| `loto7.csv` | 抽せんデータ |
+| `loto7_best_model.json` | 全期間採用モデル |
+| `loto7_evolution_trainer.py` | 進化・候補生成の中核 |
+| `holdout_evaluator.py` | 全期間holdout検証 |
+| `scripts/build_generation4_prediction.py` | 第4世代5口生成 |
+| `scripts/generation4_core.py` | Conformal、DPP、Hypergraph、動的配分 |
+| `scripts/null_strategy_league.py` | Null League・PBO |
+| `scripts/update_generation4_shadow_history.py` | Champion / Challenger・e-process |
+| `scripts/seal_generation4_prediction.py` | SHA-256封印 |
+| `scripts/check_repository_architecture.py` | 構造所有権ガード |
 
----
+## 出力保持方針
 
-## 主要出力
-
-| 出力 | 内容 |
-|---|---|
-| `loto7_best_model.json` | 採用モデル |
-| `loto7_best_model_shardXX_of_08.json` | shard別ベストモデル |
-| `outputs/evolution_history_shardXX_of_08.csv` | shard別進化履歴 |
-| `outputs/evolution_best_summary_shardXX_of_08.csv` | shard別上位サマリー |
-| `outputs/evolution_best_prediction.csv` | 最新予測CSV |
-| `outputs/evolution_merged_summary.json` | 統合結果サマリー |
-| `outputs/run_manifest.json` | 実行manifest |
-| `outputs/holdout/holdout_result.csv` | holdout詳細CSV |
-| `outputs/holdout/holdout_summary.json` | holdout集計JSON |
-| `outputs/holdout/holdout_report.txt` | holdoutテキストレポート |
-| `outputs/holdout/latest_prediction_report.txt` | 最新予測TXT |
-| `outputs/holdout/model_selection_report.txt` | モデル選定TXT |
-| `outputs/loto7_progress_summary.json` | 進捗JSON |
-| `outputs/loto7_progress_summary.md` | 進捗Markdown |
-| `outputs/txt_reports/` | TXT一括確認フォルダ |
-
----
-
-## ローカル実行例
-
-### precision進化学習の軽量実行
-
-```bash
-DISABLE_GIT_PUSH=1 python loto7_precision_evolution_trainer.py \
-  --csv loto7.csv \
-  --output-dir outputs/local_test \
-  --best-model outputs/local_test/loto7_best_model.json \
-  --generations 2 \
-  --population 12 \
-  --elite-count 3 \
-  --purchase-count 5 \
-  --min-train-draws 60 \
-  --max-targets 20 \
-  --target-stride 5 \
-  --shard-id 0 \
-  --num-shards 1 \
-  --workers 1
-```
-
-### holdout検証
-
-```bash
-python holdout_evaluator.py \
-  --csv loto7.csv \
-  --best-model loto7_best_model.json \
-  --holdout-start-draw 2 \
-  --min-train-draws 1 \
-  --purchase-count 5 \
-  --output outputs/holdout/holdout_result.csv \
-  --summary outputs/holdout/holdout_summary.json \
-  --report outputs/holdout/holdout_report.txt \
-  --state outputs/holdout/holdout_state.json \
-  --resume \
-  --fail-on-missing-prize
-```
-
-### TXTレポート集約
-
-```bash
-bash scripts/collect_txt_reports.sh outputs/txt_reports
-```
-
----
-
-## 運用メモ
-
-### PRが作成された場合
-
-まず以下を確認してください。
-
-```text
-outputs/txt_reports/00_index.txt
-outputs/txt_reports/all_reports.txt
-outputs/self_evolution/adoption_decision.json
-outputs/self_evolution/proposal.json
-loto7_self_evolution_config.json
-```
-
-### 不要PRの判断
-
-以下の場合は採用しない方針です。
-
-- `decision: no_op`
-- 実質差分が時刻のみ
-- `ready_for_pull_request: false`
-- `outputs/self_evolution` の不要な履歴削除だけが含まれる
-- `mergeable=false` かつ設定改善が重複している
-
-### 採用PRの判断
-
-以下の場合は採用候補です。
-
-- `decision: propose_pr`
-- `ready_for_pull_request: true`
-- `loto7_self_evolution_config.json` に実質的な改善差分がある
-- smoke testが通っている
-- `outputs/txt_reports/10_pr_summary.txt` で改善理由が確認できる
-
----
-
-## 免責
-
-このリポジトリは、LOTO7の過去データ分析・バックテスト・予測補助・自己進化実験を目的としています。
-
-- 当せんを保証しません
-- 利益を保証しません
-- バックテスト結果は将来成績を保証しません
-- 購入判断は自己責任で行ってください
+- 本番予測・累積履歴・封印証跡はGitへ保持
+- resume可能なモデル状態は、圧縮方式導入までは保持
+- 再生成可能な大型診断は、参照関係を切り替えた後にActions artifactsへ移行
+- 一時実行制御ファイル、fold内部データ、ローカルキャッシュは追跡しない
