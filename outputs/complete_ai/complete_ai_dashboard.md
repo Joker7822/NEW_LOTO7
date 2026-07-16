@@ -1,17 +1,17 @@
 # LOTO7 Complete AI Dashboard
 
-- generated_at: 2026-07-16T13:38:13.046718+00:00
-- candidates: 1992
+- generated_at: 2026-07-16T15:56:57.037287+00:00
+- candidates: 1993
 - ROI window: 100
-- ROI: 3.993333333333333
-- max_match: 6
+- ROI: -0.6673333333333333
+- max_match: 5
 
 ## Selected 5 tickets
-1. `08 09 12 15 18 22 34` score=20195.3134119 expected_roi=1999.31
-2. `01 06 07 08 09 17 36` score=645.71805158 expected_roi=45.865
-3. `17 20 22 24 27 29 32` score=429.74305349 expected_roi=24.842
-4. `07 08 09 12 22 29 35` score=235.15316229 expected_roi=1.61966667
-5. `01 07 09 12 22 26 34` score=234.12256076 expected_roi=1.58533333
+1. `07 10 12 14 16 17 22` score=442.2662118 expected_roi=24.87933333
+2. `07 08 09 15 22 34 36` score=438.0875879 expected_roi=22.69633333
+3. `08 09 12 14 15 22 29` score=436.31639593 expected_roi=22.58333333
+4. `12 13 14 17 22 29 34` score=435.74701176 expected_roi=22.61233333
+5. `01 06 07 08 19 33 34` score=420.37740637 expected_roi=22.52766667
 
 ## Master Champions
 - loto7_best_model.json id=g228_0228_2057 score=71271.89 generation=228
@@ -22,17 +22,17 @@
   "window": 100,
   "tickets_per_draw": 5,
   "total_cost": 150000,
-  "total_payout": 749000,
-  "roi": 3.993333333333333,
-  "max_match": 6,
+  "total_payout": 49900,
+  "roi": -0.6673333333333333,
+  "max_match": 5,
   "rank_counts": {
     "1等": 0,
     "2等": 0,
-    "3等": 1,
-    "4等": 0,
-    "5等": 20,
-    "6等": 13,
-    "外れ": 466
+    "3等": 0,
+    "4等": 1,
+    "5等": 13,
+    "6等": 14,
+    "外れ": 472
   }
 }
 ```
