@@ -1,6 +1,6 @@
 name: Apply Repository Restructure
 
-# apply-request: 2026-07-17-r3
+# apply-request: 2026-07-17-r4
 on:
   workflow_dispatch:
   push:
@@ -144,21 +144,15 @@ jobs:
       - name: Commit restructured repository
         run: |
           set -euo pipefail
-          SNAPSHOT="$(mktemp -d)"
-          cp -a . "$SNAPSHOT/repo"
-          for ATTEMPT in 1 2 3 4; do
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No repository restructuring changes"
+            exit 0
+          fi
+          git commit -m "Restructure NEW_LOTO7 repository architecture"
+          for ATTEMPT in 1 2 3 4 5 6; do
             git fetch origin main
-            git reset --hard origin/main
-            rsync -a --delete \
-              --exclude .git/ \
-              --exclude outputs/generation4/sealed/ \
-              "$SNAPSHOT/repo/" ./
-            git add -A
-            if git diff --cached --quiet; then
-              echo "No repository restructuring changes"
-              exit 0
-            fi
-            git commit -m "Restructure NEW_LOTO7 repository architecture"
+            git rebase origin/main
             if git push origin HEAD:main; then
               exit 0
             fi
