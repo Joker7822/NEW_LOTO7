@@ -8,9 +8,12 @@ on:
     paths:
       - "scripts/audit_repository_structure.py"
       - "scripts/check_repository_architecture.py"
-      - "scripts/restructure_repository.py"
       - "config/repository_layout.json"
       - ".github/workflows/repository_structure_audit.yml"
+      - ".github/workflows/loto7_generation4_run.yml"
+      - ".github/workflows/loto7_evolution.yml"
+      - ".github/workflows/loto7_model_self_evolution.yml"
+      - ".github/workflows/loto7_quick_finish.yml"
 
 permissions:
   contents: write
@@ -44,8 +47,7 @@ jobs:
           set -euo pipefail
           python -m py_compile \
             scripts/audit_repository_structure.py \
-            scripts/check_repository_architecture.py \
-            scripts/restructure_repository.py
+            scripts/check_repository_architecture.py
           python scripts/check_repository_architecture.py \
             --json docs/architecture/repository_architecture_guard.json \
             --markdown docs/architecture/repository_architecture_guard.md
