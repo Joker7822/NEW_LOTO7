@@ -1,0 +1,74 @@
+name: Repository Structure Audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "scripts/audit_repository_structure.py"
+      - ".github/workflows/repository_structure_audit.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: repository-structure-audit-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generate structure audit
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/audit_repository_structure.py
+          python scripts/audit_repository_structure.py \
+            --json docs/architecture/repository_structure_audit.json \
+            --markdown docs/architecture/repository_structure_audit.md
+
+      - name: Commit audit reports
+        run: |
+          set -euo pipefail
+          git add docs/architecture/repository_structure_audit.json \
+                  docs/architecture/repository_structure_audit.md
+          if git diff --cached --quiet; then
+            echo "No repository audit changes"
+            exit 0
+          fi
+          git commit -m "Update repository structure audit [skip ci]"
+          for ATTEMPT in 1 2 3; do
+            if git push origin HEAD:${GITHUB_REF_NAME}; then
+              exit 0
+            fi
+            git fetch origin ${GITHUB_REF_NAME}
+            git rebase origin/${GITHUB_REF_NAME}
+            sleep $((ATTEMPT * 5))
+          done
+          exit 1
+
+      - name: Upload structure audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: repository-structure-audit
+          path: |
+            docs/architecture/repository_structure_audit.json
+            docs/architecture/repository_structure_audit.md
+          if-no-files-found: error
