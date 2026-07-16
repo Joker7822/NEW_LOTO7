@@ -7,6 +7,9 @@ on:
       - main
     paths:
       - "scripts/audit_repository_structure.py"
+      - "scripts/check_repository_architecture.py"
+      - "scripts/restructure_repository.py"
+      - "config/repository_layout.json"
       - ".github/workflows/repository_structure_audit.yml"
 
 permissions:
@@ -39,7 +42,13 @@ jobs:
       - name: Generate structure audit
         run: |
           set -euo pipefail
-          python -m py_compile scripts/audit_repository_structure.py
+          python -m py_compile \
+            scripts/audit_repository_structure.py \
+            scripts/check_repository_architecture.py \
+            scripts/restructure_repository.py
+          python scripts/check_repository_architecture.py \
+            --json docs/architecture/repository_architecture_guard.json \
+            --markdown docs/architecture/repository_architecture_guard.md
           python scripts/audit_repository_structure.py \
             --json docs/architecture/repository_structure_audit.json \
             --markdown docs/architecture/repository_structure_audit.md
@@ -47,19 +56,22 @@ jobs:
       - name: Commit audit reports
         run: |
           set -euo pipefail
-          git add docs/architecture/repository_structure_audit.json \
-                  docs/architecture/repository_structure_audit.md
+          git add \
+            docs/architecture/repository_structure_audit.json \
+            docs/architecture/repository_structure_audit.md \
+            docs/architecture/repository_architecture_guard.json \
+            docs/architecture/repository_architecture_guard.md
           if git diff --cached --quiet; then
             echo "No repository audit changes"
             exit 0
           fi
           git commit -m "Update repository structure audit [skip ci]"
           for ATTEMPT in 1 2 3; do
-            if git push origin HEAD:${GITHUB_REF_NAME}; then
+            if git push origin HEAD:"${GITHUB_REF_NAME}"; then
               exit 0
             fi
-            git fetch origin ${GITHUB_REF_NAME}
-            git rebase origin/${GITHUB_REF_NAME}
+            git fetch origin "${GITHUB_REF_NAME}"
+            git rebase "origin/${GITHUB_REF_NAME}"
             sleep $((ATTEMPT * 5))
           done
           exit 1
@@ -71,4 +83,6 @@ jobs:
           path: |
             docs/architecture/repository_structure_audit.json
             docs/architecture/repository_structure_audit.md
+            docs/architecture/repository_architecture_guard.json
+            docs/architecture/repository_architecture_guard.md
           if-no-files-found: error
