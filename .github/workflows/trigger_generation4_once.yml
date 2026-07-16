@@ -1,5 +1,6 @@
 name: Trigger Generation 4 Full Run Once
 
+# run-request: 2026-07-16T11:29:00Z
 on:
   push:
     branches:
