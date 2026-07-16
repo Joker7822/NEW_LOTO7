@@ -1,5 +1,6 @@
 name: Repository Structure Audit
 
+# final-permanent-audit: 2026-07-17
 on:
   workflow_dispatch:
   push:
