@@ -40,25 +40,26 @@
     "number_usage": {
       "1": 2,
       "10": 2,
-      "12": 3,
+      "12": 2,
+      "13": 1,
       "16": 2,
       "17": 2,
-      "18": 1,
       "19": 1,
-      "22": 3,
-      "24": 2,
+      "20": 1,
+      "22": 4,
+      "24": 1,
       "26": 1,
       "29": 1,
-      "33": 2,
+      "33": 3,
       "35": 2,
       "36": 2,
-      "6": 4,
+      "6": 3,
       "7": 1,
-      "8": 2,
-      "9": 2
+      "8": 1,
+      "9": 3
     },
-    "objective_score": 575.977338,
-    "pair_coverage_count": 88,
+    "objective_score": 592.212279,
+    "pair_coverage_count": 90,
     "post_selection_number_replacements": 0,
     "source_counts": {
       "full": 1,
@@ -71,8 +72,8 @@
       "regime": 2,
       "super": 0
     },
-    "triple_coverage_count": 168,
-    "unique_number_count": 18
+    "triple_coverage_count": 170,
+    "unique_number_count": 19
   },
   "change_point": {
     "aggregate_distance": 0.038863462,
@@ -215,47 +216,49 @@
     "super": 0.0
   },
   "generation4_portfolio": {
-    "average_pair_overlap": 2.1,
+    "average_pair_overlap": 1.9,
     "candidate_pool_counts": {
       "full": 212,
       "recent": 213,
       "regime": 184,
       "super": 0
     },
-    "max_number_usage": 3,
+    "max_number_usage": 4,
     "max_pair_overlap": 3,
     "number_usage": {
       "1": 2,
       "10": 2,
-      "12": 3,
+      "12": 2,
       "13": 1,
-      "14": 2,
       "16": 1,
       "17": 2,
+      "18": 1,
       "19": 1,
-      "22": 3,
+      "20": 1,
+      "22": 4,
       "24": 1,
       "26": 1,
-      "33": 2,
+      "29": 1,
+      "33": 3,
       "35": 2,
-      "36": 3,
-      "6": 3,
+      "36": 2,
+      "6": 2,
       "7": 2,
       "8": 2,
       "9": 2
     },
     "objective_components": {
       "conformal": 33.0,
-      "dpp_logdet": 5.671228,
-      "entropy": 2.822205,
-      "hypergraph": 100.470863,
-      "hypergraph_pair": 74.017348,
-      "hypergraph_triple": 75.581473,
-      "overlap_penalty": 3.916667,
-      "quality": 6.828377,
-      "total": 49.844018
+      "dpp_logdet": 5.713548,
+      "entropy": 2.906664,
+      "hypergraph": 102.684502,
+      "hypergraph_pair": 75.73652,
+      "hypergraph_triple": 76.994234,
+      "overlap_penalty": 3.416667,
+      "quality": 7.00069,
+      "total": 50.935999
     },
-    "objective_score": 49.844018,
+    "objective_score": 50.935999,
     "post_selection_number_replacements": 0,
     "selector": "dpp_hypergraph_beam_search_v1",
     "source_counts": {
@@ -269,7 +272,7 @@
       "regime": 2,
       "super": 0
     },
-    "unique_number_count": 18
+    "unique_number_count": 20
   },
   "kind": "loto7_generation4_complete",
   "notes": [
@@ -279,9 +282,9 @@
   ],
   "null_strategy_league": {
     "available": true,
-    "model_percentile": 0.444444,
+    "model_percentile": 0.472222,
     "passed": false,
-    "pbo": 0.55,
+    "pbo": 0.45,
     "summary_path": "outputs/generation4/null_strategy_league_summary.json"
   },
   "prediction_draw_no": 686,
