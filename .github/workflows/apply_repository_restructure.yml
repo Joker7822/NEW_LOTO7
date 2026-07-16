@@ -1,6 +1,6 @@
 name: Apply Repository Restructure
 
-# apply-request: 2026-07-17-r4
+# apply-request: 2026-07-17-r5-bundle
 on:
   workflow_dispatch:
   push:
@@ -10,7 +10,7 @@ on:
       - ".github/workflows/apply_repository_restructure.yml"
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: apply-repository-restructure-main
@@ -26,11 +26,6 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-
-      - name: Configure git
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -141,24 +136,58 @@ jobs:
             --json docs/architecture/repository_structure_audit.json \
             --markdown docs/architecture/repository_structure_audit.md
 
-      - name: Commit restructured repository
+      - name: Build validated change bundle
         run: |
           set -euo pipefail
-          git add -A
-          if git diff --cached --quiet; then
-            echo "No repository restructuring changes"
-            exit 0
-          fi
-          git commit -m "Restructure NEW_LOTO7 repository architecture"
-          for ATTEMPT in 1 2 3 4 5 6; do
-            git fetch origin main
-            git rebase origin/main
-            if git push origin HEAD:main; then
-              exit 0
-            fi
-            sleep $((ATTEMPT * 5))
-          done
-          exit 1
+          python - <<'PY'
+          import json
+          import shutil
+          import subprocess
+          from pathlib import Path
+
+          root = Path('.')
+          bundle = Path('repository_restructure_bundle')
+          files_dir = bundle / 'files'
+          files_dir.mkdir(parents=True, exist_ok=True)
+
+          raw = subprocess.check_output(['git', 'status', '--porcelain=v1', '-z'])
+          entries = [item for item in raw.decode('utf-8', errors='replace').split('\0') if item]
+          updates = []
+          deletions = []
+          for entry in entries:
+              status = entry[:2]
+              path_text = entry[3:]
+              if ' -> ' in path_text:
+                  path_text = path_text.split(' -> ', 1)[1]
+              path = Path(path_text)
+              if 'D' in status or not path.exists():
+                  deletions.append(path.as_posix())
+                  continue
+              if path.is_file():
+                  destination = files_dir / path
+                  destination.parent.mkdir(parents=True, exist_ok=True)
+                  shutil.copy2(path, destination)
+                  updates.append(path.as_posix())
+
+          manifest = {
+              'validated': True,
+              'base_sha': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+              'updates': sorted(set(updates)),
+              'deletions': sorted(set(deletions)),
+          }
+          (bundle / 'manifest.json').write_text(
+              json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + '\n',
+              encoding='utf-8',
+          )
+          print(json.dumps(manifest, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Upload validated restructure bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: repository-restructure-validated-bundle
+          path: repository_restructure_bundle/**
+          if-no-files-found: error
 
       - name: Upload architecture reports
         if: always()
