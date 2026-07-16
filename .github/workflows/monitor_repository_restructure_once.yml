@@ -1,6 +1,6 @@
 name: Monitor Repository Restructure Once
 
-# monitor-request: 2026-07-17-r3
+# monitor-request: 2026-07-17-r4
 on:
   workflow_dispatch:
   push:
