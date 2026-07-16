@@ -19,7 +19,6 @@ permissions:
 concurrency:
   group: loto7-nested-walk-forward-${{ github.ref_name }}
   cancel-in-progress: false
-  queue: max
 
 jobs:
   nested-validation:
