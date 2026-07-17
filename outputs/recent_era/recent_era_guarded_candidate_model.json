@@ -1,31 +1,31 @@
 {
   "baseline_metrics": {
-    "evolution_score": 31746.34,
-    "genome_id": "g168_0168_4117",
-    "grade_hit_count": 53,
+    "evolution_score": 34018.15,
+    "genome_id": "g070_0070_3390",
+    "grade_hit_count": 64,
     "high_grade_hit_count": 4,
     "max_bonus_match": 2,
     "max_main_match": 6,
     "missing_prize_draw_count": 0,
     "missing_prize_draws": [],
     "path": "outputs/recent_era/recent_era_best_model.json",
-    "profit": -50700,
+    "profit": -41700,
     "purchase_count": 5,
     "rank_counts": {
       "1等": 0,
       "2等": 0,
       "3等": 1,
       "4等": 3,
-      "5等": 11,
-      "6等": 38,
-      "外れ": 1622
+      "5等": 23,
+      "6等": 37,
+      "外れ": 1621
     },
-    "roi": 0.899104,
-    "roi_percent": 89.91,
-    "target_draws": 335,
-    "total_cost": 502500,
-    "total_payout": 451800,
-    "total_tickets": 1675,
+    "roi": 0.917507,
+    "roi_percent": 91.751,
+    "target_draws": 337,
+    "total_cost": 505500,
+    "total_payout": 463800,
+    "total_tickets": 1685,
     "unit_cost": 300
   },
   "csv": "loto7.csv",
@@ -48,7 +48,7 @@
     "recent120_weight": 0.23747831234079164,
     "recent240_weight": 0.15840612836849238,
     "recent60_weight": 0.5752789148681424,
-    "score": 34018.15,
+    "score": 33960.37,
     "sum_bonus": 0.35449110823439867,
     "target_sum_max": 166,
     "target_sum_min": 103,
@@ -60,10 +60,10 @@
     "Parent-pool diversity and composite exploration score are used before strict adoption.",
     "This does not guarantee future lottery winnings or profit."
   ],
-  "objective_score": 34018.15,
+  "objective_score": 33960.37,
   "purchase_count": 5,
   "selected_holdout": {
-    "evolution_score": 0.0,
+    "evolution_score": 34018.15,
     "genome_id": "g070_0070_3390",
     "grade_hit_count": 64,
     "high_grade_hit_count": 4,
@@ -71,8 +71,8 @@
     "max_main_match": 6,
     "missing_prize_draw_count": 0,
     "missing_prize_draws": [],
-    "path": "candidate_70",
-    "profit": -38700,
+    "path": "outputs/recent_era/recent_era_best_model.json",
+    "profit": -41700,
     "purchase_count": 5,
     "rank_counts": {
       "1等": 0,
@@ -81,17 +81,17 @@
       "4等": 3,
       "5等": 23,
       "6等": 37,
-      "外れ": 1611
+      "外れ": 1621
     },
-    "roi": 0.922985,
-    "roi_percent": 92.299,
-    "target_draws": 335,
-    "total_cost": 502500,
+    "roi": 0.917507,
+    "roi_percent": 91.751,
+    "target_draws": 337,
+    "total_cost": 505500,
     "total_payout": 463800,
-    "total_tickets": 1675,
+    "total_tickets": 1685,
     "unit_cost": 300
   },
   "selection_mode": "model_only_holdout_roi_with_exploration_score",
   "source": "model_self_evolver",
-  "updated_at": "2026-07-10T14:58:18.792955+00:00"
+  "updated_at": "2026-07-17T17:40:41.865819+00:00"
 }
