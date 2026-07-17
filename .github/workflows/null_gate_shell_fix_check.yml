@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - fix/null-gate-heredoc
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
