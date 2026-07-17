@@ -54,6 +54,16 @@ jobs:
           if [ -z "$ITERATIONS" ]; then ITERATIONS="40"; fi
           echo "iterations=${ITERATIONS}" >> "$GITHUB_OUTPUT"
 
+      - name: Compile strict nested adoption modules
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            scripts/nested_walk_forward_validation.py \
+            scripts/promote_nested_candidate.py \
+            scripts/promote_nested_candidate_strict.py \
+            scripts/strict_adoption_gates.py \
+            tests/test_strict_adoption_gates.py
+
       - name: Run Recent Era sealed nested folds
         env:
           ITERATIONS: ${{ steps.settings.outputs.iterations }}
@@ -82,7 +92,9 @@ jobs:
             --max-runtime-minutes-per-fold 28 \
             --bootstrap-samples 300
           cp -f outputs/validation/recent/nested_walk_forward_summary.json outputs/validation/nested_walk_forward_summary.json
-          python scripts/promote_nested_candidate.py \
+          python scripts/promote_nested_candidate_strict.py \
+            --min-nested-total-roi-percent 8.0 \
+            --min-nested-total-roi-delta-percent 0.0 \
             --csv loto7.csv \
             --baseline-model outputs/recent_era/recent_era_best_model.json \
             --candidate-model "$CANDIDATE" \
@@ -121,7 +133,9 @@ jobs:
             --seed "${{ github.run_id }}2023" \
             --max-runtime-minutes-per-fold 28 \
             --bootstrap-samples 300
-          python scripts/promote_nested_candidate.py \
+          python scripts/promote_nested_candidate_strict.py \
+            --min-nested-total-roi-percent 8.0 \
+            --min-nested-total-roi-delta-percent 0.0 \
             --csv loto7.csv \
             --baseline-model outputs/super_recent/super_recent_best_model.json \
             --candidate-model "$CANDIDATE" \
@@ -138,7 +152,8 @@ jobs:
           set -euo pipefail
           python -m unittest \
             tests.test_prediction_output_consistency \
-            tests.test_robust_validation_and_portfolio -v
+            tests.test_robust_validation_and_portfolio \
+            tests.test_strict_adoption_gates -v
 
       - name: Commit nested summaries and promoted models
         if: always()
