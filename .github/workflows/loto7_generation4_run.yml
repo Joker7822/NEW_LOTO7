@@ -138,8 +138,10 @@ jobs:
             --seed "${GITHUB_RUN_ID}"
 
       - name: Build Generation 4 prediction through strict adoption gates
+        id: strict_build
         run: |
-          set -euo pipefail
+          set -uo pipefail
+          set +e
           python scripts/build_generation4_prediction_strict.py \
             --require-null-league-summary \
             --strict-gate-summary outputs/generation4/strict_adoption_gate.json \
@@ -165,6 +167,20 @@ jobs:
             --history-overlap-limit 6 \
             --conformal-alpha 0.20 \
             --minimum-conformal-hits 4
+          STATUS=$?
+          set -e
+
+          if [ "$STATUS" -eq 2 ]; then
+            echo "adoption_allowed=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Null League rejected this candidate. Existing production prediction, history, report and sealed evidence are retained unchanged."
+            exit 0
+          fi
+          if [ "$STATUS" -ne 0 ]; then
+            echo "::error::Generation 4 strict builder failed unexpectedly with exit code $STATUS"
+            exit "$STATUS"
+          fi
+
+          echo "adoption_allowed=true" >> "$GITHUB_OUTPUT"
 
           python scripts/enforce_prediction_constraints.py \
             --prediction outputs/evolution_best_prediction.csv \
@@ -177,7 +193,23 @@ jobs:
             --summary outputs/generation4/latest_generation4_summary.json \
             --report outputs/holdout/latest_prediction_report.txt
 
+      - name: Confirm statistical rejection is fail-closed
+        if: ${{ steps.strict_build.outputs.adoption_allowed == 'false' }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("outputs/generation4/strict_adoption_gate.json")
+          payload = json.loads(path.read_text(encoding="utf-8"))
+          if payload.get("adoption_allowed") is not False:
+              raise SystemExit("strict gate must record adoption_allowed=false")
+          print("Strict gate rejection recorded; production adoption remains blocked.")
+          PY
+
       - name: Update histories and e-process
+        if: ${{ steps.strict_build.outputs.adoption_allowed == 'true' }}
         run: |
           set -euo pipefail
           python scripts/update_prediction_history.py \
@@ -202,6 +234,7 @@ jobs:
             --min-evaluated-draws 30
 
       - name: Seal prediction
+        if: ${{ steps.strict_build.outputs.adoption_allowed == 'true' }}
         run: |
           set -euo pipefail
           GITHUB_SHA="$(git rev-parse HEAD)" python scripts/seal_generation4_prediction.py \
@@ -213,77 +246,115 @@ jobs:
             --recent-model outputs/recent_era/recent_era_best_model.json \
             --super-model outputs/super_recent/super_recent_best_model.json
 
-      - name: Verify required outputs
+      - name: Verify run outcome
+        env:
+          ADOPTION_ALLOWED: ${{ steps.strict_build.outputs.adoption_allowed }}
         run: |
           set -euo pipefail
-          test -s outputs/evolution_best_prediction.csv
-          test -s outputs/holdout/latest_prediction_report.txt
-          test -s outputs/generation4/latest_generation4_summary.json
           test -s outputs/generation4/null_strategy_league_summary.json
+          test -s outputs/generation4/null_strategy_league_report.txt
           test -s outputs/generation4/strict_adoption_gate.json
-          test -s outputs/generation4/latest_shadow_predictions.json
-          test -s outputs/generation4/champion_challenger_summary.json
-          test -s outputs/generation4/latest_sealed_manifest.json
 
-      - name: Commit Generation 4 outputs
+          if [ "$ADOPTION_ALLOWED" = "true" ]; then
+            test -s outputs/evolution_best_prediction.csv
+            test -s outputs/holdout/latest_prediction_report.txt
+            test -s outputs/generation4/latest_generation4_summary.json
+            test -s outputs/generation4/latest_shadow_predictions.json
+            test -s outputs/generation4/champion_challenger_summary.json
+            test -s outputs/generation4/latest_sealed_manifest.json
+          elif [ "$ADOPTION_ALLOWED" = "false" ]; then
+            test -s outputs/evolution_best_prediction.csv
+            test -s outputs/evolution_prediction_history.csv
+            test -s outputs/holdout/latest_prediction_report.txt
+            python - <<'PY'
+            import json
+            payload = json.load(open("outputs/generation4/strict_adoption_gate.json", encoding="utf-8"))
+            if payload.get("adoption_allowed") is not False:
+                raise SystemExit("rejected run has an invalid strict gate result")
+            PY
+          else
+            echo "::error::strict_build did not publish adoption_allowed"
+            exit 1
+          fi
+
+      - name: Commit Generation 4 outcome
+        env:
+          ADOPTION_ALLOWED: ${{ steps.strict_build.outputs.adoption_allowed }}
         run: |
           set -euo pipefail
           SNAPSHOT="$(mktemp -d)"
           mkdir -p "$SNAPSHOT/outputs/generation4/sealed" "$SNAPSHOT/outputs/holdout" "$SNAPSHOT/outputs/role_ensemble"
-          for FILE in \
-            latest_generation4_summary.json \
-            strict_adoption_gate.json \
-            null_strategy_league_summary.json \
-            null_strategy_league_report.txt \
-            latest_shadow_predictions.json \
-            shadow_history.csv \
-            champion_challenger_summary.json \
-            champion_challenger_report.txt \
-            latest_sealed_manifest.json \
-            sealed_index.json; do
-            cp -f "outputs/generation4/$FILE" "$SNAPSHOT/outputs/generation4/$FILE" 2>/dev/null || true
-          done
-          cp -a outputs/generation4/sealed/. "$SNAPSHOT/outputs/generation4/sealed/" 2>/dev/null || true
-          cp -f outputs/evolution_best_prediction.csv outputs/evolution_prediction_history.csv \
-            outputs/evolution_prediction_history_result.txt "$SNAPSHOT/outputs/"
-          cp -f outputs/holdout/latest_prediction_report.txt "$SNAPSHOT/outputs/holdout/"
-          cp -f outputs/role_ensemble/regime_*.json outputs/role_ensemble/regime_*.txt \
-            "$SNAPSHOT/outputs/role_ensemble/" 2>/dev/null || true
+
+          cp -f outputs/generation4/strict_adoption_gate.json "$SNAPSHOT/outputs/generation4/"
+          cp -f outputs/generation4/null_strategy_league_summary.json "$SNAPSHOT/outputs/generation4/"
+          cp -f outputs/generation4/null_strategy_league_report.txt "$SNAPSHOT/outputs/generation4/"
+
+          if [ "$ADOPTION_ALLOWED" = "true" ]; then
+            for FILE in \
+              latest_generation4_summary.json \
+              latest_shadow_predictions.json \
+              shadow_history.csv \
+              champion_challenger_summary.json \
+              champion_challenger_report.txt \
+              latest_sealed_manifest.json \
+              sealed_index.json; do
+              cp -f "outputs/generation4/$FILE" "$SNAPSHOT/outputs/generation4/$FILE" 2>/dev/null || true
+            done
+            cp -a outputs/generation4/sealed/. "$SNAPSHOT/outputs/generation4/sealed/" 2>/dev/null || true
+            cp -f outputs/evolution_best_prediction.csv outputs/evolution_prediction_history.csv \
+              outputs/evolution_prediction_history_result.txt "$SNAPSHOT/outputs/"
+            cp -f outputs/holdout/latest_prediction_report.txt "$SNAPSHOT/outputs/holdout/"
+            cp -f outputs/role_ensemble/regime_*.json outputs/role_ensemble/regime_*.txt \
+              "$SNAPSHOT/outputs/role_ensemble/" 2>/dev/null || true
+          fi
 
           for ATTEMPT in 1 2 3 4; do
             git fetch origin main
             git reset --hard origin/main
             mkdir -p outputs/generation4/sealed outputs/holdout outputs/role_ensemble
-            cp -f "$SNAPSHOT/outputs/generation4/"* outputs/generation4/ 2>/dev/null || true
-            cp -a "$SNAPSHOT/outputs/generation4/sealed/." outputs/generation4/sealed/ 2>/dev/null || true
-            cp -f "$SNAPSHOT/outputs/evolution_best_prediction.csv" outputs/evolution_best_prediction.csv
-            cp -f "$SNAPSHOT/outputs/evolution_prediction_history.csv" outputs/evolution_prediction_history.csv
-            cp -f "$SNAPSHOT/outputs/evolution_prediction_history_result.txt" outputs/evolution_prediction_history_result.txt
-            cp -f "$SNAPSHOT/outputs/holdout/latest_prediction_report.txt" outputs/holdout/latest_prediction_report.txt
-            cp -f "$SNAPSHOT/outputs/role_ensemble/"* outputs/role_ensemble/ 2>/dev/null || true
+
+            cp -f "$SNAPSHOT/outputs/generation4/strict_adoption_gate.json" outputs/generation4/
+            cp -f "$SNAPSHOT/outputs/generation4/null_strategy_league_summary.json" outputs/generation4/
+            cp -f "$SNAPSHOT/outputs/generation4/null_strategy_league_report.txt" outputs/generation4/
+
             git add -f \
-              outputs/generation4/latest_generation4_summary.json \
               outputs/generation4/strict_adoption_gate.json \
               outputs/generation4/null_strategy_league_summary.json \
-              outputs/generation4/null_strategy_league_report.txt \
-              outputs/generation4/latest_shadow_predictions.json \
-              outputs/generation4/shadow_history.csv \
-              outputs/generation4/champion_challenger_summary.json \
-              outputs/generation4/champion_challenger_report.txt \
-              outputs/generation4/latest_sealed_manifest.json \
-              outputs/generation4/sealed_index.json \
-              outputs/generation4/sealed \
-              outputs/evolution_best_prediction.csv \
-              outputs/evolution_prediction_history.csv \
-              outputs/evolution_prediction_history_result.txt \
-              outputs/holdout/latest_prediction_report.txt \
-              outputs/role_ensemble/regime_*.json \
-              outputs/role_ensemble/regime_*.txt || true
+              outputs/generation4/null_strategy_league_report.txt
+
+            if [ "$ADOPTION_ALLOWED" = "true" ]; then
+              cp -f "$SNAPSHOT/outputs/generation4/"* outputs/generation4/ 2>/dev/null || true
+              cp -a "$SNAPSHOT/outputs/generation4/sealed/." outputs/generation4/sealed/ 2>/dev/null || true
+              cp -f "$SNAPSHOT/outputs/evolution_best_prediction.csv" outputs/evolution_best_prediction.csv
+              cp -f "$SNAPSHOT/outputs/evolution_prediction_history.csv" outputs/evolution_prediction_history.csv
+              cp -f "$SNAPSHOT/outputs/evolution_prediction_history_result.txt" outputs/evolution_prediction_history_result.txt
+              cp -f "$SNAPSHOT/outputs/holdout/latest_prediction_report.txt" outputs/holdout/latest_prediction_report.txt
+              cp -f "$SNAPSHOT/outputs/role_ensemble/"* outputs/role_ensemble/ 2>/dev/null || true
+              git add -f \
+                outputs/generation4/latest_generation4_summary.json \
+                outputs/generation4/latest_shadow_predictions.json \
+                outputs/generation4/shadow_history.csv \
+                outputs/generation4/champion_challenger_summary.json \
+                outputs/generation4/champion_challenger_report.txt \
+                outputs/generation4/latest_sealed_manifest.json \
+                outputs/generation4/sealed_index.json \
+                outputs/generation4/sealed \
+                outputs/evolution_best_prediction.csv \
+                outputs/evolution_prediction_history.csv \
+                outputs/evolution_prediction_history_result.txt \
+                outputs/holdout/latest_prediction_report.txt \
+                outputs/role_ensemble/regime_*.json \
+                outputs/role_ensemble/regime_*.txt || true
+              COMMIT_MESSAGE="Complete LOTO7 Generation 4 full run [skip ci]"
+            else
+              COMMIT_MESSAGE="Record rejected LOTO7 Generation 4 adoption [skip ci]"
+            fi
+
             if git diff --cached --quiet; then
-              echo "No Generation 4 output changes"
+              echo "No Generation 4 outcome changes"
               exit 0
             fi
-            git commit -m "Complete LOTO7 Generation 4 full run [skip ci]"
+            git commit -m "$COMMIT_MESSAGE"
             if git push origin HEAD:main; then exit 0; fi
             sleep $((ATTEMPT * 10))
           done
