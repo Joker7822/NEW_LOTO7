@@ -9,7 +9,7 @@
     "missing_prize_draw_count": 0,
     "missing_prize_draws": [],
     "path": "loto7_best_model.json",
-    "profit": 66700,
+    "profit": 65200,
     "purchase_count": 5,
     "rank_counts": {
       "1等": 0,
@@ -18,14 +18,14 @@
       "4等": 15,
       "5等": 60,
       "6等": 90,
-      "外れ": 3254
+      "外れ": 3259
     },
-    "roi": 1.06501,
-    "roi_percent": 106.501,
-    "target_draws": 684,
-    "total_cost": 1026000,
+    "roi": 1.063455,
+    "roi_percent": 106.345,
+    "target_draws": 685,
+    "total_cost": 1027500,
     "total_payout": 1092700,
-    "total_tickets": 3420,
+    "total_tickets": 3425,
     "unit_cost": 300
   },
   "csv": "loto7.csv",
@@ -48,7 +48,7 @@
     "recent120_weight": 0.40339417355164786,
     "recent240_weight": 0.011409372125524774,
     "recent60_weight": 0.4500038011436771,
-    "score": 71254.8,
+    "score": 71237.75,
     "sum_bonus": 0.5503278341511205,
     "target_sum_max": 140,
     "target_sum_min": 113,
@@ -60,7 +60,7 @@
     "Parent-pool diversity and composite exploration score are used before strict adoption.",
     "This does not guarantee future lottery winnings or profit."
   ],
-  "objective_score": 71254.8,
+  "objective_score": 71237.75,
   "purchase_count": 5,
   "selected_holdout": {
     "evolution_score": 71271.89,
@@ -72,7 +72,7 @@
     "missing_prize_draw_count": 0,
     "missing_prize_draws": [],
     "path": "loto7_best_model.json",
-    "profit": 66700,
+    "profit": 65200,
     "purchase_count": 5,
     "rank_counts": {
       "1等": 0,
@@ -81,17 +81,17 @@
       "4等": 15,
       "5等": 60,
       "6等": 90,
-      "外れ": 3254
+      "外れ": 3259
     },
-    "roi": 1.06501,
-    "roi_percent": 106.501,
-    "target_draws": 684,
-    "total_cost": 1026000,
+    "roi": 1.063455,
+    "roi_percent": 106.345,
+    "target_draws": 685,
+    "total_cost": 1027500,
     "total_payout": 1092700,
-    "total_tickets": 3420,
+    "total_tickets": 3425,
     "unit_cost": 300
   },
   "selection_mode": "model_only_holdout_roi_with_exploration_score",
   "source": "model_self_evolver",
-  "updated_at": "2026-07-17T13:20:53.479508+00:00"
+  "updated_at": "2026-07-17T16:04:54.897283+00:00"
 }
