@@ -9,7 +9,7 @@
     "test": 5,
     "workflow": 9
   },
-  "created_at": "2026-07-17T09:35:50.470135+00:00",
+  "created_at": "2026-07-17T11:36:23.516215+00:00",
   "directory_file_counts": {
     ".github": 9,
     "<root>": 18,
@@ -102,7 +102,7 @@
       "path": "outputs/recent_era/recent_era_model_history.csv"
     },
     {
-      "bytes": 136031,
+      "bytes": 136264,
       "path": "outputs/model_self_evolution/history.csv"
     },
     {
@@ -146,7 +146,7 @@
       "path": "scripts/backtest_role_ensemble.py"
     },
     {
-      "bytes": 31313,
+      "bytes": 31325,
       "path": "docs/architecture/repository_structure_audit.json"
     },
     {
@@ -156,10 +156,6 @@
     {
       "bytes": 30690,
       "path": "loto7_model_self_evolver.py"
-    },
-    {
-      "bytes": 29235,
-      "path": "outputs/model_self_evolution/state.json"
     },
     {
       "bytes": 28220,
@@ -206,8 +202,12 @@
       "path": "scripts/generation4_core.py"
     },
     {
-      "bytes": 16725,
+      "bytes": 16520,
       "path": ".github/workflows/loto7_generation4_run.yml"
+    },
+    {
+      "bytes": 16294,
+      "path": "scripts/recent_era_optimizer.py"
     }
   ],
   "model_or_state_files": [
@@ -542,7 +542,7 @@
     },
     {
       "contains_nonstandard_concurrency_queue": false,
-      "line_count": 374,
+      "line_count": 360,
       "name": "LOTO7 Generation 4 Production",
       "path": ".github/workflows/loto7_generation4_run.yml",
       "referenced_paths": [
