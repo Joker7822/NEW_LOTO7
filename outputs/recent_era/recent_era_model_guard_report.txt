@@ -1,7 +1,7 @@
 LOTO7 Recent Era Dedicated Guard Report
 ========================================
 
-created_at: 2026-07-17T06:10:04.202277+00:00
+created_at: 2026-07-17T11:53:33.463411+00:00
 recent_start_year: 2020
 accepted: True
 restored_baseline: False
