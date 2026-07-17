@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import json
+import tempfile
 import unittest
 from dataclasses import dataclass
+from pathlib import Path
 from unittest.mock import patch
 
+from scripts.build_generation4_prediction_strict import main as strict_generation4_main
 from scripts.strict_adoption_gates import (
     nested_total_roi_gate,
     null_league_adoption_gate,
@@ -37,6 +41,28 @@ class StrictAdoptionGateTests(unittest.TestCase):
     def test_missing_null_league_is_fail_closed_when_required(self):
         result = null_league_adoption_gate(None, require_available=True)
         self.assertFalse(result["adoption_allowed"])
+
+    def test_generation4_entrypoint_stops_before_prediction_on_null_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            null_summary = root / "null.json"
+            gate_summary = root / "gate.json"
+            null_summary.write_text(
+                json.dumps({"decision": {"passed": False}, "model_percentile": 0.4, "pbo": 0.3}),
+                encoding="utf-8",
+            )
+            result = strict_generation4_main(
+                [
+                    "--require-null-league-summary",
+                    "--null-league-summary",
+                    str(null_summary),
+                    "--strict-gate-summary",
+                    str(gate_summary),
+                ]
+            )
+            self.assertEqual(result, 2)
+            payload = json.loads(gate_summary.read_text(encoding="utf-8"))
+            self.assertFalse(payload["adoption_allowed"])
 
     def test_nested_total_roi_below_baseline_is_rejected(self):
         summary = {
