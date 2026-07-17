@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - agent/strict-statistical-adoption-gates
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
