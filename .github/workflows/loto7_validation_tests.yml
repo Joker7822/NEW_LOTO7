@@ -12,8 +12,11 @@ on:
       - "scripts/adaptive_model_safety_guard.py"
       - "scripts/nested_walk_forward_validation.py"
       - "scripts/promote_nested_candidate.py"
+      - "scripts/promote_nested_candidate_strict.py"
       - "scripts/generation4_core.py"
       - "scripts/build_generation4_prediction.py"
+      - "scripts/build_generation4_prediction_strict.py"
+      - "scripts/strict_adoption_gates.py"
       - "scripts/null_strategy_league.py"
       - "scripts/update_generation4_shadow_history.py"
       - "scripts/seal_generation4_prediction.py"
@@ -23,6 +26,7 @@ on:
       - "tests/test_prediction_output_consistency.py"
       - "tests/test_robust_validation_and_portfolio.py"
       - "tests/test_generation4_pipeline.py"
+      - "tests/test_strict_adoption_gates.py"
       - ".github/workflows/loto7_generation4_run.yml"
       - ".github/workflows/loto7_nested_walk_forward.yml"
       - ".github/workflows/loto7_validation_tests.yml"
@@ -53,8 +57,11 @@ jobs:
             scripts/adaptive_model_safety_guard.py \
             scripts/nested_walk_forward_validation.py \
             scripts/promote_nested_candidate.py \
+            scripts/promote_nested_candidate_strict.py \
             scripts/generation4_core.py \
             scripts/build_generation4_prediction.py \
+            scripts/build_generation4_prediction_strict.py \
+            scripts/strict_adoption_gates.py \
             scripts/null_strategy_league.py \
             scripts/update_generation4_shadow_history.py \
             scripts/seal_generation4_prediction.py \
@@ -62,7 +69,8 @@ jobs:
             scripts/check_repository_architecture.py \
             tests/test_prediction_output_consistency.py \
             tests/test_robust_validation_and_portfolio.py \
-            tests/test_generation4_pipeline.py
+            tests/test_generation4_pipeline.py \
+            tests/test_strict_adoption_gates.py
       - name: Run focused validation tests
         run: |
           set -euo pipefail
@@ -70,4 +78,5 @@ jobs:
           python -m unittest \
             tests.test_prediction_output_consistency \
             tests.test_robust_validation_and_portfolio \
-            tests.test_generation4_pipeline -v
+            tests.test_generation4_pipeline \
+            tests.test_strict_adoption_gates -v

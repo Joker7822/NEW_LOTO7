@@ -14,7 +14,11 @@ on:
       - ".github/workflows/loto7_generation4_run.yml"
       - ".github/workflows/loto7_evolution.yml"
       - ".github/workflows/loto7_model_self_evolution.yml"
-      - ".github/workflows/loto7_quick_finish.yml"
+      - ".github/workflows/loto7_nested_walk_forward.yml"
+      - ".github/workflows/loto7_recent_era_self_evolution.yml"
+      - "scripts/strict_adoption_gates.py"
+      - "scripts/build_generation4_prediction_strict.py"
+      - "scripts/promote_nested_candidate_strict.py"
 
 permissions:
   contents: write

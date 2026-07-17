@@ -1,7 +1,7 @@
 {
   "canonical_production_workflow": ".github/workflows/loto7_generation4_run.yml",
   "config": "config/repository_layout.json",
-  "created_at": "2026-07-16T22:43:09.506278+00:00",
+  "created_at": "2026-07-17T04:49:47.608446+00:00",
   "errors": [],
   "production_writers": {
     "outputs/evolution_best_prediction.csv": [
@@ -17,45 +17,26 @@
       ".github/workflows/loto7_generation4_run.yml"
     ]
   },
-  "root_python_count": 29,
+  "root_python_count": 10,
   "root_python_files": [
-    "export_latest_prediction_txt.py",
     "holdout_evaluator.py",
-    "loto7_advanced_optimizer.py",
-    "loto7_advanced_v2.py",
-    "loto7_chunked_backtest.py",
     "loto7_complete_ai_system.py",
-    "loto7_deep_ai.py",
-    "loto7_enhanced_predictor.py",
-    "loto7_evaluate_backtest.py",
     "loto7_evolution_trainer.py",
-    "loto7_logic_predictor.py",
     "loto7_ml_stack.py",
     "loto7_model_self_evolver.py",
-    "loto7_nextgen_models.py",
-    "loto7_pipeline.py",
-    "loto7_pipeline_enhanced.py",
-    "loto7_precision_evolution_trainer.py",
     "loto7_progress_monitor.py",
-    "loto7_resumable_backtest.py",
     "loto7_safe_evolution_runner.py",
-    "loto7_self_evolution_engine.py",
-    "loto7_self_evolver.py",
-    "loto7_train_from_backtest.py",
     "merge_evolution_shards.py",
-    "resumable_loto7_backtest.py",
     "scrapingloto7.py",
-    "sitecustomize.py",
-    "summarize_backtest_results.py",
-    "validate_evolution_resume.py"
+    "sitecustomize.py"
   ],
   "status": "pass",
-  "tracked_output_count": 172,
+  "tracked_output_count": 121,
   "warnings": [
-    "Root still contains 29 Python modules; retain as compatibility layer until Phase 2 migration",
-    "outputs/ contains 172 tracked files; reproducible diagnostics should move to Actions artifacts"
+    "Root still contains 10 Python modules; retain as compatibility layer until Phase 2 migration",
+    "outputs/ contains 121 tracked files; reproducible diagnostics should move to Actions artifacts"
   ],
-  "workflow_count": 11,
+  "workflow_count": 9,
   "workflow_names": {
     "Backfill LOTO7 prize amounts": [
       ".github/workflows/backfill-loto7-prizes.yml"
@@ -72,17 +53,11 @@
     "LOTO7 Nested Walk Forward Validation": [
       ".github/workflows/loto7_nested_walk_forward.yml"
     ],
-    "LOTO7 Quick Finish Check": [
-      ".github/workflows/loto7_quick_finish.yml"
-    ],
     "LOTO7 Recent Era Self Evolution": [
       ".github/workflows/loto7_recent_era_self_evolution.yml"
     ],
     "LOTO7 Smoke Test": [
       ".github/workflows/loto7-smoke.yml"
-    ],
-    "LOTO7 TXT Reports": [
-      ".github/workflows/loto7_txt_reports.yml"
     ],
     "LOTO7 Validation Tests": [
       ".github/workflows/loto7_validation_tests.yml"

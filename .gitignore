@@ -11,7 +11,7 @@ __pycache__/
 venv/
 env/
 
-# Generated pipeline outputs
+# Generated pipeline outputs: ignore by default
 outputs/*
 !outputs/
 !outputs/evolution_*.csv
@@ -24,11 +24,13 @@ outputs/*
 !outputs/role_ensemble/*.json
 !outputs/role_ensemble/*.txt
 !outputs/role_ensemble/*.csv
-!outputs/txt_reports/
-!outputs/txt_reports/*.txt
-!outputs/txt_reports/*.md
-!outputs/txt_reports/*.json
 *.log
+
+# Artifact-only diagnostics
+outputs/ml_stack/
+outputs/complete_ai/
+outputs/deep_ai/
+outputs/txt_reports/
 
 # Deprecated root generated LOTO7 outputs
 latest_loto7_prediction.txt
@@ -62,11 +64,7 @@ Thumbs.db
 chromedriver.exe
 geckodriver.exe
 
-# Repository architecture: transient and reproducible local files
-__pycache__/
-.pytest_cache/
-.mypy_cache/
-*.pyc
+# Transient and reproducible local files
 *.tmp
 outputs/**/folds/
 outputs/**/tmp/
@@ -74,3 +72,6 @@ outputs/**/.tmp/
 outputs/generation4/current_run_snapshot.json
 outputs/generation4/current_run_snapshot.txt
 outputs/generation4/dispatch_requested.txt
+outputs/generation4/full_run_status.json
+outputs/generation4/full_run_status.txt
+outputs/generation4/latest_input_fingerprint.txt
