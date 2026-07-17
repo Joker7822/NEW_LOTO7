@@ -1,0 +1,84 @@
+name: Null League Rejection Fix Check
+
+on:
+  push:
+    branches:
+      - fix/null-league-rejection-success
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate workflow YAML
+        run: |
+          set -euo pipefail
+          ruby -e 'require "yaml"; YAML.load_file(".github/workflows/loto7_generation4_run.yml"); puts "workflow YAML valid"'
+
+      - name: Run Generation 4 tests
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            scripts/build_generation4_prediction_strict.py \
+            scripts/strict_adoption_gates.py \
+            tests/test_strict_adoption_gates.py
+          python -m unittest \
+            tests.test_prediction_output_consistency \
+            tests.test_robust_validation_and_portfolio \
+            tests.test_generation4_pipeline \
+            tests.test_strict_adoption_gates -v
+
+      - name: Verify exit code 2 is handled as no-adoption success
+        run: |
+          set -euo pipefail
+          TMP_DIR="$(mktemp -d)"
+          cat > "$TMP_DIR/null.json" <<'JSON'
+          {
+            "decision": {"passed": false},
+            "model_percentile": 0.461111,
+            "pbo": 0.25
+          }
+          JSON
+
+          set +e
+          python scripts/build_generation4_prediction_strict.py \
+            --require-null-league-summary \
+            --null-league-summary "$TMP_DIR/null.json" \
+            --strict-gate-summary "$TMP_DIR/gate.json"
+          STATUS=$?
+          set -e
+
+          test "$STATUS" -eq 2
+          if [ "$STATUS" -eq 2 ]; then
+            ADOPTION_ALLOWED=false
+          else
+            exit "$STATUS"
+          fi
+          test "$ADOPTION_ALLOWED" = "false"
+
+          python - "$TMP_DIR/gate.json" <<'PY'
+          import json
+          import sys
+          payload = json.load(open(sys.argv[1], encoding="utf-8"))
+          assert payload["adoption_allowed"] is False
+          print("no-adoption path verified")
+          PY
+
+      - name: Verify guarded workflow branches
+        run: |
+          set -euo pipefail
+          grep -F 'id: strict_build' .github/workflows/loto7_generation4_run.yml
+          grep -F "steps.strict_build.outputs.adoption_allowed == 'true'" .github/workflows/loto7_generation4_run.yml
+          grep -F "steps.strict_build.outputs.adoption_allowed == 'false'" .github/workflows/loto7_generation4_run.yml
+          grep -F 'Record rejected LOTO7 Generation 4 adoption' .github/workflows/loto7_generation4_run.yml
