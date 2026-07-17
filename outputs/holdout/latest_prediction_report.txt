@@ -1,48 +1,40 @@
-LOTO7 Generation 4 Latest Prediction
-====================================
+LOTO7 Latest Prediction Report
+===============================
 
+作成日時(UTC): 2026-07-17T00:54:15.754589+00:00
 基準最新回: 第685回
 基準最新抽せん日: 2026-07-10
 予測対象回: 第686回
-予測方式: generation4_complete
-採用構成: Bayesian DMA + Change-Point + Rolling Conformal + DPP + Hypergraph
-selection_integrity: original_model_candidates / post-selection replacement=0
 
-[最新予測 5口]
-1位 / 1口目: 07 08 10 16 22 33 35 / 相対スコア=0.95 / 方式=generation4_recent
-2位 / 2口目: 01 09 10 17 24 33 36 / 相対スコア=0.90 / 方式=generation4_recent
-3位 / 3口目: 01 08 12 18 22 29 35 / 相対スコア=0.85 / 方式=portfolio_regime_high_match
-4位 / 4口目: 06 13 17 19 20 22 36 / 相対スコア=0.80 / 方式=portfolio_regime_high_match
-5位 / 5口目: 06 07 09 12 22 26 33 / 相対スコア=0.75 / 方式=generation4_full
+[採用モデル]
+先頭モデルID: g228_0228_2057:main_best
+先頭モデルスコア: 71271.89
+使用元モデル数: 2
+予測方式: optimized_five_ticket_portfolio
+selection_integrity: original_model_candidates
+採用基準: 全候補から5口セットを一括最適化 / 選択後の数字置換なし
 
-[Generation 4 Evidence]
-source_quotas: {'full': 1, 'recent': 2, 'regime': 2, 'super': 0}
-source_weights: {'full': 0.210526316, 'recent': 0.526315789, 'regime': 0.263157895, 'super': 0.0}
-change_point_score: 0.390101 / level=low
-conformal_pool_size: 24
-conformal_pool: [1, 4, 6, 7, 8, 9, 10, 12, 13, 14, 15, 17, 18, 19, 20, 22, 26, 29, 30, 31, 33, 34, 35, 36]
-conformal_empirical_coverage: 0.645604
-null_league_passed: False
-null_model_percentile: 0.461111
-null_pbo: 0.6
-
-[Portfolio Objective]
-objective_score: 50.935999
-dpp_logdet: 5.713548
-hypergraph_score: 102.684502
-conformal_hits: 33.0
-unique_number_count: 20
-max_number_usage: 4
-max_pair_overlap: 3
-average_pair_overlap: 1.9
+[最新予測 5口: 正規化相対スコア順]
+1位 / 1口目: 06 07 09 12 22 26 35 / 相対スコア=0.95 / 方式=portfolio_regime_main_best
+2位 / 2口目: 01 06 09 12 22 29 36 / 相対スコア=0.90 / 方式=portfolio_full_period
+3位 / 3口目: 01 08 16 18 19 22 33 / 相対スコア=0.85 / 方式=portfolio_regime_high_match
+4位 / 4口目: 06 09 12 17 20 22 33 / 相対スコア=0.80 / 方式=portfolio_full_period
+5位 / 5口目: 06 08 10 16 17 24 36 / 相対スコア=0.75 / 方式=portfolio_recent_era
 
 [相対スコアの意味]
-0.95から順に統一した5口内の順位です。当せん確率ではありません。
+0.95から順に統一した5口内の相対順位スコアです。
+当せん確率や期待収益率を表す数値ではありません。
+
+[Portfolio Constraint Verification]
+max_number_usage: 4
+max_pair_overlap: 4
+super_recent_independent: false
+post_selection_changes: 0
+final_usage: 01=2, 06=4, 07=1, 08=2, 09=3, 10=1, 12=3, 16=2, 17=2, 18=1, 19=1, 20=1, 22=4, 24=1, 26=1, 29=1, 33=2, 35=1, 36=2
+super_recent_note: Recent Eraと異なるモデルIDが採用されるまで独立枠は使用しません。
 
 [出力ファイル]
 CSV: outputs/evolution_best_prediction.csv
-Generation 4 summary: outputs/generation4/latest_generation4_summary.json
-Shadow history: outputs/generation4/shadow_history.csv
-Sealed manifest: outputs/generation4/latest_sealed_manifest.json
+TXT: outputs/holdout/latest_prediction_report.txt
 
-注意: 宝くじはランダム性が高く、過去検証・Conformal集合・e-processは将来の当せんや利益を保証しません。
+注意: 宝くじはランダム性が高く、この予測は当せんや利益を保証するものではありません。
