@@ -1,0 +1,24 @@
+{
+  "adoption_allowed": false,
+  "conformal_recalibration": {
+    "enabled": true,
+    "method": "rolling_prior_top_k_minimum_hit_coverage_v1",
+    "required_main_hits": 4
+  },
+  "created_at": "2026-07-17T11:55:16.279574+00:00",
+  "kind": "loto7_generation4_strict_adoption_gate",
+  "null_league_gate": {
+    "adoption_allowed": false,
+    "available": true,
+    "model_percentile": 0.477778,
+    "passed": false,
+    "pbo": 0.6,
+    "reasons": [
+      "null league passed=False",
+      "null exceedance=0.477778",
+      "PBO=0.6",
+      "Null League failed; production adoption is completely rejected"
+    ]
+  },
+  "null_league_summary": "outputs/generation4/null_strategy_league_summary.json"
+}
