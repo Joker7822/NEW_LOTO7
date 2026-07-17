@@ -1,24 +1,23 @@
 {
   "category_counts": {
-    "documentation": 12,
-    "generated_output": 172,
-    "other": 7,
-    "root_data_or_report": 11,
-    "root_python": 29,
-    "script": 27,
-    "test": 4,
-    "workflow": 11
+    "documentation": 7,
+    "generated_output": 121,
+    "other": 3,
+    "root_data_or_report": 6,
+    "root_python": 10,
+    "script": 26,
+    "test": 5,
+    "workflow": 9
   },
-  "created_at": "2026-07-16T22:43:09.591245+00:00",
+  "created_at": "2026-07-17T04:49:47.566758+00:00",
   "directory_file_counts": {
-    ".github": 11,
-    "<root>": 45,
+    ".github": 9,
+    "<root>": 18,
     "config": 1,
-    "docs": 12,
-    "outputs": 172,
-    "patches": 1,
-    "scripts": 27,
-    "tests": 4
+    "docs": 7,
+    "outputs": 121,
+    "scripts": 26,
+    "tests": 5
   },
   "duplicate_filenames": {
     "nested_walk_forward_report.txt": [
@@ -40,14 +39,8 @@
     ]
   },
   "duplicate_workflow_names": {},
-  "file_count": 273,
+  "file_count": 187,
   "history_report_summary_files": [
-    "docs/architecture/repository_restructure_report.json",
-    "outputs/complete_ai/complete_ai_summary.json",
-    "outputs/deep_ai/deep_ai_summary.json",
-    "outputs/deep_ai/ppo_training_history.csv",
-    "outputs/deep_ai/transformer_training_history.csv",
-    "outputs/evolution_merged_summary.json",
     "outputs/evolution_prediction_history.csv",
     "outputs/evolution_prediction_history_result.txt",
     "outputs/generation4/champion_challenger_report.txt",
@@ -58,14 +51,10 @@
     "outputs/generation4/shadow_history.csv",
     "outputs/holdout/holdout_report.txt",
     "outputs/holdout/holdout_summary.json",
-    "outputs/holdout/latest_portfolio_summary.json",
     "outputs/holdout/latest_prediction_report.txt",
-    "outputs/holdout/model_selection_report.txt",
-    "outputs/holdout/model_selection_summary.json",
     "outputs/holdout/recent_era_report.txt",
     "outputs/holdout/recent_era_summary.json",
     "outputs/loto7_progress_summary.json",
-    "outputs/ml_stack/ml_model_report.csv",
     "outputs/model_self_evolution/history.csv",
     "outputs/model_self_evolution/report.txt",
     "outputs/model_self_evolution/standalone_history.csv",
@@ -91,14 +80,6 @@
     "outputs/super_recent/super_recent_model_history.csv",
     "outputs/super_recent/super_recent_model_report.txt",
     "outputs/super_recent/super_recent_model_summary.json",
-    "outputs/txt_reports/02_prediction_history_result.txt",
-    "outputs/txt_reports/03_holdout_report.txt",
-    "outputs/txt_reports/04_model_selection_report.txt",
-    "outputs/txt_reports/04_recent_era_report.txt",
-    "outputs/txt_reports/05_model_selection_report.txt",
-    "outputs/txt_reports/11_json_summary_digest.txt",
-    "outputs/txt_reports/12_json_summary_digest.txt",
-    "outputs/txt_reports/99_combined_report.txt",
     "outputs/validation/nested_walk_forward_summary.json",
     "outputs/validation/recent/nested_walk_forward_report.txt",
     "outputs/validation/recent/nested_walk_forward_summary.json",
@@ -109,79 +90,43 @@
   ],
   "largest_files": [
     {
-      "bytes": 4503009,
-      "path": "outputs/ml_stack/ml_training_frame.csv"
-    },
-    {
-      "bytes": 796920,
-      "path": "outputs/deep_ai/transformer_model.pt"
-    },
-    {
       "bytes": 767005,
       "path": "outputs/role_ensemble/role_ensemble_backtest.csv"
-    },
-    {
-      "bytes": 477155,
-      "path": "outputs/ml_stack/loto7_memorybank_mb4.csv"
-    },
-    {
-      "bytes": 379234,
-      "path": "outputs/ml_stack/loto7_memorybank_mb5.csv"
     },
     {
       "bytes": 324540,
       "path": "outputs/holdout/holdout_result.csv"
     },
     {
-      "bytes": 236135,
-      "path": "outputs/complete_ai/complete_ai_candidates.csv"
-    },
-    {
-      "bytes": 194143,
+      "bytes": 199272,
       "path": "outputs/recent_era/recent_era_model_history.csv"
     },
     {
-      "bytes": 142957,
-      "path": "outputs/ml_stack/loto7_memorybank_mb6.csv"
+      "bytes": 135334,
+      "path": "outputs/model_self_evolution/history.csv"
     },
     {
       "bytes": 135323,
       "path": "loto7.csv"
     },
     {
-      "bytes": 134293,
-      "path": "outputs/model_self_evolution/history.csv"
-    },
-    {
-      "bytes": 108727,
-      "path": "outputs/deep_ai/ppo_policy.pt"
-    },
-    {
       "bytes": 77989,
       "path": "outputs/model_self_evolution/standalone_history.csv"
     },
     {
-      "bytes": 63251,
+      "bytes": 65681,
       "path": "outputs/super_recent/super_recent_model_history.csv"
     },
     {
-      "bytes": 54331,
-      "path": "outputs/txt_reports/99_combined_report.txt"
-    },
-    {
-      "bytes": 52640,
-      "path": "loto7_advanced_optimizer.py"
-    },
-    {
-      "bytes": 46714,
+      "bytes": 46611,
       "path": "outputs/super_recent/super_recent_model_state.json"
     },
     {
-      "bytes": 46332,
+      "bytes": 46293,
       "path": "outputs/generation4/null_strategy_league_summary.json"
     },
     {
-      "bytes": 42919,
+      "bytes": 42868,
       "path": "outputs/recent_era/recent_era_model_state.json"
     },
     {
@@ -197,16 +142,12 @@
       "path": "loto7_evolution_trainer.py"
     },
     {
-      "bytes": 38743,
+      "bytes": 38068,
       "path": "docs/architecture/repository_structure_audit.json"
     },
     {
       "bytes": 31625,
       "path": "scripts/backtest_role_ensemble.py"
-    },
-    {
-      "bytes": 30944,
-      "path": "outputs/txt_reports/03_holdout_report.txt"
     },
     {
       "bytes": 30801,
@@ -225,14 +166,53 @@
       "path": "holdout_evaluator.py"
     },
     {
-      "bytes": 26048,
-      "path": "loto7_enhanced_predictor.py"
+      "bytes": 26630,
+      "path": "outputs/model_self_evolution/state.json"
+    },
+    {
+      "bytes": 23954,
+      "path": "scripts/build_dual_model_prediction.py"
+    },
+    {
+      "bytes": 22239,
+      "path": "scripts/build_generation4_prediction.py"
+    },
+    {
+      "bytes": 21495,
+      "path": "outputs/super_recent/super_recent_adaptive_safety_guard.json"
+    },
+    {
+      "bytes": 21281,
+      "path": "outputs/recent_era/recent_era_adaptive_safety_guard.json"
+    },
+    {
+      "bytes": 19848,
+      "path": "loto7_complete_ai_system.py"
+    },
+    {
+      "bytes": 19291,
+      "path": "outputs/super_recent/super_recent_adaptive_safety_guard_report.txt"
+    },
+    {
+      "bytes": 19204,
+      "path": "outputs/recent_era/recent_era_adaptive_safety_guard_report.txt"
+    },
+    {
+      "bytes": 18473,
+      "path": ".github/workflows/loto7_evolution.yml"
+    },
+    {
+      "bytes": 18415,
+      "path": "scripts/generation4_core.py"
+    },
+    {
+      "bytes": 16294,
+      "path": "scripts/recent_era_optimizer.py"
     }
   ],
   "model_or_state_files": [
     "loto7_best_model.json",
     "outputs/holdout/holdout_state.json",
-    "outputs/holdout/model_selection_summary.json",
     "outputs/model_self_evolution/best_candidate_model.json",
     "outputs/model_self_evolution/standalone_best_candidate_model.json",
     "outputs/model_self_evolution/standalone_state.json",
@@ -256,49 +236,14 @@
     "outputs/super_recent/super_recent_model_summary.json"
   ],
   "nonstandard_concurrency_queue_workflows": [],
-  "possibly_orphaned_python": [
-    "export_latest_prediction_txt.py",
-    "loto7_chunked_backtest.py",
-    "loto7_deep_ai.py",
-    "loto7_evaluate_backtest.py",
-    "loto7_pipeline_enhanced.py",
-    "loto7_precision_evolution_trainer.py",
-    "loto7_resumable_backtest.py",
-    "loto7_self_evolution_engine.py",
-    "loto7_self_evolver.py",
-    "loto7_train_from_backtest.py",
-    "resumable_loto7_backtest.py",
-    "scripts/build_latest_prediction_from_best_model.py",
-    "scripts/optimize_recent_era_role_strategy.py",
-    "sitecustomize.py",
-    "summarize_backtest_results.py",
-    "validate_evolution_resume.py"
-  ],
-  "python_file_count": 55,
+  "possibly_orphaned_python": [],
+  "python_file_count": 36,
   "recommendations": [
     {
-      "action": "Keep compatibility wrappers at root and move implementations into src/loto7 or scripts by responsibility.",
-      "detail": "Root contains 29 Python files.",
-      "issue": "root_python_clutter",
-      "priority": "P0"
-    },
-    {
       "action": "Separate immutable prediction evidence from reproducible intermediate outputs; retain only latest, sealed, and compact history files.",
-      "detail": "Repository tracks 172 files under outputs/.",
+      "detail": "Repository tracks 121 files under outputs/.",
       "issue": "tracked_generated_outputs",
       "priority": "P0"
-    },
-    {
-      "action": "Review before archiving; static detection can miss dynamic calls.",
-      "detail": "16 Python files have no detected workflow/import reference.",
-      "issue": "possibly_orphaned_python",
-      "priority": "P1"
-    },
-    {
-      "action": "Make Generation 4 the sole writer of production prediction outputs; legacy workflows write only candidate or diagnostic artifacts.",
-      "detail": "Multiple generations and workflows can write prediction outputs.",
-      "issue": "generation_ownership",
-      "priority": "P1"
     },
     {
       "action": "Adopt src/loto7/{data,models,validation,portfolio,reporting} and keep scripts as thin CLI entry points.",
@@ -316,124 +261,55 @@
   "repository_root": "/home/runner/work/NEW_LOTO7/NEW_LOTO7",
   "root_files": [
     ".gitignore",
-    "EVOLUTION_RESUME_DESIGN.md",
     "GENERATION4.md",
-    "IMPLEMENTATION_STATUS_20260609.md",
-    "NEXTGEN_IMPLEMENTATION.md",
     "README.md",
-    "export_latest_prediction_txt.py",
     "holdout_evaluator.py",
     "loto7.csv",
-    "loto7_advanced_optimizer.py",
-    "loto7_advanced_v2.py",
     "loto7_best_model.json",
-    "loto7_chunked_backtest.py",
     "loto7_complete_ai_system.py",
-    "loto7_deep_ai.py",
-    "loto7_enhanced_predictor.py",
-    "loto7_evaluate_backtest.py",
     "loto7_evolution_trainer.py",
-    "loto7_hit_structure_clusters.csv",
-    "loto7_logic_predictor.py",
-    "loto7_meta6_classifier.json",
-    "loto7_meta_classifier.json",
     "loto7_ml_stack.py",
     "loto7_model_self_evolver.py",
-    "loto7_nextgen_models.py",
-    "loto7_pipeline.py",
-    "loto7_pipeline_enhanced.py",
-    "loto7_precision_evolution_trainer.py",
     "loto7_progress_monitor.py",
-    "loto7_resumable_backtest.py",
     "loto7_safe_evolution_runner.py",
     "loto7_self_evolution_config.json",
-    "loto7_self_evolution_engine.py",
-    "loto7_self_evolver.py",
-    "loto7_shap_feature_selection.json",
-    "loto7_train_from_backtest.py",
     "merge_evolution_shards.py",
-    "requirements-deep.txt",
     "requirements-ml.txt",
     "requirements.txt",
-    "resumable_loto7_backtest.py",
     "scrapingloto7.py",
-    "sitecustomize.py",
-    "summarize_backtest_results.py",
-    "validate_evolution_resume.py"
+    "sitecustomize.py"
   ],
   "root_python_files": [
-    "export_latest_prediction_txt.py",
     "holdout_evaluator.py",
-    "loto7_advanced_optimizer.py",
-    "loto7_advanced_v2.py",
-    "loto7_chunked_backtest.py",
     "loto7_complete_ai_system.py",
-    "loto7_deep_ai.py",
-    "loto7_enhanced_predictor.py",
-    "loto7_evaluate_backtest.py",
     "loto7_evolution_trainer.py",
-    "loto7_logic_predictor.py",
     "loto7_ml_stack.py",
     "loto7_model_self_evolver.py",
-    "loto7_nextgen_models.py",
-    "loto7_pipeline.py",
-    "loto7_pipeline_enhanced.py",
-    "loto7_precision_evolution_trainer.py",
     "loto7_progress_monitor.py",
-    "loto7_resumable_backtest.py",
     "loto7_safe_evolution_runner.py",
-    "loto7_self_evolution_engine.py",
-    "loto7_self_evolver.py",
-    "loto7_train_from_backtest.py",
     "merge_evolution_shards.py",
-    "resumable_loto7_backtest.py",
     "scrapingloto7.py",
-    "sitecustomize.py",
-    "summarize_backtest_results.py",
-    "validate_evolution_resume.py"
+    "sitecustomize.py"
   ],
   "suffix_counts": {
-    ".csv": 27,
-    ".diff": 1,
-    ".json": 85,
-    ".md": 17,
-    ".pt": 2,
-    ".py": 59,
-    ".sh": 1,
-    ".sha256": 17,
-    ".txt": 52,
-    ".yml": 11,
+    ".csv": 10,
+    ".json": 72,
+    ".md": 8,
+    ".py": 41,
+    ".sha256": 20,
+    ".txt": 26,
+    ".yml": 9,
     "<none>": 1
   },
-  "test_file_count": 4,
-  "tracked_output_count": 172,
+  "test_file_count": 5,
+  "tracked_output_count": 121,
   "tracked_outputs": [
-    "outputs/README.md",
-    "outputs/complete_ai/complete_ai_candidates.csv",
-    "outputs/complete_ai/complete_ai_dashboard.md",
-    "outputs/complete_ai/complete_ai_prediction.csv",
-    "outputs/complete_ai/complete_ai_summary.json",
-    "outputs/complete_ai/feature_store_numbers.csv",
-    "outputs/deep_ai/deep_ai_number_ranking.csv",
-    "outputs/deep_ai/deep_ai_prediction.csv",
-    "outputs/deep_ai/deep_ai_summary.json",
-    "outputs/deep_ai/deep_ai_summary.md",
-    "outputs/deep_ai/ppo_number_probabilities.csv",
-    "outputs/deep_ai/ppo_policy.pt",
-    "outputs/deep_ai/ppo_training_history.csv",
-    "outputs/deep_ai/transformer_model.pt",
-    "outputs/deep_ai/transformer_number_probabilities.csv",
-    "outputs/deep_ai/transformer_training_history.csv",
     "outputs/evolution_best_prediction.csv",
-    "outputs/evolution_merged_summary.json",
     "outputs/evolution_prediction_history.csv",
     "outputs/evolution_prediction_history_result.txt",
     "outputs/generation4/champion_challenger_report.txt",
     "outputs/generation4/champion_challenger_summary.json",
-    "outputs/generation4/full_run_status.json",
-    "outputs/generation4/full_run_status.txt",
     "outputs/generation4/latest_generation4_summary.json",
-    "outputs/generation4/latest_input_fingerprint.txt",
     "outputs/generation4/latest_sealed_manifest.json",
     "outputs/generation4/latest_shadow_predictions.json",
     "outputs/generation4/null_strategy_league_report.txt",
@@ -446,6 +322,8 @@
     "outputs/generation4/sealed/prediction_686_248483ec6829b31c.sha256",
     "outputs/generation4/sealed/prediction_686_28f6e31848a8948e.json",
     "outputs/generation4/sealed/prediction_686_28f6e31848a8948e.sha256",
+    "outputs/generation4/sealed/prediction_686_29a0c7361a5f691d.json",
+    "outputs/generation4/sealed/prediction_686_29a0c7361a5f691d.sha256",
     "outputs/generation4/sealed/prediction_686_4422dd7b5d5c9f7e.json",
     "outputs/generation4/sealed/prediction_686_4422dd7b5d5c9f7e.sha256",
     "outputs/generation4/sealed/prediction_686_4b743099e627aef1.json",
@@ -460,12 +338,16 @@
     "outputs/generation4/sealed/prediction_686_792723c6bb06b74a.sha256",
     "outputs/generation4/sealed/prediction_686_84728927fb6166c3.json",
     "outputs/generation4/sealed/prediction_686_84728927fb6166c3.sha256",
+    "outputs/generation4/sealed/prediction_686_8dfaba5c77abc881.json",
+    "outputs/generation4/sealed/prediction_686_8dfaba5c77abc881.sha256",
     "outputs/generation4/sealed/prediction_686_98457b45928fe73d.json",
     "outputs/generation4/sealed/prediction_686_98457b45928fe73d.sha256",
     "outputs/generation4/sealed/prediction_686_a206fe994fd7735c.json",
     "outputs/generation4/sealed/prediction_686_a206fe994fd7735c.sha256",
     "outputs/generation4/sealed/prediction_686_bcf35223e5a2139f.json",
     "outputs/generation4/sealed/prediction_686_bcf35223e5a2139f.sha256",
+    "outputs/generation4/sealed/prediction_686_dc9fa2951a0bb47d.json",
+    "outputs/generation4/sealed/prediction_686_dc9fa2951a0bb47d.sha256",
     "outputs/generation4/sealed/prediction_686_e48de775625ddbfb.json",
     "outputs/generation4/sealed/prediction_686_e48de775625ddbfb.sha256",
     "outputs/generation4/sealed/prediction_686_e5e6a1f92d36ce22.json",
@@ -478,23 +360,11 @@
     "outputs/holdout/holdout_result.csv",
     "outputs/holdout/holdout_state.json",
     "outputs/holdout/holdout_summary.json",
-    "outputs/holdout/latest_portfolio_summary.json",
     "outputs/holdout/latest_prediction_report.txt",
-    "outputs/holdout/model_selection_report.txt",
-    "outputs/holdout/model_selection_summary.json",
     "outputs/holdout/recent_era_report.txt",
     "outputs/holdout/recent_era_summary.json",
     "outputs/loto7_progress_summary.json",
     "outputs/loto7_progress_summary.md",
-    "outputs/ml_stack/loto7_memorybank_mb4.csv",
-    "outputs/ml_stack/loto7_memorybank_mb5.csv",
-    "outputs/ml_stack/loto7_memorybank_mb6.csv",
-    "outputs/ml_stack/ml_features.csv",
-    "outputs/ml_stack/ml_model_report.csv",
-    "outputs/ml_stack/ml_stack_status.json",
-    "outputs/ml_stack/ml_training_frame.csv",
-    "outputs/ml_stack/optuna_best_params.json",
-    "outputs/ml_stack/shap_feature_importance.csv",
     "outputs/model_self_evolution/best_candidate_model.json",
     "outputs/model_self_evolution/history.csv",
     "outputs/model_self_evolution/report.txt",
@@ -532,7 +402,6 @@
     "outputs/role_ensemble/role_ensemble_summary.json",
     "outputs/role_ensemble/role_strategy.json",
     "outputs/role_ensemble/role_strategy_report.txt",
-    "outputs/run_manifest.json",
     "outputs/super_recent/super_recent_adaptive_safety_guard.json",
     "outputs/super_recent/super_recent_adaptive_safety_guard_report.txt",
     "outputs/super_recent/super_recent_baseline_before_run.json",
@@ -547,30 +416,6 @@
     "outputs/super_recent/super_recent_model_report.txt",
     "outputs/super_recent/super_recent_model_state.json",
     "outputs/super_recent/super_recent_model_summary.json",
-    "outputs/txt_reports/00_INDEX.txt",
-    "outputs/txt_reports/01_latest_prediction.txt",
-    "outputs/txt_reports/02_prediction_history_result.txt",
-    "outputs/txt_reports/03_holdout_report.txt",
-    "outputs/txt_reports/04_model_selection_report.txt",
-    "outputs/txt_reports/04_recent_era_report.txt",
-    "outputs/txt_reports/05_model_selection_report.txt",
-    "outputs/txt_reports/05_model_self_evolution_standalone.txt",
-    "outputs/txt_reports/06_model_self_evolution_integrated.txt",
-    "outputs/txt_reports/06_model_self_evolution_standalone.txt",
-    "outputs/txt_reports/07_model_self_evolution_integrated.txt",
-    "outputs/txt_reports/07_role_ensemble_backtest.txt",
-    "outputs/txt_reports/08_role_ensemble_backtest.txt",
-    "outputs/txt_reports/08_role_strategy_optimizer.txt",
-    "outputs/txt_reports/09_regime_strategy.txt",
-    "outputs/txt_reports/09_role_strategy_optimizer.txt",
-    "outputs/txt_reports/10_progress_summary.md",
-    "outputs/txt_reports/10_regime_strategy.txt",
-    "outputs/txt_reports/11_json_summary_digest.txt",
-    "outputs/txt_reports/11_progress_summary.md",
-    "outputs/txt_reports/12_json_summary_digest.txt",
-    "outputs/txt_reports/99_combined_report.txt",
-    "outputs/txt_reports/README.txt",
-    "outputs/txt_reports/manifest.json",
     "outputs/validation/nested_walk_forward_summary.json",
     "outputs/validation/recent/nested_walk_forward_report.txt",
     "outputs/validation/recent/nested_walk_forward_summary.json",
@@ -581,7 +426,7 @@
     "outputs/validation/super_recent/promotion_decision.json",
     "outputs/validation/super_recent/promotion_report.txt"
   ],
-  "workflow_count": 11,
+  "workflow_count": 9,
   "workflow_referenced_python": [
     "holdout_evaluator.py",
     "loto7_complete_ai_system.py",
@@ -589,17 +434,16 @@
     "loto7_model_self_evolver.py",
     "loto7_progress_monitor.py",
     "loto7_safe_evolution_runner.py",
-    "merge_evolution_shards.py",
     "scrapingloto7.py",
     "scripts/adaptive_model_safety_guard.py",
     "scripts/audit_repository_structure.py",
     "scripts/backtest_role_ensemble.py",
     "scripts/build_dual_model_prediction.py",
     "scripts/build_generation4_prediction.py",
+    "scripts/build_generation4_prediction_strict.py",
     "scripts/build_recent_era_model_comparison.py",
     "scripts/check_prediction_history_results.py",
     "scripts/check_repository_architecture.py",
-    "scripts/collect_txt_reports.py",
     "scripts/detect_loto7_regime.py",
     "scripts/enforce_prediction_constraints.py",
     "scripts/finalize_generation4_report.py",
@@ -608,21 +452,24 @@
     "scripts/null_strategy_league.py",
     "scripts/optimize_role_strategy.py",
     "scripts/promote_nested_candidate.py",
+    "scripts/promote_nested_candidate_strict.py",
     "scripts/recent_era_dedicated_guard.py",
     "scripts/recent_era_optimizer.py",
     "scripts/repair_holdout_summary.py",
     "scripts/robust_model_metrics.py",
     "scripts/seal_generation4_prediction.py",
+    "scripts/strict_adoption_gates.py",
     "scripts/update_generation4_shadow_history.py",
     "scripts/update_prediction_history.py",
     "tests/test_generation4_pipeline.py",
     "tests/test_prediction_output_consistency.py",
-    "tests/test_robust_validation_and_portfolio.py"
+    "tests/test_robust_validation_and_portfolio.py",
+    "tests/test_strict_adoption_gates.py"
   ],
   "workflow_trigger_counts": {
-    "push": 7,
-    "schedule": 4,
-    "workflow_dispatch": 11,
+    "push": 6,
+    "schedule": 3,
+    "workflow_dispatch": 9,
     "workflow_run": 2
   },
   "workflows": [
@@ -655,7 +502,7 @@
     },
     {
       "contains_nonstandard_concurrency_queue": false,
-      "line_count": 478,
+      "line_count": 460,
       "name": "LOTO7 Evolution Trainer",
       "path": ".github/workflows/loto7_evolution.yml",
       "referenced_paths": [
@@ -695,11 +542,11 @@
     },
     {
       "contains_nonstandard_concurrency_queue": false,
-      "line_count": 264,
+      "line_count": 303,
       "name": "LOTO7 Generation 4 Production",
       "path": ".github/workflows/loto7_generation4_run.yml",
       "referenced_paths": [
-        "scripts/build_generation4_prediction.py",
+        "scripts/build_generation4_prediction_strict.py",
         "scripts/check_prediction_history_results.py",
         "scripts/detect_loto7_regime.py",
         "scripts/enforce_prediction_constraints.py",
@@ -718,6 +565,7 @@
         "outputs/generation4/latest_shadow_predictions.json",
         "outputs/generation4/null_strategy_league_report.txt",
         "outputs/generation4/null_strategy_league_summary.json",
+        "outputs/generation4/sealed_index.json",
         "outputs/generation4/shadow_history.csv",
         "outputs/holdout/latest_prediction_report.txt",
         "outputs/recent_era/recent_era_best_model.json",
@@ -727,8 +575,11 @@
         "outputs/role_ensemble/regime_strategy_report.txt",
         "outputs/role_ensemble/role_strategy.json",
         "outputs/super_recent/super_recent_best_model.json",
+        "scripts/build_generation4_prediction.py",
         "scripts/generation4_core.py",
-        "tests/test_generation4_pipeline.py"
+        "scripts/strict_adoption_gates.py",
+        "tests/test_generation4_pipeline.py",
+        "tests/test_strict_adoption_gates.py"
       ],
       "triggers": [
         "workflow_dispatch",
@@ -766,12 +617,12 @@
     },
     {
       "contains_nonstandard_concurrency_queue": false,
-      "line_count": 201,
+      "line_count": 216,
       "name": "LOTO7 Nested Walk Forward Validation",
       "path": ".github/workflows/loto7_nested_walk_forward.yml",
       "referenced_paths": [
         "scripts/nested_walk_forward_validation.py",
-        "scripts/promote_nested_candidate.py",
+        "scripts/promote_nested_candidate_strict.py",
         "outputs/recent_era/recent_era_best_model.json",
         "outputs/recent_era/recent_era_candidate_model.json",
         "outputs/recent_era/recent_era_guarded_candidate_model.json",
@@ -786,35 +637,14 @@
         "outputs/validation/super_recent/nested_walk_forward_report.txt",
         "outputs/validation/super_recent/nested_walk_forward_summary.json",
         "outputs/validation/super_recent/promotion_decision.json",
-        "outputs/validation/super_recent/promotion_report.txt"
+        "outputs/validation/super_recent/promotion_report.txt",
+        "scripts/promote_nested_candidate.py",
+        "scripts/strict_adoption_gates.py",
+        "tests/test_strict_adoption_gates.py"
       ],
       "triggers": [
         "workflow_dispatch",
         "workflow_run"
-      ]
-    },
-    {
-      "contains_nonstandard_concurrency_queue": false,
-      "line_count": 249,
-      "name": "LOTO7 Quick Finish Check",
-      "path": ".github/workflows/loto7_quick_finish.yml",
-      "referenced_paths": [
-        "holdout_evaluator.py",
-        "loto7_progress_monitor.py",
-        "merge_evolution_shards.py",
-        "scrapingloto7.py",
-        "outputs/evolution_merged_summary.json",
-        "outputs/holdout/holdout_report.txt",
-        "outputs/holdout/holdout_result.csv",
-        "outputs/holdout/holdout_state.json",
-        "outputs/holdout/holdout_summary.json",
-        "outputs/loto7_progress_summary.json",
-        "outputs/loto7_progress_summary.md",
-        "outputs/run_manifest.json",
-        "scripts/collect_txt_reports.sh"
-      ],
-      "triggers": [
-        "workflow_dispatch"
       ]
     },
     {
@@ -859,20 +689,6 @@
       ],
       "triggers": [
         "workflow_dispatch",
-        "schedule"
-      ]
-    },
-    {
-      "contains_nonstandard_concurrency_queue": false,
-      "line_count": 67,
-      "name": "LOTO7 TXT Reports",
-      "path": ".github/workflows/loto7_txt_reports.yml",
-      "referenced_paths": [
-        "scripts/collect_txt_reports.py"
-      ],
-      "triggers": [
-        "workflow_dispatch",
-        "push",
         "schedule"
       ]
     },

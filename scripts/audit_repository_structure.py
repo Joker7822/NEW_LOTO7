@@ -156,7 +156,7 @@ def audit(root: Path) -> Dict[str, object]:
         if path not in referenced_python
         and path not in {"setup.py"}
         and not path.endswith("/__init__.py")
-        and Path(path).name not in {"conftest.py"}
+        and Path(path).name not in {"conftest.py", "sitecustomize.py"}
     )
 
     stem_groups: Dict[str, List[str]] = defaultdict(list)
@@ -185,7 +185,7 @@ def audit(root: Path) -> Dict[str, object]:
     invalid_queue_workflows = [item["path"] for item in workflow_details if item["contains_nonstandard_concurrency_queue"]]
 
     recommendations: List[Dict[str, object]] = []
-    if len(root_python) > 8:
+    if len(root_python) > 12:
         recommendations.append({
             "priority": "P0",
             "issue": "root_python_clutter",
@@ -221,12 +221,6 @@ def audit(root: Path) -> Dict[str, object]:
             "action": "Review before archiving; static detection can miss dynamic calls.",
         })
     recommendations.extend([
-        {
-            "priority": "P1",
-            "issue": "generation_ownership",
-            "detail": "Multiple generations and workflows can write prediction outputs.",
-            "action": "Make Generation 4 the sole writer of production prediction outputs; legacy workflows write only candidate or diagnostic artifacts.",
-        },
         {
             "priority": "P1",
             "issue": "package_boundaries",

@@ -389,15 +389,6 @@ jobs:
         run: |
           set -euo pipefail
           python loto7_ml_stack.py --csv loto7.csv --output-dir outputs/ml_stack --min-train 60 --max-targets 240 --candidates-per-draw 80 --label label_4plus --optuna-trials 50
-      - name: Commit ML outputs
-        if: always()
-        run: |
-          set -euo pipefail
-          git add -f outputs/ml_stack/*.csv outputs/ml_stack/*.json || true
-          if git diff --cached --quiet; then echo "No ML output changes"; exit 0; fi
-          git commit -m "Update LOTO7 ML stack outputs [skip ci]"
-          git pull --rebase --autostash || true
-          git push || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -425,15 +416,6 @@ jobs:
         env:
           PYTHONUNBUFFERED: "1"
         run: python loto7_complete_ai_system.py --csv loto7.csv --output-dir outputs/complete_ai --monte-carlo-sims 20000 --roi-window 100
-      - name: Commit complete AI outputs
-        if: always()
-        run: |
-          set -euo pipefail
-          git add -f outputs/complete_ai/*.csv outputs/complete_ai/*.json outputs/complete_ai/*.md || true
-          if git diff --cached --quiet; then echo "No complete AI output changes"; exit 0; fi
-          git commit -m "Update LOTO7 complete AI outputs [skip ci]"
-          git pull --rebase --autostash || true
-          git push || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:

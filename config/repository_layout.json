@@ -6,7 +6,9 @@
     ".github/workflows/loto7_dual_prediction.yml",
     ".github/workflows/trigger_generation4_once.yml",
     ".github/workflows/monitor_generation4_once.yml",
-    ".github/workflows/snapshot_generation4_status.yml"
+    ".github/workflows/snapshot_generation4_status.yml",
+    ".github/workflows/loto7_quick_finish.yml",
+    ".github/workflows/loto7_txt_reports.yml"
   ],
   "production_outputs": [
     "outputs/evolution_best_prediction.csv",
@@ -49,11 +51,11 @@
     ],
     "diagnostics": [
       "outputs/holdout/",
-      "outputs/role_ensemble/",
+      "outputs/role_ensemble/"
+    ],
+    "artifact_only_diagnostics": [
       "outputs/ml_stack/",
-      "outputs/deep_ai/",
-      "outputs/complete_ai/",
-      "outputs/txt_reports/"
+      "outputs/complete_ai/"
     ]
   }
 }
