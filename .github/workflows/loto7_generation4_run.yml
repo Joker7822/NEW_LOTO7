@@ -22,11 +22,14 @@ on:
       - "config/repository_layout.json"
       - "scripts/generation4_core.py"
       - "scripts/build_generation4_prediction.py"
+      - "scripts/build_generation4_prediction_strict.py"
+      - "scripts/strict_adoption_gates.py"
       - "scripts/null_strategy_league.py"
       - "scripts/update_generation4_shadow_history.py"
       - "scripts/seal_generation4_prediction.py"
       - "scripts/finalize_generation4_report.py"
       - "tests/test_generation4_pipeline.py"
+      - "tests/test_strict_adoption_gates.py"
 
 permissions:
   contents: write
@@ -95,11 +98,14 @@ jobs:
           python -m py_compile \
             scripts/generation4_core.py \
             scripts/build_generation4_prediction.py \
+            scripts/build_generation4_prediction_strict.py \
+            scripts/strict_adoption_gates.py \
             scripts/null_strategy_league.py \
             scripts/update_generation4_shadow_history.py \
             scripts/seal_generation4_prediction.py \
             scripts/finalize_generation4_report.py \
-            tests/test_generation4_pipeline.py
+            tests/test_generation4_pipeline.py \
+            tests/test_strict_adoption_gates.py
 
       - name: Run Generation 4 tests
         run: |
@@ -107,7 +113,8 @@ jobs:
           python -m unittest \
             tests.test_prediction_output_consistency \
             tests.test_robust_validation_and_portfolio \
-            tests.test_generation4_pipeline -v
+            tests.test_generation4_pipeline \
+            tests.test_strict_adoption_gates -v
 
       - name: Resolve null simulations
         id: settings
@@ -130,10 +137,13 @@ jobs:
             --unit-cost 300 \
             --seed "${GITHUB_RUN_ID}"
 
-      - name: Build Generation 4 prediction
+      - name: Build Generation 4 prediction through strict adoption gates
         run: |
           set -euo pipefail
-          python scripts/build_generation4_prediction.py \
+          python scripts/build_generation4_prediction_strict.py \
+            --require-null-league-summary \
+            --strict-gate-summary outputs/generation4/strict_adoption_gate.json \
+            --conformal-required-hits 4 \
             --csv loto7.csv \
             --full-model loto7_best_model.json \
             --recent-model outputs/recent_era/recent_era_best_model.json \
@@ -210,6 +220,7 @@ jobs:
           test -s outputs/holdout/latest_prediction_report.txt
           test -s outputs/generation4/latest_generation4_summary.json
           test -s outputs/generation4/null_strategy_league_summary.json
+          test -s outputs/generation4/strict_adoption_gate.json
           test -s outputs/generation4/latest_shadow_predictions.json
           test -s outputs/generation4/champion_challenger_summary.json
           test -s outputs/generation4/latest_sealed_manifest.json
