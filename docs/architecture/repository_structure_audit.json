@@ -9,7 +9,7 @@
     "test": 5,
     "workflow": 9
   },
-  "created_at": "2026-07-17T05:14:45.200320+00:00",
+  "created_at": "2026-07-17T09:35:50.470135+00:00",
   "directory_file_counts": {
     ".github": 9,
     "<root>": 18,
@@ -98,11 +98,11 @@
       "path": "outputs/holdout/holdout_result.csv"
     },
     {
-      "bytes": 199272,
+      "bytes": 202889,
       "path": "outputs/recent_era/recent_era_model_history.csv"
     },
     {
-      "bytes": 135796,
+      "bytes": 136031,
       "path": "outputs/model_self_evolution/history.csv"
     },
     {
@@ -114,11 +114,11 @@
       "path": "outputs/model_self_evolution/standalone_history.csv"
     },
     {
-      "bytes": 65681,
+      "bytes": 68342,
       "path": "outputs/super_recent/super_recent_model_history.csv"
     },
     {
-      "bytes": 46611,
+      "bytes": 46524,
       "path": "outputs/super_recent/super_recent_model_state.json"
     },
     {
@@ -126,7 +126,7 @@
       "path": "outputs/generation4/null_strategy_league_summary.json"
     },
     {
-      "bytes": 42868,
+      "bytes": 42860,
       "path": "outputs/recent_era/recent_era_model_state.json"
     },
     {
@@ -146,7 +146,7 @@
       "path": "scripts/backtest_role_ensemble.py"
     },
     {
-      "bytes": 30954,
+      "bytes": 31313,
       "path": "docs/architecture/repository_structure_audit.json"
     },
     {
@@ -158,7 +158,7 @@
       "path": "loto7_model_self_evolver.py"
     },
     {
-      "bytes": 29249,
+      "bytes": 29235,
       "path": "outputs/model_self_evolution/state.json"
     },
     {
@@ -178,11 +178,11 @@
       "path": "scripts/build_generation4_prediction.py"
     },
     {
-      "bytes": 21495,
+      "bytes": 21469,
       "path": "outputs/super_recent/super_recent_adaptive_safety_guard.json"
     },
     {
-      "bytes": 21281,
+      "bytes": 21278,
       "path": "outputs/recent_era/recent_era_adaptive_safety_guard.json"
     },
     {
@@ -190,11 +190,11 @@
       "path": "loto7_complete_ai_system.py"
     },
     {
-      "bytes": 19291,
+      "bytes": 19272,
       "path": "outputs/super_recent/super_recent_adaptive_safety_guard_report.txt"
     },
     {
-      "bytes": 19204,
+      "bytes": 19201,
       "path": "outputs/recent_era/recent_era_adaptive_safety_guard_report.txt"
     },
     {
@@ -206,8 +206,8 @@
       "path": "scripts/generation4_core.py"
     },
     {
-      "bytes": 16294,
-      "path": "scripts/recent_era_optimizer.py"
+      "bytes": 16725,
+      "path": ".github/workflows/loto7_generation4_run.yml"
     }
   ],
   "model_or_state_files": [
@@ -542,7 +542,7 @@
     },
     {
       "contains_nonstandard_concurrency_queue": false,
-      "line_count": 303,
+      "line_count": 374,
       "name": "LOTO7 Generation 4 Production",
       "path": ".github/workflows/loto7_generation4_run.yml",
       "referenced_paths": [

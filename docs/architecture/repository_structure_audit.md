@@ -1,6 +1,6 @@
 # NEW_LOTO7 Repository Structure Audit
 
-Generated: `2026-07-17T05:14:45.200320+00:00`
+Generated: `2026-07-17T09:35:50.470135+00:00`
 
 ## Summary
 
@@ -30,7 +30,7 @@ Generated: `2026-07-17T05:14:45.200320+00:00`
 | `Backfill LOTO7 prize amounts`<br>`.github/workflows/backfill-loto7-prizes.yml` | workflow_dispatch, push | 66 | - |
 | `LOTO7 Smoke Test`<br>`.github/workflows/loto7-smoke.yml` | workflow_dispatch, push | 114 | - |
 | `LOTO7 Evolution Trainer`<br>`.github/workflows/loto7_evolution.yml` | workflow_dispatch, schedule | 460 | - |
-| `LOTO7 Generation 4 Production`<br>`.github/workflows/loto7_generation4_run.yml` | workflow_dispatch, workflow_run, push | 303 | - |
+| `LOTO7 Generation 4 Production`<br>`.github/workflows/loto7_generation4_run.yml` | workflow_dispatch, workflow_run, push | 374 | - |
 | `LOTO7 Model Self Evolution`<br>`.github/workflows/loto7_model_self_evolution.yml` | workflow_dispatch, push, schedule | 196 | - |
 | `LOTO7 Nested Walk Forward Validation`<br>`.github/workflows/loto7_nested_walk_forward.yml` | workflow_dispatch, workflow_run | 216 | - |
 | `LOTO7 Recent Era Self Evolution`<br>`.github/workflows/loto7_recent_era_self_evolution.yml` | workflow_dispatch, schedule | 306 | - |
@@ -67,22 +67,22 @@ State, reports, model candidates and sealed evidence share outputs/.
 |---|---:|
 | `outputs/role_ensemble/role_ensemble_backtest.csv` | 767005 |
 | `outputs/holdout/holdout_result.csv` | 324540 |
-| `outputs/recent_era/recent_era_model_history.csv` | 199272 |
-| `outputs/model_self_evolution/history.csv` | 135796 |
+| `outputs/recent_era/recent_era_model_history.csv` | 202889 |
+| `outputs/model_self_evolution/history.csv` | 136031 |
 | `loto7.csv` | 135323 |
 | `outputs/model_self_evolution/standalone_history.csv` | 77989 |
-| `outputs/super_recent/super_recent_model_history.csv` | 65681 |
-| `outputs/super_recent/super_recent_model_state.json` | 46611 |
+| `outputs/super_recent/super_recent_model_history.csv` | 68342 |
+| `outputs/super_recent/super_recent_model_state.json` | 46524 |
 | `outputs/generation4/null_strategy_league_summary.json` | 46293 |
-| `outputs/recent_era/recent_era_model_state.json` | 42868 |
+| `outputs/recent_era/recent_era_model_state.json` | 42860 |
 | `merge_evolution_shards.py` | 42620 |
 | `outputs/model_self_evolution/standalone_state.json` | 39771 |
 | `loto7_evolution_trainer.py` | 39244 |
 | `scripts/backtest_role_ensemble.py` | 31625 |
-| `docs/architecture/repository_structure_audit.json` | 30954 |
+| `docs/architecture/repository_structure_audit.json` | 31313 |
 | `outputs/holdout/holdout_report.txt` | 30801 |
 | `loto7_model_self_evolver.py` | 30690 |
-| `outputs/model_self_evolution/state.json` | 29249 |
+| `outputs/model_self_evolution/state.json` | 29235 |
 | `scripts/adaptive_model_safety_guard.py` | 28220 |
 | `holdout_evaluator.py` | 27801 |
 
