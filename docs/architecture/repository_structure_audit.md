@@ -1,6 +1,6 @@
 # NEW_LOTO7 Repository Structure Audit
 
-Generated: `2026-07-17T04:49:47.566758+00:00`
+Generated: `2026-07-17T05:14:45.200320+00:00`
 
 ## Summary
 
@@ -34,8 +34,8 @@ Generated: `2026-07-17T04:49:47.566758+00:00`
 | `LOTO7 Model Self Evolution`<br>`.github/workflows/loto7_model_self_evolution.yml` | workflow_dispatch, push, schedule | 196 | - |
 | `LOTO7 Nested Walk Forward Validation`<br>`.github/workflows/loto7_nested_walk_forward.yml` | workflow_dispatch, workflow_run | 216 | - |
 | `LOTO7 Recent Era Self Evolution`<br>`.github/workflows/loto7_recent_era_self_evolution.yml` | workflow_dispatch, schedule | 306 | - |
-| `LOTO7 Validation Tests`<br>`.github/workflows/loto7_validation_tests.yml` | workflow_dispatch, push | 73 | - |
-| `Repository Structure Audit`<br>`.github/workflows/repository_structure_audit.yml` | workflow_dispatch, push | 91 | - |
+| `LOTO7 Validation Tests`<br>`.github/workflows/loto7_validation_tests.yml` | workflow_dispatch, push | 82 | - |
+| `Repository Structure Audit`<br>`.github/workflows/repository_structure_audit.yml` | workflow_dispatch, push | 95 | - |
 
 ## Highest-priority findings
 
@@ -68,7 +68,7 @@ State, reports, model candidates and sealed evidence share outputs/.
 | `outputs/role_ensemble/role_ensemble_backtest.csv` | 767005 |
 | `outputs/holdout/holdout_result.csv` | 324540 |
 | `outputs/recent_era/recent_era_model_history.csv` | 199272 |
-| `outputs/model_self_evolution/history.csv` | 135334 |
+| `outputs/model_self_evolution/history.csv` | 135796 |
 | `loto7.csv` | 135323 |
 | `outputs/model_self_evolution/standalone_history.csv` | 77989 |
 | `outputs/super_recent/super_recent_model_history.csv` | 65681 |
@@ -78,12 +78,12 @@ State, reports, model candidates and sealed evidence share outputs/.
 | `merge_evolution_shards.py` | 42620 |
 | `outputs/model_self_evolution/standalone_state.json` | 39771 |
 | `loto7_evolution_trainer.py` | 39244 |
-| `docs/architecture/repository_structure_audit.json` | 38068 |
 | `scripts/backtest_role_ensemble.py` | 31625 |
+| `docs/architecture/repository_structure_audit.json` | 30954 |
 | `outputs/holdout/holdout_report.txt` | 30801 |
 | `loto7_model_self_evolver.py` | 30690 |
+| `outputs/model_self_evolution/state.json` | 29249 |
 | `scripts/adaptive_model_safety_guard.py` | 28220 |
 | `holdout_evaluator.py` | 27801 |
-| `outputs/model_self_evolution/state.json` | 26630 |
 
 > Static-reference detection is conservative. A file listed as possibly unreferenced must be reviewed before deletion.

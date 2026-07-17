@@ -9,7 +9,7 @@
     "test": 5,
     "workflow": 9
   },
-  "created_at": "2026-07-17T04:49:47.566758+00:00",
+  "created_at": "2026-07-17T05:14:45.200320+00:00",
   "directory_file_counts": {
     ".github": 9,
     "<root>": 18,
@@ -102,7 +102,7 @@
       "path": "outputs/recent_era/recent_era_model_history.csv"
     },
     {
-      "bytes": 135334,
+      "bytes": 135796,
       "path": "outputs/model_self_evolution/history.csv"
     },
     {
@@ -142,12 +142,12 @@
       "path": "loto7_evolution_trainer.py"
     },
     {
-      "bytes": 38068,
-      "path": "docs/architecture/repository_structure_audit.json"
-    },
-    {
       "bytes": 31625,
       "path": "scripts/backtest_role_ensemble.py"
+    },
+    {
+      "bytes": 30954,
+      "path": "docs/architecture/repository_structure_audit.json"
     },
     {
       "bytes": 30801,
@@ -158,16 +158,16 @@
       "path": "loto7_model_self_evolver.py"
     },
     {
+      "bytes": 29249,
+      "path": "outputs/model_self_evolution/state.json"
+    },
+    {
       "bytes": 28220,
       "path": "scripts/adaptive_model_safety_guard.py"
     },
     {
       "bytes": 27801,
       "path": "holdout_evaluator.py"
-    },
-    {
-      "bytes": 26630,
-      "path": "outputs/model_self_evolution/state.json"
     },
     {
       "bytes": 23954,
@@ -694,7 +694,7 @@
     },
     {
       "contains_nonstandard_concurrency_queue": false,
-      "line_count": 73,
+      "line_count": 82,
       "name": "LOTO7 Validation Tests",
       "path": ".github/workflows/loto7_validation_tests.yml",
       "referenced_paths": [
@@ -702,18 +702,22 @@
         "scripts/adaptive_model_safety_guard.py",
         "scripts/build_dual_model_prediction.py",
         "scripts/build_generation4_prediction.py",
+        "scripts/build_generation4_prediction_strict.py",
         "scripts/enforce_prediction_constraints.py",
         "scripts/finalize_generation4_report.py",
         "scripts/generation4_core.py",
         "scripts/nested_walk_forward_validation.py",
         "scripts/null_strategy_league.py",
         "scripts/promote_nested_candidate.py",
+        "scripts/promote_nested_candidate_strict.py",
         "scripts/robust_model_metrics.py",
         "scripts/seal_generation4_prediction.py",
+        "scripts/strict_adoption_gates.py",
         "scripts/update_generation4_shadow_history.py",
         "tests/test_generation4_pipeline.py",
         "tests/test_prediction_output_consistency.py",
-        "tests/test_robust_validation_and_portfolio.py"
+        "tests/test_robust_validation_and_portfolio.py",
+        "tests/test_strict_adoption_gates.py"
       ],
       "triggers": [
         "workflow_dispatch",
@@ -722,7 +726,7 @@
     },
     {
       "contains_nonstandard_concurrency_queue": false,
-      "line_count": 91,
+      "line_count": 95,
       "name": "Repository Structure Audit",
       "path": ".github/workflows/repository_structure_audit.yml",
       "referenced_paths": [
@@ -731,7 +735,10 @@
         "docs/architecture/repository_architecture_guard.json",
         "docs/architecture/repository_architecture_guard.md",
         "docs/architecture/repository_structure_audit.json",
-        "docs/architecture/repository_structure_audit.md"
+        "docs/architecture/repository_structure_audit.md",
+        "scripts/build_generation4_prediction_strict.py",
+        "scripts/promote_nested_candidate_strict.py",
+        "scripts/strict_adoption_gates.py"
       ],
       "triggers": [
         "workflow_dispatch",
