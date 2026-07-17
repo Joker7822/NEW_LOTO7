@@ -1,0 +1,50 @@
+name: Null Gate Shell Fix Check
+
+on:
+  push:
+    branches:
+      - fix/null-gate-heredoc
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate workflow YAML and remove heredocs
+        run: |
+          set -euo pipefail
+          ruby -e 'require "yaml"; YAML.load_file(".github/workflows/loto7_generation4_run.yml"); puts "workflow YAML valid"'
+          if grep -F "<<'PY'" .github/workflows/loto7_generation4_run.yml; then
+            echo "::error::Python heredoc remains in Generation 4 workflow"
+            exit 1
+          fi
+
+      - name: Execute fail-closed Python commands
+        run: |
+          set -euo pipefail
+          mkdir -p outputs/generation4
+          printf '%s\n' '{"adoption_allowed": false}' > outputs/generation4/strict_adoption_gate.json
+          python -c 'import json; from pathlib import Path; payload = json.loads(Path("outputs/generation4/strict_adoption_gate.json").read_text(encoding="utf-8")); assert payload.get("adoption_allowed") is False, "strict gate must record adoption_allowed=false"; print("Strict gate rejection recorded; production adoption remains blocked.")'
+          python -c 'import json; payload = json.load(open("outputs/generation4/strict_adoption_gate.json", encoding="utf-8")); assert payload.get("adoption_allowed") is False, "rejected run has an invalid strict gate result"'
+
+      - name: Run Generation 4 focused tests
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            scripts/build_generation4_prediction_strict.py \
+            scripts/strict_adoption_gates.py \
+            tests/test_strict_adoption_gates.py
+          python -m unittest \
+            tests.test_prediction_output_consistency \
+            tests.test_robust_validation_and_portfolio \
+            tests.test_generation4_pipeline \
+            tests.test_strict_adoption_gates -v
