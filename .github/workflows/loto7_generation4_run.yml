@@ -197,16 +197,7 @@ jobs:
         if: ${{ steps.strict_build.outputs.adoption_allowed == 'false' }}
         run: |
           set -euo pipefail
-          python - <<'PY'
-          import json
-          from pathlib import Path
-
-          path = Path("outputs/generation4/strict_adoption_gate.json")
-          payload = json.loads(path.read_text(encoding="utf-8"))
-          if payload.get("adoption_allowed") is not False:
-              raise SystemExit("strict gate must record adoption_allowed=false")
-          print("Strict gate rejection recorded; production adoption remains blocked.")
-          PY
+          python -c 'import json; from pathlib import Path; payload = json.loads(Path("outputs/generation4/strict_adoption_gate.json").read_text(encoding="utf-8")); assert payload.get("adoption_allowed") is False, "strict gate must record adoption_allowed=false"; print("Strict gate rejection recorded; production adoption remains blocked.")'
 
       - name: Update histories and e-process
         if: ${{ steps.strict_build.outputs.adoption_allowed == 'true' }}
@@ -266,12 +257,7 @@ jobs:
             test -s outputs/evolution_best_prediction.csv
             test -s outputs/evolution_prediction_history.csv
             test -s outputs/holdout/latest_prediction_report.txt
-            python - <<'PY'
-            import json
-            payload = json.load(open("outputs/generation4/strict_adoption_gate.json", encoding="utf-8"))
-            if payload.get("adoption_allowed") is not False:
-                raise SystemExit("rejected run has an invalid strict gate result")
-            PY
+            python -c 'import json; payload = json.load(open("outputs/generation4/strict_adoption_gate.json", encoding="utf-8")); assert payload.get("adoption_allowed") is False, "rejected run has an invalid strict gate result"'
           else
             echo "::error::strict_build did not publish adoption_allowed"
             exit 1
