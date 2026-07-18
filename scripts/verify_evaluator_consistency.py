@@ -6,8 +6,13 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.evaluation_core import EVALUATOR_VERSION, financial_metrics
 
@@ -15,7 +20,11 @@ Key = Tuple[int, int]
 
 
 def normalize_ticket(value: object) -> str:
-    return " ".join(f"{int(token):02d}" for token in str(value or "").replace(",", " ").split() if token.isdigit())
+    return " ".join(
+        f"{int(token):02d}"
+        for token in str(value or "").replace(",", " ").split()
+        if token.isdigit()
+    )
 
 
 def read_rows(path: Path) -> List[Dict[str, str]]:
@@ -47,16 +56,25 @@ def verify(holdout_path: Path, role_path: Path, unit_cost: int = 300) -> Dict[st
         }
         differences = {name: values for name, values in checks.items() if values[0] != values[1]}
         if differences:
-            mismatches.append({"draw_no": key[0], "ticket_index": key[1], "differences": differences})
+            mismatches.append(
+                {"draw_no": key[0], "ticket_index": key[1], "differences": differences}
+            )
 
     def aggregate(rows: List[Dict[str, str]], *, holdout_format: bool) -> Dict[str, object]:
-        total_payout = sum(int(row.get("prize_amount" if holdout_format else "payout", 0) or 0) for row in rows)
+        total_payout = sum(
+            int(row.get("prize_amount" if holdout_format else "payout", 0) or 0)
+            for row in rows
+        )
         rank_key = "rank"
         winners = sum(1 for row in rows if row.get(rank_key) not in {"", "外れ"})
-        draw_numbers = {int(row.get("draw_no" if holdout_format else "target_draw_no", 0) or 0) for row in rows}
+        draw_numbers = {
+            int(row.get("draw_no" if holdout_format else "target_draw_no", 0) or 0)
+            for row in rows
+        }
         winning_draw_numbers = {
             int(row.get("draw_no" if holdout_format else "target_draw_no", 0) or 0)
-            for row in rows if row.get(rank_key) not in {"", "外れ"}
+            for row in rows
+            if row.get(rank_key) not in {"", "外れ"}
         }
         return financial_metrics(
             total_cost=len(rows) * unit_cost,
@@ -71,7 +89,15 @@ def verify(holdout_path: Path, role_path: Path, unit_cost: int = 300) -> Dict[st
     role_metrics = aggregate(role_rows, holdout_format=False)
     metrics_equal = all(
         holdout_metrics.get(key) == role_metrics.get(key)
-        for key in ("total_cost", "total_payout", "profit", "profit_roi_percent", "payout_roi_percent", "ticket_hit_rate_percent", "draw_hit_rate_percent")
+        for key in (
+            "total_cost",
+            "total_payout",
+            "profit",
+            "profit_roi_percent",
+            "payout_roi_percent",
+            "ticket_hit_rate_percent",
+            "draw_hit_rate_percent",
+        )
     )
     payload: Dict[str, object] = {
         "kind": "loto7_evaluator_consistency",
@@ -85,7 +111,10 @@ def verify(holdout_path: Path, role_path: Path, unit_cost: int = 300) -> Dict[st
         "holdout_metrics": holdout_metrics,
         "role_best_model_metrics": role_metrics,
         "metrics_equal": metrics_equal,
-        "passed": not missing_in_role and not missing_in_holdout and not mismatches and metrics_equal,
+        "passed": not missing_in_role
+        and not missing_in_holdout
+        and not mismatches
+        and metrics_equal,
     }
     return payload
 
@@ -100,7 +129,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     payload = verify(Path(args.holdout), Path(args.role), args.unit_cost)
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    output.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
     return 0 if payload["passed"] else 2
 
