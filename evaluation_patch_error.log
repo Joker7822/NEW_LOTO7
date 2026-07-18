@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "scripts/apply_evaluation_unification_patch.py", line 7, in <module>
+    ROOT = Path(__file__).resolve().parents[1]
+                ^^^^^^^^
+NameError: name '__file__' is not defined. Did you mean: '__name__'?
