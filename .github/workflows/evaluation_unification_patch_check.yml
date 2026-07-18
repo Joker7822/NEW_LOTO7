@@ -36,7 +36,7 @@ jobs:
         id: apply_patch
         run: |
           set +e
-          python -c 'from pathlib import Path; p=Path("scripts/apply_evaluation_unification_patch.py"); s=p.read_text(encoding="utf-8"); s=s.replace("if count != 1:\n        raise RuntimeError(f\"{path}: expected one exact match, found {count}: {old[:100]!r}\")", "if count < 1:\n        raise RuntimeError(f\"{path}: expected at least one exact match, found {count}: {old[:100]!r}\")", 1); exec(compile(s, str(p), "exec"))' > evaluation_patch_error.log 2>&1
+          python -c 'from pathlib import Path; p=Path("scripts/apply_evaluation_unification_patch.py"); s=p.read_text(encoding="utf-8"); s=s.replace("if count != 1:\n        raise RuntimeError(f\"{path}: expected one exact match, found {count}: {old[:100]!r}\")", "if count < 1:\n        raise RuntimeError(f\"{path}: expected at least one exact match, found {count}: {old[:100]!r}\")", 1); exec(compile(s, str(p), "exec"), {"__file__": str(p), "__name__": "__main__"})' > evaluation_patch_error.log 2>&1
           STATUS=$?
           cat evaluation_patch_error.log
           exit "$STATUS"
