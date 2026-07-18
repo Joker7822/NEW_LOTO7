@@ -16,7 +16,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from loto7_evolution_trainer import Draw, evaluate_ticket, load_draws  # noqa: E402
-from merge_evolution_shards import load_prize_rows, prize_amount_for_rank  # noqa: E402
+from scripts.evaluation_core import load_prize_rows, prize_amount_for_rank  # noqa: E402
 from scripts.generation4_core import bounded_strategy_utility, eprocess_from_history  # noqa: E402
 
 Ticket = Tuple[int, ...]
@@ -120,7 +120,7 @@ def write_report(path: Path, payload: Dict[str, object]) -> None:
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def main() -> int:
+def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Update generation 4 shadow history and e-process.")
     parser.add_argument("--csv", default="loto7.csv")
     parser.add_argument("--latest-shadow", default="outputs/generation4/latest_shadow_predictions.json")
@@ -132,7 +132,8 @@ def main() -> int:
     parser.add_argument("--betting-fraction", type=float, default=0.25)
     parser.add_argument("--promotion-threshold", type=float, default=20.0)
     parser.add_argument("--min-evaluated-draws", type=int, default=30)
-    args = parser.parse_args()
+    parser.add_argument("--evaluate-only", action="store_true", help="Evaluate existing rows without appending latest-shadow predictions")
+    args = parser.parse_args(argv)
 
     draws = load_draws(args.csv)
     draws_by_no = {draw.draw_no: draw for draw in draws}
@@ -152,7 +153,7 @@ def main() -> int:
             evaluate_row(row, target, prize_rows.get(draw_no, {}))
 
     latest_path = Path(args.latest_shadow)
-    if latest_path.exists() and latest_path.stat().st_size > 0:
+    if not args.evaluate_only and latest_path.exists() and latest_path.stat().st_size > 0:
         latest = json.loads(latest_path.read_text(encoding="utf-8"))
         draw_no = int(latest.get("prediction_draw_no") or 0)
         strategies = latest.get("strategies", {})
@@ -193,6 +194,7 @@ def main() -> int:
         "history_rows": len(rows),
         "evaluated_rows": sum(1 for row in rows if row.get("status") == "evaluated"),
         "pending_rows": sum(1 for row in rows if row.get("status") != "evaluated"),
+        "update_mode": "evaluate_only" if args.evaluate_only else "evaluate_and_append_latest",
         "eprocess": eprocess,
     }
     summary_path = Path(args.summary)

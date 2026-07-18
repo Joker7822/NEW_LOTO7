@@ -18,7 +18,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from loto7_evolution_trainer import Draw, evaluate_ticket, load_draws, parse_nums
-from holdout_evaluator import load_prize_rows, prize_amount_for_rank
+from scripts.evaluation_core import financial_metrics, load_prize_rows, prize_amount_for_rank
 
 RANK_ORDER = ["1等", "2等", "3等", "4等", "5等", "6等", "外れ", "未抽せん"]
 
@@ -161,10 +161,16 @@ def main() -> int:
                 "draw_label": f"第{draw.draw_no}回",
             })
 
-    total_profit = total_payout - total_cost
-    hit_rate = (winning_rows / evaluated_rows * 100.0) if evaluated_rows else 0.0
-    payout_roi = (total_payout / total_cost * 100.0) if total_cost else 0.0
-    profit_roi = (total_profit / total_cost * 100.0) if total_cost else 0.0
+    metrics = financial_metrics(
+        total_cost=total_cost,
+        total_payout=total_payout,
+        total_tickets=evaluated_rows,
+        winning_tickets=winning_rows,
+    )
+    total_profit = int(metrics["profit"])
+    hit_rate = float(metrics["ticket_hit_rate_percent"])
+    payout_roi = float(metrics["payout_roi_percent"])
+    profit_roi = float(metrics["profit_roi_percent"])
 
     lines = [
         "LOTO7 Prediction History Result Check",

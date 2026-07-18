@@ -42,14 +42,19 @@ if str(REPO_ROOT) not in sys.path:
 
 from loto7_evolution_trainer import Draw, evaluate_ticket, generate_tickets, load_draws  # noqa: E402
 from merge_evolution_shards import (  # noqa: E402
-    PRIZE_RANKS,
-    RANK_ORDER,
     fmt_ticket,
     load_model,
-    load_prize_rows,
     make_role_ensemble_prediction_rows,
-    prize_amount_for_rank,
     select_target_indices,
+)
+from scripts.evaluation_core import (  # noqa: E402
+    EVALUATOR_VERSION,
+    PRIZE_RANKS,
+    RANK_ORDER,
+    file_sha256,
+    finalize_stats as canonical_finalize_stats,
+    load_prize_rows,
+    prize_amount_for_rank,
 )
 
 DETAIL_FIELDS = [
@@ -128,39 +133,12 @@ def update_ticket_stats(stats: Dict[str, object], *, unit_cost: int, payout: int
 
 
 def finalize_stats(stats: Dict[str, object]) -> Dict[str, object]:
-    total_cost = int(stats.get("total_cost", 0))
-    total_payout = int(stats.get("total_payout", 0))
-    total_tickets = int(stats.get("total_tickets", 0))
-    draw_count = int(stats.get("draw_count", 0))
-    ranks = stats.get("rank_counts", {})
-    rank_counts = {rank: int(ranks.get(rank, 0)) for rank in RANK_ORDER} if isinstance(ranks, dict) else empty_rank_counts()
-    grade_hit_count = sum(rank_counts.get(rank, 0) for rank in PRIZE_RANKS)
-    high_grade_hit_count = sum(rank_counts.get(rank, 0) for rank in ["1等", "2等", "3等", "4等"])
-    profit = total_payout - total_cost
-    roi = (total_payout / total_cost) if total_cost else 0.0
-    ticket_hit_rate = (grade_hit_count / total_tickets * 100.0) if total_tickets else 0.0
-    draw_hit_rate = (int(stats.get("draw_hit_count", 0)) / draw_count * 100.0) if draw_count else 0.0
-    out = dict(stats)
-    out.update(
-        {
-            "total_cost": total_cost,
-            "total_payout": total_payout,
-            "profit": profit,
-            "roi": round(roi, 6),
-            "roi_percent": round(roi * 100.0, 3),
-            "ticket_hit_rate_percent": round(ticket_hit_rate, 3),
-            "draw_hit_rate_percent": round(draw_hit_rate, 3),
-            "grade_hit_count": grade_hit_count,
-            "high_grade_hit_count": high_grade_hit_count,
-            "rank_counts": rank_counts,
-        }
-    )
-    return out
+    return canonical_finalize_stats(stats)
 
 
 def compare(role: Dict[str, object], best: Dict[str, object]) -> Dict[str, object]:
-    role_roi = float(role.get("roi_percent", 0.0))
-    best_roi = float(best.get("roi_percent", 0.0))
+    role_roi = float(role.get("profit_roi_percent", role.get("roi_percent", 0.0)))
+    best_roi = float(best.get("profit_roi_percent", best.get("roi_percent", 0.0)))
     role_profit = int(role.get("profit", 0))
     best_profit = int(best.get("profit", 0))
     return {
@@ -374,7 +352,8 @@ def write_report(path: str, summary: Dict[str, object]) -> None:
     lines.append(f"is_ticket_count_valid: {validation.get('is_ticket_count_valid')}")
     lines.append("")
     lines.append("[Role Ensemble]")
-    lines.append(f"roi_percent: {role.get('roi_percent')}")
+    lines.append(f"profit_roi_percent: {role.get('profit_roi_percent')}")
+    lines.append(f"payout_roi_percent: {role.get('payout_roi_percent')}")
     lines.append(f"profit: {role.get('profit')}")
     lines.append(f"grade_hit_count: {role.get('grade_hit_count')}")
     lines.append(f"high_grade_hit_count: {role.get('high_grade_hit_count')}")
@@ -383,7 +362,8 @@ def write_report(path: str, summary: Dict[str, object]) -> None:
     lines.append(f"rank_counts: {json.dumps(role.get('rank_counts', {}), ensure_ascii=False, sort_keys=True)}")
     lines.append("")
     lines.append("[Best Model Top 5]")
-    lines.append(f"roi_percent: {best.get('roi_percent')}")
+    lines.append(f"profit_roi_percent: {best.get('profit_roi_percent')}")
+    lines.append(f"payout_roi_percent: {best.get('payout_roi_percent')}")
     lines.append(f"profit: {best.get('profit')}")
     lines.append(f"grade_hit_count: {best.get('grade_hit_count')}")
     lines.append(f"high_grade_hit_count: {best.get('high_grade_hit_count')}")
@@ -457,6 +437,8 @@ def state_matches(state: Dict[str, object], args: argparse.Namespace, genome_id:
         and int(state.get("unit_cost", -1)) == int(args.unit_cost)
         and int(state.get("holdout_start_draw", -1)) == int(args.holdout_start_draw)
         and int(state.get("min_train_draws", -1)) == int(args.min_train_draws)
+        and state.get("evaluator_version") == EVALUATOR_VERSION
+        and state.get("model_sha256") == file_sha256(args.best_model)
         and int(state.get("target_draws_total", -1)) == len(target_draw_nos)
     )
 
@@ -466,6 +448,7 @@ def load_resume_details(args: argparse.Namespace, genome_id: str, target_draw_no
         return [], set(), [], 0
     state_path = Path(args.state)
     if not state_path.exists() or state_path.stat().st_size <= 0:
+        Path(args.output).unlink(missing_ok=True)
         return [], set(), [], 0
     try:
         state = read_json(args.state)
@@ -473,7 +456,8 @@ def load_resume_details(args: argparse.Namespace, genome_id: str, target_draw_no
         print(f"[WARN] cannot read state; starting fresh: {exc}")
         return [], set(), [], 0
     if not state_matches(state, args, genome_id, target_draw_nos):
-        print("[INFO] role ensemble state does not match current settings; starting fresh")
+        print("[INFO] role ensemble state/model/evaluator fingerprint changed; deleting stale detail CSV")
+        Path(args.output).unlink(missing_ok=True)
         return [], set(), [], 0
     detail_rows = read_detail_csv(args.output)
     deduped, duplicate_removed = dedupe_detail_rows(detail_rows, args.purchase_count)
@@ -520,6 +504,8 @@ def build_summary(
         "csv": args.csv,
         "best_model_path": args.best_model,
         "genome_id": genome_id,
+        "model_sha256": file_sha256(args.best_model),
+        "evaluator_version": EVALUATOR_VERSION,
         "purchase_count": args.purchase_count,
         "unit_cost": args.unit_cost,
         "holdout_start_draw": args.holdout_start_draw,
@@ -563,6 +549,8 @@ def save_state(
         "csv": args.csv,
         "best_model": args.best_model,
         "genome_id": genome_id,
+        "model_sha256": file_sha256(args.best_model),
+        "evaluator_version": EVALUATOR_VERSION,
         "purchase_count": args.purchase_count,
         "unit_cost": args.unit_cost,
         "holdout_start_draw": args.holdout_start_draw,
