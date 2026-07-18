@@ -1,7 +1,7 @@
 LOTO7 Role Strategy Optimizer Report
 ====================================
 
-created_at: 2026-07-18T19:54:43.756216+00:00
+created_at: 2026-07-18T22:07:46.600720+00:00
 reason: optimized_from_role_ensemble_backtest_with_main_best_cap
 source_status: completed
 completed_target_draws: 685 / 685
