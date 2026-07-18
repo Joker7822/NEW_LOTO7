@@ -1,0 +1,180 @@
+name: Evaluator Full Data PR Check
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "holdout_evaluator.py"
+      - "scripts/backtest_role_ensemble.py"
+      - "scripts/check_prediction_history_results.py"
+      - "scripts/evaluation_core.py"
+      - "scripts/update_generation4_shadow_history.py"
+      - "scripts/verify_evaluator_consistency.py"
+      - "scripts/verify_full_evaluator_consistency.py"
+      - "tests/test_evaluation_unification.py"
+      - ".github/workflows/loto7_generation4_run.yml"
+      - ".github/workflows/loto7_validation_tests.yml"
+      - ".github/workflows/evaluator_full_data_pr_check.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: evaluator-full-data-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Compile and run regression tests
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            scripts/evaluation_core.py \
+            scripts/verify_evaluator_consistency.py \
+            scripts/verify_full_evaluator_consistency.py \
+            holdout_evaluator.py \
+            scripts/backtest_role_ensemble.py \
+            scripts/check_prediction_history_results.py \
+            scripts/update_generation4_shadow_history.py \
+            tests/test_evaluation_unification.py
+          python -m unittest \
+            tests.test_evaluation_unification \
+            tests.test_prediction_output_consistency \
+            tests.test_robust_validation_and_portfolio \
+            tests.test_generation4_pipeline \
+            tests.test_strict_adoption_gates -v
+
+      - name: Regenerate all 3425 best-model tickets
+        run: |
+          set -euo pipefail
+          python scripts/verify_full_evaluator_consistency.py \
+            --csv loto7.csv \
+            --model loto7_best_model.json \
+            --holdout outputs/holdout/holdout_result.csv \
+            --output outputs/role_ensemble/evaluator_consistency.json \
+            --purchase-count 5 \
+            --unit-cost 300 \
+            --workers 8
+
+      - name: Clean Role backtest subset consistency
+        run: |
+          set -euo pipefail
+          rm -f /tmp/role_subset.csv /tmp/role_subset.json /tmp/role_subset.txt /tmp/role_subset_state.json /tmp/holdout_subset.csv
+          python scripts/backtest_role_ensemble.py \
+            --csv loto7.csv \
+            --best-model loto7_best_model.json \
+            --holdout-start-draw 2 \
+            --min-train-draws 1 \
+            --purchase-count 5 \
+            --overlap-limit 4 \
+            --max-targets 12 \
+            --output /tmp/role_subset.csv \
+            --summary /tmp/role_subset.json \
+            --report /tmp/role_subset.txt \
+            --state /tmp/role_subset_state.json \
+            --no-resume \
+            --max-runtime-minutes 45 \
+            --safe-exit-minutes 5
+          python - <<'PY'
+          import csv
+          from pathlib import Path
+
+          with Path('/tmp/role_subset.csv').open('r', encoding='utf-8-sig', newline='') as stream:
+              draw_nos = {int(row['target_draw_no']) for row in csv.DictReader(stream) if row['system'] == 'best_model'}
+          with Path('outputs/holdout/holdout_result.csv').open('r', encoding='utf-8-sig', newline='') as stream:
+              reader = csv.DictReader(stream)
+              fields = reader.fieldnames
+              rows = [row for row in reader if int(row['draw_no']) in draw_nos]
+          with Path('/tmp/holdout_subset.csv').open('w', encoding='utf-8', newline='') as stream:
+              writer = csv.DictWriter(stream, fieldnames=fields)
+              writer.writeheader()
+              writer.writerows(rows)
+          print(f'subset draws={len(draw_nos)} holdout rows={len(rows)}')
+          PY
+          python scripts/verify_evaluator_consistency.py \
+            --holdout /tmp/holdout_subset.csv \
+            --role /tmp/role_subset.csv \
+            --output outputs/role_ensemble/evaluator_consistency_subset.json \
+            --unit-cost 300
+
+      - name: Verify rejection-safe live refresh
+        run: |
+          set -euo pipefail
+          cp -f outputs/generation4/shadow_history.csv /tmp/shadow_before.csv
+          python scripts/check_prediction_history_results.py \
+            --history outputs/evolution_prediction_history.csv \
+            --csv loto7.csv \
+            --output outputs/evolution_prediction_history_result.txt
+          python scripts/update_generation4_shadow_history.py \
+            --csv loto7.csv \
+            --latest-shadow outputs/generation4/latest_shadow_predictions.json \
+            --history outputs/generation4/shadow_history.csv \
+            --summary outputs/generation4/champion_challenger_summary.json \
+            --report outputs/generation4/champion_challenger_report.txt \
+            --challenger generation4 \
+            --champion beam_baseline \
+            --promotion-threshold 20 \
+            --min-evaluated-draws 30 \
+            --evaluate-only
+          python - <<'PY'
+          import csv
+          import json
+          from pathlib import Path
+
+          def keys(path):
+              with Path(path).open('r', encoding='utf-8-sig', newline='') as stream:
+                  return {(row.get('prediction_draw_no', ''), row.get('strategy', '')) for row in csv.DictReader(stream)}
+
+          before = keys('/tmp/shadow_before.csv')
+          after = keys('outputs/generation4/shadow_history.csv')
+          summary = json.loads(Path('outputs/generation4/champion_challenger_summary.json').read_text(encoding='utf-8'))
+          assert before == after, 'evaluate-only must not append shadow predictions'
+          assert summary.get('update_mode') == 'evaluate_only'
+          print(json.dumps({
+              'before_row_keys': len(before),
+              'after_row_keys': len(after),
+              'update_mode': summary.get('update_mode'),
+              'evaluated_rows': summary.get('evaluated_rows'),
+              'pending_rows': summary.get('pending_rows'),
+          }, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Validate production workflow ordering and YAML
+        run: |
+          set -euo pipefail
+          ruby -e 'require "yaml"; YAML.load_file(".github/workflows/loto7_generation4_run.yml"); YAML.load_file(".github/workflows/loto7_validation_tests.yml"); puts "workflow YAML valid"'
+          python - <<'PY'
+          from pathlib import Path
+          text = Path('.github/workflows/loto7_generation4_run.yml').read_text(encoding='utf-8')
+          assert text.index('Refresh existing production results before adoption decision') < text.index('Build Generation 4 prediction through strict adoption gates')
+          for marker in (
+              'outputs/evolution_prediction_history_result.txt',
+              'outputs/generation4/shadow_history.csv',
+              'outputs/generation4/champion_challenger_summary.json',
+              'outputs/generation4/champion_challenger_report.txt',
+              'Record rejected LOTO7 Generation 4 adoption and refresh live results [skip ci]',
+          ):
+              assert marker in text, marker
+          print('production rejection path ordering and retained files are valid')
+          PY
+
+      - name: Upload validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluator-full-data-pr-check
+          path: |
+            outputs/role_ensemble/evaluator_consistency*.json
+            outputs/evolution_prediction_history_result.txt
+            outputs/generation4/champion_challenger_summary.json
+            outputs/generation4/champion_challenger_report.txt
+          if-no-files-found: error
