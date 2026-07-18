@@ -36,16 +36,22 @@ jobs:
         id: apply_patch
         run: |
           set +e
+          if [ -f scripts/evaluation_core.py ]; then
+            echo "Evaluator patch already applied"
+            rm -f evaluation_patch_error.log
+            exit 0
+          fi
           python -c 'from pathlib import Path; p=Path("scripts/apply_evaluation_unification_patch.py"); s=p.read_text(encoding="utf-8"); s=s.replace("if count != 1:\n        raise RuntimeError(f\"{path}: expected one exact match, found {count}: {old[:100]!r}\")", "if count < 1:\n        raise RuntimeError(f\"{path}: expected at least one exact match, found {count}: {old[:100]!r}\")", 1); exec(compile(s, str(p), "exec"), {"__file__": str(p), "__name__": "__main__"})' > evaluation_patch_error.log 2>&1
           STATUS=$?
           cat evaluation_patch_error.log
           exit "$STATUS"
 
       - name: Save patch failure diagnostics
-        if: ${{ failure() && github.event_name == 'push' }}
+        if: ${{ failure() }}
         run: |
           set -euo pipefail
           git add -f evaluation_patch_error.log
+          if git diff --cached --quiet; then exit 0; fi
           git commit -m "Record evaluator patch failure diagnostics [skip ci]"
           git push origin HEAD:fix/unify-evaluation-live-results
 
@@ -77,7 +83,6 @@ jobs:
           ruby -e 'require "yaml"; YAML.load_file(".github/workflows/loto7_evolution.yml"); YAML.load_file(".github/workflows/loto7_generation4_run.yml"); YAML.load_file(".github/workflows/loto7_validation_tests.yml"); puts "workflow YAML valid"'
 
       - name: Commit patched implementation
-        if: ${{ github.event_name == 'push' }}
         run: |
           set -euo pipefail
           rm -f evaluation_patch_error.log
