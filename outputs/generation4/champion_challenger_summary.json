@@ -1,20 +1,21 @@
 {
-  "created_at": "2026-07-17T01:18:48.221778+00:00",
+  "created_at": "2026-07-18T08:25:03.712303+00:00",
   "eprocess": {
     "betting_fraction": 0.25,
     "challenger": "generation4",
     "champion": "beam_baseline",
     "decision": "continue",
-    "e_value": 1.0,
-    "evaluated_draws": 0,
-    "mean_utility_difference": 0.0,
+    "e_value": 0.973857143,
+    "evaluated_draws": 1,
+    "mean_utility_difference": -0.104571429,
     "min_evaluated_draws": 30,
     "promotion_threshold": 20.0,
-    "reverse_e_value": 1.0
+    "reverse_e_value": 1.026142857
   },
-  "evaluated_rows": 0,
+  "evaluated_rows": 6,
   "history_path": "outputs/generation4/shadow_history.csv",
   "history_rows": 6,
   "kind": "loto7_generation4_champion_challenger",
-  "pending_rows": 6
+  "pending_rows": 0,
+  "update_mode": "evaluate_only"
 }
