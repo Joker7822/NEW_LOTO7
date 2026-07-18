@@ -1,7 +1,7 @@
 LOTO7 Role Ensemble Backtest Report
 ===================================
 
-created_at: 2026-07-17T23:20:33.188083+00:00
+created_at: 2026-07-18T01:36:51.314484+00:00
 status: completed
 model: loto7_best_model.json
 genome_id: g228_0228_2057
@@ -16,7 +16,7 @@ min_train_draws: 1
 expected_tickets_per_system: 3425
 role_ensemble_tickets: 3425
 best_model_tickets: 3425
-duplicates_removed: 4940
+duplicates_removed: 0
 is_ticket_count_valid: True
 
 [Role Ensemble]
