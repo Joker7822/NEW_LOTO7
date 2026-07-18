@@ -8,7 +8,7 @@
     "model_id": "g036_0036_2241",
     "path": "outputs/super_recent/super_recent_guarded_candidate_model.json"
   },
-  "created_at": "2026-07-18T08:21:48.140382+00:00",
+  "created_at": "2026-07-18T13:44:33.123143+00:00",
   "csv": "loto7.csv",
   "decision": {
     "accepted": true,
