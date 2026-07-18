@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Regenerate every holdout best-model ticket and compare it exactly.
+"""Regenerate holdout best-model tickets and compare them exactly.
 
-This is intentionally heavier than the normal regression suite. It verifies that
-current ticket generation, rank evaluation and prize calculation reproduce every
-row in a sealed holdout detail CSV.
+With ``--sample-count 0`` this audits every holdout draw. A positive sample count
+selects evenly spaced draws across the entire holdout period, which is suitable
+for routine CI while preserving the full audit command for manual verification.
 """
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ import os
 import sys
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
@@ -70,6 +70,19 @@ def _normalized_ticket(value: object) -> str:
     )
 
 
+def _stratified_indices(indices: Sequence[int], sample_count: int) -> List[int]:
+    ordered = list(indices)
+    if sample_count <= 0 or sample_count >= len(ordered):
+        return ordered
+    if sample_count == 1:
+        return [ordered[-1]]
+    positions = {
+        round(offset * (len(ordered) - 1) / (sample_count - 1))
+        for offset in range(sample_count)
+    }
+    return [ordered[position] for position in sorted(positions)]
+
+
 def verify(
     *,
     csv_path: str,
@@ -78,9 +91,20 @@ def verify(
     purchase_count: int,
     unit_cost: int,
     workers: int,
+    sample_count: int = 0,
 ) -> Dict[str, object]:
     with Path(holdout_path).open("r", encoding="utf-8-sig", newline="") as stream:
-        holdout_rows = list(csv.DictReader(stream))
+        all_holdout_rows = list(csv.DictReader(stream))
+    draws = load_draws(csv_path)
+    available_draw_nos = {int(row["draw_no"]) for row in all_holdout_rows}
+    all_target_indices = [
+        index for index, draw in enumerate(draws) if draw.draw_no in available_draw_nos
+    ]
+    target_indices = _stratified_indices(all_target_indices, sample_count)
+    selected_draw_nos = {draws[index].draw_no for index in target_indices}
+    holdout_rows = [
+        row for row in all_holdout_rows if int(row["draw_no"]) in selected_draw_nos
+    ]
     expected: Dict[Key, Dict[str, object]] = {
         (int(row["draw_no"]), int(row["combo_index"])): {
             "ticket": _normalized_ticket(row.get("ticket")),
@@ -91,9 +115,6 @@ def verify(
         }
         for row in holdout_rows
     }
-    draws = load_draws(csv_path)
-    wanted_draws = {draw_no for draw_no, _ in expected}
-    target_indices = [index for index, draw in enumerate(draws) if draw.draw_no in wanted_draws]
     actual: Dict[Key, Dict[str, object]] = {}
     with ProcessPoolExecutor(
         max_workers=workers,
@@ -135,10 +156,13 @@ def verify(
     )
     expected_ticket_count = len(target_indices) * purchase_count
     return {
-        "kind": "loto7_full_evaluator_consistency",
+        "kind": "loto7_evaluator_consistency_audit",
         "evaluator_version": EVALUATOR_VERSION,
         "workers": workers,
+        "available_target_draws": len(all_target_indices),
+        "sample_count_requested": sample_count,
         "target_draws": len(target_indices),
+        "sampled_draw_nos": sorted(selected_draw_nos),
         "expected_tickets": len(expected),
         "regenerated_tickets": len(actual),
         "calculated_expected_ticket_count": expected_ticket_count,
@@ -149,6 +173,7 @@ def verify(
         "extra_samples": extra[:20],
         "mismatch_samples": mismatches[:20],
         "metrics": metrics,
+        "full_history_audit": len(target_indices) == len(all_target_indices),
         "passed": (
             not missing
             and not extra
@@ -168,9 +193,20 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--purchase-count", type=int, default=5)
     parser.add_argument("--unit-cost", type=int, default=300)
     parser.add_argument("--workers", type=int, default=max(1, min(8, os.cpu_count() or 1)))
+    parser.add_argument(
+        "--sample-count",
+        type=int,
+        default=0,
+        help="0 audits all holdout draws; a positive value selects evenly spaced draws",
+    )
     args = parser.parse_args(argv)
-    if args.purchase_count <= 0 or args.unit_cost <= 0 or args.workers <= 0:
-        raise SystemExit("purchase-count, unit-cost and workers must be positive")
+    if (
+        args.purchase_count <= 0
+        or args.unit_cost <= 0
+        or args.workers <= 0
+        or args.sample_count < 0
+    ):
+        raise SystemExit("purchase-count, unit-cost and workers must be positive; sample-count must be nonnegative")
     payload = verify(
         csv_path=args.csv,
         model_path=args.model,
@@ -178,6 +214,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         purchase_count=args.purchase_count,
         unit_cost=args.unit_cost,
         workers=args.workers,
+        sample_count=args.sample_count,
     )
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
