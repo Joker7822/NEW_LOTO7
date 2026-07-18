@@ -1,0 +1,47 @@
+name: Apply Evaluation Workflow Patch
+
+on:
+  push:
+    branches:
+      - fix/unify-evaluation-live-results
+    paths:
+      - ".github/workflows/apply_evaluation_workflow_patch.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: fix/unify-evaluation-live-results
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Apply workflow changes
+        run: |
+          set -euo pipefail
+          python scripts/apply_evaluation_workflow_patch.py
+          ruby -e 'require "yaml"; YAML.load_file(".github/workflows/loto7_evolution.yml"); YAML.load_file(".github/workflows/loto7_generation4_run.yml"); YAML.load_file(".github/workflows/loto7_validation_tests.yml"); puts "workflow YAML valid"'
+      - name: Commit workflow changes
+        run: |
+          set -euo pipefail
+          git add \
+            .github/workflows/loto7_evolution.yml \
+            .github/workflows/loto7_generation4_run.yml \
+            .github/workflows/loto7_validation_tests.yml
+          git commit -m "Run live evaluation even when Generation 4 adoption is rejected"
+          for ATTEMPT in 1 2 3 4; do
+            git pull --rebase origin fix/unify-evaluation-live-results
+            if git push origin HEAD:fix/unify-evaluation-live-results; then exit 0; fi
+            sleep $((ATTEMPT * 5))
+          done
+          exit 1
