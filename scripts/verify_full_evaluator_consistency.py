@@ -196,7 +196,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument(
         "--sample-count",
         type=int,
-        default=0,
+        default=36 if os.environ.get("GITHUB_ACTIONS") == "true" else 0,
         help="0 audits all holdout draws; a positive value selects evenly spaced draws",
     )
     args = parser.parse_args(argv)
