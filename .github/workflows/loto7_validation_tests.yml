@@ -18,7 +18,12 @@ on:
       - "scripts/build_generation4_prediction_strict.py"
       - "scripts/strict_adoption_gates.py"
       - "scripts/null_strategy_league.py"
+      - "scripts/evaluation_core.py"
+      - "scripts/verify_evaluator_consistency.py"
       - "scripts/update_generation4_shadow_history.py"
+      - "scripts/check_prediction_history_results.py"
+      - "holdout_evaluator.py"
+      - "scripts/backtest_role_ensemble.py"
       - "scripts/seal_generation4_prediction.py"
       - "scripts/finalize_generation4_report.py"
       - "scripts/check_repository_architecture.py"
@@ -27,6 +32,7 @@ on:
       - "tests/test_robust_validation_and_portfolio.py"
       - "tests/test_generation4_pipeline.py"
       - "tests/test_strict_adoption_gates.py"
+      - "tests/test_evaluation_unification.py"
       - ".github/workflows/loto7_generation4_run.yml"
       - ".github/workflows/loto7_nested_walk_forward.yml"
       - ".github/workflows/loto7_validation_tests.yml"
@@ -63,14 +69,20 @@ jobs:
             scripts/build_generation4_prediction_strict.py \
             scripts/strict_adoption_gates.py \
             scripts/null_strategy_league.py \
+            scripts/evaluation_core.py \
+            scripts/verify_evaluator_consistency.py \
             scripts/update_generation4_shadow_history.py \
+            scripts/check_prediction_history_results.py \
+            holdout_evaluator.py \
+            scripts/backtest_role_ensemble.py \
             scripts/seal_generation4_prediction.py \
             scripts/finalize_generation4_report.py \
             scripts/check_repository_architecture.py \
             tests/test_prediction_output_consistency.py \
             tests/test_robust_validation_and_portfolio.py \
             tests/test_generation4_pipeline.py \
-            tests/test_strict_adoption_gates.py
+            tests/test_strict_adoption_gates.py \
+            tests/test_evaluation_unification.py
       - name: Run focused validation tests
         run: |
           set -euo pipefail
@@ -79,4 +91,5 @@ jobs:
             tests.test_prediction_output_consistency \
             tests.test_robust_validation_and_portfolio \
             tests.test_generation4_pipeline \
-            tests.test_strict_adoption_gates -v
+            tests.test_strict_adoption_gates \
+            tests.test_evaluation_unification -v
