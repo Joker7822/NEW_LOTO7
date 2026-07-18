@@ -86,10 +86,17 @@ jobs:
         run: |
           set -euo pipefail
           rm -f evaluation_patch_error.log
-          git add -A
+          git add \
+            scripts/evaluation_core.py \
+            scripts/verify_evaluator_consistency.py \
+            holdout_evaluator.py \
+            scripts/backtest_role_ensemble.py \
+            scripts/check_prediction_history_results.py \
+            scripts/update_generation4_shadow_history.py \
+            tests/test_evaluation_unification.py
           if git diff --cached --quiet; then
-            echo "No patch changes"
+            echo "No evaluator implementation changes"
             exit 0
           fi
-          git commit -m "Unify LOTO7 evaluators and refresh live results on rejection"
+          git commit -m "Unify LOTO7 evaluator implementation"
           git push origin HEAD:fix/unify-evaluation-live-results
