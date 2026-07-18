@@ -1,14 +1,14 @@
 LOTO7 Adaptive Model Safety Guard
 =================================
 
-created_at: 2026-07-17T17:44:10.315439+00:00
+created_at: 2026-07-17T23:28:04.028836+00:00
 focus_start_year: 2020
 accepted: True
 restored_baseline: False
 independent_from_reference: None
 
 [Reasons]
-- nested validation ok: positive=2 median=0.000pt worst=-4.231pt
+- nested validation ok: positive=3 median=2.949pt worst=0.000pt
 - same model id detected; all safety checks still executed
 - focus window ok: roi=91.751% delta=0.000pt profit_delta=0
 - high-grade/max-main ok: high_delta=0 max_main_delta=0
@@ -299,7 +299,7 @@ independent_from_reference: None
 
 [Nested Walk Forward]
 {
-  "created_at": "2026-07-17T10:46:34.164217+00:00",
+  "created_at": "2026-07-17T15:49:18.324981+00:00",
   "fold_count": 3,
   "folds": [
     {
@@ -350,25 +350,25 @@ independent_from_reference: None
         }
       },
       "candidate_metrics": {
-        "bootstrap_roi_percent_p05": 3.712,
-        "bootstrap_roi_percent_p50": 12.692,
-        "bootstrap_roi_percent_p95": 24.372,
+        "bootstrap_roi_percent_p05": 9.865,
+        "bootstrap_roi_percent_p50": 17.051,
+        "bootstrap_roi_percent_p95": 26.673,
         "cvar20_profit_per_draw": -1500.0,
-        "genome_id": "g015_0015_3333",
-        "grade_hit_count": 10,
+        "genome_id": "g070_0070_3390",
+        "grade_hit_count": 13,
         "high_grade_hit_count": 0,
-        "largest_draw_payout": 3500,
-        "largest_two_draw_payout": 6500,
+        "largest_draw_payout": 2700,
+        "largest_two_draw_payout": 4100,
         "max_bonus_match": 2,
         "max_main_match": 4,
-        "median_year_roi_percent": 13.333,
+        "median_year_roi_percent": 17.564,
         "missing_prize_draw_count": 0,
         "missing_prize_draws": [],
         "path": "outputs/validation/recent/folds/fold_1_2023/best_model.json",
-        "payout_hhi": 0.246857,
+        "payout_hhi": 0.1048,
         "positive_year_count": 0,
-        "profit": -67600,
-        "profit_roi_percent": -86.667,
+        "profit": -64300,
+        "profit_roi_percent": -82.436,
         "purchase_count": 5,
         "rank_counts": {
           "1等": 0,
@@ -376,35 +376,35 @@ independent_from_reference: None
           "3等": 0,
           "4等": 0,
           "5等": 3,
-          "6等": 7,
-          "外れ": 250
+          "6等": 10,
+          "外れ": 247
         },
-        "roi": 0.133333,
-        "roi_excluding_top1_percent": 8.846,
-        "roi_excluding_top2_percent": 5.0,
-        "roi_percent": 13.333,
+        "roi": 0.175641,
+        "roi_excluding_top1_percent": 14.103,
+        "roi_excluding_top2_percent": 12.308,
+        "roi_percent": 17.564,
         "target_draws": 52,
-        "top1_payout_share": 0.336538,
+        "top1_payout_share": 0.19708,
         "total_cost": 78000,
-        "total_payout": 10400,
+        "total_payout": 13700,
         "total_tickets": 260,
         "unit_cost": 300,
-        "worst_year_roi_percent": 13.333,
+        "worst_year_roi_percent": 17.564,
         "year_count": 1,
         "yearly_roi_percent": {
-          "2023": 13.333
+          "2023": 17.564
         }
       },
       "evaluation_year": 2023,
-      "fold_model_id": "g015_0015_3333",
+      "fold_model_id": "g070_0070_3390",
       "fold_model_path": "outputs/validation/recent/folds/fold_1_2023/best_model.json",
       "label": "train_through_2021_select_2022_evaluate_2023",
       "leakage_check": true,
-      "roi_delta_percent": -4.231,
+      "roi_delta_percent": 0.0,
       "selection_csv_max_year": 2022,
       "selection_csv_rows": 503,
       "selection_year": 2022,
-      "top1_removed_roi_delta_percent": -5.257,
+      "top1_removed_roi_delta_percent": 0.0,
       "train_end_year": 2021
     },
     {
@@ -455,25 +455,25 @@ independent_from_reference: None
         }
       },
       "candidate_metrics": {
-        "bootstrap_roi_percent_p05": 2.519,
-        "bootstrap_roi_percent_p50": 7.821,
-        "bootstrap_roi_percent_p95": 15.91,
+        "bootstrap_roi_percent_p05": 4.737,
+        "bootstrap_roi_percent_p50": 10.769,
+        "bootstrap_roi_percent_p95": 17.442,
         "cvar20_profit_per_draw": -1500.0,
-        "genome_id": "g070_0070_3390",
-        "grade_hit_count": 5,
+        "genome_id": "g011_0011_5601",
+        "grade_hit_count": 7,
         "high_grade_hit_count": 0,
-        "largest_draw_payout": 3000,
-        "largest_two_draw_payout": 4300,
+        "largest_draw_payout": 1500,
+        "largest_two_draw_payout": 3000,
         "max_bonus_match": 2,
         "max_main_match": 4,
-        "median_year_roi_percent": 8.205,
+        "median_year_roi_percent": 11.154,
         "missing_prize_draw_count": 0,
         "missing_prize_draws": [],
         "path": "outputs/validation/recent/folds/fold_2_2024/best_model.json",
-        "payout_hhi": 0.314941,
+        "payout_hhi": 0.146519,
         "positive_year_count": 0,
-        "profit": -71600,
-        "profit_roi_percent": -91.795,
+        "profit": -69300,
+        "profit_roi_percent": -88.846,
         "purchase_count": 5,
         "rank_counts": {
           "1等": 0,
@@ -481,35 +481,35 @@ independent_from_reference: None
           "3等": 0,
           "4等": 0,
           "5等": 3,
-          "6等": 2,
-          "外れ": 255
+          "6等": 4,
+          "外れ": 253
         },
-        "roi": 0.082051,
-        "roi_excluding_top1_percent": 4.359,
-        "roi_excluding_top2_percent": 2.692,
-        "roi_percent": 8.205,
+        "roi": 0.111538,
+        "roi_excluding_top1_percent": 9.231,
+        "roi_excluding_top2_percent": 7.308,
+        "roi_percent": 11.154,
         "target_draws": 52,
-        "top1_payout_share": 0.46875,
+        "top1_payout_share": 0.172414,
         "total_cost": 78000,
-        "total_payout": 6400,
+        "total_payout": 8700,
         "total_tickets": 260,
         "unit_cost": 300,
-        "worst_year_roi_percent": 8.205,
+        "worst_year_roi_percent": 11.154,
         "year_count": 1,
         "yearly_roi_percent": {
-          "2024": 8.205
+          "2024": 11.154
         }
       },
       "evaluation_year": 2024,
-      "fold_model_id": "g070_0070_3390",
+      "fold_model_id": "g011_0011_5601",
       "fold_model_path": "outputs/validation/recent/folds/fold_2_2024/best_model.json",
       "label": "train_through_2022_select_2023_evaluate_2024",
       "leakage_check": true,
-      "roi_delta_percent": 0.0,
+      "roi_delta_percent": 2.949,
       "selection_csv_max_year": 2023,
       "selection_csv_rows": 555,
       "selection_year": 2023,
-      "top1_removed_roi_delta_percent": 0.0,
+      "top1_removed_roi_delta_percent": 4.872,
       "train_end_year": 2022
     },
     {
@@ -560,79 +560,79 @@ independent_from_reference: None
         }
       },
       "candidate_metrics": {
-        "bootstrap_roi_percent_p05": 7.19,
-        "bootstrap_roi_percent_p50": 15.359,
-        "bootstrap_roi_percent_p95": 25.503,
+        "bootstrap_roi_percent_p05": 8.889,
+        "bootstrap_roi_percent_p50": 18.17,
+        "bootstrap_roi_percent_p95": 31.516,
         "cvar20_profit_per_draw": -1500.0,
-        "genome_id": "g023_0023_8189",
-        "grade_hit_count": 11,
+        "genome_id": "g024_0024_1057",
+        "grade_hit_count": 14,
         "high_grade_hit_count": 0,
-        "largest_draw_payout": 2700,
-        "largest_two_draw_payout": 4700,
+        "largest_draw_payout": 2900,
+        "largest_two_draw_payout": 5700,
         "max_bonus_match": 2,
         "max_main_match": 4,
-        "median_year_roi_percent": 15.033,
+        "median_year_roi_percent": 18.431,
         "missing_prize_draw_count": 0,
         "missing_prize_draws": [],
         "path": "outputs/validation/recent/folds/fold_3_2025/best_model.json",
-        "payout_hhi": 0.146163,
+        "payout_hhi": 0.162718,
         "positive_year_count": 0,
-        "profit": -65000,
-        "profit_roi_percent": -84.967,
+        "profit": -62400,
+        "profit_roi_percent": -81.569,
         "purchase_count": 5,
         "rank_counts": {
           "1等": 0,
           "2等": 0,
           "3等": 0,
           "4等": 0,
-          "5等": 5,
-          "6等": 6,
-          "外れ": 244
+          "5等": 4,
+          "6等": 10,
+          "外れ": 241
         },
-        "roi": 0.150327,
-        "roi_excluding_top1_percent": 11.503,
-        "roi_excluding_top2_percent": 8.889,
-        "roi_percent": 15.033,
+        "roi": 0.184314,
+        "roi_excluding_top1_percent": 14.641,
+        "roi_excluding_top2_percent": 10.98,
+        "roi_percent": 18.431,
         "target_draws": 51,
-        "top1_payout_share": 0.234783,
+        "top1_payout_share": 0.205674,
         "total_cost": 76500,
-        "total_payout": 11500,
+        "total_payout": 14100,
         "total_tickets": 255,
         "unit_cost": 300,
-        "worst_year_roi_percent": 15.033,
+        "worst_year_roi_percent": 18.431,
         "year_count": 1,
         "yearly_roi_percent": {
-          "2025": 15.033
+          "2025": 18.431
         }
       },
       "evaluation_year": 2025,
-      "fold_model_id": "g023_0023_8189",
+      "fold_model_id": "g024_0024_1057",
       "fold_model_path": "outputs/validation/recent/folds/fold_3_2025/best_model.json",
       "label": "train_through_2023_select_2024_evaluate_2025",
       "leakage_check": true,
-      "roi_delta_percent": 0.785,
+      "roi_delta_percent": 4.183,
       "selection_csv_max_year": 2024,
       "selection_csv_rows": 607,
       "selection_year": 2024,
-      "top1_removed_roi_delta_percent": 2.483,
+      "top1_removed_roi_delta_percent": 5.621,
       "train_end_year": 2023
     }
   ],
   "future_leakage_detected": false,
   "kind": "loto7_true_nested_walk_forward",
-  "median_roi_delta_percent": 0.0,
-  "median_top1_removed_roi_delta_percent": 0.0,
+  "median_roi_delta_percent": 2.949,
+  "median_top1_removed_roi_delta_percent": 4.872,
   "notes": [
     "Every fold selection CSV ends before its sealed evaluation year.",
     "Fold evolution is performed independently and cannot read evaluation-year rows.",
     "Historical validation does not guarantee future winnings."
   ],
-  "positive_roi_delta_folds": 2,
-  "positive_top1_removed_delta_folds": 2,
+  "positive_roi_delta_folds": 3,
+  "positive_top1_removed_delta_folds": 3,
   "reference_model_id": "g070_0070_3390",
   "reference_model_path": "outputs/recent_era/recent_era_guarded_candidate_model.json",
-  "worst_roi_delta_percent": -4.231,
-  "worst_top1_removed_roi_delta_percent": -5.257
+  "worst_roi_delta_percent": 0.0,
+  "worst_top1_removed_roi_delta_percent": 0.0
 }
 
 注意: 過去検証上の安全ガードであり、将来の当せんや利益を保証しません。
