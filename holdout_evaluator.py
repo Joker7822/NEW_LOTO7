@@ -31,9 +31,18 @@ from loto7_evolution_trainer import (
     load_best_model,
     load_draws,
 )
-
-RANK_ORDER = ["1等", "2等", "3等", "4等", "5等", "6等", "外れ"]
-PRIZE_RANKS = ["1等", "2等", "3等", "4等", "5等", "6等"]
+from scripts.evaluation_core import (
+    EVALUATOR_VERSION,
+    PRIZE_RANKS,
+    RANK_ORDER,
+    draw_no_int,
+    file_sha256,
+    has_any_prize_amount,
+    load_prize_rows,
+    payout_roi as canonical_payout_roi,
+    prize_amount_for_rank,
+    profit_roi as canonical_profit_roi,
+)
 FIELDNAMES = [
     "draw_no", "date", "year", "combo_index", "ticket", "actual_main", "actual_bonus",
     "main_match", "bonus_match", "rank", "purchase_cost", "prize_amount", "profit", "prize_data_missing",
@@ -42,42 +51,6 @@ FIELDNAMES = [
 
 def utc_now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat()
-
-
-def draw_no_int(text: object) -> Optional[int]:
-    m = re.search(r"\d+", str(text or ""))
-    return int(m.group(0)) if m else None
-
-
-def parse_money_yen(text: object) -> int:
-    raw = str(text or "").strip()
-    if not raw or raw == "該当なし":
-        return 0
-    m = re.search(r"([0-9,]+)", raw)
-    if not m:
-        return 0
-    return int(m.group(1).replace(",", ""))
-
-
-def load_prize_rows(csv_path: str) -> Dict[int, Dict[str, str]]:
-    out: Dict[int, Dict[str, str]] = {}
-    with Path(csv_path).open("r", encoding="utf-8-sig", newline="") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            no = draw_no_int(row.get("回別"))
-            if no is not None:
-                out[no] = {k: str(v or "").strip() for k, v in row.items()}
-    return out
-
-
-def prize_amount_for_rank(row: Dict[str, str], rank: str) -> int:
-    if rank == "外れ":
-        return 0
-    return parse_money_yen(row.get(f"{rank}当選金額", ""))
-
-
-def has_any_prize_amount(row: Dict[str, str]) -> bool:
-    return any(str(row.get(f"{rank}当選金額", "")).strip() for rank in PRIZE_RANKS)
 
 
 def fmt_ticket(ticket: Sequence[int]) -> str:
@@ -103,17 +76,13 @@ def pct(numerator: int, denominator: int) -> float:
 
 
 def roi_from_profit(total_cost: int, total_payout: int) -> float:
-    """収支ベースROI: (払戻額 - 購入額) / 購入額。"""
-    if total_cost <= 0:
-        return 0.0
-    return (total_payout - total_cost) / total_cost
+    """Canonical profit ROI: (payout - cost) / cost."""
+    return canonical_profit_roi(total_cost, total_payout)
 
 
 def roi_from_payout(total_cost: int, total_payout: int) -> float:
-    """従来の回収率: 払戻額 / 購入額。互換確認用に別名で保持する。"""
-    if total_cost <= 0:
-        return 0.0
-    return total_payout / total_cost
+    """Canonical payout ratio: payout / cost."""
+    return canonical_payout_roi(total_cost, total_payout)
 
 
 def empty_year_stats() -> Dict[str, object]:
@@ -185,6 +154,8 @@ def state_key(args: argparse.Namespace, *, model_id: str, model_score: float) ->
         "purchase_count": args.purchase_count,
         "unit_cost": args.unit_cost,
         "min_train_draws": args.min_train_draws,
+        "evaluator_version": EVALUATOR_VERSION,
+        "model_sha256": file_sha256(args.best_model),
         "output": args.output,
     }
 
@@ -383,6 +354,8 @@ def build_summary(args: argparse.Namespace, *, genome, output_csv: Path, summary
         "best_model": args.best_model,
         "model_id": genome.id,
         "model_score": genome.score,
+        "model_sha256": file_sha256(args.best_model),
+        "evaluator_version": EVALUATOR_VERSION,
         "holdout_start_draw": args.holdout_start_draw,
         "holdout_end_draw": args.holdout_end_draw,
         "target_draws": stats["target_draws"],
