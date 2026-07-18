@@ -692,15 +692,17 @@
   "state_key": {
     "best_model": "loto7_best_model.json",
     "csv": "loto7.csv",
+    "evaluator_version": "loto7-evaluator-2026.07.18-v1",
     "holdout_end_draw": null,
     "holdout_start_draw": 2,
     "min_train_draws": 1,
     "model_id": "g228_0228_2057",
     "model_score": 71271.89,
+    "model_sha256": "afd5c5193eaf3c414861e9849cb63fd1cb2f6809e1a5c45bf0864fac1e6ae529",
     "output": "outputs/holdout/holdout_result.csv",
     "purchase_count": 5,
     "unit_cost": 300
   },
   "total_targets": 685,
-  "updated_at": "2026-07-18T07:33:08.687870+00:00"
+  "updated_at": "2026-07-18T10:27:09.510584+00:00"
 }
