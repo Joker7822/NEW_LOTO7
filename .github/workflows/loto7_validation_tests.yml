@@ -33,6 +33,7 @@ on:
       - "tests/test_generation4_pipeline.py"
       - "tests/test_strict_adoption_gates.py"
       - "tests/test_evaluation_unification.py"
+      - "tests/test_nested_promotion_gates.py"
       - ".github/workflows/loto7_generation4_run.yml"
       - ".github/workflows/loto7_nested_walk_forward.yml"
       - ".github/workflows/loto7_validation_tests.yml"
@@ -82,7 +83,8 @@ jobs:
             tests/test_robust_validation_and_portfolio.py \
             tests/test_generation4_pipeline.py \
             tests/test_strict_adoption_gates.py \
-            tests/test_evaluation_unification.py
+            tests/test_evaluation_unification.py \
+            tests/test_nested_promotion_gates.py
       - name: Run focused validation tests
         run: |
           set -euo pipefail
@@ -92,4 +94,5 @@ jobs:
             tests.test_robust_validation_and_portfolio \
             tests.test_generation4_pipeline \
             tests.test_strict_adoption_gates \
-            tests.test_evaluation_unification -v
+            tests.test_evaluation_unification \
+            tests.test_nested_promotion_gates -v
