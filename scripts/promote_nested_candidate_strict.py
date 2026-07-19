@@ -17,6 +17,8 @@ if str(REPO_ROOT) not in sys.path:
 
 from scripts.strict_adoption_gates import nested_total_roi_gate, read_json, write_json  # noqa: E402
 
+DEFAULT_MIN_NESTED_TOTAL_ROI_DELTA_PERCENT = 0.5
+
 
 def now_iso() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat()
@@ -54,7 +56,11 @@ def main(argv: Optional[List[str]] = None) -> int:
     raw_args = list(sys.argv[1:] if argv is None else argv)
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--min-nested-total-roi-percent", type=float, default=8.0)
-    parser.add_argument("--min-nested-total-roi-delta-percent", type=float, default=0.0)
+    parser.add_argument(
+        "--min-nested-total-roi-delta-percent",
+        type=float,
+        default=DEFAULT_MIN_NESTED_TOTAL_ROI_DELTA_PERCENT,
+    )
     strict, delegated = parser.parse_known_args(raw_args)
 
     baseline_model = option_value(delegated, "--baseline-model")
@@ -94,6 +100,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             "strict_nested_total_roi_gate": gate,
             "decision": {
                 "promoted": False,
+                "copy_performed": False,
                 "reasons": [],
                 "warnings": list(gate.get("failures", [])),
                 "complete_rejection": True,
@@ -106,12 +113,7 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     import scripts.promote_nested_candidate as original  # noqa: E402
 
-    previous_argv = sys.argv
-    try:
-        sys.argv = [str(Path(original.__file__).resolve()), *delegated]
-        result = int(original.main())
-    finally:
-        sys.argv = previous_argv
+    result = int(original.main(delegated))
 
     decision_file = Path(decision_path)
     if decision_file.exists() and decision_file.stat().st_size > 0:
@@ -119,7 +121,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         payload["strict_nested_total_roi_gate"] = gate
         decision = payload.get("decision")
         if isinstance(decision, dict):
-            decision["complete_rejection"] = False
+            promoted = bool(decision.get("promoted"))
+            decision["complete_rejection"] = not promoted
         write_json(decision_path, payload)
     with Path(report_path).open("a", encoding="utf-8") as stream:
         stream.write("\n[Strict Aggregate Nested ROI Gate]\n")
