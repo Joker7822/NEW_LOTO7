@@ -62,7 +62,8 @@ jobs:
             scripts/promote_nested_candidate.py \
             scripts/promote_nested_candidate_strict.py \
             scripts/strict_adoption_gates.py \
-            tests/test_strict_adoption_gates.py
+            tests/test_strict_adoption_gates.py \
+            tests/test_nested_promotion_gates.py
 
       - name: Run Recent Era sealed nested folds
         env:
@@ -94,7 +95,7 @@ jobs:
           cp -f outputs/validation/recent/nested_walk_forward_summary.json outputs/validation/nested_walk_forward_summary.json
           python scripts/promote_nested_candidate_strict.py \
             --min-nested-total-roi-percent 8.0 \
-            --min-nested-total-roi-delta-percent 0.0 \
+            --min-nested-total-roi-delta-percent 0.5 \
             --csv loto7.csv \
             --baseline-model outputs/recent_era/recent_era_best_model.json \
             --candidate-model "$CANDIDATE" \
@@ -104,7 +105,14 @@ jobs:
             --report outputs/validation/recent/promotion_report.txt \
             --focus-start-year 2020 \
             --purchase-count 5 \
-            --unit-cost 300
+            --unit-cost 300 \
+            --min-positive-folds 2 \
+            --min-fold-roi-improvement-percent 0.5 \
+            --min-median-roi-delta-percent 0.5 \
+            --min-median-top1-removed-delta-percent 0.5 \
+            --min-focus-roi-delta-percent 0.5 \
+            --min-top1-removed-delta-percent 0.5 \
+            --max-top1-payout-share 0.50
 
       - name: Run Super Recent sealed nested folds
         env:
@@ -135,7 +143,7 @@ jobs:
             --bootstrap-samples 300
           python scripts/promote_nested_candidate_strict.py \
             --min-nested-total-roi-percent 8.0 \
-            --min-nested-total-roi-delta-percent 0.0 \
+            --min-nested-total-roi-delta-percent 0.5 \
             --csv loto7.csv \
             --baseline-model outputs/super_recent/super_recent_best_model.json \
             --candidate-model "$CANDIDATE" \
@@ -145,7 +153,14 @@ jobs:
             --report outputs/validation/super_recent/promotion_report.txt \
             --focus-start-year 2023 \
             --purchase-count 5 \
-            --unit-cost 300
+            --unit-cost 300 \
+            --min-positive-folds 2 \
+            --min-fold-roi-improvement-percent 0.5 \
+            --min-median-roi-delta-percent 0.5 \
+            --min-median-top1-removed-delta-percent 0.5 \
+            --min-focus-roi-delta-percent 0.5 \
+            --min-top1-removed-delta-percent 0.5 \
+            --max-top1-payout-share 0.50
 
       - name: Run validation tests
         run: |
@@ -153,7 +168,8 @@ jobs:
           python -m unittest \
             tests.test_prediction_output_consistency \
             tests.test_robust_validation_and_portfolio \
-            tests.test_strict_adoption_gates -v
+            tests.test_strict_adoption_gates \
+            tests.test_nested_promotion_gates -v
 
       - name: Commit nested summaries and promoted models
         if: always()
