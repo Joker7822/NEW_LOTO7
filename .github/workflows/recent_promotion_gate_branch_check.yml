@@ -1,15 +1,15 @@
-name: Recent Promotion Gate Branch Check
+name: Recent Promotion Gate PR Check
 
 on:
-  push:
+  pull_request:
     branches:
-      - fix/recent-promotion-gates
+      - main
 
 permissions:
   contents: read
 
 concurrency:
-  group: recent-promotion-gate-branch-check
+  group: recent-promotion-gate-pr-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
