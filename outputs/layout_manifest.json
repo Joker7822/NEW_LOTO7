@@ -23,7 +23,7 @@
     {
       "canonical": "outputs/production/prediction_history_result.txt",
       "category": "production",
-      "copied_files": 1,
+      "copied_files": 0,
       "key": "prediction_history_result",
       "legacy": "outputs/evolution_prediction_history_result.txt",
       "resumable": false,
@@ -103,7 +103,7 @@
     {
       "canonical": "outputs/evidence/validation",
       "category": "evidence",
-      "copied_files": 0,
+      "copied_files": 11,
       "key": "validation_evidence",
       "legacy": "outputs/validation",
       "resumable": true,
@@ -133,7 +133,7 @@
     {
       "canonical": "outputs/diagnostics/generation4",
       "category": "diagnostics",
-      "copied_files": 5,
+      "copied_files": 0,
       "key": "generation4_diagnostics",
       "legacy": "outputs/generation4",
       "resumable": false,
@@ -141,8 +141,8 @@
       "source_exists": true
     }
   ],
-  "copied_files": 6,
-  "created_at": "2026-07-20T10:07:02.242286+00:00",
+  "copied_files": 11,
+  "created_at": "2026-07-20T12:33:23.086312+00:00",
   "kind": "loto7_output_layout_migration",
   "legacy_paths_retained": true,
   "missing_source_count": 0,
