@@ -1,0 +1,83 @@
+{
+  "base_counts": {
+    "contrarian": 0,
+    "high_match": 1,
+    "main_best": 1,
+    "mid_high": 1,
+    "recent120": 2
+  },
+  "base_strategy": "outputs/role_ensemble/role_strategy.json",
+  "created_at": "2026-07-17T00:54:15.652798+00:00",
+  "csv": "loto7.csv",
+  "final_counts": {
+    "contrarian": 0,
+    "high_match": 2,
+    "main_best": 1,
+    "mid_high": 0,
+    "recent120": 2
+  },
+  "kind": "loto7_regime_state",
+  "latest_bonus": [
+    23,
+    36
+  ],
+  "latest_draw_date": "2026-07-10",
+  "latest_draw_no": 685,
+  "latest_main": [
+    1,
+    5,
+    16,
+    20,
+    21,
+    22,
+    31
+  ],
+  "prior120_metrics": {
+    "avg_consecutive_pairs": 1.0667,
+    "avg_high_count": 2.5917,
+    "avg_low_count": 3.375,
+    "avg_mid_high_count": 3.0167,
+    "avg_odd_count": 3.4583,
+    "avg_repeat_from_previous": 1.3445,
+    "avg_sum": 135.625,
+    "sum_stddev": 26.5132
+  },
+  "recent20_metrics": {
+    "avg_consecutive_pairs": 1.2,
+    "avg_high_count": 1.75,
+    "avg_low_count": 3.85,
+    "avg_mid_high_count": 2.7,
+    "avg_odd_count": 3.3,
+    "avg_repeat_from_previous": 1.5263,
+    "avg_sum": 123.2,
+    "sum_stddev": 29.1986
+  },
+  "recent60_metrics": {
+    "avg_consecutive_pairs": 1.1833,
+    "avg_high_count": 2.2167,
+    "avg_low_count": 3.65,
+    "avg_mid_high_count": 2.85,
+    "avg_odd_count": 3.5333,
+    "avg_repeat_from_previous": 1.5424,
+    "avg_sum": 128.9667,
+    "sum_stddev": 27.0345
+  },
+  "regime": "recent_repeat_trend",
+  "regime_counts": {
+    "contrarian": 0,
+    "high_match": 2,
+    "main_best": 1,
+    "mid_high": 0,
+    "recent120": 2
+  },
+  "regime_scores": {
+    "balanced": 2.5484,
+    "consecutive_trend": 5.7328,
+    "contrarian_gap_trend": 1.20843,
+    "high_variance_trend": 6.19446,
+    "low_balanced_trend": 10.63375,
+    "mid_high_trend": -20.0489,
+    "recent_repeat_trend": 14.4039
+  },
+  "regime_strength": 0.600806
+}

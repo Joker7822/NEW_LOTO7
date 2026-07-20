@@ -1,0 +1,37 @@
+LOTO7 Recent Era Holdout Report
+===============================
+
+created_at: 2026-07-19T23:47:30.683616+00:00
+detail_csv: outputs/holdout/holdout_result.csv
+recent_start_year: 2020
+
+[Recent Era Summary]
+target_draws: 337
+total_tickets: 1685
+total_cost: 505,500円
+total_payout: 83,700円
+profit: -421,800円
+profit_roi_percent: -83.442%
+payout_roi_percent: 16.558%
+ticket_hit_rate_percent: 3.976%
+draw_hit_rate_percent: 9.199%
+max_main_match: 5
+rank_counts: {"1等": 0, "2等": 0, "3等": 0, "4等": 2, "5等": 30, "6等": 35, "外れ": 1618}
+
+[Year Summary Fixed]
+2013: target_draws=38 / payout_roi=90.351% / profit=-5,500円 / max_main=5 / hits=5
+2014: target_draws=51 / payout_roi=16.993% / profit=-63,500円 / max_main=4 / hits=11
+2015: target_draws=51 / payout_roi=45.621% / profit=-41,600円 / max_main=5 / hits=13
+2016: target_draws=52 / payout_roi=18.59% / profit=-63,500円 / max_main=4 / hits=13
+2017: target_draws=52 / payout_roi=1092.051% / profit=773,800円 / max_main=6 / hits=23
+2018: target_draws=52 / payout_roi=34.744% / profit=-50,900円 / max_main=5 / hits=20
+2019: target_draws=52 / payout_roi=20.769% / profit=-61,800円 / max_main=4 / hits=14
+2020: target_draws=51 / payout_roi=18.693% / profit=-62,200円 / max_main=5 / hits=8
+2021: target_draws=51 / payout_roi=3.922% / profit=-73,500円 / max_main=3 / hits=3
+2022: target_draws=52 / payout_roi=25.0% / profit=-58,500円 / max_main=4 / hits=17
+2023: target_draws=52 / payout_roi=15.897% / profit=-65,600円 / max_main=4 / hits=12
+2024: target_draws=52 / payout_roi=8.333% / profit=-71,500円 / max_main=4 / hits=6
+2025: target_draws=51 / payout_roi=22.092% / profit=-59,600円 / max_main=5 / hits=10
+2026: target_draws=28 / payout_roi=26.429% / profit=-30,900円 / max_main=4 / hits=11
+
+注意: 過去検証上のrecent era評価であり、将来の当せんや利益を保証しません。

@@ -1,0 +1,76 @@
+{
+  "created_at": "2026-07-20T01:14:45.405639+00:00",
+  "csv": "loto7.csv",
+  "delta_recent_minus_full": {
+    "grade_hit_count_delta": -1,
+    "high_grade_hit_count_delta": 0,
+    "max_main_match_delta": 1,
+    "profit_delta": 370400,
+    "roi_percent_delta": 134.936,
+    "total_payout_delta": 370400
+  },
+  "full_period_model_recent_era": {
+    "metrics": {
+      "grade_hit_count": 39,
+      "high_grade_hit_count": 1,
+      "max_bonus_match": 2,
+      "max_main_match": 5,
+      "missing_prize_draw_count": 0,
+      "profit": -227600,
+      "rank_counts": {
+        "1等": 0,
+        "2等": 0,
+        "3等": 0,
+        "4等": 1,
+        "5等": 16,
+        "6等": 22,
+        "外れ": 876
+      },
+      "roi": 0.170856,
+      "roi_percent": 17.086,
+      "target_draws": 183,
+      "total_cost": 274500,
+      "total_payout": 46900,
+      "total_tickets": 915
+    },
+    "model_id": "g228_0228_2057",
+    "path": "loto7_best_model.json"
+  },
+  "kind": "loto7_recent_era_model_comparison",
+  "notes": [
+    "outputs/holdout/holdout_summary.json is intentionally kept as the full-period adopted model summary.",
+    "This file compares Recent Era performance separately to avoid mixing full-period and recent-era dedicated model scores.",
+    "This does not guarantee lottery winnings or profit."
+  ],
+  "purchase_count": 5,
+  "recent_era_dedicated_model": {
+    "metrics": {
+      "grade_hit_count": 38,
+      "high_grade_hit_count": 1,
+      "max_bonus_match": 2,
+      "max_main_match": 6,
+      "missing_prize_draw_count": 0,
+      "profit": 142800,
+      "rank_counts": {
+        "1等": 0,
+        "2等": 0,
+        "3等": 1,
+        "4等": 0,
+        "5等": 15,
+        "6等": 22,
+        "外れ": 877
+      },
+      "roi": 1.520219,
+      "roi_percent": 152.022,
+      "target_draws": 183,
+      "total_cost": 274500,
+      "total_payout": 417300,
+      "total_tickets": 915
+    },
+    "model_id": "g070_0070_3390",
+    "path": "outputs/super_recent/super_recent_best_model.json"
+  },
+  "recent_start_year": 2023,
+  "recent_target_draws": 183,
+  "unit_cost": 300
+}

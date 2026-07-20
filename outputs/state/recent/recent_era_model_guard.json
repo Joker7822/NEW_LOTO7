@@ -1,0 +1,85 @@
+{
+  "baseline": {
+    "model_id": "g070_0070_3390",
+    "path": "outputs/recent_era/recent_era_baseline_before_run.json",
+    "recent": {
+      "grade_hit_count": 64,
+      "high_grade_hit_count": 4,
+      "max_bonus_match": 2,
+      "max_main_match": 6,
+      "missing_prize_draw_count": 0,
+      "profit": -41700,
+      "rank_counts": {
+        "1等": 0,
+        "2等": 0,
+        "3等": 1,
+        "4等": 3,
+        "5等": 23,
+        "6等": 37,
+        "外れ": 1621
+      },
+      "roi": 0.917507,
+      "roi_percent": 91.751,
+      "target_draws": 337,
+      "total_cost": 505500,
+      "total_payout": 463800,
+      "total_tickets": 1685
+    }
+  },
+  "best_model_after_guard": "outputs/recent_era/recent_era_guarded_candidate_model.json",
+  "candidate": {
+    "model_id": "g070_0070_3390",
+    "path": "outputs/recent_era/recent_era_candidate_model.json",
+    "recent": {
+      "grade_hit_count": 64,
+      "high_grade_hit_count": 4,
+      "max_bonus_match": 2,
+      "max_main_match": 6,
+      "missing_prize_draw_count": 0,
+      "profit": -41700,
+      "rank_counts": {
+        "1等": 0,
+        "2等": 0,
+        "3等": 1,
+        "4等": 3,
+        "5等": 23,
+        "6等": 37,
+        "外れ": 1621
+      },
+      "roi": 0.917507,
+      "roi_percent": 91.751,
+      "target_draws": 337,
+      "total_cost": 505500,
+      "total_payout": 463800,
+      "total_tickets": 1685
+    }
+  },
+  "created_at": "2026-07-19T22:23:26.758635+00:00",
+  "csv": "loto7.csv",
+  "decision": {
+    "accepted": true,
+    "reasons": [
+      "same model id; recent-era dedicated guard keeps current model"
+    ],
+    "restore_on_fail": true,
+    "restored_baseline": false,
+    "same_model": true,
+    "thresholds": {
+      "allow_recent_high_grade_drop": false,
+      "min_recent_payout_roi_percent": 8.0,
+      "min_recent_profit_delta": 0,
+      "min_recent_roi_delta_percent": 0.0
+    },
+    "warnings": []
+  },
+  "kind": "loto7_recent_era_dedicated_guard",
+  "notes": [
+    "This guard intentionally ignores full-period ROI.",
+    "Recent Era dedicated models are used only for Recent Era prediction slots.",
+    "This does not guarantee lottery winnings or profit."
+  ],
+  "purchase_count": 5,
+  "recent_start_year": 2020,
+  "recent_target_draws_total": 337,
+  "unit_cost": 300
+}

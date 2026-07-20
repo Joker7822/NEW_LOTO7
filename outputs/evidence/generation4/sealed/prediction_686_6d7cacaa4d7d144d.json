@@ -1,0 +1,20 @@
+{
+  "created_at": "2026-07-16T12:02:00.352650+00:00",
+  "files": {
+    "loto7.csv": "b67e2f86683bbe4f69985b7299ea8e9e7adb48da87e81802909725b3dcd0d83a",
+    "loto7_best_model.json": "afd5c5193eaf3c414861e9849cb63fd1cb2f6809e1a5c45bf0864fac1e6ae529",
+    "outputs/evolution_best_prediction.csv": "e22f28862e6f69e3940cc854a06d50ef518425ffec3c780cd2f09345516635f0",
+    "outputs/generation4/latest_generation4_summary.json": "51b9b8f2bb5edff2b2bacf082d2ebdb4ad29b91b406d2e588b0612044d215763",
+    "outputs/generation4/latest_shadow_predictions.json": "6f2d867c88b5ceab0e60f584667d06bfb42e495d0ad063729006a7267e550495",
+    "outputs/recent_era/recent_era_best_model.json": "fd3fedccfed17951a03cc2b2c2dfa1d86b4982c9c15f7522e48adfa46909b554",
+    "outputs/super_recent/super_recent_best_model.json": "fd3fedccfed17951a03cc2b2c2dfa1d86b4982c9c15f7522e48adfa46909b554",
+    "scripts/build_generation4_prediction.py": "079b7b664159f0ffb083c78b8a46f14b0c1464f787875e650daf8822b6a1a2f3"
+  },
+  "git_sha": "bccb1a80f4660963645efded4d76e9d7d44aed05",
+  "github_run_attempt": "1",
+  "github_run_id": "29495395450",
+  "hash_algorithm": "sha256",
+  "kind": "loto7_generation4_sealed_prediction",
+  "manifest_sha256": "6d7cacaa4d7d144de395ca71e8ff669104fd4404da989ed27998ef638978cb7b",
+  "prediction_draw_no": 686
+}

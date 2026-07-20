@@ -1,0 +1,45 @@
+LOTO7 Model-Only Self Evolution Report
+======================================
+
+created_at: 2026-07-20T00:44:57.045868+00:00
+status: safe_exit_at_139.26_minutes
+resume_used: True
+start_iteration: 288
+last_iteration: 310
+iterations_requested: 500
+iterations_evaluated: 310
+iterations_evaluated_this_run: 23
+target_draws: 183
+objective: composite_roi_profit_highgrade_exploration
+
+[Baseline]
+objective_score: 31378.99
+roi_percent: 152.022
+profit: 142800
+grade_hit_count: 38
+high_grade_hit_count: 1
+max_main_match: 6
+
+[Best Candidate]
+objective_score: 33254.76
+roi_percent: 153.188
+profit: 146000
+grade_hit_count: 30
+high_grade_hit_count: 2
+max_main_match: 6
+
+[Adoption]
+{
+  "adopted": true,
+  "allow_high_grade_drop": true,
+  "applied": false,
+  "apply_requested": false,
+  "min_profit_delta": 0,
+  "min_roi_delta_percent": 0.1,
+  "reasons": [
+    "roi 1.520219 -> 1.531876",
+    "profit 142800 -> 146000"
+  ]
+}
+
+注意: 過去検証上の改善候補であり、将来の当せんや利益を保証しません。
