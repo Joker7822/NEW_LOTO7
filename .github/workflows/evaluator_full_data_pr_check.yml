@@ -5,15 +5,22 @@ on:
     branches:
       - main
     paths:
+      - "pyproject.toml"
+      - "src/loto7/evaluation/**"
+      - "src/loto7/validation/**"
       - "holdout_evaluator.py"
       - "scripts/backtest_role_ensemble.py"
       - "scripts/check_prediction_history_results.py"
       - "scripts/evaluation_core.py"
+      - "scripts/robust_model_metrics.py"
       - "scripts/update_generation4_shadow_history.py"
       - "scripts/verify_evaluator_consistency.py"
       - "scripts/verify_full_evaluator_consistency.py"
       - "tests/test_evaluation_unification.py"
+      - "tests/test_package_layout_and_hit_metrics.py"
       - ".github/workflows/loto7_generation4_run.yml"
+      - ".github/workflows/loto7_nested_walk_forward.yml"
+      - ".github/workflows/loto7_output_layout_sync.yml"
       - ".github/workflows/loto7_validation_tests.yml"
       - ".github/workflows/evaluator_full_data_pr_check.yml"
 
@@ -34,24 +41,34 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Install package in editable mode
+        run: python -m pip install -e .
+
       - name: Compile and run regression tests
         run: |
           set -euo pipefail
           python -m py_compile \
+            src/loto7/evaluation/core.py \
+            src/loto7/evaluation/hit_metrics.py \
+            src/loto7/evaluation/robust.py \
+            src/loto7/validation/hit_rate_gate.py \
             scripts/evaluation_core.py \
+            scripts/robust_model_metrics.py \
             scripts/verify_evaluator_consistency.py \
             scripts/verify_full_evaluator_consistency.py \
             holdout_evaluator.py \
             scripts/backtest_role_ensemble.py \
             scripts/check_prediction_history_results.py \
             scripts/update_generation4_shadow_history.py \
-            tests/test_evaluation_unification.py
+            tests/test_evaluation_unification.py \
+            tests/test_package_layout_and_hit_metrics.py
           python -m unittest \
             tests.test_evaluation_unification \
             tests.test_prediction_output_consistency \
             tests.test_robust_validation_and_portfolio \
             tests.test_generation4_pipeline \
-            tests.test_strict_adoption_gates -v
+            tests.test_strict_adoption_gates \
+            tests.test_package_layout_and_hit_metrics -v
 
       - name: Regenerate all 3425 best-model tickets
         run: |
@@ -140,18 +157,24 @@ jobs:
           assert before == after, 'evaluate-only must not append shadow predictions'
           assert summary.get('update_mode') == 'evaluate_only'
           print(json.dumps({
-              'before_row_keys': len(before),
-              'after_row_keys': len(after),
-              'update_mode': summary.get('update_mode'),
-              'evaluated_rows': summary.get('evaluated_rows'),
-              'pending_rows': summary.get('pending_rows'),
+            'before_row_keys': len(before),
+            'after_row_keys': len(after),
+            'update_mode': summary.get('update_mode'),
+            'evaluated_rows': summary.get('evaluated_rows'),
+            'pending_rows': summary.get('pending_rows'),
           }, ensure_ascii=False, indent=2))
           PY
 
-      - name: Validate production workflow ordering and YAML
+      - name: Validate all workflow YAML and production ordering
         run: |
           set -euo pipefail
-          ruby -e 'require "yaml"; YAML.load_file(".github/workflows/loto7_generation4_run.yml"); YAML.load_file(".github/workflows/loto7_validation_tests.yml"); puts "workflow YAML valid"'
+          ruby - <<'RUBY'
+          require "yaml"
+          paths = Dir[".github/workflows/*.{yml,yaml}"].sort
+          raise "no workflow files" if paths.empty?
+          paths.each { |path| YAML.load_file(path) }
+          puts "validated #{paths.length} workflow YAML files"
+          RUBY
           python - <<'PY'
           from pathlib import Path
           text = Path('.github/workflows/loto7_generation4_run.yml').read_text(encoding='utf-8')
@@ -164,7 +187,11 @@ jobs:
               'Record rejected LOTO7 Generation 4 adoption and refresh live results [skip ci]',
           ):
               assert marker in text, marker
-          print('production rejection path ordering and retained files are valid')
+          nested = Path('.github/workflows/loto7_nested_walk_forward.yml').read_text(encoding='utf-8')
+          assert nested.index('python scripts/check_hit_rate_promotion.py') < nested.index('python scripts/promote_nested_candidate_strict.py')
+          sync = Path('.github/workflows/loto7_output_layout_sync.yml').read_text(encoding='utf-8')
+          assert 'scripts/migrate_output_layout.py' in sync
+          print('production ordering, accuracy gate ordering and canonical sync are valid')
           PY
 
       - name: Upload validation evidence

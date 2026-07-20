@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "production_workflow": ".github/workflows/loto7_generation4_run.yml",
   "production_workflow_name": "LOTO7 Generation 4 Production",
   "forbidden_workflows": [
@@ -16,42 +16,81 @@
     "outputs/evolution_prediction_history_result.txt",
     "outputs/holdout/latest_prediction_report.txt"
   ],
+  "canonical_production_outputs": [
+    "outputs/production/latest_prediction.csv",
+    "outputs/production/prediction_history.csv",
+    "outputs/production/prediction_history_result.txt",
+    "outputs/production/latest_prediction_report.txt"
+  ],
   "sealed_evidence": [
     "outputs/generation4/latest_sealed_manifest.json",
     "outputs/generation4/sealed_index.json",
     "outputs/generation4/sealed/"
+  ],
+  "canonical_sealed_evidence": [
+    "outputs/evidence/generation4/latest_sealed_manifest.json",
+    "outputs/evidence/generation4/sealed_index.json",
+    "outputs/evidence/generation4/sealed/"
   ],
   "workflow_run_sources": [
     "LOTO7 Evolution Trainer",
     "LOTO7 Model Self Evolution",
     "LOTO7 Nested Walk Forward Validation"
   ],
+  "package_policy": {
+    "canonical_package": "src/loto7",
+    "install": "python -m pip install -e .",
+    "scripts_policy": "Migrated scripts must remain thin import-compatible CLI wrappers.",
+    "required_modules": [
+      "src/loto7/evaluation/core.py",
+      "src/loto7/evaluation/hit_metrics.py",
+      "src/loto7/evaluation/robust.py",
+      "src/loto7/validation/hit_rate_gate.py",
+      "src/loto7/paths.py"
+    ]
+  },
   "root_python_policy": {
     "status": "compatibility_layer",
     "target": "src/loto7",
     "migration_rule": "Move implementations only with import-compatible wrappers and dedicated regression tests."
   },
+  "output_layout": {
+    "version": 2,
+    "migration_mode": "canonical_mirror_with_legacy_resume_compatibility",
+    "config": "config/output_layout.json",
+    "canonical_roots": [
+      "outputs/production/",
+      "outputs/evidence/",
+      "outputs/state/",
+      "outputs/diagnostics/"
+    ]
+  },
   "output_classes": {
     "production": [
+      "outputs/production/",
       "outputs/evolution_best_prediction.csv",
       "outputs/evolution_prediction_history.csv",
       "outputs/evolution_prediction_history_result.txt",
       "outputs/holdout/latest_prediction_report.txt"
     ],
     "evidence": [
+      "outputs/evidence/",
       "outputs/generation4/latest_sealed_manifest.json",
       "outputs/generation4/sealed_index.json",
-      "outputs/generation4/sealed/"
-    ],
-    "state": [
-      "outputs/model_self_evolution/",
-      "outputs/recent_era/",
-      "outputs/super_recent/",
+      "outputs/generation4/sealed/",
       "outputs/validation/"
     ],
+    "state": [
+      "outputs/state/",
+      "outputs/model_self_evolution/",
+      "outputs/recent_era/",
+      "outputs/super_recent/"
+    ],
     "diagnostics": [
+      "outputs/diagnostics/",
       "outputs/holdout/",
-      "outputs/role_ensemble/"
+      "outputs/role_ensemble/",
+      "outputs/generation4/"
     ],
     "artifact_only_diagnostics": [
       "outputs/ml_stack/",

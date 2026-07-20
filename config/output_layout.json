@@ -1,0 +1,17 @@
+{
+  "schema_version": 2,
+  "migration_mode": "canonical_mirror_with_legacy_resume_compatibility",
+  "categories": {
+    "production": "outputs/production/",
+    "evidence": "outputs/evidence/",
+    "state": "outputs/state/",
+    "diagnostics": "outputs/diagnostics/"
+  },
+  "rules": [
+    "Canonical directories are the long-term public layout.",
+    "Legacy paths remain readable and writable during the compatibility phase.",
+    "Resume state is copied, never destructively moved, until every workflow uses canonical paths.",
+    "Immutable sealed evidence must never be pruned by the migration utility.",
+    "Large reproducible detail files should be uploaded as Actions artifacts rather than retained indefinitely."
+  ]
+}
