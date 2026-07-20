@@ -2,14 +2,15 @@
 # -*- coding: utf-8 -*-
 """Mirror legacy NEW_LOTO7 outputs into the canonical v2 layout.
 
-The migration is intentionally non-destructive. Legacy paths remain in place so
-existing workflows and resume files continue to work while consumers migrate to
-``outputs/{production,evidence,state,diagnostics}``.
+The migration is non-destructive. Legacy resume paths remain available while
+compact production, evidence, state and diagnostic files are mirrored to the
+new layout. Large reproducible details stay in Actions artifacts.
 """
 from __future__ import annotations
 
 import argparse
 import datetime as dt
+import fnmatch
 import json
 import shutil
 import sys
@@ -22,6 +23,38 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from loto7.paths import BINDINGS, OUTPUT_LAYOUT_VERSION  # noqa: E402
+
+COPY_RULES: Dict[str, Dict[str, object]] = {
+    "sealed_directory": {"patterns": ["**/*"], "excluded_roots": []},
+    "full_state": {
+        "patterns": ["*.json", "*.txt"],
+        "excluded_roots": [],
+    },
+    "recent_state": {
+        "patterns": ["*.json", "*.txt"],
+        "excluded_roots": [],
+    },
+    "super_recent_state": {
+        "patterns": ["*.json", "*.txt"],
+        "excluded_roots": [],
+    },
+    "validation_evidence": {
+        "patterns": ["*.json", "*.txt", "**/*.json", "**/*.txt"],
+        "excluded_roots": ["folds", "recent/folds", "super_recent/folds"],
+    },
+    "holdout_diagnostics": {
+        "patterns": ["*.json", "*.txt"],
+        "excluded_roots": [],
+    },
+    "role_diagnostics": {
+        "patterns": ["*.json", "*.txt"],
+        "excluded_roots": [],
+    },
+    "generation4_diagnostics": {
+        "patterns": ["*.json", "*.txt", "shadow_history.csv"],
+        "excluded_roots": ["sealed"],
+    },
+}
 
 
 def now_iso() -> str:
@@ -40,22 +73,36 @@ def _copy_file(source: Path, target: Path) -> int:
     return 1
 
 
-def _copy_tree(source: Path, target: Path, *, exclude: set[str] | None = None) -> int:
+def _is_selected(key: str, relative: Path) -> bool:
+    rule = COPY_RULES.get(key)
+    if rule is None:
+        return True
+    text = relative.as_posix()
+    excluded = [str(value) for value in rule.get("excluded_roots", [])]
+    if any(text == root or text.startswith(root + "/") for root in excluded):
+        return False
+    patterns = [str(value) for value in rule.get("patterns", [])]
+    return any(fnmatch.fnmatch(text, pattern) for pattern in patterns)
+
+
+def _copy_tree(source: Path, target: Path, *, key: str) -> tuple[int, int]:
     copied = 0
-    excluded = exclude or set()
+    skipped = 0
     for path in source.rglob("*"):
         if not path.is_file():
             continue
         relative = path.relative_to(source)
-        if relative.parts and relative.parts[0] in excluded:
+        if not _is_selected(key, relative):
+            skipped += 1
             continue
         copied += _copy_file(path, target / relative)
-    return copied
+    return copied, skipped
 
 
 def migrate(root: Path, *, verify_only: bool = False) -> Dict[str, object]:
     actions: List[Dict[str, object]] = []
     copied_files = 0
+    skipped_detail_files = 0
     missing_sources: List[str] = []
 
     for item in BINDINGS:
@@ -65,13 +112,14 @@ def migrate(root: Path, *, verify_only: bool = False) -> Dict[str, object]:
         if not exists:
             missing_sources.append(item.legacy)
         copied = 0
+        skipped = 0
         if exists and not verify_only:
             if source.is_dir():
-                exclude = {"sealed"} if item.key == "generation4_diagnostics" else set()
-                copied = _copy_tree(source, target, exclude=exclude)
+                copied, skipped = _copy_tree(source, target, key=item.key)
             else:
                 copied = _copy_file(source, target)
         copied_files += copied
+        skipped_detail_files += skipped
         actions.append(
             {
                 "key": item.key,
@@ -81,6 +129,7 @@ def migrate(root: Path, *, verify_only: bool = False) -> Dict[str, object]:
                 "source_exists": exists,
                 "resumable": item.resumable,
                 "copied_files": copied,
+                "skipped_reproducible_detail_files": skipped,
             }
         )
 
@@ -88,10 +137,11 @@ def migrate(root: Path, *, verify_only: bool = False) -> Dict[str, object]:
         "created_at": now_iso(),
         "kind": "loto7_output_layout_migration",
         "output_layout_version": OUTPUT_LAYOUT_VERSION,
-        "mode": "verify_only" if verify_only else "copy_non_destructive",
+        "mode": "verify_only" if verify_only else "copy_non_destructive_compact",
         "legacy_paths_retained": True,
         "resume_compatibility": "preserved",
         "copied_files": copied_files,
+        "skipped_reproducible_detail_files": skipped_detail_files,
         "missing_source_count": len(missing_sources),
         "missing_sources": missing_sources,
         "actions": actions,
