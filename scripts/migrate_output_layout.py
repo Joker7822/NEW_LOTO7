@@ -25,7 +25,7 @@ if str(SRC_ROOT) not in sys.path:
 from loto7.paths import BINDINGS, OUTPUT_LAYOUT_VERSION  # noqa: E402
 
 COPY_RULES: Dict[str, Dict[str, object]] = {
-    "sealed_directory": {"patterns": ["**/*"], "excluded_roots": []},
+    "sealed_directory": {"patterns": ["*", "**/*"], "excluded_roots": []},
     "full_state": {
         "patterns": ["*.json", "*.txt"],
         "excluded_roots": [],
