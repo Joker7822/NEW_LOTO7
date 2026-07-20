@@ -51,6 +51,7 @@ on:
       - "tests/test_nested_promotion_gates.py"
       - "tests/test_package_layout_and_hit_metrics.py"
       - "tests/test_output_layout_compatibility.py"
+      - "tests/test_sealed_output_migration.py"
       - "tests/test_workflow_resume_compatibility.py"
       - ".github/workflows/loto7_generation4_run.yml"
       - ".github/workflows/loto7_nested_walk_forward.yml"
@@ -116,6 +117,7 @@ jobs:
             tests/test_nested_promotion_gates.py \
             tests/test_package_layout_and_hit_metrics.py \
             tests/test_output_layout_compatibility.py \
+            tests/test_sealed_output_migration.py \
             tests/test_workflow_resume_compatibility.py
       - name: Run focused validation tests
         run: |
@@ -131,4 +133,5 @@ jobs:
             tests.test_nested_promotion_gates \
             tests.test_package_layout_and_hit_metrics \
             tests.test_output_layout_compatibility \
+            tests.test_sealed_output_migration \
             tests.test_workflow_resume_compatibility -v
