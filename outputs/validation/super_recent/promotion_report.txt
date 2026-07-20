@@ -1,7 +1,7 @@
 LOTO7 Strict Nested Candidate Promotion
 =======================================
 
-created_at: 2026-07-19T22:33:40.552314+00:00
+created_at: 2026-07-20T03:43:30.532642+00:00
 promoted: False
 
 [Aggregate Nested ROI Gate]
@@ -12,19 +12,20 @@ promoted: False
     "total_payout": 35900
   },
   "candidate": {
-    "roi_percent": 7.182796,
+    "roi_percent": 14.408602,
     "total_cost": 232500,
-    "total_payout": 16700
+    "total_payout": 33500
   },
   "expected_model_id": "g036_0036_2241",
   "failures": [
-    "nested total ROI failed: 7.183% < 8.000%",
-    "nested total ROI delta failed: -8.258pt < 0.500pt"
+    "nested total ROI delta failed: -1.032pt < 0.500pt"
   ],
   "passed": false,
-  "reasons": [],
+  "reasons": [
+    "nested total ROI ok: 14.409% >= 8.000%"
+  ],
   "reference_model_id": "g036_0036_2241",
-  "roi_delta_percent": -8.258065,
+  "roi_delta_percent": -1.032258,
   "thresholds": {
     "min_candidate_roi_percent": 8.0,
     "min_roi_delta_percent": 0.5

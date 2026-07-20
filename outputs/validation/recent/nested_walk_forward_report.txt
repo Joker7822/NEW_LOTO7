@@ -1,37 +1,37 @@
 LOTO7 Nested Walk-Forward Validation
 ======================================
 
-created_at: 2026-07-19T21:25:54.075718+00:00
+created_at: 2026-07-20T02:21:25.813328+00:00
 reference_model_id: g070_0070_3390
 fold_count: 3
 future_leakage_detected: False
-positive_roi_delta_folds: 3
-median_roi_delta_percent: 0.0
-worst_roi_delta_percent: 0.0
-median_top1_removed_roi_delta_percent: 0.0
+positive_roi_delta_folds: 2
+median_roi_delta_percent: 1.438
+worst_roi_delta_percent: -1.154
+median_top1_removed_roi_delta_percent: 3.006
 
 [Folds]
 - train_through_2021_select_2022_evaluate_2023
   leakage_check: True
-  fold_model_id: g070_0070_3390
+  fold_model_id: g005_0005_8549
   baseline_roi: 17.564
-  candidate_roi: 17.564
-  roi_delta: 0.0
-  top1_removed_delta: 0.0
+  candidate_roi: 16.41
+  roi_delta: -1.154
+  top1_removed_delta: -2.693
 - train_through_2022_select_2023_evaluate_2024
   leakage_check: True
-  fold_model_id: g070_0070_3390
+  fold_model_id: g006_0006_6578
   baseline_roi: 8.205
-  candidate_roi: 8.205
-  roi_delta: 0.0
-  top1_removed_delta: 0.0
+  candidate_roi: 11.795
+  roi_delta: 3.59
+  top1_removed_delta: 3.59
 - train_through_2023_select_2024_evaluate_2025
   leakage_check: True
-  fold_model_id: g003_0003_5926
+  fold_model_id: g020_0020_3160
   baseline_roi: 14.248
   candidate_roi: 15.686
   roi_delta: 1.438
-  top1_removed_delta: 3.529
+  top1_removed_delta: 3.006
 
 This validation evolves each fold model without access to its evaluation year.
 It is historical validation and does not guarantee future lottery results.
