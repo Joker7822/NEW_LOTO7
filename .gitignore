@@ -24,6 +24,28 @@ outputs/*
 !outputs/role_ensemble/*.json
 !outputs/role_ensemble/*.txt
 !outputs/role_ensemble/*.csv
+
+# Canonical v2 output layout: retain only compact public/state/evidence files
+!outputs/production/
+!outputs/production/*.csv
+!outputs/production/*.txt
+!outputs/production/README.md
+!outputs/evidence/
+!outputs/evidence/**/
+!outputs/evidence/**/*.json
+!outputs/evidence/**/*.txt
+!outputs/evidence/**/*.sha256
+!outputs/evidence/README.md
+!outputs/state/
+!outputs/state/**/
+!outputs/state/**/*.json
+!outputs/state/README.md
+!outputs/diagnostics/
+!outputs/diagnostics/**/
+!outputs/diagnostics/**/*.json
+!outputs/diagnostics/**/*.txt
+!outputs/diagnostics/README.md
+!outputs/layout_manifest.json
 *.log
 
 # Artifact-only diagnostics
@@ -31,6 +53,7 @@ outputs/ml_stack/
 outputs/complete_ai/
 outputs/deep_ai/
 outputs/txt_reports/
+outputs/diagnostics/**/*.csv
 
 # Deprecated root generated LOTO7 outputs
 latest_loto7_prediction.txt
