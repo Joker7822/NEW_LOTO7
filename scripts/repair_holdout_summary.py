@@ -1,31 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-scripts/repair_holdout_summary.py
-
-holdout_result.csv を正として、holdout_summary.json の年別 target_draws=0 表示を補正し、
-2020年以降など recent era の集計を追加する。
-
-出力:
-  outputs/holdout/holdout_summary.json        # 上書き補正
-  outputs/holdout/recent_era_summary.json    # recent era専用JSON
-  outputs/holdout/recent_era_report.txt      # recent era専用TXT
-
-注意:
-  過去検証上の集計であり、将来の当せんや利益を保証しない。
-"""
-
+"""Repair holdout summaries from the detail CSV and add high-match metrics."""
 from __future__ import annotations
 
 import argparse
 import csv
 import datetime as dt
 import json
-import re
+import sys
 from pathlib import Path
-from typing import Dict, Set
+from typing import Dict, List, Set
 
-RANK_ORDER = ["1等", "2等", "3等", "4等", "5等", "6等", "外れ"]
+REPO_ROOT = Path(__file__).resolve().parents[1]
+SRC_ROOT = REPO_ROOT / "src"
+if str(SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SRC_ROOT))
+
+from loto7.evaluation.core import RANK_ORDER, financial_metrics  # noqa: E402
+from loto7.evaluation.hit_metrics import summarize_hit_metrics  # noqa: E402
 
 
 def now_iso() -> str:
@@ -33,20 +25,10 @@ def now_iso() -> str:
 
 
 def draw_no_int(text: object) -> int | None:
-    m = re.search(r"\d+", str(text or ""))
-    return int(m.group(0)) if m else None
+    import re
 
-
-def pct(numerator: int, denominator: int) -> float:
-    return numerator / denominator if denominator > 0 else 0.0
-
-
-def roi_from_profit(total_cost: int, total_payout: int) -> float:
-    return (total_payout - total_cost) / total_cost if total_cost > 0 else 0.0
-
-
-def roi_from_payout(total_cost: int, total_payout: int) -> float:
-    return total_payout / total_cost if total_cost > 0 else 0.0
+    match = re.search(r"\d+", str(text or ""))
+    return int(match.group(0)) if match else None
 
 
 def format_yen(value: object) -> str:
@@ -62,52 +44,43 @@ def empty_stats() -> Dict[str, object]:
         "total_tickets": 0,
         "winning_ticket_count": 0,
         "winning_draw_count": 0,
-        "ticket_hit_rate": 0.0,
-        "ticket_hit_rate_percent": 0.0,
-        "draw_hit_rate": 0.0,
-        "draw_hit_rate_percent": 0.0,
         "total_cost": 0,
         "total_payout": 0,
-        "profit": 0,
-        "roi": 0.0,
-        "roi_percent": 0.0,
-        "payout_roi": 0.0,
-        "payout_roi_percent": 0.0,
         "max_main_match": 0,
         "rank_counts": {rank: 0 for rank in RANK_ORDER},
     }
 
 
-def finalize(stats: Dict[str, object], draw_set: Set[int], winning_draws: Set[int]) -> Dict[str, object]:
-    total_cost = int(stats.get("total_cost", 0))
-    total_payout = int(stats.get("total_payout", 0))
-    total_tickets = int(stats.get("total_tickets", 0))
-    winning_tickets = int(stats.get("winning_ticket_count", 0))
-    profit = total_payout - total_cost
-    roi = roi_from_profit(total_cost, total_payout)
-    payout_roi = roi_from_payout(total_cost, total_payout)
-    ticket_hit_rate = pct(winning_tickets, total_tickets)
-    draw_hit_rate = pct(len(winning_draws), len(draw_set))
+def finalize(
+    stats: Dict[str, object],
+    draw_set: Set[int],
+    winning_draws: Set[int],
+    draw_max_matches: Dict[int, int],
+    ticket_matches: List[int],
+) -> Dict[str, object]:
     out = dict(stats)
     out.update(
-        {
-            "target_draws": len(draw_set),
-            "winning_draw_count": len(winning_draws),
-            "profit": profit,
-            "roi": round(roi, 6),
-            "roi_percent": round(roi * 100.0, 3),
-            "payout_roi": round(payout_roi, 6),
-            "payout_roi_percent": round(payout_roi * 100.0, 3),
-            "ticket_hit_rate": round(ticket_hit_rate, 6),
-            "ticket_hit_rate_percent": round(ticket_hit_rate * 100.0, 3),
-            "draw_hit_rate": round(draw_hit_rate, 6),
-            "draw_hit_rate_percent": round(draw_hit_rate * 100.0, 3),
-        }
+        financial_metrics(
+            total_cost=int(stats.get("total_cost", 0)),
+            total_payout=int(stats.get("total_payout", 0)),
+            total_tickets=int(stats.get("total_tickets", 0)),
+            winning_tickets=int(stats.get("winning_ticket_count", 0)),
+            target_draws=len(draw_set),
+            winning_draws=len(winning_draws),
+        )
+    )
+    out["target_draws"] = len(draw_set)
+    out["winning_draw_count"] = len(winning_draws)
+    out.update(
+        summarize_hit_metrics(
+            [draw_max_matches[draw_no] for draw_no in sorted(draw_max_matches)],
+            ticket_main_matches=ticket_matches,
+        )
     )
     return out
 
 
-def add_row(stats: Dict[str, object], row: Dict[str, str]) -> tuple[int | None, bool]:
+def add_row(stats: Dict[str, object], row: Dict[str, str]) -> tuple[int | None, bool, int]:
     draw_no = draw_no_int(row.get("draw_no"))
     rank = str(row.get("rank") or "外れ")
     cost = int(row.get("purchase_cost") or 0)
@@ -123,45 +96,69 @@ def add_row(stats: Dict[str, object], row: Dict[str, str]) -> tuple[int | None, 
     won = rank != "外れ"
     if won:
         stats["winning_ticket_count"] = int(stats.get("winning_ticket_count", 0)) + 1
-    return draw_no, won
+    return draw_no, won, main_match
 
 
 def build_from_detail(detail_csv: Path, recent_start_year: int) -> Dict[str, object]:
     year_stats: Dict[str, Dict[str, object]] = {}
     year_draws: Dict[str, Set[int]] = {}
     year_winning_draws: Dict[str, Set[int]] = {}
+    year_draw_max: Dict[str, Dict[int, int]] = {}
+    year_ticket_matches: Dict[str, List[int]] = {}
     recent_stats = empty_stats()
     recent_draws: Set[int] = set()
     recent_winning_draws: Set[int] = set()
+    recent_draw_max: Dict[int, int] = {}
+    recent_ticket_matches: List[int] = []
 
-    with detail_csv.open("r", encoding="utf-8", newline="") as f:
-        reader = csv.DictReader(f)
+    with detail_csv.open("r", encoding="utf-8", newline="") as stream:
+        reader = csv.DictReader(stream)
         for row in reader:
             year = str(row.get("year") or "unknown")
             year_stats.setdefault(year, empty_stats())
             year_draws.setdefault(year, set())
             year_winning_draws.setdefault(year, set())
-            draw_no, won = add_row(year_stats[year], row)
+            year_draw_max.setdefault(year, {})
+            year_ticket_matches.setdefault(year, [])
+            draw_no, won, main_match = add_row(year_stats[year], row)
+            year_ticket_matches[year].append(main_match)
             if draw_no is not None:
                 year_draws[year].add(draw_no)
+                year_draw_max[year][draw_no] = max(year_draw_max[year].get(draw_no, 0), main_match)
                 if won:
                     year_winning_draws[year].add(draw_no)
             try:
-                y = int(year)
+                numeric_year = int(year)
             except Exception:
-                y = 0
-            if y >= recent_start_year:
-                recent_draw_no, recent_won = add_row(recent_stats, row)
+                numeric_year = 0
+            if numeric_year >= recent_start_year:
+                recent_draw_no, recent_won, recent_main_match = add_row(recent_stats, row)
+                recent_ticket_matches.append(recent_main_match)
                 if recent_draw_no is not None:
                     recent_draws.add(recent_draw_no)
+                    recent_draw_max[recent_draw_no] = max(
+                        recent_draw_max.get(recent_draw_no, 0), recent_main_match
+                    )
                     if recent_won:
                         recent_winning_draws.add(recent_draw_no)
 
     fixed_years = {
-        year: finalize(stats, year_draws.get(year, set()), year_winning_draws.get(year, set()))
+        year: finalize(
+            stats,
+            year_draws.get(year, set()),
+            year_winning_draws.get(year, set()),
+            year_draw_max.get(year, {}),
+            year_ticket_matches.get(year, []),
+        )
         for year, stats in sorted(year_stats.items())
     }
-    recent = finalize(recent_stats, recent_draws, recent_winning_draws)
+    recent = finalize(
+        recent_stats,
+        recent_draws,
+        recent_winning_draws,
+        recent_draw_max,
+        recent_ticket_matches,
+    )
     recent["start_year"] = recent_start_year
     return {"year_summary": fixed_years, "recent_era_summary": recent}
 
@@ -188,6 +185,11 @@ def write_report(path: Path, payload: Dict[str, object]) -> None:
         f"ticket_hit_rate_percent: {recent.get('ticket_hit_rate_percent')}%",
         f"draw_hit_rate_percent: {recent.get('draw_hit_rate_percent')}%",
         f"max_main_match: {recent.get('max_main_match')}",
+        f"average_max_main_match: {recent.get('average_max_main_match')}",
+        f"draw_main4_plus_rate_percent: {recent.get('draw_main4_plus_rate_percent')}%",
+        f"draw_main5_plus_rate_percent: {recent.get('draw_main5_plus_rate_percent')}%",
+        f"draw_main6_plus_rate_percent: {recent.get('draw_main6_plus_rate_percent')}%",
+        f"hit_objective_score: {recent.get('hit_objective_score')}",
         f"rank_counts: {json.dumps(recent.get('rank_counts', {}), ensure_ascii=False, sort_keys=True)}",
         "",
         "[Year Summary Fixed]",
@@ -198,16 +200,21 @@ def write_report(path: Path, payload: Dict[str, object]) -> None:
         lines.append(
             f"{year}: target_draws={item.get('target_draws')} / payout_roi={item.get('payout_roi_percent')}% / "
             f"profit={format_yen(item.get('profit'))} / max_main={item.get('max_main_match')} / "
-            f"hits={item.get('winning_ticket_count')}"
+            f"main4+={item.get('draw_main4_plus_rate_percent')}% / "
+            f"main5+={item.get('draw_main5_plus_rate_percent')}% / hits={item.get('winning_ticket_count')}"
         )
-    lines.append("")
-    lines.append("注意: 過去検証上のrecent era評価であり、将来の当せんや利益を保証しません。")
+    lines.extend(
+        [
+            "",
+            "注意: 過去検証上のrecent era評価であり、将来の当せんや利益を保証しません。",
+        ]
+    )
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Repair holdout year summary and add recent era summary.")
+    parser = argparse.ArgumentParser(description="Repair holdout summaries and add accuracy-first metrics.")
     parser.add_argument("--detail", default="outputs/holdout/holdout_result.csv")
     parser.add_argument("--summary", default="outputs/holdout/holdout_summary.json")
     parser.add_argument("--recent-summary", default="outputs/holdout/recent_era_summary.json")
@@ -227,7 +234,10 @@ def main() -> int:
     summary["year_summary"] = fixed["year_summary"]
     summary["recent_era_summary"] = fixed["recent_era_summary"]
     summary["year_summary_repaired_at"] = now_iso()
-    summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    summary_path.write_text(
+        json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
 
     recent_payload = {
         "created_at": now_iso(),
@@ -239,7 +249,10 @@ def main() -> int:
     }
     recent_summary_path = Path(args.recent_summary)
     recent_summary_path.parent.mkdir(parents=True, exist_ok=True)
-    recent_summary_path.write_text(json.dumps(recent_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    recent_summary_path.write_text(
+        json.dumps(recent_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     write_report(Path(args.recent_report), recent_payload)
     print(json.dumps(recent_payload, ensure_ascii=False, indent=2, sort_keys=True))
     return 0
