@@ -73,7 +73,7 @@
     {
       "canonical": "outputs/state/full",
       "category": "state",
-      "copied_files": 0,
+      "copied_files": 4,
       "key": "full_state",
       "legacy": "outputs/model_self_evolution",
       "resumable": true,
@@ -83,7 +83,7 @@
     {
       "canonical": "outputs/state/recent",
       "category": "state",
-      "copied_files": 11,
+      "copied_files": 0,
       "key": "recent_state",
       "legacy": "outputs/recent_era",
       "resumable": true,
@@ -93,7 +93,7 @@
     {
       "canonical": "outputs/state/super_recent",
       "category": "state",
-      "copied_files": 11,
+      "copied_files": 0,
       "key": "super_recent_state",
       "legacy": "outputs/super_recent",
       "resumable": true,
@@ -113,7 +113,7 @@
     {
       "canonical": "outputs/diagnostics/holdout",
       "category": "diagnostics",
-      "copied_files": 0,
+      "copied_files": 5,
       "key": "holdout_diagnostics",
       "legacy": "outputs/holdout",
       "resumable": false,
@@ -123,7 +123,7 @@
     {
       "canonical": "outputs/diagnostics/role_ensemble",
       "category": "diagnostics",
-      "copied_files": 0,
+      "copied_files": 5,
       "key": "role_diagnostics",
       "legacy": "outputs/role_ensemble",
       "resumable": false,
@@ -141,8 +141,8 @@
       "source_exists": true
     }
   ],
-  "copied_files": 22,
-  "created_at": "2026-07-20T15:25:07.721438+00:00",
+  "copied_files": 14,
+  "created_at": "2026-07-20T17:57:28.455786+00:00",
   "kind": "loto7_output_layout_migration",
   "legacy_paths_retained": true,
   "missing_source_count": 0,
