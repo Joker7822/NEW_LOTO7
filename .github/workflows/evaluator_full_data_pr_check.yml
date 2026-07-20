@@ -188,7 +188,7 @@ jobs:
           ):
               assert marker in text, marker
           nested = Path('.github/workflows/loto7_nested_walk_forward.yml').read_text(encoding='utf-8')
-          assert nested.index('check_hit_rate_promotion.py') < nested.index('promote_nested_candidate_strict.py')
+          assert nested.index('python scripts/check_hit_rate_promotion.py') < nested.index('python scripts/promote_nested_candidate_strict.py')
           sync = Path('.github/workflows/loto7_output_layout_sync.yml').read_text(encoding='utf-8')
           assert 'scripts/migrate_output_layout.py' in sync
           print('production ordering, accuracy gate ordering and canonical sync are valid')
