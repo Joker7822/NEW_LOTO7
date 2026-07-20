@@ -41,6 +41,9 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Install package in editable mode
+        run: python -m pip install -e .
+
       - name: Pull latest guarded candidates
         run: |
           set -euo pipefail
@@ -58,12 +61,20 @@ jobs:
         run: |
           set -euo pipefail
           python -m py_compile \
+            src/loto7/evaluation/core.py \
+            src/loto7/evaluation/hit_metrics.py \
+            src/loto7/evaluation/robust.py \
+            src/loto7/validation/hit_rate_gate.py \
             scripts/nested_walk_forward_validation.py \
             scripts/promote_nested_candidate.py \
             scripts/promote_nested_candidate_strict.py \
+            scripts/check_hit_rate_promotion.py \
+            scripts/migrate_output_layout.py \
             scripts/strict_adoption_gates.py \
             tests/test_strict_adoption_gates.py \
-            tests/test_nested_promotion_gates.py
+            tests/test_nested_promotion_gates.py \
+            tests/test_package_layout_and_hit_metrics.py \
+            tests/test_output_layout_compatibility.py
 
       - name: Run Recent Era sealed nested folds
         env:
@@ -93,26 +104,40 @@ jobs:
             --max-runtime-minutes-per-fold 28 \
             --bootstrap-samples 300
           cp -f outputs/validation/recent/nested_walk_forward_summary.json outputs/validation/nested_walk_forward_summary.json
-          python scripts/promote_nested_candidate_strict.py \
-            --min-nested-total-roi-percent 8.0 \
-            --min-nested-total-roi-delta-percent 0.5 \
-            --csv loto7.csv \
-            --baseline-model outputs/recent_era/recent_era_best_model.json \
-            --candidate-model "$CANDIDATE" \
-            --best-model outputs/recent_era/recent_era_best_model.json \
+          python scripts/check_hit_rate_promotion.py \
             --nested-summary outputs/validation/recent/nested_walk_forward_summary.json \
-            --decision outputs/validation/recent/promotion_decision.json \
-            --report outputs/validation/recent/promotion_report.txt \
-            --focus-start-year 2020 \
-            --purchase-count 5 \
-            --unit-cost 300 \
+            --decision outputs/validation/recent/hit_rate_gate.json \
             --min-positive-folds 2 \
-            --min-fold-roi-improvement-percent 0.5 \
-            --min-median-roi-delta-percent 0.5 \
-            --min-median-top1-removed-delta-percent 0.5 \
-            --min-focus-roi-delta-percent 0.5 \
-            --min-top1-removed-delta-percent 0.5 \
-            --max-top1-payout-share 0.50
+            --min-fold-objective-delta 0.05 \
+            --min-objective-delta 0.05 \
+            --min-draw4-rate-delta-percent 0.0 \
+            --min-draw5-count-delta 0 \
+            --min-average-max-delta 0.0
+          if python -c 'import json,sys; raise SystemExit(0 if json.load(open(sys.argv[1], encoding="utf-8"))["passed"] else 1)' outputs/validation/recent/hit_rate_gate.json; then
+            python scripts/promote_nested_candidate_strict.py \
+              --min-nested-total-roi-percent 8.0 \
+              --min-nested-total-roi-delta-percent 0.5 \
+              --csv loto7.csv \
+              --baseline-model outputs/recent_era/recent_era_best_model.json \
+              --candidate-model "$CANDIDATE" \
+              --best-model outputs/recent_era/recent_era_best_model.json \
+              --nested-summary outputs/validation/recent/nested_walk_forward_summary.json \
+              --decision outputs/validation/recent/promotion_decision.json \
+              --report outputs/validation/recent/promotion_report.txt \
+              --focus-start-year 2020 \
+              --purchase-count 5 \
+              --unit-cost 300 \
+              --min-positive-folds 2 \
+              --min-fold-roi-improvement-percent 0.5 \
+              --min-median-roi-delta-percent 0.5 \
+              --min-median-top1-removed-delta-percent 0.5 \
+              --min-focus-roi-delta-percent 0.5 \
+              --min-top1-removed-delta-percent 0.5 \
+              --max-top1-payout-share 0.50
+          else
+            cp -f outputs/validation/recent/hit_rate_gate.json outputs/validation/recent/promotion_decision.json
+            python -c 'import json,sys; d=json.load(open(sys.argv[1], encoding="utf-8")); print("LOTO7 High-Match Promotion Rejection\n===================================\n"); print("promoted: False"); print("failures:"); [print(f"- {x}") for x in d.get("failures", [])]' outputs/validation/recent/hit_rate_gate.json > outputs/validation/recent/promotion_report.txt
+          fi
 
       - name: Run Super Recent sealed nested folds
         env:
@@ -141,26 +166,40 @@ jobs:
             --seed "${{ github.run_id }}2023" \
             --max-runtime-minutes-per-fold 28 \
             --bootstrap-samples 300
-          python scripts/promote_nested_candidate_strict.py \
-            --min-nested-total-roi-percent 8.0 \
-            --min-nested-total-roi-delta-percent 0.5 \
-            --csv loto7.csv \
-            --baseline-model outputs/super_recent/super_recent_best_model.json \
-            --candidate-model "$CANDIDATE" \
-            --best-model outputs/super_recent/super_recent_best_model.json \
+          python scripts/check_hit_rate_promotion.py \
             --nested-summary outputs/validation/super_recent/nested_walk_forward_summary.json \
-            --decision outputs/validation/super_recent/promotion_decision.json \
-            --report outputs/validation/super_recent/promotion_report.txt \
-            --focus-start-year 2023 \
-            --purchase-count 5 \
-            --unit-cost 300 \
+            --decision outputs/validation/super_recent/hit_rate_gate.json \
             --min-positive-folds 2 \
-            --min-fold-roi-improvement-percent 0.5 \
-            --min-median-roi-delta-percent 0.5 \
-            --min-median-top1-removed-delta-percent 0.5 \
-            --min-focus-roi-delta-percent 0.5 \
-            --min-top1-removed-delta-percent 0.5 \
-            --max-top1-payout-share 0.50
+            --min-fold-objective-delta 0.05 \
+            --min-objective-delta 0.05 \
+            --min-draw4-rate-delta-percent 0.0 \
+            --min-draw5-count-delta 0 \
+            --min-average-max-delta 0.0
+          if python -c 'import json,sys; raise SystemExit(0 if json.load(open(sys.argv[1], encoding="utf-8"))["passed"] else 1)' outputs/validation/super_recent/hit_rate_gate.json; then
+            python scripts/promote_nested_candidate_strict.py \
+              --min-nested-total-roi-percent 8.0 \
+              --min-nested-total-roi-delta-percent 0.5 \
+              --csv loto7.csv \
+              --baseline-model outputs/super_recent/super_recent_best_model.json \
+              --candidate-model "$CANDIDATE" \
+              --best-model outputs/super_recent/super_recent_best_model.json \
+              --nested-summary outputs/validation/super_recent/nested_walk_forward_summary.json \
+              --decision outputs/validation/super_recent/promotion_decision.json \
+              --report outputs/validation/super_recent/promotion_report.txt \
+              --focus-start-year 2023 \
+              --purchase-count 5 \
+              --unit-cost 300 \
+              --min-positive-folds 2 \
+              --min-fold-roi-improvement-percent 0.5 \
+              --min-median-roi-delta-percent 0.5 \
+              --min-median-top1-removed-delta-percent 0.5 \
+              --min-focus-roi-delta-percent 0.5 \
+              --min-top1-removed-delta-percent 0.5 \
+              --max-top1-payout-share 0.50
+          else
+            cp -f outputs/validation/super_recent/hit_rate_gate.json outputs/validation/super_recent/promotion_decision.json
+            python -c 'import json,sys; d=json.load(open(sys.argv[1], encoding="utf-8")); print("LOTO7 High-Match Promotion Rejection\n===================================\n"); print("promoted: False"); print("failures:"); [print(f"- {x}") for x in d.get("failures", [])]' outputs/validation/super_recent/hit_rate_gate.json > outputs/validation/super_recent/promotion_report.txt
+          fi
 
       - name: Run validation tests
         run: |
@@ -169,7 +208,15 @@ jobs:
             tests.test_prediction_output_consistency \
             tests.test_robust_validation_and_portfolio \
             tests.test_strict_adoption_gates \
-            tests.test_nested_promotion_gates -v
+            tests.test_nested_promotion_gates \
+            tests.test_package_layout_and_hit_metrics \
+            tests.test_output_layout_compatibility -v
+
+      - name: Build canonical output layout artifact
+        if: always()
+        run: |
+          set -euo pipefail
+          python scripts/migrate_output_layout.py --manifest outputs/layout_manifest.json
 
       - name: Commit nested summaries and promoted models
         if: always()
@@ -182,7 +229,7 @@ jobs:
             "$SNAPSHOT/outputs/recent_era" \
             "$SNAPSHOT/outputs/super_recent"
           cp -f outputs/validation/nested_walk_forward_summary.json "$SNAPSHOT/outputs/validation/" 2>/dev/null || true
-          for FILE in nested_walk_forward_summary.json nested_walk_forward_report.txt promotion_decision.json promotion_report.txt; do
+          for FILE in nested_walk_forward_summary.json nested_walk_forward_report.txt hit_rate_gate.json promotion_decision.json promotion_report.txt; do
             cp -f "outputs/validation/recent/$FILE" "$SNAPSHOT/outputs/validation/recent/" 2>/dev/null || true
             cp -f "outputs/validation/super_recent/$FILE" "$SNAPSHOT/outputs/validation/super_recent/" 2>/dev/null || true
           done
@@ -202,10 +249,12 @@ jobs:
               outputs/validation/nested_walk_forward_summary.json \
               outputs/validation/recent/nested_walk_forward_summary.json \
               outputs/validation/recent/nested_walk_forward_report.txt \
+              outputs/validation/recent/hit_rate_gate.json \
               outputs/validation/recent/promotion_decision.json \
               outputs/validation/recent/promotion_report.txt \
               outputs/validation/super_recent/nested_walk_forward_summary.json \
               outputs/validation/super_recent/nested_walk_forward_report.txt \
+              outputs/validation/super_recent/hit_rate_gate.json \
               outputs/validation/super_recent/promotion_decision.json \
               outputs/validation/super_recent/promotion_report.txt \
               outputs/recent_era/recent_era_best_model.json \
@@ -229,4 +278,9 @@ jobs:
             outputs/validation/**
             outputs/recent_era/recent_era_best_model.json
             outputs/super_recent/super_recent_best_model.json
+            outputs/production/**
+            outputs/evidence/**
+            outputs/state/**
+            outputs/diagnostics/**
+            outputs/layout_manifest.json
           if-no-files-found: ignore
