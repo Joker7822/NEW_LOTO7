@@ -2,10 +2,20 @@ name: LOTO7 Validation Tests
 
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - "src/**"
+      - "scripts/**"
+      - "tests/**"
+      - "config/**"
+      - "pyproject.toml"
+      - ".github/workflows/**"
+      - "holdout_evaluator.py"
   push:
     branches:
       - main
     paths:
+      - "src/**"
       - "scripts/build_dual_model_prediction.py"
       - "scripts/enforce_prediction_constraints.py"
       - "scripts/robust_model_metrics.py"
@@ -13,6 +23,8 @@ on:
       - "scripts/nested_walk_forward_validation.py"
       - "scripts/promote_nested_candidate.py"
       - "scripts/promote_nested_candidate_strict.py"
+      - "scripts/check_hit_rate_promotion.py"
+      - "scripts/migrate_output_layout.py"
       - "scripts/generation4_core.py"
       - "scripts/build_generation4_prediction.py"
       - "scripts/build_generation4_prediction_strict.py"
@@ -22,18 +34,23 @@ on:
       - "scripts/verify_evaluator_consistency.py"
       - "scripts/update_generation4_shadow_history.py"
       - "scripts/check_prediction_history_results.py"
+      - "scripts/repair_holdout_summary.py"
       - "holdout_evaluator.py"
       - "scripts/backtest_role_ensemble.py"
       - "scripts/seal_generation4_prediction.py"
       - "scripts/finalize_generation4_report.py"
       - "scripts/check_repository_architecture.py"
       - "config/repository_layout.json"
+      - "config/output_layout.json"
+      - "pyproject.toml"
       - "tests/test_prediction_output_consistency.py"
       - "tests/test_robust_validation_and_portfolio.py"
       - "tests/test_generation4_pipeline.py"
       - "tests/test_strict_adoption_gates.py"
       - "tests/test_evaluation_unification.py"
       - "tests/test_nested_promotion_gates.py"
+      - "tests/test_package_layout_and_hit_metrics.py"
+      - "tests/test_output_layout_compatibility.py"
       - ".github/workflows/loto7_generation4_run.yml"
       - ".github/workflows/loto7_nested_walk_forward.yml"
       - ".github/workflows/loto7_validation_tests.yml"
@@ -54,10 +71,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Install package in editable mode
+        run: python -m pip install -e .
       - name: Compile prediction modules
         run: |
           set -euo pipefail
           python -m py_compile \
+            src/loto7/__init__.py \
+            src/loto7/paths.py \
+            src/loto7/evaluation/core.py \
+            src/loto7/evaluation/hit_metrics.py \
+            src/loto7/evaluation/robust.py \
+            src/loto7/validation/hit_rate_gate.py \
             scripts/build_dual_model_prediction.py \
             scripts/enforce_prediction_constraints.py \
             scripts/robust_model_metrics.py \
@@ -65,6 +90,8 @@ jobs:
             scripts/nested_walk_forward_validation.py \
             scripts/promote_nested_candidate.py \
             scripts/promote_nested_candidate_strict.py \
+            scripts/check_hit_rate_promotion.py \
+            scripts/migrate_output_layout.py \
             scripts/generation4_core.py \
             scripts/build_generation4_prediction.py \
             scripts/build_generation4_prediction_strict.py \
@@ -74,6 +101,7 @@ jobs:
             scripts/verify_evaluator_consistency.py \
             scripts/update_generation4_shadow_history.py \
             scripts/check_prediction_history_results.py \
+            scripts/repair_holdout_summary.py \
             holdout_evaluator.py \
             scripts/backtest_role_ensemble.py \
             scripts/seal_generation4_prediction.py \
@@ -84,15 +112,20 @@ jobs:
             tests/test_generation4_pipeline.py \
             tests/test_strict_adoption_gates.py \
             tests/test_evaluation_unification.py \
-            tests/test_nested_promotion_gates.py
+            tests/test_nested_promotion_gates.py \
+            tests/test_package_layout_and_hit_metrics.py \
+            tests/test_output_layout_compatibility.py
       - name: Run focused validation tests
         run: |
           set -euo pipefail
-          python scripts/check_repository_architecture.py
+          python scripts/check_repository_architecture.py --report-only
+          python scripts/migrate_output_layout.py --verify-only --manifest /tmp/loto7-layout-manifest.json
           python -m unittest \
             tests.test_prediction_output_consistency \
             tests.test_robust_validation_and_portfolio \
             tests.test_generation4_pipeline \
             tests.test_strict_adoption_gates \
             tests.test_evaluation_unification \
-            tests.test_nested_promotion_gates -v
+            tests.test_nested_promotion_gates \
+            tests.test_package_layout_and_hit_metrics \
+            tests.test_output_layout_compatibility -v
