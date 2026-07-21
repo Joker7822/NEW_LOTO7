@@ -18,7 +18,7 @@ from loto7.evolution.hit_first import (
     hit_first_score,
     match_quality_score,
 )
-from loto7_evolution_trainer import Draw, Genome
+from loto7_evolution_trainer import Draw, Genome, evaluate_genome
 
 
 def metrics(**overrides: object) -> dict[str, object]:
@@ -76,6 +76,18 @@ def sample_genome(*, identifier: str = "test_hit_first", score: float = 0.0) -> 
     )
 
 
+def sample_draws() -> list[Draw]:
+    return [
+        Draw(
+            draw_no=index + 1,
+            date=f"2026-01-{index + 1:02d}",
+            main=tuple(range(index + 1, index + 8)),
+            bonus=(20 + index, 30 + index),
+        )
+        for index in range(8)
+    ]
+
+
 class HitFirstLearningTests(unittest.TestCase):
     def test_roi_and_profit_do_not_change_learning_score_or_ranking(self) -> None:
         low_finance = metrics(payout_roi_percent=8.0, roi_percent=8.0, profit=-500000)
@@ -97,6 +109,22 @@ class HitFirstLearningTests(unittest.TestCase):
         self.assertEqual(genome.max_main_match, 0)
         self.assertEqual(genome.best_rank_count, 0)
 
+    def test_generation_trainer_uses_hit_first_objective(self) -> None:
+        genome, result = evaluate_genome(
+            sample_genome(identifier="trainer"),
+            sample_draws(),
+            purchase_count=5,
+            min_train_draws=3,
+            max_targets=None,
+            target_stride=1,
+        )
+        self.assertEqual(result["objective_version"], OBJECTIVE_VERSION)
+        self.assertEqual(result["targets"], 5)
+        self.assertEqual(result["tickets"], 25)
+        self.assertEqual(result["score"], hit_first_score(result))
+        self.assertEqual(genome.score, result["score"])
+        self.assertGreater(float(result["average_portfolio_unique_numbers"]), 0.0)
+
     def test_more_five_plus_reach_improves_learning_score(self) -> None:
         baseline = metrics(draw_main5_plus_count=0, draw_main5_plus_rate=0.0)
         improved = metrics(draw_main5_plus_count=3, draw_main5_plus_rate=0.02)
@@ -114,19 +142,10 @@ class HitFirstLearningTests(unittest.TestCase):
         self.assertGreater(hit_first_score(diverse), hit_first_score(duplicated))
 
     def test_walk_forward_evaluator_emits_complete_hit_first_metrics(self) -> None:
-        draws = [
-            Draw(
-                draw_no=index + 1,
-                date=f"2026-01-{index + 1:02d}",
-                main=tuple(range(index + 1, index + 8)),
-                bonus=(20 + index, 30 + index),
-            )
-            for index in range(8)
-        ]
         result = evaluate_model_on_holdout(
             genome=sample_genome(),
             model_path="synthetic",
-            draws=draws,
+            draws=sample_draws(),
             prize_rows={},
             target_indices=[3, 4, 5, 6, 7],
             purchase_count=5,
