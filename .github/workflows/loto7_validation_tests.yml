@@ -11,6 +11,8 @@ on:
       - "pyproject.toml"
       - ".github/workflows/**"
       - "holdout_evaluator.py"
+      - "loto7_evolution_trainer.py"
+      - "_loto7_evolution_trainer_impl.py"
       - "loto7_model_self_evolver.py"
       - "_loto7_model_self_evolver_impl.py"
   push:
@@ -18,6 +20,8 @@ on:
       - main
     paths:
       - "src/**"
+      - "loto7_evolution_trainer.py"
+      - "_loto7_evolution_trainer_impl.py"
       - "loto7_model_self_evolver.py"
       - "_loto7_model_self_evolver_impl.py"
       - "scripts/build_dual_model_prediction.py"
@@ -92,6 +96,8 @@ jobs:
             src/loto7/evolution/__init__.py \
             src/loto7/evolution/hit_first.py \
             src/loto7/validation/hit_rate_gate.py \
+            _loto7_evolution_trainer_impl.py \
+            loto7_evolution_trainer.py \
             _loto7_model_self_evolver_impl.py \
             loto7_model_self_evolver.py \
             scripts/build_dual_model_prediction.py \
