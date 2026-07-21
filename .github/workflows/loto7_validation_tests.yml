@@ -11,11 +11,19 @@ on:
       - "pyproject.toml"
       - ".github/workflows/**"
       - "holdout_evaluator.py"
+      - "loto7_evolution_trainer.py"
+      - "_loto7_evolution_trainer_impl.py"
+      - "loto7_model_self_evolver.py"
+      - "_loto7_model_self_evolver_impl.py"
   push:
     branches:
       - main
     paths:
       - "src/**"
+      - "loto7_evolution_trainer.py"
+      - "_loto7_evolution_trainer_impl.py"
+      - "loto7_model_self_evolver.py"
+      - "_loto7_model_self_evolver_impl.py"
       - "scripts/build_dual_model_prediction.py"
       - "scripts/enforce_prediction_constraints.py"
       - "scripts/robust_model_metrics.py"
@@ -50,6 +58,7 @@ on:
       - "tests/test_evaluation_unification.py"
       - "tests/test_nested_promotion_gates.py"
       - "tests/test_package_layout_and_hit_metrics.py"
+      - "tests/test_hit_first_learning.py"
       - "tests/test_output_layout_compatibility.py"
       - "tests/test_sealed_output_migration.py"
       - "tests/test_workflow_resume_compatibility.py"
@@ -84,7 +93,13 @@ jobs:
             src/loto7/evaluation/core.py \
             src/loto7/evaluation/hit_metrics.py \
             src/loto7/evaluation/robust.py \
+            src/loto7/evolution/__init__.py \
+            src/loto7/evolution/hit_first.py \
             src/loto7/validation/hit_rate_gate.py \
+            _loto7_evolution_trainer_impl.py \
+            loto7_evolution_trainer.py \
+            _loto7_model_self_evolver_impl.py \
+            loto7_model_self_evolver.py \
             scripts/build_dual_model_prediction.py \
             scripts/enforce_prediction_constraints.py \
             scripts/robust_model_metrics.py \
@@ -116,6 +131,7 @@ jobs:
             tests/test_evaluation_unification.py \
             tests/test_nested_promotion_gates.py \
             tests/test_package_layout_and_hit_metrics.py \
+            tests/test_hit_first_learning.py \
             tests/test_output_layout_compatibility.py \
             tests/test_sealed_output_migration.py \
             tests/test_workflow_resume_compatibility.py
@@ -132,6 +148,7 @@ jobs:
             tests.test_evaluation_unification \
             tests.test_nested_promotion_gates \
             tests.test_package_layout_and_hit_metrics \
+            tests.test_hit_first_learning \
             tests.test_output_layout_compatibility \
             tests.test_sealed_output_migration \
             tests.test_workflow_resume_compatibility -v
