@@ -8,10 +8,12 @@ from loto7.evolution.hit_first import (
     OBJECTIVE_VERSION,
     adoption_decision,
     diversity_quality_score,
+    evaluate_model_on_holdout,
     hit_first_key,
     hit_first_score,
     match_quality_score,
 )
+from loto7_evolution_trainer import Draw, Genome
 
 
 def metrics(**overrides: object) -> dict[str, object]:
@@ -63,6 +65,53 @@ class HitFirstLearningTests(unittest.TestCase):
         duplicated = metrics(average_portfolio_unique_numbers=9.0, mean_ticket_pair_overlap=5.8)
         diverse = metrics(average_portfolio_unique_numbers=18.0, mean_ticket_pair_overlap=3.0)
         self.assertGreater(hit_first_score(diverse), hit_first_score(duplicated))
+
+    def test_walk_forward_evaluator_emits_complete_hit_first_metrics(self) -> None:
+        draws = [
+            Draw(
+                draw_no=index + 1,
+                date=f"2026-01-{index + 1:02d}",
+                main=tuple(range(index + 1, index + 8)),
+                bonus=(20 + index, 30 + index),
+            )
+            for index in range(8)
+        ]
+        genome = Genome(
+            id="test_hit_first",
+            generation=0,
+            full_weight=0.25,
+            recent240_weight=0.25,
+            recent120_weight=0.25,
+            recent60_weight=0.25,
+            pair_weight=0.08,
+            pair_recency_weight=0.08,
+            pair_stability_weight=0.08,
+            triple_weight=0.02,
+            dormancy_weight=0.01,
+            odd_bonus=0.2,
+            sum_bonus=0.2,
+            low_high_bonus=0.2,
+            consecutive_penalty=0.2,
+            overlap_limit=4,
+            pool_size=12,
+            target_sum_min=40,
+            target_sum_max=210,
+            max_consecutive_pairs=3,
+        )
+        result = evaluate_model_on_holdout(
+            genome=genome,
+            model_path="synthetic",
+            draws=draws,
+            prize_rows={},
+            target_indices=[3, 4, 5, 6, 7],
+            purchase_count=5,
+            unit_cost=300,
+        )
+        self.assertEqual(result["target_draws"], 5)
+        self.assertEqual(result["total_tickets"], 25)
+        self.assertGreater(float(result["average_portfolio_unique_numbers"]), 0.0)
+        self.assertEqual(len(result["temporal_segment_metrics"]), 4)
+        self.assertEqual(result["hit_first_objective_score"], hit_first_score(result))
 
     def test_adoption_rejects_high_match_regression_even_with_high_roi(self) -> None:
         baseline = metrics()
