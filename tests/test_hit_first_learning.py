@@ -2,8 +2,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+import json
+import tempfile
 import unittest
+from dataclasses import asdict
+from pathlib import Path
 
+import loto7_model_self_evolver as self_evolver_cli
 from loto7.evolution.hit_first import (
     OBJECTIVE_VERSION,
     adoption_decision,
@@ -43,12 +48,54 @@ def metrics(**overrides: object) -> dict[str, object]:
     return base
 
 
+def sample_genome(*, identifier: str = "test_hit_first", score: float = 0.0) -> Genome:
+    return Genome(
+        id=identifier,
+        generation=0,
+        full_weight=0.25,
+        recent240_weight=0.25,
+        recent120_weight=0.25,
+        recent60_weight=0.25,
+        pair_weight=0.08,
+        pair_recency_weight=0.08,
+        pair_stability_weight=0.08,
+        triple_weight=0.02,
+        dormancy_weight=0.01,
+        odd_bonus=0.2,
+        sum_bonus=0.2,
+        low_high_bonus=0.2,
+        consecutive_penalty=0.2,
+        overlap_limit=4,
+        pool_size=12,
+        target_sum_min=40,
+        target_sum_max=210,
+        max_consecutive_pairs=3,
+        score=score,
+        max_main_match=6,
+        best_rank_count=99,
+    )
+
+
 class HitFirstLearningTests(unittest.TestCase):
     def test_roi_and_profit_do_not_change_learning_score_or_ranking(self) -> None:
         low_finance = metrics(payout_roi_percent=8.0, roi_percent=8.0, profit=-500000)
         high_finance = metrics(payout_roi_percent=500.0, roi_percent=500.0, profit=9000000)
         self.assertEqual(hit_first_score(low_finance), hit_first_score(high_finance))
         self.assertEqual(hit_first_key(low_finance), hit_first_key(high_finance))
+
+    def test_legacy_seed_score_is_reset_by_public_cli(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "legacy_model.json"
+            path.write_text(
+                json.dumps({"genome": asdict(sample_genome(identifier="legacy", score=999999.0))}),
+                encoding="utf-8",
+            )
+            seeds = self_evolver_cli._load_high_match_seed_genomes([str(path)])
+        self.assertEqual(len(seeds), 1)
+        genome = seeds[0][1]
+        self.assertEqual(genome.score, 0.0)
+        self.assertEqual(genome.max_main_match, 0)
+        self.assertEqual(genome.best_rank_count, 0)
 
     def test_more_five_plus_reach_improves_learning_score(self) -> None:
         baseline = metrics(draw_main5_plus_count=0, draw_main5_plus_rate=0.0)
@@ -76,30 +123,8 @@ class HitFirstLearningTests(unittest.TestCase):
             )
             for index in range(8)
         ]
-        genome = Genome(
-            id="test_hit_first",
-            generation=0,
-            full_weight=0.25,
-            recent240_weight=0.25,
-            recent120_weight=0.25,
-            recent60_weight=0.25,
-            pair_weight=0.08,
-            pair_recency_weight=0.08,
-            pair_stability_weight=0.08,
-            triple_weight=0.02,
-            dormancy_weight=0.01,
-            odd_bonus=0.2,
-            sum_bonus=0.2,
-            low_high_bonus=0.2,
-            consecutive_penalty=0.2,
-            overlap_limit=4,
-            pool_size=12,
-            target_sum_min=40,
-            target_sum_max=210,
-            max_consecutive_pairs=3,
-        )
         result = evaluate_model_on_holdout(
-            genome=genome,
+            genome=sample_genome(),
             model_path="synthetic",
             draws=draws,
             prize_rows={},
