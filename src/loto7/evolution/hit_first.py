@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """High-match-first evaluation and adoption rules for LOTO7 evolution.
 
-Prize amounts and profit are deliberately excluded from the learning score.
-Financial values are calculated only for independent safety gates.
+Prize amounts and profit are deliberately excluded from the learning score and
+ranking. Financial values are calculated only for independent safety gates.
 """
 from __future__ import annotations
 
@@ -68,8 +68,8 @@ def hit_first_score(metrics: Dict[str, object]) -> float:
     return round(score, 6)
 
 
-def hit_first_key(metrics: Dict[str, object]) -> Tuple[float, int, float, float, float, int, float]:
-    """Lexicographic key used for best selection and parent-pool ranking."""
+def hit_first_key(metrics: Dict[str, object]) -> Tuple[float, int, float, float, float, int, float, float]:
+    """Ranking key containing no payout, ROI or profit fields."""
     return (
         hit_first_score(metrics),
         _int(metrics, "draw_main5_plus_count"),
@@ -77,7 +77,8 @@ def hit_first_key(metrics: Dict[str, object]) -> Tuple[float, int, float, float,
         _float(metrics, "average_max_main_match"),
         _float(metrics, "temporal_segment_match_score_min"),
         _int(metrics, "draw_main6_plus_count"),
-        _float(metrics, "payout_roi_percent"),  # final tie-break only
+        _float(metrics, "diversity_quality_score", diversity_quality_score(metrics)),
+        -_float(metrics, "mean_ticket_pair_overlap"),
     )
 
 
