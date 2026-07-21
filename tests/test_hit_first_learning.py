@@ -42,10 +42,11 @@ def metrics(**overrides: object) -> dict[str, object]:
 
 
 class HitFirstLearningTests(unittest.TestCase):
-    def test_roi_and_profit_do_not_change_learning_score(self) -> None:
+    def test_roi_and_profit_do_not_change_learning_score_or_ranking(self) -> None:
         low_finance = metrics(payout_roi_percent=8.0, roi_percent=8.0, profit=-500000)
         high_finance = metrics(payout_roi_percent=500.0, roi_percent=500.0, profit=9000000)
         self.assertEqual(hit_first_score(low_finance), hit_first_score(high_finance))
+        self.assertEqual(hit_first_key(low_finance), hit_first_key(high_finance))
 
     def test_more_five_plus_reach_improves_learning_score(self) -> None:
         baseline = metrics(draw_main5_plus_count=0, draw_main5_plus_rate=0.0)
