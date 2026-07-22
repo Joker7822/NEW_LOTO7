@@ -1,45 +1,54 @@
-LOTO7 Model-Only Self Evolution Report
-======================================
+LOTO7 High-Match-First Self Evolution Report
+==============================================
 
-created_at: 2026-07-21T23:11:14.466601+00:00
-status: safe_exit_at_191.29_minutes
-resume_used: True
-start_iteration: 148
-last_iteration: 158
-iterations_requested: 500
-iterations_evaluated: 158
-iterations_evaluated_this_run: 11
+created_at: 2026-07-22T07:06:55.460069+00:00
+status: safe_exit_at_190.14_minutes
+objective: hit_first_temporal_robustness
+objective_version: loto7-hit-first-2026.07.22-v1
+resume_used: False
+iterations_evaluated: 8
 target_draws: 337
-objective: composite_roi_profit_highgrade_exploration
 
 [Baseline]
-objective_score: 33960.37
-roi_percent: 91.751
-profit: -41700
-grade_hit_count: 64
-high_grade_hit_count: 4
-max_main_match: 6
+hit_first_objective_score: 17.220909
+average_max_main_match: 2.089021
+draw_main4_plus_rate_percent: 5.341
+draw_main5_plus_count: 4
+worst_segment_score: 10.11906
+payout_roi_percent(safety only): 91.751
 
 [Best Candidate]
-objective_score: 33960.37
-roi_percent: 91.751
-profit: -41700
-grade_hit_count: 64
-high_grade_hit_count: 4
-max_main_match: 6
+hit_first_objective_score: 17.518528
+average_max_main_match: 2.068249
+draw_main4_plus_rate_percent: 5.638
+draw_main5_plus_count: 1
+worst_segment_score: 9.88096
+payout_roi_percent(safety only): 14.243
 
 [Adoption]
 {
   "adopted": false,
-  "allow_high_grade_drop": true,
   "applied": false,
   "apply_requested": false,
-  "min_profit_delta": 0,
-  "min_roi_delta_percent": 0.1,
+  "legacy_min_profit_delta_ignored_as_learning_reward": 0,
+  "legacy_min_roi_delta_percent_ignored_as_learning_reward": 0.1,
+  "max_roi_drop_percent": 5.0,
+  "max_top1_payout_share": 0.5,
+  "min_average_max_delta": 0.0,
+  "min_draw4_rate_delta_percent": 0.0,
+  "min_draw5_count_delta": 0,
+  "min_hit_objective_delta": 0.05,
+  "min_payout_roi_percent": 8.0,
+  "min_temporal_min_delta": 0.0,
   "reasons": [
-    "profit -41700 -> -41700",
-    "roi not improved enough 0.917507 -> 0.917507"
+    "objective delta=0.297619",
+    "draw4+ delta=0.297pt",
+    "top1 payout share=0.151389 <= 0.500000",
+    "FAIL: draw5+ count delta -3 < 0",
+    "FAIL: average max delta -0.020772 < 0.000000",
+    "FAIL: worst-segment delta -0.238100 < 0.000000",
+    "FAIL: financial floor failed: 14.243% < 86.751%"
   ]
 }
 
-注意: 過去検証上の改善候補であり、将来の当せんや利益を保証しません。
+ROI/profit are not learning rewards. They are adoption safety checks only.
