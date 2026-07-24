@@ -1,0 +1,297 @@
+name: LOTO7 Refresh Latest Prediction
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - LOTO7 Generation 4 Production
+    types:
+      - completed
+  push:
+    branches:
+      - main
+    paths:
+      - "loto7.csv"
+      - "loto7_best_model.json"
+      - "outputs/recent_era/recent_era_best_model.json"
+      - "outputs/super_recent/super_recent_best_model.json"
+      - "outputs/role_ensemble/regime_strategy.json"
+      - "scripts/build_generation4_prediction.py"
+      - "scripts/update_prediction_history.py"
+      - "scripts/assert_latest_prediction_fresh.py"
+      - "tests/test_latest_prediction_freshness.py"
+      - ".github/workflows/loto7_refresh_latest_prediction.yml"
+  pull_request:
+    paths:
+      - "scripts/assert_latest_prediction_fresh.py"
+      - "tests/test_latest_prediction_freshness.py"
+      - ".github/workflows/loto7_refresh_latest_prediction.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: loto7-refresh-latest-prediction-main
+  cancel-in-progress: false
+
+jobs:
+  validate-freshness-guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || 'main' }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Compile freshness guard
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/assert_latest_prediction_fresh.py tests/test_latest_prediction_freshness.py
+
+      - name: Test freshness invariant
+        run: |
+          set -euo pipefail
+          python -m unittest tests.test_latest_prediction_freshness -v
+
+  refresh-production-prediction:
+    if: ${{ github.event_name != 'pull_request' && (github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')) }}
+    needs:
+      - validate-freshness-guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Pull latest production state
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git reset --hard origin/main
+
+      - name: Prepare approved production inputs
+        run: |
+          set -euo pipefail
+          mkdir -p outputs/generation4/sealed outputs/holdout outputs/recent_era outputs/super_recent outputs/role_ensemble
+
+          if [ ! -s outputs/recent_era/recent_era_best_model.json ]; then
+            cp -f loto7_best_model.json outputs/recent_era/recent_era_best_model.json
+          fi
+          if [ ! -s outputs/super_recent/super_recent_best_model.json ]; then
+            cp -f outputs/recent_era/recent_era_best_model.json outputs/super_recent/super_recent_best_model.json
+          fi
+          if [ ! -s outputs/role_ensemble/regime_strategy.json ]; then
+            BASE_STRATEGY="outputs/recent_era/recent_role_strategy.json"
+            if [ ! -s "$BASE_STRATEGY" ]; then BASE_STRATEGY="outputs/role_ensemble/role_strategy.json"; fi
+            python scripts/detect_loto7_regime.py \
+              --csv loto7.csv \
+              --base-strategy "$BASE_STRATEGY" \
+              --output outputs/role_ensemble/regime_state.json \
+              --strategy-output outputs/role_ensemble/regime_strategy.json \
+              --report outputs/role_ensemble/regime_strategy_report.txt \
+              --purchase-count 5
+          fi
+
+      - name: Build next-draw prediction from current approved models
+        run: |
+          set -euo pipefail
+          python scripts/build_generation4_prediction.py \
+            --csv loto7.csv \
+            --full-model loto7_best_model.json \
+            --recent-model outputs/recent_era/recent_era_best_model.json \
+            --super-recent-model outputs/super_recent/super_recent_best_model.json \
+            --regime-strategy outputs/role_ensemble/regime_strategy.json \
+            --prediction-history outputs/evolution_prediction_history.csv \
+            --shadow-history outputs/generation4/shadow_history.csv \
+            --null-league-summary outputs/generation4/null_strategy_league_summary.json \
+            --prediction outputs/evolution_best_prediction.csv \
+            --prediction-report outputs/holdout/latest_prediction_report.txt \
+            --summary outputs/generation4/latest_generation4_summary.json \
+            --shadow-output outputs/generation4/latest_shadow_predictions.json \
+            --purchase-count 5 \
+            --candidates-per-source 220 \
+            --candidates-per-step 80 \
+            --beam-width 220 \
+            --max-number-usage 4 \
+            --max-pair-overlap 4 \
+            --history-overlap-limit 6 \
+            --conformal-alpha 0.20 \
+            --minimum-conformal-hits 4
+
+          python scripts/enforce_prediction_constraints.py \
+            --prediction outputs/evolution_best_prediction.csv \
+            --report outputs/holdout/latest_prediction_report.txt \
+            --max-number-usage 4 \
+            --max-pair-overlap 4
+
+          python scripts/finalize_generation4_report.py \
+            --prediction outputs/evolution_best_prediction.csv \
+            --summary outputs/generation4/latest_generation4_summary.json \
+            --report outputs/holdout/latest_prediction_report.txt
+
+      - name: Mark this as a production refresh, not model adoption
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          summary_path = Path("outputs/generation4/latest_generation4_summary.json")
+          summary = json.loads(summary_path.read_text(encoding="utf-8"))
+          gate_path = Path("outputs/generation4/strict_adoption_gate.json")
+          adoption_allowed = None
+          if gate_path.exists() and gate_path.stat().st_size > 0:
+              gate = json.loads(gate_path.read_text(encoding="utf-8"))
+              adoption_allowed = gate.get("adoption_allowed")
+          summary["production_refresh"] = {
+              "reason": "always_publish_latest_draw_plus_one",
+              "model_adoption_changed": False,
+              "latest_strict_gate_adoption_allowed": adoption_allowed,
+          }
+          summary_path.write_text(
+              json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          PY
+
+      - name: Upsert prediction history and evaluate completed draws
+        run: |
+          set -euo pipefail
+          python scripts/update_prediction_history.py \
+            --latest outputs/evolution_best_prediction.csv \
+            --history outputs/evolution_prediction_history.csv \
+            --csv loto7.csv
+
+          python scripts/check_prediction_history_results.py \
+            --history outputs/evolution_prediction_history.csv \
+            --csv loto7.csv \
+            --output outputs/evolution_prediction_history_result.txt
+
+      - name: Verify prediction freshness
+        run: |
+          set -euo pipefail
+          python scripts/assert_latest_prediction_fresh.py \
+            --csv loto7.csv \
+            --prediction outputs/evolution_best_prediction.csv \
+            --history outputs/evolution_prediction_history.csv
+
+      - name: Seal refreshed prediction
+        run: |
+          set -euo pipefail
+          GITHUB_SHA="$(git rev-parse HEAD)" python scripts/seal_generation4_prediction.py \
+            --prediction outputs/evolution_best_prediction.csv \
+            --summary outputs/generation4/latest_generation4_summary.json \
+            --shadow outputs/generation4/latest_shadow_predictions.json \
+            --dataset loto7.csv \
+            --full-model loto7_best_model.json \
+            --recent-model outputs/recent_era/recent_era_best_model.json \
+            --super-model outputs/super_recent/super_recent_best_model.json
+
+      - name: Verify required refreshed outputs
+        run: |
+          set -euo pipefail
+          test -s outputs/evolution_best_prediction.csv
+          test -s outputs/evolution_prediction_history.csv
+          test -s outputs/evolution_prediction_history_result.txt
+          test -s outputs/holdout/latest_prediction_report.txt
+          test -s outputs/generation4/latest_generation4_summary.json
+          test -s outputs/generation4/latest_shadow_predictions.json
+          test -s outputs/generation4/latest_sealed_manifest.json
+          test -s outputs/generation4/sealed_index.json
+
+      - name: Commit refreshed production prediction
+        run: |
+          set -euo pipefail
+          SNAPSHOT="$(mktemp -d)"
+          mkdir -p "$SNAPSHOT/outputs/generation4/sealed" "$SNAPSHOT/outputs/holdout"
+
+          cp -f outputs/evolution_best_prediction.csv "$SNAPSHOT/outputs/"
+          cp -f outputs/evolution_prediction_history.csv "$SNAPSHOT/outputs/"
+          cp -f outputs/evolution_prediction_history_result.txt "$SNAPSHOT/outputs/"
+          cp -f outputs/holdout/latest_prediction_report.txt "$SNAPSHOT/outputs/holdout/"
+          cp -f outputs/generation4/latest_generation4_summary.json "$SNAPSHOT/outputs/generation4/"
+          cp -f outputs/generation4/latest_shadow_predictions.json "$SNAPSHOT/outputs/generation4/"
+          cp -f outputs/generation4/latest_sealed_manifest.json "$SNAPSHOT/outputs/generation4/"
+          cp -f outputs/generation4/sealed_index.json "$SNAPSHOT/outputs/generation4/"
+          cp -a outputs/generation4/sealed/. "$SNAPSHOT/outputs/generation4/sealed/"
+
+          for ATTEMPT in 1 2 3 4; do
+            git fetch origin main
+            git reset --hard origin/main
+            mkdir -p outputs/generation4/sealed outputs/holdout
+
+            cp -f "$SNAPSHOT/outputs/evolution_best_prediction.csv" outputs/evolution_best_prediction.csv
+            cp -f "$SNAPSHOT/outputs/evolution_prediction_history.csv" outputs/evolution_prediction_history.csv
+            cp -f "$SNAPSHOT/outputs/evolution_prediction_history_result.txt" outputs/evolution_prediction_history_result.txt
+            cp -f "$SNAPSHOT/outputs/holdout/latest_prediction_report.txt" outputs/holdout/latest_prediction_report.txt
+            cp -f "$SNAPSHOT/outputs/generation4/latest_generation4_summary.json" outputs/generation4/latest_generation4_summary.json
+            cp -f "$SNAPSHOT/outputs/generation4/latest_shadow_predictions.json" outputs/generation4/latest_shadow_predictions.json
+            cp -f "$SNAPSHOT/outputs/generation4/latest_sealed_manifest.json" outputs/generation4/latest_sealed_manifest.json
+            cp -f "$SNAPSHOT/outputs/generation4/sealed_index.json" outputs/generation4/sealed_index.json
+            cp -a "$SNAPSHOT/outputs/generation4/sealed/." outputs/generation4/sealed/
+
+            git add -f \
+              outputs/evolution_best_prediction.csv \
+              outputs/evolution_prediction_history.csv \
+              outputs/evolution_prediction_history_result.txt \
+              outputs/holdout/latest_prediction_report.txt \
+              outputs/generation4/latest_generation4_summary.json \
+              outputs/generation4/latest_shadow_predictions.json \
+              outputs/generation4/latest_sealed_manifest.json \
+              outputs/generation4/sealed_index.json \
+              outputs/generation4/sealed
+
+            if git diff --cached --quiet; then
+              echo "Latest production prediction is already current"
+              exit 0
+            fi
+
+            TARGET_DRAW="$(python - <<'PY'
+          import csv
+          with open('outputs/evolution_best_prediction.csv', encoding='utf-8-sig', newline='') as stream:
+              row = next(csv.DictReader(stream))
+          print(int(float(row['prediction_draw_no'])))
+          PY
+          )"
+            git commit -m "Refresh LOTO7 prediction for draw ${TARGET_DRAW} [skip ci]"
+            if git push origin HEAD:main; then exit 0; fi
+            sleep $((ATTEMPT * 10))
+          done
+          exit 1
+
+      - name: Upload refreshed prediction artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: loto7-latest-production-prediction
+          path: |
+            outputs/evolution_best_prediction.csv
+            outputs/evolution_prediction_history.csv
+            outputs/evolution_prediction_history_result.txt
+            outputs/holdout/latest_prediction_report.txt
+            outputs/generation4/latest_generation4_summary.json
+            outputs/generation4/latest_shadow_predictions.json
+            outputs/generation4/latest_sealed_manifest.json
+            outputs/generation4/sealed_index.json
+          if-no-files-found: error
