@@ -23,7 +23,7 @@
     {
       "canonical": "outputs/production/prediction_history_result.txt",
       "category": "production",
-      "copied_files": 0,
+      "copied_files": 1,
       "key": "prediction_history_result",
       "legacy": "outputs/evolution_prediction_history_result.txt",
       "resumable": false,
@@ -73,7 +73,7 @@
     {
       "canonical": "outputs/state/full",
       "category": "state",
-      "copied_files": 4,
+      "copied_files": 0,
       "key": "full_state",
       "legacy": "outputs/model_self_evolution",
       "resumable": true,
@@ -103,7 +103,7 @@
     {
       "canonical": "outputs/evidence/validation",
       "category": "evidence",
-      "copied_files": 11,
+      "copied_files": 0,
       "key": "validation_evidence",
       "legacy": "outputs/validation",
       "resumable": true,
@@ -113,7 +113,7 @@
     {
       "canonical": "outputs/diagnostics/holdout",
       "category": "diagnostics",
-      "copied_files": 5,
+      "copied_files": 0,
       "key": "holdout_diagnostics",
       "legacy": "outputs/holdout",
       "resumable": false,
@@ -133,7 +133,7 @@
     {
       "canonical": "outputs/diagnostics/generation4",
       "category": "diagnostics",
-      "copied_files": 0,
+      "copied_files": 5,
       "key": "generation4_diagnostics",
       "legacy": "outputs/generation4",
       "resumable": false,
@@ -141,8 +141,8 @@
       "source_exists": true
     }
   ],
-  "copied_files": 20,
-  "created_at": "2026-07-24T17:54:55.435288+00:00",
+  "copied_files": 6,
+  "created_at": "2026-07-24T18:12:38.432208+00:00",
   "kind": "loto7_output_layout_migration",
   "legacy_paths_retained": true,
   "missing_source_count": 0,
