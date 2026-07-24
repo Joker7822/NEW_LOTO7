@@ -1,32 +1,32 @@
 LOTO7 Recent Era Model Comparison
 ===================================
 
-created_at: 2026-07-24T15:13:31.393281+00:00
+created_at: 2026-07-24T20:34:15.548848+00:00
 recent_start_year: 2023
-target_draws: 183
+target_draws: 184
 
 [Full-period model evaluated on Recent Era]
 model_id: g228_0228_2057
-roi_percent: 17.086
-profit: -227600
+roi_percent: 16.993
+profit: -229100
 total_payout: 46900
 grade_hit_count: 39
 high_grade_hit_count: 1
 max_main_match: 5
-rank_counts: {"1等": 0, "2等": 0, "3等": 0, "4等": 1, "5等": 16, "6等": 22, "外れ": 876}
+rank_counts: {"1等": 0, "2等": 0, "3等": 0, "4等": 1, "5等": 16, "6等": 22, "外れ": 881}
 
 [Recent Era dedicated model]
 model_id: g070_0070_3390
-roi_percent: 152.022
-profit: 142800
+roi_percent: 151.196
+profit: 141300
 total_payout: 417300
 grade_hit_count: 38
 high_grade_hit_count: 1
 max_main_match: 6
-rank_counts: {"1等": 0, "2等": 0, "3等": 1, "4等": 0, "5等": 15, "6等": 22, "外れ": 877}
+rank_counts: {"1等": 0, "2等": 0, "3等": 1, "4等": 0, "5等": 15, "6等": 22, "外れ": 882}
 
 [Delta: recent dedicated - full-period model on Recent Era]
-roi_percent_delta: 134.936
+roi_percent_delta: 134.203
 profit_delta: 370400
 total_payout_delta: 370400
 grade_hit_count_delta: -1
