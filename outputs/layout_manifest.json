@@ -3,7 +3,7 @@
     {
       "canonical": "outputs/production/latest_prediction.csv",
       "category": "production",
-      "copied_files": 1,
+      "copied_files": 0,
       "key": "latest_prediction",
       "legacy": "outputs/evolution_best_prediction.csv",
       "resumable": false,
@@ -13,7 +13,7 @@
     {
       "canonical": "outputs/production/prediction_history.csv",
       "category": "production",
-      "copied_files": 1,
+      "copied_files": 0,
       "key": "prediction_history",
       "legacy": "outputs/evolution_prediction_history.csv",
       "resumable": false,
@@ -33,7 +33,7 @@
     {
       "canonical": "outputs/production/latest_prediction_report.txt",
       "category": "production",
-      "copied_files": 1,
+      "copied_files": 0,
       "key": "latest_prediction_report",
       "legacy": "outputs/holdout/latest_prediction_report.txt",
       "resumable": false,
@@ -43,7 +43,7 @@
     {
       "canonical": "outputs/evidence/generation4/latest_sealed_manifest.json",
       "category": "evidence",
-      "copied_files": 1,
+      "copied_files": 0,
       "key": "sealed_manifest",
       "legacy": "outputs/generation4/latest_sealed_manifest.json",
       "resumable": false,
@@ -53,7 +53,7 @@
     {
       "canonical": "outputs/evidence/generation4/sealed_index.json",
       "category": "evidence",
-      "copied_files": 1,
+      "copied_files": 0,
       "key": "sealed_index",
       "legacy": "outputs/generation4/sealed_index.json",
       "resumable": false,
@@ -63,7 +63,7 @@
     {
       "canonical": "outputs/evidence/generation4/sealed",
       "category": "evidence",
-      "copied_files": 2,
+      "copied_files": 0,
       "key": "sealed_directory",
       "legacy": "outputs/generation4/sealed",
       "resumable": false,
@@ -73,7 +73,7 @@
     {
       "canonical": "outputs/state/full",
       "category": "state",
-      "copied_files": 4,
+      "copied_files": 0,
       "key": "full_state",
       "legacy": "outputs/model_self_evolution",
       "resumable": true,
@@ -113,7 +113,7 @@
     {
       "canonical": "outputs/diagnostics/holdout",
       "category": "diagnostics",
-      "copied_files": 6,
+      "copied_files": 0,
       "key": "holdout_diagnostics",
       "legacy": "outputs/holdout",
       "resumable": false,
@@ -123,7 +123,7 @@
     {
       "canonical": "outputs/diagnostics/role_ensemble",
       "category": "diagnostics",
-      "copied_files": 5,
+      "copied_files": 0,
       "key": "role_diagnostics",
       "legacy": "outputs/role_ensemble",
       "resumable": false,
@@ -133,7 +133,7 @@
     {
       "canonical": "outputs/diagnostics/generation4",
       "category": "diagnostics",
-      "copied_files": 4,
+      "copied_files": 5,
       "key": "generation4_diagnostics",
       "legacy": "outputs/generation4",
       "resumable": false,
@@ -141,8 +141,8 @@
       "source_exists": true
     }
   ],
-  "copied_files": 27,
-  "created_at": "2026-07-24T08:02:18.213879+00:00",
+  "copied_files": 6,
+  "created_at": "2026-07-24T08:14:18.084776+00:00",
   "kind": "loto7_output_layout_migration",
   "legacy_paths_retained": true,
   "missing_source_count": 0,
