@@ -1,7 +1,7 @@
 LOTO7 Prediction History Result Check
 ====================================
 
-created_at: 2026-07-24T22:58:26.300389+00:00
+created_at: 2026-07-24T22:59:37.214115+00:00
 history_csv: outputs/evolution_prediction_history.csv
 loto7_csv: loto7.csv
 
@@ -64,8 +64,8 @@ actual_main: 15 22 23 24 25 29 36 / actual_bonus: 35 37
 
 抽せん日: 2026-07-31 / 第688回
 actual_main: - / actual_bonus: -
-  予測1: 1, 14, 15, 17, 22, 34, 36 | 信頼度=0.95 | main=- bonus=- | result=未抽せん | payout=0円
-  予測2: 1, 6, 9, 12, 22, 33, 36 | 信頼度=0.9 | main=- bonus=- | result=未抽せん | payout=0円
-  予測3: 1, 7, 12, 16, 18, 22, 35 | 信頼度=0.85 | main=- bonus=- | result=未抽せん | payout=0円
-  予測4: 7, 9, 16, 17, 24, 29, 36 | 信頼度=0.8 | main=- bonus=- | result=未抽せん | payout=0円
-  予測5: 6, 8, 17, 20, 22, 29, 35 | 信頼度=0.75 | main=- bonus=- | result=未抽せん | payout=0円
+  予測1: 10, 12, 14, 15, 22, 29, 35 | 信頼度=0.95 | main=- bonus=- | result=未抽せん | payout=0円
+  予測2: 1, 7, 12, 17, 18, 24, 29 | 信頼度=0.9 | main=- bonus=- | result=未抽せん | payout=0円
+  予測3: 6, 7, 15, 17, 20, 22, 33 | 信頼度=0.85 | main=- bonus=- | result=未抽せん | payout=0円
+  予測4: 8, 16, 17, 18, 24, 35, 36 | 信頼度=0.8 | main=- bonus=- | result=未抽せん | payout=0円
+  予測5: 1, 6, 9, 12, 22, 34, 36 | 信頼度=0.75 | main=- bonus=- | result=未抽せん | payout=0円
