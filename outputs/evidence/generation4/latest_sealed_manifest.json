@@ -1,20 +1,20 @@
 {
-  "created_at": "2026-07-17T01:18:48.287293+00:00",
+  "created_at": "2026-07-24T07:18:56.042800+00:00",
   "files": {
-    "loto7.csv": "b67e2f86683bbe4f69985b7299ea8e9e7adb48da87e81802909725b3dcd0d83a",
+    "loto7.csv": "5d36ca4ec4c11f8b6cbc515b526868898b7aacd4f374e135d80de8736ac510f4",
     "loto7_best_model.json": "afd5c5193eaf3c414861e9849cb63fd1cb2f6809e1a5c45bf0864fac1e6ae529",
-    "outputs/evolution_best_prediction.csv": "6479063bef1bbed25268155b35cf4d35b1d1de10d81602d2adfc6e54f6855a04",
-    "outputs/generation4/latest_generation4_summary.json": "a4015920dae913eac12536b1dd78a013e1e6e832f4ab47bac82f54e4847e8460",
-    "outputs/generation4/latest_shadow_predictions.json": "46f466b2aae52cbfe55658e1759a3938bec6435f96a68cd396161348f4c6d21b",
+    "outputs/evolution_best_prediction.csv": "01aa5144f80a7c9d143d894776bf8d62d576c5f41d2191c692a9677d6e95d5ae",
+    "outputs/generation4/latest_generation4_summary.json": "5cd04cf59d45a9579f6783bb568b8b1cfd81bd9e9793b617fd58d8b5eba41086",
+    "outputs/generation4/latest_shadow_predictions.json": "4d76a8ca0e5e15b8d15c46faaf490bf6d01dd12a1fc790ab016bfbdcae53c471",
     "outputs/recent_era/recent_era_best_model.json": "fd3fedccfed17951a03cc2b2c2dfa1d86b4982c9c15f7522e48adfa46909b554",
     "outputs/super_recent/super_recent_best_model.json": "fd3fedccfed17951a03cc2b2c2dfa1d86b4982c9c15f7522e48adfa46909b554",
     "scripts/build_generation4_prediction.py": "079b7b664159f0ffb083c78b8a46f14b0c1464f787875e650daf8822b6a1a2f3"
   },
-  "git_sha": "381d095eedd95090eb62cbafba5d39830d4bf79b",
+  "git_sha": "7bfe22b580dcc409207627668e278b44c88fb88b",
   "github_run_attempt": "1",
-  "github_run_id": "29546244172",
+  "github_run_id": "30074993370",
   "hash_algorithm": "sha256",
   "kind": "loto7_generation4_sealed_prediction",
-  "manifest_sha256": "29a0c7361a5f691d99da414c366f6799fdbd1783338debea479b62d42d89f5a2",
-  "prediction_draw_no": 686
+  "manifest_sha256": "f68f26b91e4535ccf410bb02f163e2cc31d0f6e1aead55a8535b8cd57905872a",
+  "prediction_draw_no": 687
 }
