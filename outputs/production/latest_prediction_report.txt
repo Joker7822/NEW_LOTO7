@@ -1,40 +1,40 @@
 LOTO7 Generation 4 Latest Prediction
 ====================================
 
-基準最新回: 第686回
-基準最新抽せん日: 2026-07-17
-予測対象回: 第687回
+基準最新回: 第687回
+基準最新抽せん日: 2026-07-24
+予測対象回: 第688回
 予測方式: generation4_complete
 採用構成: Bayesian DMA + Change-Point + Rolling Conformal + DPP + Hypergraph
 selection_integrity: original_model_candidates / post-selection replacement=0
 
 [最新予測 5口]
-1位 / 1口目: 01 07 08 18 22 29 34 / 相対スコア=0.95 / 方式=portfolio_regime_high_match
-2位 / 2口目: 01 06 09 17 18 33 36 / 相対スコア=0.90 / 方式=generation4_recent
-3位 / 3口目: 01 14 16 19 22 33 35 / 相対スコア=0.85 / 方式=portfolio_regime_high_match
-4位 / 4口目: 07 08 12 16 33 35 36 / 相対スコア=0.80 / 方式=generation4_recent
-5位 / 5口目: 06 09 12 17 20 22 35 / 相対スコア=0.75 / 方式=generation4_full
+1位 / 1口目: 07 08 09 14 22 29 35 / 相対スコア=0.95 / 方式=portfolio_regime_high_match
+2位 / 2口目: 01 07 12 17 18 24 29 / 相対スコア=0.90 / 方式=generation4_recent
+3位 / 3口目: 06 07 15 17 20 22 33 / 相対スコア=0.85 / 方式=portfolio_regime_high_match
+4位 / 4口目: 08 16 17 18 24 35 36 / 相対スコア=0.80 / 方式=generation4_recent
+5位 / 5口目: 01 06 09 12 22 34 36 / 相対スコア=0.75 / 方式=generation4_full
 
 [Generation 4 Evidence]
 source_quotas: {'full': 1, 'recent': 2, 'regime': 2, 'super': 0}
 source_weights: {'full': 0.215256588, 'recent': 0.514701803, 'regime': 0.270041609, 'super': 0.0}
-change_point_score: 0.406343 / level=low
+change_point_score: 0.406226 / level=low
 conformal_pool_size: 24
 conformal_pool: [1, 4, 6, 7, 8, 9, 10, 12, 13, 14, 15, 17, 18, 19, 20, 22, 26, 29, 31, 32, 33, 34, 35, 36]
-conformal_empirical_coverage: 0.644231
+conformal_empirical_coverage: 0.642857
 null_league_passed: False
-null_model_percentile: 0.438889
-null_pbo: 0.15
+null_model_percentile: 0.466667
+null_pbo: 1.0
 
 [Portfolio Objective]
-objective_score: 49.995237
-dpp_logdet: 5.664124
-hypergraph_score: 101.558259
-conformal_hits: 33.0
-unique_number_count: 18
+objective_score: 50.119279
+dpp_logdet: 5.676732
+hypergraph_score: 102.463608
+conformal_hits: 32.0
+unique_number_count: 19
 max_number_usage: 3
 max_pair_overlap: 3
-average_pair_overlap: 2.1
+average_pair_overlap: 1.9
 
 [相対スコアの意味]
 0.95から順に統一した5口内の順位です。当せん確率ではありません。

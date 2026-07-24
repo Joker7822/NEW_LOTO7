@@ -1,20 +1,20 @@
 {
-  "created_at": "2026-07-24T09:15:19.592582+00:00",
+  "created_at": "2026-07-24T14:01:46.339503+00:00",
   "files": {
-    "loto7.csv": "5d36ca4ec4c11f8b6cbc515b526868898b7aacd4f374e135d80de8736ac510f4",
+    "loto7.csv": "ffbf6fc585fad419ca324082a2f1cdf02de38240b81953150f53c7daee119446",
     "loto7_best_model.json": "afd5c5193eaf3c414861e9849cb63fd1cb2f6809e1a5c45bf0864fac1e6ae529",
-    "outputs/evolution_best_prediction.csv": "4f389e71e947a8c4bfbb1e96f0cfec6aea0ba3509334134597ee05107ae5dfc7",
-    "outputs/generation4/latest_generation4_summary.json": "553616b9179cb607ae62b6bfbc288df4f142a537f62e326294a55127dcedb16f",
-    "outputs/generation4/latest_shadow_predictions.json": "bd13643314abc94851778bedf36c6bb67791d5d1a56f99a60d81470130ca2bbe",
+    "outputs/evolution_best_prediction.csv": "d41a1a5bc2400e86f30aa648b57ef3fe05efc48afa59d2563a53104f9a33b259",
+    "outputs/generation4/latest_generation4_summary.json": "e66ccf6ddbeb983ee380f84b60e2d282f1f2a2b887f52c5ba5030c3414b8cfea",
+    "outputs/generation4/latest_shadow_predictions.json": "1a3429c9e4ffbec623e57e5cd2a2a18eedca1d9f60028b2082ce63d2d7ba8c51",
     "outputs/recent_era/recent_era_best_model.json": "fd3fedccfed17951a03cc2b2c2dfa1d86b4982c9c15f7522e48adfa46909b554",
     "outputs/super_recent/super_recent_best_model.json": "fd3fedccfed17951a03cc2b2c2dfa1d86b4982c9c15f7522e48adfa46909b554",
     "scripts/build_generation4_prediction.py": "079b7b664159f0ffb083c78b8a46f14b0c1464f787875e650daf8822b6a1a2f3"
   },
-  "git_sha": "a8b18222b65f0fff39e394d6f8b69daa38baf333",
+  "git_sha": "9899c15c53d34c37233cabeb9a545305136a6667",
   "github_run_attempt": "1",
-  "github_run_id": "30081834082",
+  "github_run_id": "30099218337",
   "hash_algorithm": "sha256",
   "kind": "loto7_generation4_sealed_prediction",
-  "manifest_sha256": "0e1144893d1c288dc54595ef41a914ab4a4c8dfe453d19101733698539685a4b",
-  "prediction_draw_no": 687
+  "manifest_sha256": "e5a32021bf787f196fcaa912af557a90d8b723d605333ce6e7223d7020c14cfd",
+  "prediction_draw_no": 688
 }
