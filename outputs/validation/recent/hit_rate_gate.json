@@ -17,10 +17,10 @@
     "target_draws": 155
   },
   "candidate": {
-    "average_max_main_match": 2.154839,
-    "draw_main4_plus_count": 12,
-    "draw_main4_plus_rate": 0.077419,
-    "draw_main4_plus_rate_percent": 7.742,
+    "average_max_main_match": 2.148387,
+    "draw_main4_plus_count": 9,
+    "draw_main4_plus_rate": 0.058065,
+    "draw_main4_plus_rate_percent": 5.806,
     "draw_main5_plus_count": 0,
     "draw_main5_plus_rate": 0.0,
     "draw_main5_plus_rate_percent": 0.0,
@@ -30,17 +30,20 @@
     "draw_main7_count": 0,
     "draw_main7_plus_rate": 0.0,
     "draw_main7_plus_rate_percent": 0.0,
-    "hit_objective_score": 12.986543,
+    "hit_objective_score": 12.521235,
     "target_draws": 155
   },
-  "created_at": "2026-07-25T16:09:21.456773+00:00",
+  "created_at": "2026-07-25T21:16:41.640523+00:00",
   "deltas": {
-    "average_max_main_match": 0.0,
-    "draw_main4_plus_rate_percent": 2.581,
+    "average_max_main_match": -0.006452,
+    "draw_main4_plus_rate_percent": 0.645,
     "draw_main5_plus_count": 0,
-    "hit_objective_score": 0.645151
+    "hit_objective_score": 0.179843
   },
-  "failures": [],
+  "failures": [
+    "materially improved folds failed: 1 < 2",
+    "average max-main delta failed: -0.006452 < 0.000000"
+  ],
   "folds": [
     {
       "baseline_hit_objective_score": 12.463609,
@@ -52,30 +55,28 @@
     },
     {
       "baseline_hit_objective_score": 11.862205,
-      "candidate_hit_objective_score": 12.420918,
+      "candidate_hit_objective_score": 11.862205,
       "evaluation_year": 2024,
-      "hit_objective_delta": 0.558713,
+      "hit_objective_delta": 0.0,
       "label": "train_through_2022_select_2023_evaluate_2024",
-      "materially_improved": true
+      "materially_improved": false
     },
     {
       "baseline_hit_objective_score": 12.705362,
-      "candidate_hit_objective_score": 14.096446,
+      "candidate_hit_objective_score": 13.251942,
       "evaluation_year": 2025,
-      "hit_objective_delta": 1.391084,
+      "hit_objective_delta": 0.54658,
       "label": "train_through_2023_select_2024_evaluate_2025",
       "materially_improved": true
     }
   ],
   "kind": "loto7_nested_high_match_gate",
-  "passed": true,
-  "positive_folds": 2,
+  "passed": false,
+  "positive_folds": 1,
   "reasons": [
-    "materially improved folds=2 >= 2",
-    "hit objective delta=0.645151 >= 0.050000",
-    "draw main4+ rate delta=2.581pt",
-    "draw main5+ count delta=0",
-    "average max-main delta=0.000000"
+    "hit objective delta=0.179843 >= 0.050000",
+    "draw main4+ rate delta=0.645pt",
+    "draw main5+ count delta=0"
   ],
   "thresholds": {
     "min_average_max_delta": 0.0,
