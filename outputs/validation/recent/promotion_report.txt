@@ -1,8 +1,37 @@
-LOTO7 High-Match Promotion Rejection
-===================================
+LOTO7 Strict Nested Candidate Promotion
+=======================================
 
+created_at: 2026-07-26T21:32:37.949510+00:00
 promoted: False
-failures:
-- materially improved folds failed: 0 < 2
-- hit objective delta failed: -0.124922 < 0.050000
-- average max-main delta failed: -0.038710 < 0.000000
+
+[Aggregate Nested ROI Gate]
+{
+  "baseline": {
+    "roi_percent": 13.333333,
+    "total_cost": 232500,
+    "total_payout": 31000
+  },
+  "candidate": {
+    "roi_percent": 12.516129,
+    "total_cost": 232500,
+    "total_payout": 29100
+  },
+  "expected_model_id": "g070_0070_3390",
+  "failures": [
+    "nested total ROI delta failed: -0.817pt < 0.500pt"
+  ],
+  "passed": false,
+  "reasons": [
+    "nested total ROI ok: 12.516% >= 8.000%"
+  ],
+  "reference_model_id": "g070_0070_3390",
+  "roi_delta_percent": -0.817204,
+  "thresholds": {
+    "min_candidate_roi_percent": 8.0,
+    "min_roi_delta_percent": 0.5
+  },
+  "valid_fold_count": 3
+}
+
+Candidate promotion was completely rejected before production model replacement.
+Historical validation does not guarantee future lottery results.
