@@ -1,7 +1,7 @@
 LOTO7 Nested Walk-Forward Validation
 ======================================
 
-created_at: 2026-07-25T22:14:15.161431+00:00
+created_at: 2026-07-26T03:57:17.634564+00:00
 reference_model_id: g070_0070_3390
 fold_count: 3
 future_leakage_detected: False
@@ -27,11 +27,11 @@ median_top1_removed_roi_delta_percent: 0.0
   top1_removed_delta: 0.0
 - train_through_2023_select_2024_evaluate_2025
   leakage_check: True
-  fold_model_id: g011_0113_5439
+  fold_model_id: g070_0070_3390
   baseline_roi: 14.248
-  candidate_roi: 17.647
-  roi_delta: 3.399
-  top1_removed_delta: 4.967
+  candidate_roi: 14.248
+  roi_delta: 0.0
+  top1_removed_delta: 0.0
 
 This validation evolves each fold model without access to its evaluation year.
 It is historical validation and does not guarantee future lottery results.
