@@ -1,14 +1,14 @@
 # Repository Architecture Guard
 
-Generated: `2026-07-27T09:49:51.963554+00:00`
+Generated: `2026-07-27T10:07:35.429973+00:00`
 
 Status: **pass**
 
 ## Summary
 
-- Workflows: **12**
+- Workflows: **13**
 - Root Python files: **12**
-- Tracked output files: **357**
+- Tracked output files: **363**
 - Errors: **0**
 - Warnings: **2**
 
@@ -26,7 +26,7 @@ Status: **pass**
 ## Warnings
 
 - Root still contains 12 Python modules; retain as compatibility layer until Phase 2 migration
-- outputs/ contains 357 tracked files; reproducible diagnostics should move to Actions artifacts
+- outputs/ contains 363 tracked files; reproducible diagnostics should move to Actions artifacts
 
 ## Policy
 

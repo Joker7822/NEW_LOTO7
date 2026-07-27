@@ -1,21 +1,21 @@
 {
   "category_counts": {
     "documentation": 7,
-    "generated_output": 357,
+    "generated_output": 363,
     "other": 4,
     "root_data_or_report": 7,
     "root_python": 22,
     "script": 32,
     "test": 15,
-    "workflow": 12
+    "workflow": 13
   },
-  "created_at": "2026-07-27T09:49:52.050731+00:00",
+  "created_at": "2026-07-27T10:07:35.518815+00:00",
   "directory_file_counts": {
-    ".github": 12,
+    ".github": 13,
     "<root>": 21,
     "config": 2,
     "docs": 7,
-    "outputs": 357,
+    "outputs": 363,
     "scripts": 32,
     "src": 10,
     "tests": 15
@@ -447,6 +447,14 @@
       "outputs/evidence/generation4/sealed/prediction_688_ccb96d65e7368786.sha256",
       "outputs/generation4/sealed/prediction_688_ccb96d65e7368786.sha256"
     ],
+    "prediction_688_d760c4d0469d78d7.json": [
+      "outputs/evidence/generation4/sealed/prediction_688_d760c4d0469d78d7.json",
+      "outputs/generation4/sealed/prediction_688_d760c4d0469d78d7.json"
+    ],
+    "prediction_688_d760c4d0469d78d7.sha256": [
+      "outputs/evidence/generation4/sealed/prediction_688_d760c4d0469d78d7.sha256",
+      "outputs/generation4/sealed/prediction_688_d760c4d0469d78d7.sha256"
+    ],
     "prediction_688_dc3c2d1ea5d0ab91.json": [
       "outputs/evidence/generation4/sealed/prediction_688_dc3c2d1ea5d0ab91.json",
       "outputs/generation4/sealed/prediction_688_dc3c2d1ea5d0ab91.json"
@@ -462,6 +470,14 @@
     "prediction_688_e5a32021bf787f19.sha256": [
       "outputs/evidence/generation4/sealed/prediction_688_e5a32021bf787f19.sha256",
       "outputs/generation4/sealed/prediction_688_e5a32021bf787f19.sha256"
+    ],
+    "prediction_688_ecdf4a460e4e251b.json": [
+      "outputs/evidence/generation4/sealed/prediction_688_ecdf4a460e4e251b.json",
+      "outputs/generation4/sealed/prediction_688_ecdf4a460e4e251b.json"
+    ],
+    "prediction_688_ecdf4a460e4e251b.sha256": [
+      "outputs/evidence/generation4/sealed/prediction_688_ecdf4a460e4e251b.sha256",
+      "outputs/generation4/sealed/prediction_688_ecdf4a460e4e251b.sha256"
     ],
     "promotion_decision.json": [
       "outputs/evidence/validation/recent/promotion_decision.json",
@@ -674,7 +690,7 @@
     ]
   },
   "duplicate_workflow_names": {},
-  "file_count": 456,
+  "file_count": 463,
   "history_report_summary_files": [
     "outputs/diagnostics/generation4/champion_challenger_report.txt",
     "outputs/diagnostics/generation4/champion_challenger_summary.json",
@@ -782,7 +798,7 @@
       "path": "outputs/recent_era/recent_era_model_history.pre_hit_first_20260722035646.csv"
     },
     {
-      "bytes": 156642,
+      "bytes": 160578,
       "path": "outputs/super_recent/super_recent_model_history.csv"
     },
     {
@@ -798,24 +814,28 @@
       "path": "outputs/super_recent/super_recent_model_history.pre_hit_first_20260722083852.csv"
     },
     {
-      "bytes": 63481,
+      "bytes": 89834,
+      "path": "docs/architecture/repository_structure_audit.json"
+    },
+    {
+      "bytes": 63381,
       "path": "outputs/state/super_recent/super_recent_model_state.json"
     },
     {
-      "bytes": 63481,
+      "bytes": 63381,
       "path": "outputs/super_recent/super_recent_model_state.json"
     },
     {
-      "bytes": 60016,
+      "bytes": 62228,
+      "path": "outputs/recent_era/recent_era_model_history.csv"
+    },
+    {
+      "bytes": 59965,
       "path": "outputs/recent_era/recent_era_model_state.json"
     },
     {
-      "bytes": 60016,
+      "bytes": 59965,
       "path": "outputs/state/recent/recent_era_model_state.json"
-    },
-    {
-      "bytes": 59917,
-      "path": "outputs/recent_era/recent_era_model_history.csv"
     },
     {
       "bytes": 46340,
@@ -870,19 +890,15 @@
       "path": "outputs/holdout/recent_era_summary.json"
     },
     {
-      "bytes": 31317,
-      "path": "docs/architecture/repository_structure_audit.json"
-    },
-    {
       "bytes": 31114,
       "path": "scripts/backtest_role_ensemble.py"
     },
     {
-      "bytes": 30999,
+      "bytes": 30995,
       "path": "outputs/state/super_recent/super_recent_adaptive_safety_guard.json"
     },
     {
-      "bytes": 30999,
+      "bytes": 30995,
       "path": "outputs/super_recent/super_recent_adaptive_safety_guard.json"
     },
     {
@@ -950,7 +966,7 @@
   "recommendations": [
     {
       "action": "Separate immutable prediction evidence from reproducible intermediate outputs; retain only latest, sealed, and compact history files.",
-      "detail": "Repository tracks 357 files under outputs/.",
+      "detail": "Repository tracks 363 files under outputs/.",
       "issue": "tracked_generated_outputs",
       "priority": "P0"
     },
@@ -1013,17 +1029,17 @@
   ],
   "suffix_counts": {
     ".csv": 16,
-    ".json": 201,
+    ".json": 204,
     ".md": 12,
     ".py": 69,
-    ".sha256": 93,
+    ".sha256": 96,
     ".toml": 1,
     ".txt": 51,
-    ".yml": 12,
+    ".yml": 13,
     "<none>": 1
   },
   "test_file_count": 15,
-  "tracked_output_count": 357,
+  "tracked_output_count": 363,
   "tracked_outputs": [
     "outputs/diagnostics/README.md",
     "outputs/diagnostics/generation4/champion_challenger_report.txt",
@@ -1140,10 +1156,14 @@
     "outputs/evidence/generation4/sealed/prediction_688_a7a3485d00d53152.sha256",
     "outputs/evidence/generation4/sealed/prediction_688_ccb96d65e7368786.json",
     "outputs/evidence/generation4/sealed/prediction_688_ccb96d65e7368786.sha256",
+    "outputs/evidence/generation4/sealed/prediction_688_d760c4d0469d78d7.json",
+    "outputs/evidence/generation4/sealed/prediction_688_d760c4d0469d78d7.sha256",
     "outputs/evidence/generation4/sealed/prediction_688_dc3c2d1ea5d0ab91.json",
     "outputs/evidence/generation4/sealed/prediction_688_dc3c2d1ea5d0ab91.sha256",
     "outputs/evidence/generation4/sealed/prediction_688_e5a32021bf787f19.json",
     "outputs/evidence/generation4/sealed/prediction_688_e5a32021bf787f19.sha256",
+    "outputs/evidence/generation4/sealed/prediction_688_ecdf4a460e4e251b.json",
+    "outputs/evidence/generation4/sealed/prediction_688_ecdf4a460e4e251b.sha256",
     "outputs/evidence/generation4/sealed_index.json",
     "outputs/evidence/validation/nested_walk_forward_summary.json",
     "outputs/evidence/validation/recent/hit_rate_gate.json",
@@ -1260,6 +1280,8 @@
     "outputs/generation4/sealed/prediction_688_dc3c2d1ea5d0ab91.sha256",
     "outputs/generation4/sealed/prediction_688_e5a32021bf787f19.json",
     "outputs/generation4/sealed/prediction_688_e5a32021bf787f19.sha256",
+    "outputs/generation4/sealed/prediction_688_ecdf4a460e4e251b.json",
+    "outputs/generation4/sealed/prediction_688_ecdf4a460e4e251b.sha256",
     "outputs/generation4/sealed_index.json",
     "outputs/generation4/shadow_history.csv",
     "outputs/generation4/strict_adoption_gate.json",
@@ -1383,7 +1405,7 @@
     "outputs/validation/super_recent/promotion_decision.json",
     "outputs/validation/super_recent/promotion_report.txt"
   ],
-  "workflow_count": 12,
+  "workflow_count": 13,
   "workflow_referenced_python": [
     "holdout_evaluator.py",
     "loto7_complete_ai_system.py",
@@ -1440,10 +1462,10 @@
     "tests/test_workflow_resume_compatibility.py"
   ],
   "workflow_trigger_counts": {
-    "pull_request": 3,
-    "push": 7,
+    "pull_request": 4,
+    "push": 8,
     "schedule": 3,
-    "workflow_dispatch": 11,
+    "workflow_dispatch": 12,
     "workflow_run": 4
   },
   "workflows": [
@@ -1596,6 +1618,25 @@
     },
     {
       "contains_nonstandard_concurrency_queue": false,
+      "line_count": 170,
+      "name": "LOTO7 Holdout Summary Integrity",
+      "path": ".github/workflows/loto7_holdout_summary_integrity.yml",
+      "referenced_paths": [
+        "scripts/repair_holdout_summary.py",
+        "outputs/holdout/holdout_result.csv",
+        "outputs/holdout/holdout_summary.json",
+        "outputs/holdout/recent_era_report.txt",
+        "outputs/holdout/recent_era_summary.json",
+        "tests/test_holdout_portfolio_repair.py"
+      ],
+      "triggers": [
+        "workflow_dispatch",
+        "push",
+        "pull_request"
+      ]
+    },
+    {
+      "contains_nonstandard_concurrency_queue": false,
       "line_count": 196,
       "name": "LOTO7 Model Self Evolution",
       "path": ".github/workflows/loto7_model_self_evolution.yml",
@@ -1664,7 +1705,7 @@
     },
     {
       "contains_nonstandard_concurrency_queue": false,
-      "line_count": 112,
+      "line_count": 113,
       "name": "LOTO7 Canonical Output Sync",
       "path": ".github/workflows/loto7_output_layout_sync.yml",
       "referenced_paths": [
