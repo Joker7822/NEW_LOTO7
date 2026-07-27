@@ -1,24 +1,28 @@
 {
-  "canonical_production_workflow": ".github/workflows/loto7_generation4_run.yml",
+  "canonical_production_workflow": ".github/workflows/loto7_refresh_latest_prediction.yml",
+  "canonical_production_workflow_name": "LOTO7 Production Prediction Publisher",
   "config": "config/repository_layout.json",
-  "created_at": "2026-07-17T11:36:23.438640+00:00",
+  "created_at": "2026-07-27T09:49:51.963554+00:00",
   "errors": [],
+  "generation4_evaluation_workflow": ".github/workflows/loto7_generation4_run.yml",
   "production_writers": {
     "outputs/evolution_best_prediction.csv": [
-      ".github/workflows/loto7_generation4_run.yml"
+      ".github/workflows/loto7_refresh_latest_prediction.yml"
     ],
     "outputs/evolution_prediction_history.csv": [
-      ".github/workflows/loto7_generation4_run.yml"
+      ".github/workflows/loto7_refresh_latest_prediction.yml"
     ],
     "outputs/evolution_prediction_history_result.txt": [
-      ".github/workflows/loto7_generation4_run.yml"
+      ".github/workflows/loto7_refresh_latest_prediction.yml"
     ],
     "outputs/holdout/latest_prediction_report.txt": [
-      ".github/workflows/loto7_generation4_run.yml"
+      ".github/workflows/loto7_refresh_latest_prediction.yml"
     ]
   },
-  "root_python_count": 10,
+  "root_python_count": 12,
   "root_python_files": [
+    "_loto7_evolution_trainer_impl.py",
+    "_loto7_model_self_evolver_impl.py",
     "holdout_evaluator.py",
     "loto7_complete_ai_system.py",
     "loto7_evolution_trainer.py",
@@ -31,20 +35,26 @@
     "sitecustomize.py"
   ],
   "status": "pass",
-  "tracked_output_count": 121,
+  "tracked_output_count": 357,
   "warnings": [
-    "Root still contains 10 Python modules; retain as compatibility layer until Phase 2 migration",
-    "outputs/ contains 121 tracked files; reproducible diagnostics should move to Actions artifacts"
+    "Root still contains 12 Python modules; retain as compatibility layer until Phase 2 migration",
+    "outputs/ contains 357 tracked files; reproducible diagnostics should move to Actions artifacts"
   ],
-  "workflow_count": 9,
+  "workflow_count": 12,
   "workflow_names": {
     "Backfill LOTO7 prize amounts": [
       ".github/workflows/backfill-loto7-prizes.yml"
     ],
+    "Evaluator Full Data PR Check": [
+      ".github/workflows/evaluator_full_data_pr_check.yml"
+    ],
+    "LOTO7 Canonical Output Sync": [
+      ".github/workflows/loto7_output_layout_sync.yml"
+    ],
     "LOTO7 Evolution Trainer": [
       ".github/workflows/loto7_evolution.yml"
     ],
-    "LOTO7 Generation 4 Production": [
+    "LOTO7 Generation 4 Evaluation": [
       ".github/workflows/loto7_generation4_run.yml"
     ],
     "LOTO7 Model Self Evolution": [
@@ -52,6 +62,9 @@
     ],
     "LOTO7 Nested Walk Forward Validation": [
       ".github/workflows/loto7_nested_walk_forward.yml"
+    ],
+    "LOTO7 Production Prediction Publisher": [
+      ".github/workflows/loto7_refresh_latest_prediction.yml"
     ],
     "LOTO7 Recent Era Self Evolution": [
       ".github/workflows/loto7_recent_era_self_evolution.yml"
