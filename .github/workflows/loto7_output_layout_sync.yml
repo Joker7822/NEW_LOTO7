@@ -8,7 +8,8 @@ on:
       - LOTO7 Model Self Evolution
       - LOTO7 Recent Era Self Evolution
       - LOTO7 Nested Walk Forward Validation
-      - LOTO7 Generation 4 Production
+      - LOTO7 Generation 4 Evaluation
+      - LOTO7 Production Prediction Publisher
     types:
       - completed
 
