@@ -4,4 +4,4 @@ LOTO7 High-Match Promotion Rejection
 promoted: False
 failures:
 - materially improved folds failed: 1 < 2
-- average max-main delta failed: -0.006452 < 0.000000
+- average max-main delta failed: -0.058065 < 0.000000
