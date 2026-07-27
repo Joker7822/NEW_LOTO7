@@ -1,7 +1,9 @@
 {
-  "schema_version": 2,
-  "production_workflow": ".github/workflows/loto7_generation4_run.yml",
-  "production_workflow_name": "LOTO7 Generation 4 Production",
+  "schema_version": 3,
+  "production_workflow": ".github/workflows/loto7_refresh_latest_prediction.yml",
+  "production_workflow_name": "LOTO7 Production Prediction Publisher",
+  "generation4_evaluation_workflow": ".github/workflows/loto7_generation4_run.yml",
+  "generation4_evaluation_workflow_name": "LOTO7 Generation 4 Evaluation",
   "forbidden_workflows": [
     ".github/workflows/loto7_dual_prediction.yml",
     ".github/workflows/trigger_generation4_once.yml",
@@ -33,9 +35,7 @@
     "outputs/evidence/generation4/sealed/"
   ],
   "workflow_run_sources": [
-    "LOTO7 Evolution Trainer",
-    "LOTO7 Model Self Evolution",
-    "LOTO7 Nested Walk Forward Validation"
+    "LOTO7 Generation 4 Evaluation"
   ],
   "package_policy": {
     "canonical_package": "src/loto7",
