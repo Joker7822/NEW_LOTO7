@@ -1,12 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Validate NEW_LOTO7 repository architecture invariants.
-
-The guard intentionally focuses on ownership and workflow safety.  It does not
-move legacy root modules automatically because those modules are imported by
-long-running training and validation jobs.  Structural migrations must retain
-compatibility wrappers and regression coverage.
-"""
+"""Validate NEW_LOTO7 repository architecture and production ownership."""
 from __future__ import annotations
 
 import argparse
@@ -70,6 +64,7 @@ def detect_production_writers(
 
 
 def render_markdown(payload: Mapping[str, object]) -> str:
+    canonical_name = str(payload.get("canonical_production_workflow_name") or "configured production publisher")
     lines = [
         "# Repository Architecture Guard",
         "",
@@ -103,9 +98,10 @@ def render_markdown(payload: Mapping[str, object]) -> str:
             "",
             "## Policy",
             "",
-            "- Generation 4 Production is the only workflow that may build committed production predictions.",
-            "- Evolution workflows produce models, candidates, state, and diagnostics only.",
-            "- Sealed manifests are immutable evidence and are not treated as disposable diagnostics.",
+            f"- `{canonical_name}` is the only workflow that may build committed production predictions.",
+            "- Generation 4 evaluation writes candidate and diagnostic outputs only.",
+            "- Evolution workflows produce models, candidates, state and diagnostics only.",
+            "- Sealed production manifests are immutable evidence.",
             "- Root Python implementations remain a compatibility layer until package migration tests exist.",
             "",
         ]
@@ -125,6 +121,8 @@ def main() -> int:
     config = json.loads(config_path.read_text(encoding="utf-8"))
     canonical = str(config["production_workflow"])
     canonical_name = str(config["production_workflow_name"])
+    generation4 = str(config.get("generation4_evaluation_workflow") or "")
+    generation4_name = str(config.get("generation4_evaluation_workflow_name") or "")
     forbidden = [str(item) for item in config.get("forbidden_workflows", [])]
     outputs = [str(item) for item in config.get("production_outputs", [])]
     required_sources = [str(item) for item in config.get("workflow_run_sources", [])]
@@ -154,16 +152,33 @@ def main() -> int:
     else:
         actual_name = workflow_name(canonical_text, Path(canonical).stem)
         if actual_name != canonical_name:
-            errors.append(
-                f"Canonical workflow name mismatch: expected {canonical_name!r}, got {actual_name!r}"
-            )
+            errors.append(f"Canonical workflow name mismatch: expected {canonical_name!r}, got {actual_name!r}")
         if "workflow_run:" not in canonical_text:
             errors.append("Canonical production workflow has no workflow_run trigger")
         for source in required_sources:
             if f"- {source}" not in canonical_text:
                 errors.append(f"Canonical workflow is missing upstream trigger: {source}")
         if "cancel-in-progress: true" not in canonical_text:
-            warnings.append("Canonical workflow should use latest-state-wins concurrency")
+            errors.append("Canonical production workflow must use latest-state-wins concurrency")
+
+    if generation4:
+        generation4_text = workflows.get(generation4)
+        if generation4_text is None:
+            errors.append(f"Generation 4 evaluation workflow is missing: {generation4}")
+        else:
+            actual_generation4_name = workflow_name(generation4_text, Path(generation4).stem)
+            if generation4_name and actual_generation4_name != generation4_name:
+                errors.append(
+                    f"Generation 4 workflow name mismatch: expected {generation4_name!r}, got {actual_generation4_name!r}"
+                )
+            forbidden_generation4_markers = [
+                "--prediction outputs/evolution_best_prediction.csv",
+                "--prediction-report outputs/holdout/latest_prediction_report.txt",
+                "--output outputs/evolution_prediction_history_result.txt",
+            ]
+            for marker in forbidden_generation4_markers:
+                if marker in generation4_text:
+                    errors.append(f"Generation 4 evaluation writes a production output marker: {marker}")
 
     writers = detect_production_writers(workflows, outputs)
     for output in outputs:
@@ -199,6 +214,8 @@ def main() -> int:
         "status": "pass" if not errors else "fail",
         "config": rel(config_path),
         "canonical_production_workflow": canonical,
+        "canonical_production_workflow_name": canonical_name,
+        "generation4_evaluation_workflow": generation4,
         "workflow_count": len(files),
         "workflow_names": {key: sorted(value) for key, value in sorted(names.items())},
         "production_writers": writers,
