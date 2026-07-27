@@ -1,24 +1,19 @@
 name: Repository Structure Audit
 
-# final-permanent-audit: 2026-07-17
 on:
   workflow_dispatch:
   push:
     branches:
       - main
     paths:
-      - "scripts/audit_repository_structure.py"
-      - "scripts/check_repository_architecture.py"
-      - "config/repository_layout.json"
-      - ".github/workflows/repository_structure_audit.yml"
-      - ".github/workflows/loto7_generation4_run.yml"
-      - ".github/workflows/loto7_evolution.yml"
-      - ".github/workflows/loto7_model_self_evolution.yml"
-      - ".github/workflows/loto7_nested_walk_forward.yml"
-      - ".github/workflows/loto7_recent_era_self_evolution.yml"
-      - "scripts/strict_adoption_gates.py"
-      - "scripts/build_generation4_prediction_strict.py"
-      - "scripts/promote_nested_candidate_strict.py"
+      - ".github/workflows/**"
+      - "src/**"
+      - "scripts/**"
+      - "tests/**"
+      - "config/**"
+      - "docs/architecture/**"
+      - "README.md"
+      - "pyproject.toml"
 
 permissions:
   contents: write
@@ -47,7 +42,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Generate structure audit
+      - name: Generate and enforce structure audit
         run: |
           set -euo pipefail
           python -m py_compile \
@@ -74,9 +69,7 @@ jobs:
           fi
           git commit -m "Update repository structure audit [skip ci]"
           for ATTEMPT in 1 2 3; do
-            if git push origin HEAD:"${GITHUB_REF_NAME}"; then
-              exit 0
-            fi
+            if git push origin HEAD:"${GITHUB_REF_NAME}"; then exit 0; fi
             git fetch origin "${GITHUB_REF_NAME}"
             git rebase "origin/${GITHUB_REF_NAME}"
             sleep $((ATTEMPT * 5))

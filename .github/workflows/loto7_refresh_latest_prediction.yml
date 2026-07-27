@@ -1,10 +1,10 @@
-name: LOTO7 Refresh Latest Prediction
+name: LOTO7 Production Prediction Publisher
 
 on:
   workflow_dispatch:
   workflow_run:
     workflows:
-      - LOTO7 Generation 4 Production
+      - LOTO7 Generation 4 Evaluation
     types:
       - completed
   push:
@@ -19,23 +19,30 @@ on:
       - "scripts/build_generation4_prediction.py"
       - "scripts/update_prediction_history.py"
       - "scripts/assert_latest_prediction_fresh.py"
+      - "scripts/seal_generation4_prediction.py"
+      - "config/repository_layout.json"
       - "tests/test_latest_prediction_freshness.py"
+      - "tests/test_production_ownership.py"
       - ".github/workflows/loto7_refresh_latest_prediction.yml"
   pull_request:
     paths:
       - "scripts/assert_latest_prediction_fresh.py"
+      - "scripts/check_repository_architecture.py"
+      - "config/repository_layout.json"
       - "tests/test_latest_prediction_freshness.py"
+      - "tests/test_production_ownership.py"
       - ".github/workflows/loto7_refresh_latest_prediction.yml"
+      - ".github/workflows/loto7_generation4_run.yml"
 
 permissions:
   contents: write
 
 concurrency:
-  group: loto7-refresh-latest-prediction-main
-  cancel-in-progress: false
+  group: loto7-production-publisher-main
+  cancel-in-progress: true
 
 jobs:
-  validate-freshness-guard:
+  validate-production-owner:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -50,20 +57,25 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Compile freshness guard
+      - name: Validate freshness and ownership invariants
         run: |
           set -euo pipefail
-          python -m py_compile scripts/assert_latest_prediction_fresh.py tests/test_latest_prediction_freshness.py
+          python -m py_compile \
+            scripts/assert_latest_prediction_fresh.py \
+            scripts/check_repository_architecture.py \
+            tests/test_latest_prediction_freshness.py \
+            tests/test_production_ownership.py
+          python -m unittest \
+            tests.test_latest_prediction_freshness \
+            tests.test_production_ownership -v
+          python scripts/check_repository_architecture.py \
+            --json /tmp/loto7-architecture.json \
+            --markdown /tmp/loto7-architecture.md
 
-      - name: Test freshness invariant
-        run: |
-          set -euo pipefail
-          python -m unittest tests.test_latest_prediction_freshness -v
-
-  refresh-production-prediction:
+  publish-production-prediction:
     if: ${{ github.event_name != 'pull_request' && (github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')) }}
     needs:
-      - validate-freshness-guard
+      - validate-production-owner
     runs-on: ubuntu-latest
     timeout-minutes: 120
 
@@ -84,7 +96,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Pull latest production state
+      - name: Pull latest approved state
         run: |
           set -euo pipefail
           git fetch origin main
@@ -94,7 +106,6 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p outputs/generation4/sealed outputs/holdout outputs/recent_era outputs/super_recent outputs/role_ensemble
-
           if [ ! -s outputs/recent_era/recent_era_best_model.json ]; then
             cp -f loto7_best_model.json outputs/recent_era/recent_era_best_model.json
           fi
@@ -113,7 +124,7 @@ jobs:
               --purchase-count 5
           fi
 
-      - name: Build next-draw prediction from current approved models
+      - name: Build next-draw prediction from approved models
         run: |
           set -euo pipefail
           python scripts/build_generation4_prediction.py \
@@ -150,7 +161,7 @@ jobs:
             --summary outputs/generation4/latest_generation4_summary.json \
             --report outputs/holdout/latest_prediction_report.txt
 
-      - name: Mark this as a production refresh, not model adoption
+      - name: Record production publication metadata
         run: |
           set -euo pipefail
           python - <<'PY'
@@ -160,29 +171,23 @@ jobs:
           summary_path = Path("outputs/generation4/latest_generation4_summary.json")
           summary = json.loads(summary_path.read_text(encoding="utf-8"))
           gate_path = Path("outputs/generation4/strict_adoption_gate.json")
-          adoption_allowed = None
-          if gate_path.exists() and gate_path.stat().st_size > 0:
-              gate = json.loads(gate_path.read_text(encoding="utf-8"))
-              adoption_allowed = gate.get("adoption_allowed")
-          summary["production_refresh"] = {
-              "reason": "always_publish_latest_draw_plus_one",
+          gate = json.loads(gate_path.read_text(encoding="utf-8")) if gate_path.exists() and gate_path.stat().st_size else {}
+          summary["production_publication"] = {
+              "owner_workflow": "LOTO7 Production Prediction Publisher",
+              "reason": "always_publish_latest_actual_draw_plus_one",
               "model_adoption_changed": False,
-              "latest_strict_gate_adoption_allowed": adoption_allowed,
+              "latest_strict_gate_adoption_allowed": gate.get("adoption_allowed"),
           }
-          summary_path.write_text(
-              json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-              encoding="utf-8",
-          )
+          summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
           PY
 
-      - name: Upsert prediction history and evaluate completed draws
+      - name: Upsert production history and evaluate completed draws
         run: |
           set -euo pipefail
           python scripts/update_prediction_history.py \
             --latest outputs/evolution_best_prediction.csv \
             --history outputs/evolution_prediction_history.csv \
             --csv loto7.csv
-
           python scripts/check_prediction_history_results.py \
             --history outputs/evolution_prediction_history.csv \
             --csv loto7.csv \
@@ -196,7 +201,7 @@ jobs:
             --prediction outputs/evolution_best_prediction.csv \
             --history outputs/evolution_prediction_history.csv
 
-      - name: Seal refreshed prediction
+      - name: Seal production prediction
         run: |
           set -euo pipefail
           GITHUB_SHA="$(git rev-parse HEAD)" python scripts/seal_generation4_prediction.py \
@@ -208,7 +213,7 @@ jobs:
             --recent-model outputs/recent_era/recent_era_best_model.json \
             --super-model outputs/super_recent/super_recent_best_model.json
 
-      - name: Verify required refreshed outputs
+      - name: Verify required production outputs
         run: |
           set -euo pipefail
           test -s outputs/evolution_best_prediction.csv
@@ -220,12 +225,11 @@ jobs:
           test -s outputs/generation4/latest_sealed_manifest.json
           test -s outputs/generation4/sealed_index.json
 
-      - name: Commit refreshed production prediction
+      - name: Commit production outputs
         run: |
           set -euo pipefail
           SNAPSHOT="$(mktemp -d)"
           mkdir -p "$SNAPSHOT/outputs/generation4/sealed" "$SNAPSHOT/outputs/holdout"
-
           cp -f outputs/evolution_best_prediction.csv "$SNAPSHOT/outputs/"
           cp -f outputs/evolution_prediction_history.csv "$SNAPSHOT/outputs/"
           cp -f outputs/evolution_prediction_history_result.txt "$SNAPSHOT/outputs/"
@@ -240,7 +244,6 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
             mkdir -p outputs/generation4/sealed outputs/holdout
-
             cp -f "$SNAPSHOT/outputs/evolution_best_prediction.csv" outputs/evolution_best_prediction.csv
             cp -f "$SNAPSHOT/outputs/evolution_prediction_history.csv" outputs/evolution_prediction_history.csv
             cp -f "$SNAPSHOT/outputs/evolution_prediction_history_result.txt" outputs/evolution_prediction_history_result.txt
@@ -250,7 +253,6 @@ jobs:
             cp -f "$SNAPSHOT/outputs/generation4/latest_sealed_manifest.json" outputs/generation4/latest_sealed_manifest.json
             cp -f "$SNAPSHOT/outputs/generation4/sealed_index.json" outputs/generation4/sealed_index.json
             cp -a "$SNAPSHOT/outputs/generation4/sealed/." outputs/generation4/sealed/
-
             git add -f \
               outputs/evolution_best_prediction.csv \
               outputs/evolution_prediction_history.csv \
@@ -261,12 +263,10 @@ jobs:
               outputs/generation4/latest_sealed_manifest.json \
               outputs/generation4/sealed_index.json \
               outputs/generation4/sealed
-
             if git diff --cached --quiet; then
-              echo "Latest production prediction is already current"
+              echo "Production prediction is already current"
               exit 0
             fi
-
             TARGET_DRAW="$(python - <<'PY'
           import csv
           with open('outputs/evolution_best_prediction.csv', encoding='utf-8-sig', newline='') as stream:
@@ -274,17 +274,17 @@ jobs:
           print(int(float(row['prediction_draw_no'])))
           PY
           )"
-            git commit -m "Refresh LOTO7 prediction for draw ${TARGET_DRAW} [skip ci]"
+            git commit -m "Publish LOTO7 production prediction for draw ${TARGET_DRAW} [skip ci]"
             if git push origin HEAD:main; then exit 0; fi
             sleep $((ATTEMPT * 10))
           done
           exit 1
 
-      - name: Upload refreshed prediction artifacts
+      - name: Upload production prediction artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: loto7-latest-production-prediction
+          name: loto7-production-prediction
           path: |
             outputs/evolution_best_prediction.csv
             outputs/evolution_prediction_history.csv

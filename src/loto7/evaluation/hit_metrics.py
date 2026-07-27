@@ -29,9 +29,8 @@ def summarize_hit_metrics(
 ) -> Dict[str, object]:
     """Summarize high-match accuracy without using prize amounts.
 
-    ``draw_max_main_matches`` contains the best main-number match achieved by
-    the portfolio in each draw. ``ticket_main_matches`` is optional ticket-level
-    detail. ``portfolios`` is optional and is used only for diversity metrics.
+    Missing portfolio detail is represented explicitly as unavailable rather
+    than as genuine zero diversity.
     """
     draw_values = [max(0, min(7, int(value))) for value in draw_max_main_matches]
     ticket_values = [max(0, min(7, int(value))) for value in (ticket_main_matches or [])]
@@ -39,7 +38,7 @@ def summarize_hit_metrics(
     ticket_count = len(ticket_values)
 
     result: Dict[str, object] = {
-        "hit_metric_version": "loto7-hit-metrics-2026.07.20-v1",
+        "hit_metric_version": "loto7-hit-metrics-2026.07.27-v2",
         "draw_main4_plus_count": sum(value >= 4 for value in draw_values),
         "draw_main5_plus_count": sum(value >= 5 for value in draw_values),
         "draw_main6_plus_count": sum(value >= 6 for value in draw_values),
@@ -63,6 +62,7 @@ def summarize_hit_metrics(
         result[f"ticket_main{threshold}_plus_rate"] = round(rate, 6)
         result[f"ticket_main{threshold}_plus_rate_percent"] = round(rate * 100.0, 3)
 
+    portfolio_metrics_available = portfolios is not None
     unique_counts: list[int] = []
     pair_overlaps: list[int] = []
     max_pair_overlaps: list[int] = []
@@ -75,23 +75,31 @@ def summarize_hit_metrics(
         pair_overlaps.extend(overlaps)
         max_pair_overlaps.append(max(overlaps) if overlaps else 0)
 
+    if portfolio_metrics_available:
+        average_unique: float | None = round(statistics.fmean(unique_counts), 6) if unique_counts else 0.0
+        mean_overlap: float | None = round(statistics.fmean(pair_overlaps), 6) if pair_overlaps else 0.0
+        max_overlap: int | None = max(max_pair_overlaps) if max_pair_overlaps else 0
+    else:
+        average_unique = None
+        mean_overlap = None
+        max_overlap = None
+
     result.update(
         {
-            "average_portfolio_unique_numbers": round(statistics.fmean(unique_counts), 6) if unique_counts else 0.0,
-            "mean_ticket_pair_overlap": round(statistics.fmean(pair_overlaps), 6) if pair_overlaps else 0.0,
-            "max_ticket_pair_overlap": max(max_pair_overlaps) if max_pair_overlaps else 0,
+            "portfolio_metrics_available": portfolio_metrics_available,
+            "portfolio_metric_draw_count": len(unique_counts),
+            "average_portfolio_unique_numbers": average_unique,
+            "mean_ticket_pair_overlap": mean_overlap,
+            "max_ticket_pair_overlap": max_overlap,
         }
     )
     result["hit_objective_score"] = hit_objective_score(result)
+    result["hit_objective_score_complete"] = portfolio_metrics_available
     return result
 
 
 def hit_objective_score(metrics: Dict[str, object]) -> float:
-    """Return a 0-100 accuracy-first score.
-
-    The score emphasizes draw-level 4+, 5+ and 6+ reach. Payout and profit are
-    intentionally absent; financial metrics remain separate safety gates.
-    """
+    """Return a 0-100 accuracy-first score without payout or profit data."""
     average_match = max(0.0, min(7.0, float(metrics.get("average_max_main_match", 0.0) or 0.0)))
     draw4 = max(0.0, min(1.0, float(metrics.get("draw_main4_plus_rate", 0.0) or 0.0)))
     draw5 = max(0.0, min(1.0, float(metrics.get("draw_main5_plus_rate", 0.0) or 0.0)))

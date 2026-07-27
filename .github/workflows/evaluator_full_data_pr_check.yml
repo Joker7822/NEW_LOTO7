@@ -12,13 +12,18 @@ on:
       - "scripts/backtest_role_ensemble.py"
       - "scripts/check_prediction_history_results.py"
       - "scripts/evaluation_core.py"
+      - "scripts/repair_holdout_summary.py"
       - "scripts/robust_model_metrics.py"
       - "scripts/update_generation4_shadow_history.py"
       - "scripts/verify_evaluator_consistency.py"
       - "scripts/verify_full_evaluator_consistency.py"
+      - "scripts/check_repository_architecture.py"
       - "tests/test_evaluation_unification.py"
       - "tests/test_package_layout_and_hit_metrics.py"
+      - "tests/test_holdout_portfolio_repair.py"
+      - "tests/test_production_ownership.py"
       - ".github/workflows/loto7_generation4_run.yml"
+      - ".github/workflows/loto7_refresh_latest_prediction.yml"
       - ".github/workflows/loto7_nested_walk_forward.yml"
       - ".github/workflows/loto7_output_layout_sync.yml"
       - ".github/workflows/loto7_validation_tests.yml"
@@ -53,24 +58,33 @@ jobs:
             src/loto7/evaluation/robust.py \
             src/loto7/validation/hit_rate_gate.py \
             scripts/evaluation_core.py \
+            scripts/repair_holdout_summary.py \
             scripts/robust_model_metrics.py \
             scripts/verify_evaluator_consistency.py \
             scripts/verify_full_evaluator_consistency.py \
+            scripts/check_repository_architecture.py \
             holdout_evaluator.py \
             scripts/backtest_role_ensemble.py \
             scripts/check_prediction_history_results.py \
             scripts/update_generation4_shadow_history.py \
             tests/test_evaluation_unification.py \
-            tests/test_package_layout_and_hit_metrics.py
+            tests/test_package_layout_and_hit_metrics.py \
+            tests/test_holdout_portfolio_repair.py \
+            tests/test_production_ownership.py
           python -m unittest \
             tests.test_evaluation_unification \
             tests.test_prediction_output_consistency \
             tests.test_robust_validation_and_portfolio \
             tests.test_generation4_pipeline \
             tests.test_strict_adoption_gates \
-            tests.test_package_layout_and_hit_metrics -v
+            tests.test_package_layout_and_hit_metrics \
+            tests.test_holdout_portfolio_repair \
+            tests.test_production_ownership -v
+          python scripts/check_repository_architecture.py \
+            --json /tmp/loto7-architecture.json \
+            --markdown /tmp/loto7-architecture.md
 
-      - name: Regenerate all 3425 best-model tickets
+      - name: Regenerate all best-model tickets
         run: |
           set -euo pipefail
           python scripts/verify_full_evaluator_consistency.py \
@@ -81,6 +95,35 @@ jobs:
             --purchase-count 5 \
             --unit-cost 300 \
             --workers 8
+
+      - name: Rebuild complete Holdout portfolio metrics
+        run: |
+          set -euo pipefail
+          python scripts/repair_holdout_summary.py \
+            --detail outputs/holdout/holdout_result.csv \
+            --summary outputs/holdout/holdout_summary.json \
+            --recent-summary outputs/holdout/recent_era_summary.json \
+            --recent-report outputs/holdout/recent_era_report.txt \
+            --recent-start-year 2020
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          summary = json.loads(Path('outputs/holdout/holdout_summary.json').read_text(encoding='utf-8'))
+          recent = summary['recent_era_summary']
+          assert recent['portfolio_metrics_available'] is True
+          assert recent['portfolio_metric_missing_draw_count'] == 0
+          assert recent['average_portfolio_unique_numbers'] > 0
+          assert recent['mean_ticket_pair_overlap'] > 0
+          assert recent['hit_objective_score_complete'] is True
+          print(json.dumps({
+              'target_draws': recent['target_draws'],
+              'portfolio_draws': recent['portfolio_metric_draw_count'],
+              'average_unique_numbers': recent['average_portfolio_unique_numbers'],
+              'mean_pair_overlap': recent['mean_ticket_pair_overlap'],
+              'hit_objective_score': recent['hit_objective_score'],
+          }, ensure_ascii=False, indent=2))
+          PY
 
       - name: Clean Role backtest subset consistency
         run: |
@@ -123,14 +166,14 @@ jobs:
             --output outputs/role_ensemble/evaluator_consistency_subset.json \
             --unit-cost 300
 
-      - name: Verify rejection-safe live refresh
+      - name: Verify rejection-safe diagnostic refresh
         run: |
           set -euo pipefail
           cp -f outputs/generation4/shadow_history.csv /tmp/shadow_before.csv
           python scripts/check_prediction_history_results.py \
             --history outputs/evolution_prediction_history.csv \
             --csv loto7.csv \
-            --output outputs/evolution_prediction_history_result.txt
+            --output outputs/generation4/production_history_result_snapshot.txt
           python scripts/update_generation4_shadow_history.py \
             --csv loto7.csv \
             --latest-shadow outputs/generation4/latest_shadow_predictions.json \
@@ -165,7 +208,7 @@ jobs:
           }, ensure_ascii=False, indent=2))
           PY
 
-      - name: Validate all workflow YAML and production ordering
+      - name: Validate workflow YAML and ownership ordering
         run: |
           set -euo pipefail
           ruby - <<'RUBY'
@@ -177,21 +220,24 @@ jobs:
           RUBY
           python - <<'PY'
           from pathlib import Path
-          text = Path('.github/workflows/loto7_generation4_run.yml').read_text(encoding='utf-8')
-          assert text.index('Refresh existing production results before adoption decision') < text.index('Build Generation 4 prediction through strict adoption gates')
-          for marker in (
-              'outputs/evolution_prediction_history_result.txt',
-              'outputs/generation4/shadow_history.csv',
-              'outputs/generation4/champion_challenger_summary.json',
-              'outputs/generation4/champion_challenger_report.txt',
-              'Record rejected LOTO7 Generation 4 adoption and refresh live results [skip ci]',
-          ):
-              assert marker in text, marker
-          nested = Path('.github/workflows/loto7_nested_walk_forward.yml').read_text(encoding='utf-8')
-          assert nested.index('python scripts/check_hit_rate_promotion.py') < nested.index('python scripts/promote_nested_candidate_strict.py')
+
+          generation4 = Path('.github/workflows/loto7_generation4_run.yml').read_text(encoding='utf-8')
+          publisher = Path('.github/workflows/loto7_refresh_latest_prediction.yml').read_text(encoding='utf-8')
           sync = Path('.github/workflows/loto7_output_layout_sync.yml').read_text(encoding='utf-8')
-          assert 'scripts/migrate_output_layout.py' in sync
-          print('production ordering, accuracy gate ordering and canonical sync are valid')
+          nested = Path('.github/workflows/loto7_nested_walk_forward.yml').read_text(encoding='utf-8')
+
+          assert '--prediction outputs/generation4/candidate_prediction.csv' in generation4
+          assert '--prediction outputs/evolution_best_prediction.csv' not in generation4
+          assert '--output outputs/evolution_prediction_history_result.txt' not in generation4
+          assert 'LOTO7 Production Prediction Publisher' in publisher
+          assert '- LOTO7 Generation 4 Evaluation' in publisher
+          assert '--prediction outputs/evolution_best_prediction.csv' in publisher
+          assert '--output outputs/evolution_prediction_history_result.txt' in publisher
+          assert 'cancel-in-progress: true' in publisher
+          assert '- LOTO7 Generation 4 Evaluation' in sync
+          assert '- LOTO7 Production Prediction Publisher' in sync
+          assert nested.index('python scripts/check_hit_rate_promotion.py') < nested.index('python scripts/promote_nested_candidate_strict.py')
+          print('diagnostic evaluation, sole publisher, accuracy gate and canonical sync ordering are valid')
           PY
 
       - name: Upload validation evidence
@@ -201,7 +247,10 @@ jobs:
           name: evaluator-full-data-pr-check
           path: |
             outputs/role_ensemble/evaluator_consistency*.json
-            outputs/evolution_prediction_history_result.txt
+            outputs/holdout/holdout_summary.json
+            outputs/holdout/recent_era_summary.json
+            outputs/holdout/recent_era_report.txt
+            outputs/generation4/production_history_result_snapshot.txt
             outputs/generation4/champion_challenger_summary.json
             outputs/generation4/champion_challenger_report.txt
           if-no-files-found: error

@@ -8,6 +8,8 @@ on:
       - "scripts/**"
       - "tests/**"
       - "config/**"
+      - "docs/architecture/**"
+      - "README.md"
       - "pyproject.toml"
       - ".github/workflows/**"
       - "holdout_evaluator.py"
@@ -20,51 +22,18 @@ on:
       - main
     paths:
       - "src/**"
+      - "scripts/**"
+      - "tests/**"
+      - "config/**"
+      - "docs/architecture/**"
+      - "README.md"
+      - "pyproject.toml"
+      - ".github/workflows/**"
+      - "holdout_evaluator.py"
       - "loto7_evolution_trainer.py"
       - "_loto7_evolution_trainer_impl.py"
       - "loto7_model_self_evolver.py"
       - "_loto7_model_self_evolver_impl.py"
-      - "scripts/build_dual_model_prediction.py"
-      - "scripts/enforce_prediction_constraints.py"
-      - "scripts/robust_model_metrics.py"
-      - "scripts/adaptive_model_safety_guard.py"
-      - "scripts/nested_walk_forward_validation.py"
-      - "scripts/promote_nested_candidate.py"
-      - "scripts/promote_nested_candidate_strict.py"
-      - "scripts/check_hit_rate_promotion.py"
-      - "scripts/migrate_output_layout.py"
-      - "scripts/generation4_core.py"
-      - "scripts/build_generation4_prediction.py"
-      - "scripts/build_generation4_prediction_strict.py"
-      - "scripts/strict_adoption_gates.py"
-      - "scripts/null_strategy_league.py"
-      - "scripts/evaluation_core.py"
-      - "scripts/verify_evaluator_consistency.py"
-      - "scripts/update_generation4_shadow_history.py"
-      - "scripts/check_prediction_history_results.py"
-      - "scripts/repair_holdout_summary.py"
-      - "holdout_evaluator.py"
-      - "scripts/backtest_role_ensemble.py"
-      - "scripts/seal_generation4_prediction.py"
-      - "scripts/finalize_generation4_report.py"
-      - "scripts/check_repository_architecture.py"
-      - "config/repository_layout.json"
-      - "config/output_layout.json"
-      - "pyproject.toml"
-      - "tests/test_prediction_output_consistency.py"
-      - "tests/test_robust_validation_and_portfolio.py"
-      - "tests/test_generation4_pipeline.py"
-      - "tests/test_strict_adoption_gates.py"
-      - "tests/test_evaluation_unification.py"
-      - "tests/test_nested_promotion_gates.py"
-      - "tests/test_package_layout_and_hit_metrics.py"
-      - "tests/test_hit_first_learning.py"
-      - "tests/test_output_layout_compatibility.py"
-      - "tests/test_sealed_output_migration.py"
-      - "tests/test_workflow_resume_compatibility.py"
-      - ".github/workflows/loto7_generation4_run.yml"
-      - ".github/workflows/loto7_nested_walk_forward.yml"
-      - ".github/workflows/loto7_validation_tests.yml"
 
 permissions:
   contents: read
@@ -76,15 +45,17 @@ concurrency:
 jobs:
   validation-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
       - name: Install package in editable mode
         run: python -m pip install -e .
-      - name: Compile prediction modules
+
+      - name: Compile prediction and validation modules
         run: |
           set -euo pipefail
           python -m py_compile \
@@ -119,11 +90,11 @@ jobs:
             scripts/update_generation4_shadow_history.py \
             scripts/check_prediction_history_results.py \
             scripts/repair_holdout_summary.py \
-            holdout_evaluator.py \
-            scripts/backtest_role_ensemble.py \
             scripts/seal_generation4_prediction.py \
             scripts/finalize_generation4_report.py \
             scripts/check_repository_architecture.py \
+            holdout_evaluator.py \
+            scripts/backtest_role_ensemble.py \
             tests/test_prediction_output_consistency.py \
             tests/test_robust_validation_and_portfolio.py \
             tests/test_generation4_pipeline.py \
@@ -134,12 +105,24 @@ jobs:
             tests/test_hit_first_learning.py \
             tests/test_output_layout_compatibility.py \
             tests/test_sealed_output_migration.py \
-            tests/test_workflow_resume_compatibility.py
+            tests/test_workflow_resume_compatibility.py \
+            tests/test_latest_prediction_freshness.py \
+            tests/test_production_ownership.py \
+            tests/test_holdout_portfolio_repair.py
+
+      - name: Enforce repository architecture
+        run: |
+          set -euo pipefail
+          python scripts/check_repository_architecture.py \
+            --json /tmp/loto7-architecture.json \
+            --markdown /tmp/loto7-architecture.md
+          python scripts/migrate_output_layout.py \
+            --verify-only \
+            --manifest /tmp/loto7-layout-manifest.json
+
       - name: Run focused validation tests
         run: |
           set -euo pipefail
-          python scripts/check_repository_architecture.py --report-only
-          python scripts/migrate_output_layout.py --verify-only --manifest /tmp/loto7-layout-manifest.json
           python -m unittest \
             tests.test_prediction_output_consistency \
             tests.test_robust_validation_and_portfolio \
@@ -151,4 +134,7 @@ jobs:
             tests.test_hit_first_learning \
             tests.test_output_layout_compatibility \
             tests.test_sealed_output_migration \
-            tests.test_workflow_resume_compatibility -v
+            tests.test_workflow_resume_compatibility \
+            tests.test_latest_prediction_freshness \
+            tests.test_production_ownership \
+            tests.test_holdout_portfolio_repair -v
