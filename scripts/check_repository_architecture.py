@@ -54,8 +54,16 @@ def production_write_markers(path: str) -> List[str]:
 def detect_production_writers(
     workflows: Mapping[str, str], production_outputs: Iterable[str]
 ) -> Dict[str, List[str]]:
+    """Detect workflows that both build a production file and push it to git.
+
+    Validation workflows may quote production command strings in assertions.
+    They are not committed writers unless the workflow also contains a git push.
+    """
     writers: Dict[str, List[str]] = defaultdict(list)
     for workflow, text in workflows.items():
+        commits_to_git = "git push" in text
+        if not commits_to_git:
+            continue
         for output in production_outputs:
             markers = production_write_markers(output)
             if all(marker in text for marker in markers):
