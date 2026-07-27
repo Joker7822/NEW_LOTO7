@@ -281,16 +281,17 @@
   ],
   "null_strategy_league": {
     "available": true,
-    "model_percentile": 0.461111,
+    "model_percentile": 0.433333,
     "passed": false,
-    "pbo": 0.4,
+    "pbo": 0.05,
     "summary_path": "outputs/generation4/null_strategy_league_summary.json"
   },
   "prediction_draw_no": 688,
-  "production_refresh": {
+  "production_publication": {
     "latest_strict_gate_adoption_allowed": false,
     "model_adoption_changed": false,
-    "reason": "always_publish_latest_draw_plus_one"
+    "owner_workflow": "LOTO7 Production Prediction Publisher",
+    "reason": "always_publish_latest_actual_draw_plus_one"
   },
   "shadow_strategy_names": [
     "beam_baseline",
