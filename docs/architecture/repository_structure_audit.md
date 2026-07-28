@@ -1,6 +1,6 @@
 # NEW_LOTO7 Repository Structure Audit
 
-Generated: `2026-07-28T00:43:48.518540+00:00`
+Generated: `2026-07-28T00:47:00.836041+00:00`
 
 ## Summary
 
@@ -91,7 +91,7 @@ State, reports, model candidates and sealed evidence share outputs/.
 | `outputs/model_self_evolution/history.pre_hit_first_20260721231909.csv` | 149791 |
 | `loto7.csv` | 135724 |
 | `outputs/super_recent/super_recent_model_history.pre_hit_first_20260722083852.csv` | 127953 |
-| `docs/architecture/repository_structure_audit.json` | 96943 |
+| `docs/architecture/repository_structure_audit.json` | 97367 |
 | `outputs/recent_era/recent_era_model_history.csv` | 66385 |
 | `outputs/state/super_recent/super_recent_model_state.json` | 63922 |
 | `outputs/super_recent/super_recent_model_state.json` | 63922 |
