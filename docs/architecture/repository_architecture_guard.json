@@ -1,10 +1,7 @@
 {
-  "canonical_production_workflow": ".github/workflows/loto7_refresh_latest_prediction.yml",
-  "canonical_production_workflow_name": "LOTO7 Production Prediction Publisher",
-  "config": "config/repository_layout.json",
-  "created_at": "2026-07-28T00:47:00.762762+00:00",
+  "created_at": "2026-07-28T04:12:57.094354+00:00",
   "errors": [],
-  "generation4_evaluation_workflow": ".github/workflows/loto7_generation4_run.yml",
+  "legacy_output_count": 191,
   "production_writers": {
     "outputs/evolution_best_prediction.csv": [
       ".github/workflows/loto7_refresh_latest_prediction.yml"
@@ -34,11 +31,13 @@
     "scrapingloto7.py",
     "sitecustomize.py"
   ],
+  "schema_version": 4,
   "status": "pass",
-  "tracked_output_count": 385,
+  "tracked_output_count": 389,
+  "unclassified_output_count": 2,
   "warnings": [
-    "Root still contains 12 Python modules; retain as compatibility layer until Phase 2 migration",
-    "outputs/ contains 385 tracked files; reproducible diagnostics should move to Actions artifacts"
+    "191 files remain in legacy output roots during compatibility migration",
+    "2 output files are not classified by repository policy"
   ],
   "workflow_count": 15,
   "workflow_names": {
@@ -87,5 +86,42 @@
     "Repository Structure Audit": [
       ".github/workflows/repository_structure_audit.yml"
     ]
-  }
+  },
+  "workflow_ownership": [
+    {
+      "outputs": [
+        "outputs/evolution_best_prediction.csv",
+        "outputs/evolution_prediction_history.csv",
+        "outputs/evolution_prediction_history_result.txt",
+        "outputs/holdout/latest_prediction_report.txt"
+      ],
+      "responsibility": "production_prediction_publication",
+      "workflow_name": "LOTO7 Production Prediction Publisher",
+      "workflow_path": ".github/workflows/loto7_refresh_latest_prediction.yml"
+    },
+    {
+      "outputs": [],
+      "responsibility": "automatic_model_promotion",
+      "workflow_name": "LOTO7 Generation 5 Precision Evolution",
+      "workflow_path": ".github/workflows/loto7_generation5.yml"
+    },
+    {
+      "outputs": [],
+      "responsibility": "generation4_diagnostics",
+      "workflow_name": "LOTO7 Generation 4 Evaluation",
+      "workflow_path": ".github/workflows/loto7_generation4_run.yml"
+    },
+    {
+      "outputs": [],
+      "responsibility": "canonical_output_sync",
+      "workflow_name": "LOTO7 Canonical Output Sync",
+      "workflow_path": ".github/workflows/loto7_output_layout_sync.yml"
+    },
+    {
+      "outputs": [],
+      "responsibility": "repository_architecture_guard",
+      "workflow_name": "Repository Structure Audit",
+      "workflow_path": ".github/workflows/repository_structure_audit.yml"
+    }
+  ]
 }

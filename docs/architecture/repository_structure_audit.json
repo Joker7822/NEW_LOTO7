@@ -1,835 +1,32 @@
 {
   "category_counts": {
+    "cli_or_compatibility": 36,
+    "configuration": 3,
     "documentation": 7,
-    "generated_output": 385,
-    "other": 5,
-    "root_data_or_report": 7,
-    "root_python": 23,
-    "script": 36,
-    "test": 17,
+    "other": 16,
+    "output:diagnostics": 50,
+    "output:evidence": 244,
+    "output:production": 9,
+    "output:state": 84,
+    "output:unclassified": 2,
+    "package": 15,
+    "root_compatibility": 12,
+    "test": 18,
     "workflow": 15
   },
-  "created_at": "2026-07-28T00:47:00.836041+00:00",
+  "created_at": "2026-07-28T04:12:57.164737+00:00",
   "directory_file_counts": {
     ".github": 15,
     "<root>": 22,
-    "config": 2,
+    "config": 3,
     "docs": 7,
-    "outputs": 385,
+    "outputs": 389,
     "scripts": 36,
-    "src": 11,
-    "tests": 17
-  },
-  "duplicate_filenames": {
-    "baseline_best_model_before_self_evolution.json": [
-      "outputs/recent_era/baseline_best_model_before_self_evolution.json",
-      "outputs/state/recent/baseline_best_model_before_self_evolution.json"
-    ],
-    "best_candidate_model.json": [
-      "outputs/model_self_evolution/best_candidate_model.json",
-      "outputs/state/full/best_candidate_model.json"
-    ],
-    "champion_challenger_report.txt": [
-      "outputs/diagnostics/generation4/champion_challenger_report.txt",
-      "outputs/generation4/champion_challenger_report.txt"
-    ],
-    "champion_challenger_summary.json": [
-      "outputs/diagnostics/generation4/champion_challenger_summary.json",
-      "outputs/generation4/champion_challenger_summary.json"
-    ],
-    "hit_rate_gate.json": [
-      "outputs/evidence/validation/recent/hit_rate_gate.json",
-      "outputs/evidence/validation/super_recent/hit_rate_gate.json",
-      "outputs/validation/recent/hit_rate_gate.json",
-      "outputs/validation/super_recent/hit_rate_gate.json"
-    ],
-    "holdout_report.txt": [
-      "outputs/diagnostics/holdout/holdout_report.txt",
-      "outputs/holdout/holdout_report.txt"
-    ],
-    "holdout_state.json": [
-      "outputs/diagnostics/holdout/holdout_state.json",
-      "outputs/holdout/holdout_state.json"
-    ],
-    "holdout_summary.json": [
-      "outputs/diagnostics/holdout/holdout_summary.json",
-      "outputs/holdout/holdout_summary.json"
-    ],
-    "latest_generation4_summary.json": [
-      "outputs/diagnostics/generation4/latest_generation4_summary.json",
-      "outputs/generation4/latest_generation4_summary.json"
-    ],
-    "latest_prediction_report.txt": [
-      "outputs/diagnostics/holdout/latest_prediction_report.txt",
-      "outputs/holdout/latest_prediction_report.txt",
-      "outputs/production/latest_prediction_report.txt"
-    ],
-    "latest_sealed_manifest.json": [
-      "outputs/diagnostics/generation4/latest_sealed_manifest.json",
-      "outputs/evidence/generation4/latest_sealed_manifest.json",
-      "outputs/generation4/latest_sealed_manifest.json"
-    ],
-    "latest_shadow_predictions.json": [
-      "outputs/diagnostics/generation4/latest_shadow_predictions.json",
-      "outputs/generation4/latest_shadow_predictions.json"
-    ],
-    "nested_walk_forward_report.txt": [
-      "outputs/evidence/validation/recent/nested_walk_forward_report.txt",
-      "outputs/evidence/validation/super_recent/nested_walk_forward_report.txt",
-      "outputs/validation/recent/nested_walk_forward_report.txt",
-      "outputs/validation/super_recent/nested_walk_forward_report.txt"
-    ],
-    "nested_walk_forward_summary.json": [
-      "outputs/evidence/validation/nested_walk_forward_summary.json",
-      "outputs/evidence/validation/recent/nested_walk_forward_summary.json",
-      "outputs/evidence/validation/super_recent/nested_walk_forward_summary.json",
-      "outputs/validation/nested_walk_forward_summary.json",
-      "outputs/validation/recent/nested_walk_forward_summary.json",
-      "outputs/validation/super_recent/nested_walk_forward_summary.json"
-    ],
-    "null_strategy_league_report.txt": [
-      "outputs/diagnostics/generation4/null_strategy_league_report.txt",
-      "outputs/generation4/null_strategy_league_report.txt"
-    ],
-    "null_strategy_league_summary.json": [
-      "outputs/diagnostics/generation4/null_strategy_league_summary.json",
-      "outputs/generation4/null_strategy_league_summary.json"
-    ],
-    "prediction_686_01d145e967136712.json": [
-      "outputs/evidence/generation4/sealed/prediction_686_01d145e967136712.json",
-      "outputs/generation4/sealed/prediction_686_01d145e967136712.json"
-    ],
-    "prediction_686_01d145e967136712.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_686_01d145e967136712.sha256",
-      "outputs/generation4/sealed/prediction_686_01d145e967136712.sha256"
-    ],
-    "prediction_686_160e9357688fd3b3.json": [
-      "outputs/evidence/generation4/sealed/prediction_686_160e9357688fd3b3.json",
-      "outputs/generation4/sealed/prediction_686_160e9357688fd3b3.json"
-    ],
-    "prediction_686_160e9357688fd3b3.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_686_160e9357688fd3b3.sha256",
-      "outputs/generation4/sealed/prediction_686_160e9357688fd3b3.sha256"
-    ],
-    "prediction_686_248483ec6829b31c.json": [
-      "outputs/evidence/generation4/sealed/prediction_686_248483ec6829b31c.json",
-      "outputs/generation4/sealed/prediction_686_248483ec6829b31c.json"
-    ],
-    "prediction_686_248483ec6829b31c.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_686_248483ec6829b31c.sha256",
-      "outputs/generation4/sealed/prediction_686_248483ec6829b31c.sha256"
-    ],
-    "prediction_686_28f6e31848a8948e.json": [
-      "outputs/evidence/generation4/sealed/prediction_686_28f6e31848a8948e.json",
-      "outputs/generation4/sealed/prediction_686_28f6e31848a8948e.json"
-    ],
-    "prediction_686_28f6e31848a8948e.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_686_28f6e31848a8948e.sha256",
-      "outputs/generation4/sealed/prediction_686_28f6e31848a8948e.sha256"
-    ],
-    "prediction_686_29a0c7361a5f691d.json": [
-      "outputs/evidence/generation4/sealed/prediction_686_29a0c7361a5f691d.json",
-      "outputs/generation4/sealed/prediction_686_29a0c7361a5f691d.json"
-    ],
-    "prediction_686_29a0c7361a5f691d.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_686_29a0c7361a5f691d.sha256",
-      "outputs/generation4/sealed/prediction_686_29a0c7361a5f691d.sha256"
-    ],
-    "prediction_686_4422dd7b5d5c9f7e.json": [
-      "outputs/evidence/generation4/sealed/prediction_686_4422dd7b5d5c9f7e.json",
-      "outputs/generation4/sealed/prediction_686_4422dd7b5d5c9f7e.json"
-    ],
-    "prediction_686_4422dd7b5d5c9f7e.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_686_4422dd7b5d5c9f7e.sha256",
-      "outputs/generation4/sealed/prediction_686_4422dd7b5d5c9f7e.sha256"
-    ],
-    "prediction_686_4b743099e627aef1.json": [
-      "outputs/evidence/generation4/sealed/prediction_686_4b743099e627aef1.json",
-      "outputs/generation4/sealed/prediction_686_4b743099e627aef1.json"
-    ],
-    "prediction_686_4b743099e627aef1.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_686_4b743099e627aef1.sha256",
-      "outputs/generation4/sealed/prediction_686_4b743099e627aef1.sha256"
-    ],
-    "prediction_686_59c5749ed8213fd8.json": [
-      "outputs/evidence/generation4/sealed/prediction_686_59c5749ed8213fd8.json",
-      "outputs/generation4/sealed/prediction_686_59c5749ed8213fd8.json"
-    ],
-    "prediction_686_59c5749ed8213fd8.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_686_59c5749ed8213fd8.sha256",
-      "outputs/generation4/sealed/prediction_686_59c5749ed8213fd8.sha256"
-    ],
-    "prediction_686_611eeb3427cd3f2e.json": [
-      "outputs/evidence/generation4/sealed/prediction_686_611eeb3427cd3f2e.json",
-      "outputs/generation4/sealed/prediction_686_611eeb3427cd3f2e.json"
-    ],
-    "prediction_686_611eeb3427cd3f2e.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_686_611eeb3427cd3f2e.sha256",
-      "outputs/generation4/sealed/prediction_686_611eeb3427cd3f2e.sha256"
-    ],
-    "prediction_686_6d7cacaa4d7d144d.json": [
-      "outputs/evidence/generation4/sealed/prediction_686_6d7cacaa4d7d144d.json",
-      "outputs/generation4/sealed/prediction_686_6d7cacaa4d7d144d.json"
-    ],
-    "prediction_686_6d7cacaa4d7d144d.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_686_6d7cacaa4d7d144d.sha256",
-      "outputs/generation4/sealed/prediction_686_6d7cacaa4d7d144d.sha256"
-    ],
-    "prediction_686_792723c6bb06b74a.json": [
-      "outputs/evidence/generation4/sealed/prediction_686_792723c6bb06b74a.json",
-      "outputs/generation4/sealed/prediction_686_792723c6bb06b74a.json"
-    ],
-    "prediction_686_792723c6bb06b74a.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_686_792723c6bb06b74a.sha256",
-      "outputs/generation4/sealed/prediction_686_792723c6bb06b74a.sha256"
-    ],
-    "prediction_686_84728927fb6166c3.json": [
-      "outputs/evidence/generation4/sealed/prediction_686_84728927fb6166c3.json",
-      "outputs/generation4/sealed/prediction_686_84728927fb6166c3.json"
-    ],
-    "prediction_686_84728927fb6166c3.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_686_84728927fb6166c3.sha256",
-      "outputs/generation4/sealed/prediction_686_84728927fb6166c3.sha256"
-    ],
-    "prediction_686_8dfaba5c77abc881.json": [
-      "outputs/evidence/generation4/sealed/prediction_686_8dfaba5c77abc881.json",
-      "outputs/generation4/sealed/prediction_686_8dfaba5c77abc881.json"
-    ],
-    "prediction_686_8dfaba5c77abc881.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_686_8dfaba5c77abc881.sha256",
-      "outputs/generation4/sealed/prediction_686_8dfaba5c77abc881.sha256"
-    ],
-    "prediction_686_98457b45928fe73d.json": [
-      "outputs/evidence/generation4/sealed/prediction_686_98457b45928fe73d.json",
-      "outputs/generation4/sealed/prediction_686_98457b45928fe73d.json"
-    ],
-    "prediction_686_98457b45928fe73d.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_686_98457b45928fe73d.sha256",
-      "outputs/generation4/sealed/prediction_686_98457b45928fe73d.sha256"
-    ],
-    "prediction_686_a206fe994fd7735c.json": [
-      "outputs/evidence/generation4/sealed/prediction_686_a206fe994fd7735c.json",
-      "outputs/generation4/sealed/prediction_686_a206fe994fd7735c.json"
-    ],
-    "prediction_686_a206fe994fd7735c.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_686_a206fe994fd7735c.sha256",
-      "outputs/generation4/sealed/prediction_686_a206fe994fd7735c.sha256"
-    ],
-    "prediction_686_bcf35223e5a2139f.json": [
-      "outputs/evidence/generation4/sealed/prediction_686_bcf35223e5a2139f.json",
-      "outputs/generation4/sealed/prediction_686_bcf35223e5a2139f.json"
-    ],
-    "prediction_686_bcf35223e5a2139f.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_686_bcf35223e5a2139f.sha256",
-      "outputs/generation4/sealed/prediction_686_bcf35223e5a2139f.sha256"
-    ],
-    "prediction_686_dc9fa2951a0bb47d.json": [
-      "outputs/evidence/generation4/sealed/prediction_686_dc9fa2951a0bb47d.json",
-      "outputs/generation4/sealed/prediction_686_dc9fa2951a0bb47d.json"
-    ],
-    "prediction_686_dc9fa2951a0bb47d.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_686_dc9fa2951a0bb47d.sha256",
-      "outputs/generation4/sealed/prediction_686_dc9fa2951a0bb47d.sha256"
-    ],
-    "prediction_686_e48de775625ddbfb.json": [
-      "outputs/evidence/generation4/sealed/prediction_686_e48de775625ddbfb.json",
-      "outputs/generation4/sealed/prediction_686_e48de775625ddbfb.json"
-    ],
-    "prediction_686_e48de775625ddbfb.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_686_e48de775625ddbfb.sha256",
-      "outputs/generation4/sealed/prediction_686_e48de775625ddbfb.sha256"
-    ],
-    "prediction_686_e5e6a1f92d36ce22.json": [
-      "outputs/evidence/generation4/sealed/prediction_686_e5e6a1f92d36ce22.json",
-      "outputs/generation4/sealed/prediction_686_e5e6a1f92d36ce22.json"
-    ],
-    "prediction_686_e5e6a1f92d36ce22.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_686_e5e6a1f92d36ce22.sha256",
-      "outputs/generation4/sealed/prediction_686_e5e6a1f92d36ce22.sha256"
-    ],
-    "prediction_686_f9c8e56a92cf91f5.json": [
-      "outputs/evidence/generation4/sealed/prediction_686_f9c8e56a92cf91f5.json",
-      "outputs/generation4/sealed/prediction_686_f9c8e56a92cf91f5.json"
-    ],
-    "prediction_686_f9c8e56a92cf91f5.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_686_f9c8e56a92cf91f5.sha256",
-      "outputs/generation4/sealed/prediction_686_f9c8e56a92cf91f5.sha256"
-    ],
-    "prediction_687_0a29136f76af26ed.json": [
-      "outputs/evidence/generation4/sealed/prediction_687_0a29136f76af26ed.json",
-      "outputs/generation4/sealed/prediction_687_0a29136f76af26ed.json"
-    ],
-    "prediction_687_0a29136f76af26ed.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_687_0a29136f76af26ed.sha256",
-      "outputs/generation4/sealed/prediction_687_0a29136f76af26ed.sha256"
-    ],
-    "prediction_687_0e1144893d1c288d.json": [
-      "outputs/evidence/generation4/sealed/prediction_687_0e1144893d1c288d.json",
-      "outputs/generation4/sealed/prediction_687_0e1144893d1c288d.json"
-    ],
-    "prediction_687_0e1144893d1c288d.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_687_0e1144893d1c288d.sha256",
-      "outputs/generation4/sealed/prediction_687_0e1144893d1c288d.sha256"
-    ],
-    "prediction_687_f68f26b91e4535cc.json": [
-      "outputs/evidence/generation4/sealed/prediction_687_f68f26b91e4535cc.json",
-      "outputs/generation4/sealed/prediction_687_f68f26b91e4535cc.json"
-    ],
-    "prediction_687_f68f26b91e4535cc.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_687_f68f26b91e4535cc.sha256",
-      "outputs/generation4/sealed/prediction_687_f68f26b91e4535cc.sha256"
-    ],
-    "prediction_688_0d2bc5622e33c593.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_0d2bc5622e33c593.json",
-      "outputs/generation4/sealed/prediction_688_0d2bc5622e33c593.json"
-    ],
-    "prediction_688_0d2bc5622e33c593.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_0d2bc5622e33c593.sha256",
-      "outputs/generation4/sealed/prediction_688_0d2bc5622e33c593.sha256"
-    ],
-    "prediction_688_0e7f8b4eb49f517c.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_0e7f8b4eb49f517c.json",
-      "outputs/generation4/sealed/prediction_688_0e7f8b4eb49f517c.json"
-    ],
-    "prediction_688_0e7f8b4eb49f517c.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_0e7f8b4eb49f517c.sha256",
-      "outputs/generation4/sealed/prediction_688_0e7f8b4eb49f517c.sha256"
-    ],
-    "prediction_688_11296d72d4756e92.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_11296d72d4756e92.json",
-      "outputs/generation4/sealed/prediction_688_11296d72d4756e92.json"
-    ],
-    "prediction_688_11296d72d4756e92.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_11296d72d4756e92.sha256",
-      "outputs/generation4/sealed/prediction_688_11296d72d4756e92.sha256"
-    ],
-    "prediction_688_14495e0349750fc7.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_14495e0349750fc7.json",
-      "outputs/generation4/sealed/prediction_688_14495e0349750fc7.json"
-    ],
-    "prediction_688_14495e0349750fc7.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_14495e0349750fc7.sha256",
-      "outputs/generation4/sealed/prediction_688_14495e0349750fc7.sha256"
-    ],
-    "prediction_688_1cc61ea66c4ed8e1.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_1cc61ea66c4ed8e1.json",
-      "outputs/generation4/sealed/prediction_688_1cc61ea66c4ed8e1.json"
-    ],
-    "prediction_688_1cc61ea66c4ed8e1.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_1cc61ea66c4ed8e1.sha256",
-      "outputs/generation4/sealed/prediction_688_1cc61ea66c4ed8e1.sha256"
-    ],
-    "prediction_688_1cf549f3e5f7cd6e.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_1cf549f3e5f7cd6e.json",
-      "outputs/generation4/sealed/prediction_688_1cf549f3e5f7cd6e.json"
-    ],
-    "prediction_688_1cf549f3e5f7cd6e.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_1cf549f3e5f7cd6e.sha256",
-      "outputs/generation4/sealed/prediction_688_1cf549f3e5f7cd6e.sha256"
-    ],
-    "prediction_688_262c208b153d4be0.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_262c208b153d4be0.json",
-      "outputs/generation4/sealed/prediction_688_262c208b153d4be0.json"
-    ],
-    "prediction_688_262c208b153d4be0.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_262c208b153d4be0.sha256",
-      "outputs/generation4/sealed/prediction_688_262c208b153d4be0.sha256"
-    ],
-    "prediction_688_2e825596f349a46d.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_2e825596f349a46d.json",
-      "outputs/generation4/sealed/prediction_688_2e825596f349a46d.json"
-    ],
-    "prediction_688_2e825596f349a46d.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_2e825596f349a46d.sha256",
-      "outputs/generation4/sealed/prediction_688_2e825596f349a46d.sha256"
-    ],
-    "prediction_688_33cfb4d2ac100286.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_33cfb4d2ac100286.json",
-      "outputs/generation4/sealed/prediction_688_33cfb4d2ac100286.json"
-    ],
-    "prediction_688_33cfb4d2ac100286.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_33cfb4d2ac100286.sha256",
-      "outputs/generation4/sealed/prediction_688_33cfb4d2ac100286.sha256"
-    ],
-    "prediction_688_3b8bc4158dc00742.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_3b8bc4158dc00742.json",
-      "outputs/generation4/sealed/prediction_688_3b8bc4158dc00742.json"
-    ],
-    "prediction_688_3b8bc4158dc00742.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_3b8bc4158dc00742.sha256",
-      "outputs/generation4/sealed/prediction_688_3b8bc4158dc00742.sha256"
-    ],
-    "prediction_688_3f7fd274d229a45b.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_3f7fd274d229a45b.json",
-      "outputs/generation4/sealed/prediction_688_3f7fd274d229a45b.json"
-    ],
-    "prediction_688_3f7fd274d229a45b.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_3f7fd274d229a45b.sha256",
-      "outputs/generation4/sealed/prediction_688_3f7fd274d229a45b.sha256"
-    ],
-    "prediction_688_4d6505d701bedb32.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_4d6505d701bedb32.json",
-      "outputs/generation4/sealed/prediction_688_4d6505d701bedb32.json"
-    ],
-    "prediction_688_4d6505d701bedb32.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_4d6505d701bedb32.sha256",
-      "outputs/generation4/sealed/prediction_688_4d6505d701bedb32.sha256"
-    ],
-    "prediction_688_4ed2e9b3636b5726.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_4ed2e9b3636b5726.json",
-      "outputs/generation4/sealed/prediction_688_4ed2e9b3636b5726.json"
-    ],
-    "prediction_688_4ed2e9b3636b5726.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_4ed2e9b3636b5726.sha256",
-      "outputs/generation4/sealed/prediction_688_4ed2e9b3636b5726.sha256"
-    ],
-    "prediction_688_654697595c77d3dd.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_654697595c77d3dd.json",
-      "outputs/generation4/sealed/prediction_688_654697595c77d3dd.json"
-    ],
-    "prediction_688_654697595c77d3dd.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_654697595c77d3dd.sha256",
-      "outputs/generation4/sealed/prediction_688_654697595c77d3dd.sha256"
-    ],
-    "prediction_688_6c284dd9d5affa91.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_6c284dd9d5affa91.json",
-      "outputs/generation4/sealed/prediction_688_6c284dd9d5affa91.json"
-    ],
-    "prediction_688_6c284dd9d5affa91.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_6c284dd9d5affa91.sha256",
-      "outputs/generation4/sealed/prediction_688_6c284dd9d5affa91.sha256"
-    ],
-    "prediction_688_832402ae53262926.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_832402ae53262926.json",
-      "outputs/generation4/sealed/prediction_688_832402ae53262926.json"
-    ],
-    "prediction_688_832402ae53262926.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_832402ae53262926.sha256",
-      "outputs/generation4/sealed/prediction_688_832402ae53262926.sha256"
-    ],
-    "prediction_688_83792b8fdba228de.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_83792b8fdba228de.json",
-      "outputs/generation4/sealed/prediction_688_83792b8fdba228de.json"
-    ],
-    "prediction_688_83792b8fdba228de.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_83792b8fdba228de.sha256",
-      "outputs/generation4/sealed/prediction_688_83792b8fdba228de.sha256"
-    ],
-    "prediction_688_866f11c23c0b0cb2.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_866f11c23c0b0cb2.json",
-      "outputs/generation4/sealed/prediction_688_866f11c23c0b0cb2.json"
-    ],
-    "prediction_688_866f11c23c0b0cb2.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_866f11c23c0b0cb2.sha256",
-      "outputs/generation4/sealed/prediction_688_866f11c23c0b0cb2.sha256"
-    ],
-    "prediction_688_988309e8169daf00.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_988309e8169daf00.json",
-      "outputs/generation4/sealed/prediction_688_988309e8169daf00.json"
-    ],
-    "prediction_688_988309e8169daf00.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_988309e8169daf00.sha256",
-      "outputs/generation4/sealed/prediction_688_988309e8169daf00.sha256"
-    ],
-    "prediction_688_9bb3da655b096e94.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_9bb3da655b096e94.json",
-      "outputs/generation4/sealed/prediction_688_9bb3da655b096e94.json"
-    ],
-    "prediction_688_9bb3da655b096e94.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_9bb3da655b096e94.sha256",
-      "outputs/generation4/sealed/prediction_688_9bb3da655b096e94.sha256"
-    ],
-    "prediction_688_a38cc82fe5da4221.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_a38cc82fe5da4221.json",
-      "outputs/generation4/sealed/prediction_688_a38cc82fe5da4221.json"
-    ],
-    "prediction_688_a38cc82fe5da4221.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_a38cc82fe5da4221.sha256",
-      "outputs/generation4/sealed/prediction_688_a38cc82fe5da4221.sha256"
-    ],
-    "prediction_688_a7a3485d00d53152.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_a7a3485d00d53152.json",
-      "outputs/generation4/sealed/prediction_688_a7a3485d00d53152.json"
-    ],
-    "prediction_688_a7a3485d00d53152.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_a7a3485d00d53152.sha256",
-      "outputs/generation4/sealed/prediction_688_a7a3485d00d53152.sha256"
-    ],
-    "prediction_688_ae79814d5e4b09bc.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_ae79814d5e4b09bc.json",
-      "outputs/generation4/sealed/prediction_688_ae79814d5e4b09bc.json"
-    ],
-    "prediction_688_ae79814d5e4b09bc.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_ae79814d5e4b09bc.sha256",
-      "outputs/generation4/sealed/prediction_688_ae79814d5e4b09bc.sha256"
-    ],
-    "prediction_688_c4bd2f51d0330464.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_c4bd2f51d0330464.json",
-      "outputs/generation4/sealed/prediction_688_c4bd2f51d0330464.json"
-    ],
-    "prediction_688_c4bd2f51d0330464.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_c4bd2f51d0330464.sha256",
-      "outputs/generation4/sealed/prediction_688_c4bd2f51d0330464.sha256"
-    ],
-    "prediction_688_ccb96d65e7368786.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_ccb96d65e7368786.json",
-      "outputs/generation4/sealed/prediction_688_ccb96d65e7368786.json"
-    ],
-    "prediction_688_ccb96d65e7368786.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_ccb96d65e7368786.sha256",
-      "outputs/generation4/sealed/prediction_688_ccb96d65e7368786.sha256"
-    ],
-    "prediction_688_d760c4d0469d78d7.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_d760c4d0469d78d7.json",
-      "outputs/generation4/sealed/prediction_688_d760c4d0469d78d7.json"
-    ],
-    "prediction_688_d760c4d0469d78d7.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_d760c4d0469d78d7.sha256",
-      "outputs/generation4/sealed/prediction_688_d760c4d0469d78d7.sha256"
-    ],
-    "prediction_688_d82eb51bd3edd81f.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_d82eb51bd3edd81f.json",
-      "outputs/generation4/sealed/prediction_688_d82eb51bd3edd81f.json"
-    ],
-    "prediction_688_d82eb51bd3edd81f.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_d82eb51bd3edd81f.sha256",
-      "outputs/generation4/sealed/prediction_688_d82eb51bd3edd81f.sha256"
-    ],
-    "prediction_688_dc3c2d1ea5d0ab91.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_dc3c2d1ea5d0ab91.json",
-      "outputs/generation4/sealed/prediction_688_dc3c2d1ea5d0ab91.json"
-    ],
-    "prediction_688_dc3c2d1ea5d0ab91.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_dc3c2d1ea5d0ab91.sha256",
-      "outputs/generation4/sealed/prediction_688_dc3c2d1ea5d0ab91.sha256"
-    ],
-    "prediction_688_e5a32021bf787f19.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_e5a32021bf787f19.json",
-      "outputs/generation4/sealed/prediction_688_e5a32021bf787f19.json"
-    ],
-    "prediction_688_e5a32021bf787f19.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_e5a32021bf787f19.sha256",
-      "outputs/generation4/sealed/prediction_688_e5a32021bf787f19.sha256"
-    ],
-    "prediction_688_ecdf4a460e4e251b.json": [
-      "outputs/evidence/generation4/sealed/prediction_688_ecdf4a460e4e251b.json",
-      "outputs/generation4/sealed/prediction_688_ecdf4a460e4e251b.json"
-    ],
-    "prediction_688_ecdf4a460e4e251b.sha256": [
-      "outputs/evidence/generation4/sealed/prediction_688_ecdf4a460e4e251b.sha256",
-      "outputs/generation4/sealed/prediction_688_ecdf4a460e4e251b.sha256"
-    ],
-    "production_history_result_snapshot.txt": [
-      "outputs/diagnostics/generation4/production_history_result_snapshot.txt",
-      "outputs/generation4/production_history_result_snapshot.txt"
-    ],
-    "promotion_decision.json": [
-      "outputs/evidence/validation/recent/promotion_decision.json",
-      "outputs/evidence/validation/super_recent/promotion_decision.json",
-      "outputs/validation/recent/promotion_decision.json",
-      "outputs/validation/super_recent/promotion_decision.json"
-    ],
-    "promotion_report.txt": [
-      "outputs/evidence/validation/recent/promotion_report.txt",
-      "outputs/evidence/validation/super_recent/promotion_report.txt",
-      "outputs/validation/recent/promotion_report.txt",
-      "outputs/validation/super_recent/promotion_report.txt"
-    ],
-    "recent_era_adaptive_safety_guard.json": [
-      "outputs/recent_era/recent_era_adaptive_safety_guard.json",
-      "outputs/state/recent/recent_era_adaptive_safety_guard.json"
-    ],
-    "recent_era_adaptive_safety_guard_report.txt": [
-      "outputs/recent_era/recent_era_adaptive_safety_guard_report.txt",
-      "outputs/state/recent/recent_era_adaptive_safety_guard_report.txt"
-    ],
-    "recent_era_baseline_before_run.json": [
-      "outputs/recent_era/recent_era_baseline_before_run.json",
-      "outputs/state/recent/recent_era_baseline_before_run.json"
-    ],
-    "recent_era_best_model.json": [
-      "outputs/recent_era/recent_era_best_model.json",
-      "outputs/state/recent/recent_era_best_model.json"
-    ],
-    "recent_era_candidate_model.json": [
-      "outputs/recent_era/recent_era_candidate_model.json",
-      "outputs/state/recent/recent_era_candidate_model.json"
-    ],
-    "recent_era_guarded_candidate_model.json": [
-      "outputs/recent_era/recent_era_guarded_candidate_model.json",
-      "outputs/state/recent/recent_era_guarded_candidate_model.json"
-    ],
-    "recent_era_model_comparison_report.txt": [
-      "outputs/recent_era/recent_era_model_comparison_report.txt",
-      "outputs/state/recent/recent_era_model_comparison_report.txt"
-    ],
-    "recent_era_model_comparison_summary.json": [
-      "outputs/recent_era/recent_era_model_comparison_summary.json",
-      "outputs/state/recent/recent_era_model_comparison_summary.json"
-    ],
-    "recent_era_model_guard.json": [
-      "outputs/recent_era/recent_era_model_guard.json",
-      "outputs/state/recent/recent_era_model_guard.json"
-    ],
-    "recent_era_model_guard_report.txt": [
-      "outputs/recent_era/recent_era_model_guard_report.txt",
-      "outputs/state/recent/recent_era_model_guard_report.txt"
-    ],
-    "recent_era_model_report.txt": [
-      "outputs/recent_era/recent_era_model_report.txt",
-      "outputs/state/recent/recent_era_model_report.txt"
-    ],
-    "recent_era_model_state.json": [
-      "outputs/recent_era/recent_era_model_state.json",
-      "outputs/state/recent/recent_era_model_state.json"
-    ],
-    "recent_era_model_summary.json": [
-      "outputs/recent_era/recent_era_model_summary.json",
-      "outputs/state/recent/recent_era_model_summary.json"
-    ],
-    "recent_era_optimizer.json": [
-      "outputs/recent_era/recent_era_optimizer.json",
-      "outputs/state/recent/recent_era_optimizer.json"
-    ],
-    "recent_era_optimizer_report.txt": [
-      "outputs/recent_era/recent_era_optimizer_report.txt",
-      "outputs/state/recent/recent_era_optimizer_report.txt"
-    ],
-    "recent_era_report.txt": [
-      "outputs/diagnostics/holdout/recent_era_report.txt",
-      "outputs/holdout/recent_era_report.txt"
-    ],
-    "recent_era_summary.json": [
-      "outputs/diagnostics/holdout/recent_era_summary.json",
-      "outputs/holdout/recent_era_summary.json"
-    ],
-    "recent_role_strategy.json": [
-      "outputs/recent_era/recent_role_strategy.json",
-      "outputs/state/recent/recent_role_strategy.json"
-    ],
-    "regime_state.json": [
-      "outputs/diagnostics/role_ensemble/regime_state.json",
-      "outputs/role_ensemble/regime_state.json"
-    ],
-    "regime_strategy.json": [
-      "outputs/diagnostics/role_ensemble/regime_strategy.json",
-      "outputs/role_ensemble/regime_strategy.json"
-    ],
-    "regime_strategy_report.txt": [
-      "outputs/diagnostics/role_ensemble/regime_strategy_report.txt",
-      "outputs/role_ensemble/regime_strategy_report.txt"
-    ],
-    "report.txt": [
-      "outputs/model_self_evolution/report.txt",
-      "outputs/state/full/report.txt"
-    ],
-    "role_ensemble_report.txt": [
-      "outputs/diagnostics/role_ensemble/role_ensemble_report.txt",
-      "outputs/role_ensemble/role_ensemble_report.txt"
-    ],
-    "role_ensemble_state.json": [
-      "outputs/diagnostics/role_ensemble/role_ensemble_state.json",
-      "outputs/role_ensemble/role_ensemble_state.json"
-    ],
-    "role_ensemble_summary.json": [
-      "outputs/diagnostics/role_ensemble/role_ensemble_summary.json",
-      "outputs/role_ensemble/role_ensemble_summary.json"
-    ],
-    "role_strategy.json": [
-      "outputs/diagnostics/role_ensemble/role_strategy.json",
-      "outputs/role_ensemble/role_strategy.json"
-    ],
-    "role_strategy_report.txt": [
-      "outputs/diagnostics/role_ensemble/role_strategy_report.txt",
-      "outputs/role_ensemble/role_strategy_report.txt"
-    ],
-    "sealed_index.json": [
-      "outputs/diagnostics/generation4/sealed_index.json",
-      "outputs/evidence/generation4/sealed_index.json",
-      "outputs/generation4/sealed_index.json"
-    ],
-    "shadow_history.csv": [
-      "outputs/diagnostics/generation4/shadow_history.csv",
-      "outputs/generation4/shadow_history.csv"
-    ],
-    "standalone_best_candidate_model.json": [
-      "outputs/model_self_evolution/standalone_best_candidate_model.json",
-      "outputs/state/full/standalone_best_candidate_model.json"
-    ],
-    "standalone_report.txt": [
-      "outputs/model_self_evolution/standalone_report.txt",
-      "outputs/state/full/standalone_report.txt"
-    ],
-    "standalone_state.json": [
-      "outputs/model_self_evolution/standalone_state.json",
-      "outputs/state/full/standalone_state.json"
-    ],
-    "standalone_summary.json": [
-      "outputs/model_self_evolution/standalone_summary.json",
-      "outputs/state/full/standalone_summary.json"
-    ],
-    "state.json": [
-      "outputs/model_self_evolution/state.json",
-      "outputs/state/full/state.json"
-    ],
-    "strict_adoption_gate.json": [
-      "outputs/diagnostics/generation4/strict_adoption_gate.json",
-      "outputs/generation4/strict_adoption_gate.json"
-    ],
-    "summary.json": [
-      "outputs/model_self_evolution/summary.json",
-      "outputs/state/full/summary.json"
-    ],
-    "super_recent_adaptive_safety_guard.json": [
-      "outputs/state/super_recent/super_recent_adaptive_safety_guard.json",
-      "outputs/super_recent/super_recent_adaptive_safety_guard.json"
-    ],
-    "super_recent_adaptive_safety_guard_report.txt": [
-      "outputs/state/super_recent/super_recent_adaptive_safety_guard_report.txt",
-      "outputs/super_recent/super_recent_adaptive_safety_guard_report.txt"
-    ],
-    "super_recent_baseline_before_run.json": [
-      "outputs/state/super_recent/super_recent_baseline_before_run.json",
-      "outputs/super_recent/super_recent_baseline_before_run.json"
-    ],
-    "super_recent_best_model.json": [
-      "outputs/state/super_recent/super_recent_best_model.json",
-      "outputs/super_recent/super_recent_best_model.json"
-    ],
-    "super_recent_candidate_model.json": [
-      "outputs/state/super_recent/super_recent_candidate_model.json",
-      "outputs/super_recent/super_recent_candidate_model.json"
-    ],
-    "super_recent_guarded_candidate_model.json": [
-      "outputs/state/super_recent/super_recent_guarded_candidate_model.json",
-      "outputs/super_recent/super_recent_guarded_candidate_model.json"
-    ],
-    "super_recent_model_comparison_report.txt": [
-      "outputs/state/super_recent/super_recent_model_comparison_report.txt",
-      "outputs/super_recent/super_recent_model_comparison_report.txt"
-    ],
-    "super_recent_model_comparison_summary.json": [
-      "outputs/state/super_recent/super_recent_model_comparison_summary.json",
-      "outputs/super_recent/super_recent_model_comparison_summary.json"
-    ],
-    "super_recent_model_guard.json": [
-      "outputs/state/super_recent/super_recent_model_guard.json",
-      "outputs/super_recent/super_recent_model_guard.json"
-    ],
-    "super_recent_model_guard_report.txt": [
-      "outputs/state/super_recent/super_recent_model_guard_report.txt",
-      "outputs/super_recent/super_recent_model_guard_report.txt"
-    ],
-    "super_recent_model_report.txt": [
-      "outputs/state/super_recent/super_recent_model_report.txt",
-      "outputs/super_recent/super_recent_model_report.txt"
-    ],
-    "super_recent_model_state.json": [
-      "outputs/state/super_recent/super_recent_model_state.json",
-      "outputs/super_recent/super_recent_model_state.json"
-    ],
-    "super_recent_model_summary.json": [
-      "outputs/state/super_recent/super_recent_model_summary.json",
-      "outputs/super_recent/super_recent_model_summary.json"
-    ]
+    "src": 21,
+    "tests": 18
   },
   "duplicate_workflow_names": {},
-  "file_count": 495,
-  "history_report_summary_files": [
-    "outputs/diagnostics/generation4/champion_challenger_report.txt",
-    "outputs/diagnostics/generation4/champion_challenger_summary.json",
-    "outputs/diagnostics/generation4/latest_generation4_summary.json",
-    "outputs/diagnostics/generation4/null_strategy_league_report.txt",
-    "outputs/diagnostics/generation4/null_strategy_league_summary.json",
-    "outputs/diagnostics/generation4/production_history_result_snapshot.txt",
-    "outputs/diagnostics/generation4/shadow_history.csv",
-    "outputs/diagnostics/holdout/holdout_report.txt",
-    "outputs/diagnostics/holdout/holdout_summary.json",
-    "outputs/diagnostics/holdout/latest_prediction_report.txt",
-    "outputs/diagnostics/holdout/recent_era_report.txt",
-    "outputs/diagnostics/holdout/recent_era_summary.json",
-    "outputs/diagnostics/role_ensemble/regime_strategy_report.txt",
-    "outputs/diagnostics/role_ensemble/role_ensemble_report.txt",
-    "outputs/diagnostics/role_ensemble/role_ensemble_summary.json",
-    "outputs/diagnostics/role_ensemble/role_strategy_report.txt",
-    "outputs/evidence/validation/nested_walk_forward_summary.json",
-    "outputs/evidence/validation/recent/nested_walk_forward_report.txt",
-    "outputs/evidence/validation/recent/nested_walk_forward_summary.json",
-    "outputs/evidence/validation/recent/promotion_report.txt",
-    "outputs/evidence/validation/super_recent/nested_walk_forward_report.txt",
-    "outputs/evidence/validation/super_recent/nested_walk_forward_summary.json",
-    "outputs/evidence/validation/super_recent/promotion_report.txt",
-    "outputs/evolution_prediction_history.csv",
-    "outputs/evolution_prediction_history_result.txt",
-    "outputs/generation4/champion_challenger_report.txt",
-    "outputs/generation4/champion_challenger_summary.json",
-    "outputs/generation4/latest_generation4_summary.json",
-    "outputs/generation4/null_strategy_league_report.txt",
-    "outputs/generation4/null_strategy_league_summary.json",
-    "outputs/generation4/production_history_result_snapshot.txt",
-    "outputs/generation4/shadow_history.csv",
-    "outputs/holdout/holdout_report.txt",
-    "outputs/holdout/holdout_summary.json",
-    "outputs/holdout/latest_prediction_report.txt",
-    "outputs/holdout/recent_era_report.txt",
-    "outputs/holdout/recent_era_summary.json",
-    "outputs/loto7_progress_summary.json",
-    "outputs/model_self_evolution/history.csv",
-    "outputs/model_self_evolution/history.pre_hit_first_20260721231909.csv",
-    "outputs/model_self_evolution/report.txt",
-    "outputs/model_self_evolution/standalone_history.csv",
-    "outputs/model_self_evolution/standalone_report.txt",
-    "outputs/model_self_evolution/standalone_summary.json",
-    "outputs/model_self_evolution/summary.json",
-    "outputs/production/latest_prediction_report.txt",
-    "outputs/production/prediction_history.csv",
-    "outputs/production/prediction_history_result.txt",
-    "outputs/recent_era/recent_era_adaptive_safety_guard_report.txt",
-    "outputs/recent_era/recent_era_model_comparison_report.txt",
-    "outputs/recent_era/recent_era_model_comparison_summary.json",
-    "outputs/recent_era/recent_era_model_guard_report.txt",
-    "outputs/recent_era/recent_era_model_history.csv",
-    "outputs/recent_era/recent_era_model_history.pre_hit_first_20260722035646.csv",
-    "outputs/recent_era/recent_era_model_report.txt",
-    "outputs/recent_era/recent_era_model_summary.json",
-    "outputs/recent_era/recent_era_optimizer_report.txt",
-    "outputs/role_ensemble/regime_strategy_report.txt",
-    "outputs/role_ensemble/role_ensemble_report.txt",
-    "outputs/role_ensemble/role_ensemble_summary.json",
-    "outputs/role_ensemble/role_strategy_report.txt",
-    "outputs/state/full/report.txt",
-    "outputs/state/full/standalone_report.txt",
-    "outputs/state/full/standalone_summary.json",
-    "outputs/state/full/summary.json",
-    "outputs/state/recent/recent_era_adaptive_safety_guard_report.txt",
-    "outputs/state/recent/recent_era_model_comparison_report.txt",
-    "outputs/state/recent/recent_era_model_comparison_summary.json",
-    "outputs/state/recent/recent_era_model_guard_report.txt",
-    "outputs/state/recent/recent_era_model_report.txt",
-    "outputs/state/recent/recent_era_model_summary.json",
-    "outputs/state/recent/recent_era_optimizer_report.txt",
-    "outputs/state/super_recent/super_recent_adaptive_safety_guard_report.txt",
-    "outputs/state/super_recent/super_recent_model_comparison_report.txt",
-    "outputs/state/super_recent/super_recent_model_comparison_summary.json",
-    "outputs/state/super_recent/super_recent_model_guard_report.txt",
-    "outputs/state/super_recent/super_recent_model_report.txt",
-    "outputs/state/super_recent/super_recent_model_summary.json",
-    "outputs/super_recent/super_recent_adaptive_safety_guard_report.txt",
-    "outputs/super_recent/super_recent_model_comparison_report.txt",
-    "outputs/super_recent/super_recent_model_comparison_summary.json",
-    "outputs/super_recent/super_recent_model_guard_report.txt",
-    "outputs/super_recent/super_recent_model_history.csv",
-    "outputs/super_recent/super_recent_model_history.pre_hit_first_20260722083852.csv",
-    "outputs/super_recent/super_recent_model_report.txt",
-    "outputs/super_recent/super_recent_model_summary.json",
-    "outputs/validation/nested_walk_forward_summary.json",
-    "outputs/validation/recent/nested_walk_forward_report.txt",
-    "outputs/validation/recent/nested_walk_forward_summary.json",
-    "outputs/validation/recent/promotion_report.txt",
-    "outputs/validation/super_recent/nested_walk_forward_report.txt",
-    "outputs/validation/super_recent/nested_walk_forward_summary.json",
-    "outputs/validation/super_recent/promotion_report.txt"
-  ],
+  "file_count": 511,
   "largest_files": [
     {
       "bytes": 769265,
@@ -844,7 +41,7 @@
       "path": "outputs/recent_era/recent_era_model_history.pre_hit_first_20260722035646.csv"
     },
     {
-      "bytes": 172639,
+      "bytes": 179777,
       "path": "outputs/super_recent/super_recent_model_history.csv"
     },
     {
@@ -864,35 +61,35 @@
       "path": "docs/architecture/repository_structure_audit.json"
     },
     {
-      "bytes": 66385,
+      "bytes": 70532,
       "path": "outputs/recent_era/recent_era_model_history.csv"
     },
     {
-      "bytes": 63922,
+      "bytes": 64682,
       "path": "outputs/state/super_recent/super_recent_model_state.json"
     },
     {
-      "bytes": 63922,
+      "bytes": 64682,
       "path": "outputs/super_recent/super_recent_model_state.json"
     },
     {
-      "bytes": 59981,
+      "bytes": 60719,
       "path": "outputs/recent_era/recent_era_model_state.json"
     },
     {
-      "bytes": 59981,
+      "bytes": 60719,
       "path": "outputs/state/recent/recent_era_model_state.json"
     },
     {
-      "bytes": 46328,
+      "bytes": 46338,
       "path": "outputs/diagnostics/generation4/null_strategy_league_summary.json"
     },
     {
-      "bytes": 46328,
+      "bytes": 46338,
       "path": "outputs/generation4/null_strategy_league_summary.json"
     },
     {
-      "bytes": 44401,
+      "bytes": 44859,
       "path": "outputs/model_self_evolution/history.csv"
     },
     {
@@ -920,6 +117,14 @@
       "path": "outputs/state/full/standalone_state.json"
     },
     {
+      "bytes": 37990,
+      "path": "outputs/model_self_evolution/state.json"
+    },
+    {
+      "bytes": 37990,
+      "path": "outputs/state/full/state.json"
+    },
+    {
       "bytes": 37639,
       "path": "outputs/diagnostics/holdout/recent_era_summary.json"
     },
@@ -928,115 +133,46 @@
       "path": "outputs/holdout/recent_era_summary.json"
     },
     {
-      "bytes": 36253,
-      "path": "outputs/model_self_evolution/state.json"
-    },
-    {
-      "bytes": 36253,
-      "path": "outputs/state/full/state.json"
-    },
-    {
-      "bytes": 31832,
+      "bytes": 31833,
       "path": "outputs/state/super_recent/super_recent_adaptive_safety_guard.json"
     },
     {
-      "bytes": 31832,
+      "bytes": 31833,
       "path": "outputs/super_recent/super_recent_adaptive_safety_guard.json"
     },
     {
-      "bytes": 31685,
+      "bytes": 31686,
       "path": "outputs/recent_era/recent_era_adaptive_safety_guard.json"
     },
     {
-      "bytes": 31685,
+      "bytes": 31686,
       "path": "outputs/state/recent/recent_era_adaptive_safety_guard.json"
     }
   ],
-  "model_or_state_files": [
-    "loto7_best_model.json",
-    "outputs/diagnostics/holdout/holdout_state.json",
-    "outputs/diagnostics/role_ensemble/regime_state.json",
-    "outputs/diagnostics/role_ensemble/role_ensemble_state.json",
-    "outputs/holdout/holdout_state.json",
-    "outputs/model_self_evolution/best_candidate_model.json",
-    "outputs/model_self_evolution/standalone_best_candidate_model.json",
-    "outputs/model_self_evolution/standalone_state.json",
-    "outputs/model_self_evolution/state.json",
-    "outputs/recent_era/baseline_best_model_before_self_evolution.json",
-    "outputs/recent_era/recent_era_best_model.json",
-    "outputs/recent_era/recent_era_candidate_model.json",
-    "outputs/recent_era/recent_era_guarded_candidate_model.json",
-    "outputs/recent_era/recent_era_model_comparison_summary.json",
-    "outputs/recent_era/recent_era_model_guard.json",
-    "outputs/recent_era/recent_era_model_state.json",
-    "outputs/recent_era/recent_era_model_summary.json",
-    "outputs/role_ensemble/regime_state.json",
-    "outputs/role_ensemble/role_ensemble_state.json",
-    "outputs/state/full/best_candidate_model.json",
-    "outputs/state/full/standalone_best_candidate_model.json",
-    "outputs/state/full/standalone_state.json",
-    "outputs/state/full/state.json",
-    "outputs/state/recent/baseline_best_model_before_self_evolution.json",
-    "outputs/state/recent/recent_era_best_model.json",
-    "outputs/state/recent/recent_era_candidate_model.json",
-    "outputs/state/recent/recent_era_guarded_candidate_model.json",
-    "outputs/state/recent/recent_era_model_comparison_summary.json",
-    "outputs/state/recent/recent_era_model_guard.json",
-    "outputs/state/recent/recent_era_model_state.json",
-    "outputs/state/recent/recent_era_model_summary.json",
-    "outputs/state/super_recent/super_recent_best_model.json",
-    "outputs/state/super_recent/super_recent_candidate_model.json",
-    "outputs/state/super_recent/super_recent_guarded_candidate_model.json",
-    "outputs/state/super_recent/super_recent_model_comparison_summary.json",
-    "outputs/state/super_recent/super_recent_model_guard.json",
-    "outputs/state/super_recent/super_recent_model_state.json",
-    "outputs/state/super_recent/super_recent_model_summary.json",
-    "outputs/super_recent/super_recent_best_model.json",
-    "outputs/super_recent/super_recent_candidate_model.json",
-    "outputs/super_recent/super_recent_guarded_candidate_model.json",
-    "outputs/super_recent/super_recent_model_comparison_summary.json",
-    "outputs/super_recent/super_recent_model_guard.json",
-    "outputs/super_recent/super_recent_model_state.json",
-    "outputs/super_recent/super_recent_model_summary.json"
-  ],
-  "nonstandard_concurrency_queue_workflows": [],
-  "possibly_orphaned_python": [
-    "src/loto7/evaluation/core.py",
-    "src/loto7/evaluation/hit_metrics.py",
-    "src/loto7/evaluation/robust.py",
-    "src/loto7/evolution/generation5.py",
-    "src/loto7/evolution/hit_first.py",
-    "src/loto7/paths.py",
-    "src/loto7/validation/hit_rate_gate.py"
-  ],
-  "python_file_count": 59,
+  "output_class_counts": {
+    "diagnostics": 50,
+    "evidence": 244,
+    "production": 9,
+    "state": 84,
+    "unclassified": 2
+  },
+  "package_python_count": 15,
+  "policy_schema_version": 4,
   "recommendations": [
     {
-      "action": "Separate immutable prediction evidence from reproducible intermediate outputs; retain only latest, sealed, and compact history files.",
-      "detail": "Repository tracks 385 files under outputs/.",
-      "issue": "tracked_generated_outputs",
-      "priority": "P0"
-    },
-    {
-      "action": "Review before archiving; static detection can miss dynamic calls.",
-      "detail": "7 Python files have no detected workflow/import reference.",
-      "issue": "possibly_orphaned_python",
+      "action": "Convert active workflows to canonical paths before removing aliases.",
+      "detail": "191 files remain under legacy output roots.",
+      "issue": "legacy_output_aliases",
       "priority": "P1"
     },
     {
-      "action": "Adopt src/loto7/{data,models,validation,portfolio,reporting} and keep scripts as thin CLI entry points.",
-      "detail": "Training, evaluation, prediction, workflow helpers and reporting are mixed.",
-      "issue": "package_boundaries",
+      "action": "Migrate one responsibility at a time with import and Resume tests.",
+      "detail": "11 allowlisted root implementations remain.",
+      "issue": "remaining_root_implementations",
       "priority": "P1"
-    },
-    {
-      "action": "Split outputs into production/, validation/, state/, diagnostics/, sealed/ and define retention rules.",
-      "detail": "State, reports, model candidates and sealed evidence share outputs/.",
-      "issue": "output_retention",
-      "priority": "P2"
     }
   ],
-  "repository_root": "/home/runner/work/NEW_LOTO7/NEW_LOTO7",
+  "registered_workflow_count": 15,
   "root_files": [
     ".gitignore",
     "GENERATION4.md",
@@ -1075,406 +211,8 @@
     "scrapingloto7.py",
     "sitecustomize.py"
   ],
-  "suffix_counts": {
-    ".csv": 16,
-    ".json": 214,
-    ".md": 13,
-    ".py": 76,
-    ".sha256": 106,
-    ".toml": 1,
-    ".txt": 53,
-    ".yml": 15,
-    "<none>": 1
-  },
-  "test_file_count": 17,
-  "tracked_output_count": 385,
-  "tracked_outputs": [
-    "outputs/diagnostics/README.md",
-    "outputs/diagnostics/generation4/champion_challenger_report.txt",
-    "outputs/diagnostics/generation4/champion_challenger_summary.json",
-    "outputs/diagnostics/generation4/latest_generation4_summary.json",
-    "outputs/diagnostics/generation4/latest_sealed_manifest.json",
-    "outputs/diagnostics/generation4/latest_shadow_predictions.json",
-    "outputs/diagnostics/generation4/null_strategy_league_report.txt",
-    "outputs/diagnostics/generation4/null_strategy_league_summary.json",
-    "outputs/diagnostics/generation4/production_history_result_snapshot.txt",
-    "outputs/diagnostics/generation4/sealed_index.json",
-    "outputs/diagnostics/generation4/shadow_history.csv",
-    "outputs/diagnostics/generation4/strict_adoption_gate.json",
-    "outputs/diagnostics/holdout/holdout_report.txt",
-    "outputs/diagnostics/holdout/holdout_state.json",
-    "outputs/diagnostics/holdout/holdout_summary.json",
-    "outputs/diagnostics/holdout/latest_prediction_report.txt",
-    "outputs/diagnostics/holdout/recent_era_report.txt",
-    "outputs/diagnostics/holdout/recent_era_summary.json",
-    "outputs/diagnostics/role_ensemble/regime_state.json",
-    "outputs/diagnostics/role_ensemble/regime_strategy.json",
-    "outputs/diagnostics/role_ensemble/regime_strategy_report.txt",
-    "outputs/diagnostics/role_ensemble/role_ensemble_report.txt",
-    "outputs/diagnostics/role_ensemble/role_ensemble_state.json",
-    "outputs/diagnostics/role_ensemble/role_ensemble_summary.json",
-    "outputs/diagnostics/role_ensemble/role_strategy.json",
-    "outputs/diagnostics/role_ensemble/role_strategy_report.txt",
-    "outputs/evidence/README.md",
-    "outputs/evidence/generation4/latest_sealed_manifest.json",
-    "outputs/evidence/generation4/sealed/prediction_686_01d145e967136712.json",
-    "outputs/evidence/generation4/sealed/prediction_686_01d145e967136712.sha256",
-    "outputs/evidence/generation4/sealed/prediction_686_160e9357688fd3b3.json",
-    "outputs/evidence/generation4/sealed/prediction_686_160e9357688fd3b3.sha256",
-    "outputs/evidence/generation4/sealed/prediction_686_248483ec6829b31c.json",
-    "outputs/evidence/generation4/sealed/prediction_686_248483ec6829b31c.sha256",
-    "outputs/evidence/generation4/sealed/prediction_686_28f6e31848a8948e.json",
-    "outputs/evidence/generation4/sealed/prediction_686_28f6e31848a8948e.sha256",
-    "outputs/evidence/generation4/sealed/prediction_686_29a0c7361a5f691d.json",
-    "outputs/evidence/generation4/sealed/prediction_686_29a0c7361a5f691d.sha256",
-    "outputs/evidence/generation4/sealed/prediction_686_4422dd7b5d5c9f7e.json",
-    "outputs/evidence/generation4/sealed/prediction_686_4422dd7b5d5c9f7e.sha256",
-    "outputs/evidence/generation4/sealed/prediction_686_4b743099e627aef1.json",
-    "outputs/evidence/generation4/sealed/prediction_686_4b743099e627aef1.sha256",
-    "outputs/evidence/generation4/sealed/prediction_686_59c5749ed8213fd8.json",
-    "outputs/evidence/generation4/sealed/prediction_686_59c5749ed8213fd8.sha256",
-    "outputs/evidence/generation4/sealed/prediction_686_611eeb3427cd3f2e.json",
-    "outputs/evidence/generation4/sealed/prediction_686_611eeb3427cd3f2e.sha256",
-    "outputs/evidence/generation4/sealed/prediction_686_6d7cacaa4d7d144d.json",
-    "outputs/evidence/generation4/sealed/prediction_686_6d7cacaa4d7d144d.sha256",
-    "outputs/evidence/generation4/sealed/prediction_686_792723c6bb06b74a.json",
-    "outputs/evidence/generation4/sealed/prediction_686_792723c6bb06b74a.sha256",
-    "outputs/evidence/generation4/sealed/prediction_686_84728927fb6166c3.json",
-    "outputs/evidence/generation4/sealed/prediction_686_84728927fb6166c3.sha256",
-    "outputs/evidence/generation4/sealed/prediction_686_8dfaba5c77abc881.json",
-    "outputs/evidence/generation4/sealed/prediction_686_8dfaba5c77abc881.sha256",
-    "outputs/evidence/generation4/sealed/prediction_686_98457b45928fe73d.json",
-    "outputs/evidence/generation4/sealed/prediction_686_98457b45928fe73d.sha256",
-    "outputs/evidence/generation4/sealed/prediction_686_a206fe994fd7735c.json",
-    "outputs/evidence/generation4/sealed/prediction_686_a206fe994fd7735c.sha256",
-    "outputs/evidence/generation4/sealed/prediction_686_bcf35223e5a2139f.json",
-    "outputs/evidence/generation4/sealed/prediction_686_bcf35223e5a2139f.sha256",
-    "outputs/evidence/generation4/sealed/prediction_686_dc9fa2951a0bb47d.json",
-    "outputs/evidence/generation4/sealed/prediction_686_dc9fa2951a0bb47d.sha256",
-    "outputs/evidence/generation4/sealed/prediction_686_e48de775625ddbfb.json",
-    "outputs/evidence/generation4/sealed/prediction_686_e48de775625ddbfb.sha256",
-    "outputs/evidence/generation4/sealed/prediction_686_e5e6a1f92d36ce22.json",
-    "outputs/evidence/generation4/sealed/prediction_686_e5e6a1f92d36ce22.sha256",
-    "outputs/evidence/generation4/sealed/prediction_686_f9c8e56a92cf91f5.json",
-    "outputs/evidence/generation4/sealed/prediction_686_f9c8e56a92cf91f5.sha256",
-    "outputs/evidence/generation4/sealed/prediction_687_0a29136f76af26ed.json",
-    "outputs/evidence/generation4/sealed/prediction_687_0a29136f76af26ed.sha256",
-    "outputs/evidence/generation4/sealed/prediction_687_0e1144893d1c288d.json",
-    "outputs/evidence/generation4/sealed/prediction_687_0e1144893d1c288d.sha256",
-    "outputs/evidence/generation4/sealed/prediction_687_f68f26b91e4535cc.json",
-    "outputs/evidence/generation4/sealed/prediction_687_f68f26b91e4535cc.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_0d2bc5622e33c593.json",
-    "outputs/evidence/generation4/sealed/prediction_688_0d2bc5622e33c593.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_0e7f8b4eb49f517c.json",
-    "outputs/evidence/generation4/sealed/prediction_688_0e7f8b4eb49f517c.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_11296d72d4756e92.json",
-    "outputs/evidence/generation4/sealed/prediction_688_11296d72d4756e92.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_14495e0349750fc7.json",
-    "outputs/evidence/generation4/sealed/prediction_688_14495e0349750fc7.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_1cc61ea66c4ed8e1.json",
-    "outputs/evidence/generation4/sealed/prediction_688_1cc61ea66c4ed8e1.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_1cf549f3e5f7cd6e.json",
-    "outputs/evidence/generation4/sealed/prediction_688_1cf549f3e5f7cd6e.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_262c208b153d4be0.json",
-    "outputs/evidence/generation4/sealed/prediction_688_262c208b153d4be0.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_2e825596f349a46d.json",
-    "outputs/evidence/generation4/sealed/prediction_688_2e825596f349a46d.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_33cfb4d2ac100286.json",
-    "outputs/evidence/generation4/sealed/prediction_688_33cfb4d2ac100286.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_3b8bc4158dc00742.json",
-    "outputs/evidence/generation4/sealed/prediction_688_3b8bc4158dc00742.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_3f7fd274d229a45b.json",
-    "outputs/evidence/generation4/sealed/prediction_688_3f7fd274d229a45b.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_4d6505d701bedb32.json",
-    "outputs/evidence/generation4/sealed/prediction_688_4d6505d701bedb32.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_4ed2e9b3636b5726.json",
-    "outputs/evidence/generation4/sealed/prediction_688_4ed2e9b3636b5726.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_654697595c77d3dd.json",
-    "outputs/evidence/generation4/sealed/prediction_688_654697595c77d3dd.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_6c284dd9d5affa91.json",
-    "outputs/evidence/generation4/sealed/prediction_688_6c284dd9d5affa91.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_832402ae53262926.json",
-    "outputs/evidence/generation4/sealed/prediction_688_832402ae53262926.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_83792b8fdba228de.json",
-    "outputs/evidence/generation4/sealed/prediction_688_83792b8fdba228de.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_866f11c23c0b0cb2.json",
-    "outputs/evidence/generation4/sealed/prediction_688_866f11c23c0b0cb2.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_988309e8169daf00.json",
-    "outputs/evidence/generation4/sealed/prediction_688_988309e8169daf00.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_9bb3da655b096e94.json",
-    "outputs/evidence/generation4/sealed/prediction_688_9bb3da655b096e94.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_a38cc82fe5da4221.json",
-    "outputs/evidence/generation4/sealed/prediction_688_a38cc82fe5da4221.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_a7a3485d00d53152.json",
-    "outputs/evidence/generation4/sealed/prediction_688_a7a3485d00d53152.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_ae79814d5e4b09bc.json",
-    "outputs/evidence/generation4/sealed/prediction_688_ae79814d5e4b09bc.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_c4bd2f51d0330464.json",
-    "outputs/evidence/generation4/sealed/prediction_688_c4bd2f51d0330464.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_ccb96d65e7368786.json",
-    "outputs/evidence/generation4/sealed/prediction_688_ccb96d65e7368786.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_d760c4d0469d78d7.json",
-    "outputs/evidence/generation4/sealed/prediction_688_d760c4d0469d78d7.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_d82eb51bd3edd81f.json",
-    "outputs/evidence/generation4/sealed/prediction_688_d82eb51bd3edd81f.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_dc3c2d1ea5d0ab91.json",
-    "outputs/evidence/generation4/sealed/prediction_688_dc3c2d1ea5d0ab91.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_e5a32021bf787f19.json",
-    "outputs/evidence/generation4/sealed/prediction_688_e5a32021bf787f19.sha256",
-    "outputs/evidence/generation4/sealed/prediction_688_ecdf4a460e4e251b.json",
-    "outputs/evidence/generation4/sealed/prediction_688_ecdf4a460e4e251b.sha256",
-    "outputs/evidence/generation4/sealed_index.json",
-    "outputs/evidence/validation/nested_walk_forward_summary.json",
-    "outputs/evidence/validation/recent/hit_rate_gate.json",
-    "outputs/evidence/validation/recent/nested_walk_forward_report.txt",
-    "outputs/evidence/validation/recent/nested_walk_forward_summary.json",
-    "outputs/evidence/validation/recent/promotion_decision.json",
-    "outputs/evidence/validation/recent/promotion_report.txt",
-    "outputs/evidence/validation/super_recent/hit_rate_gate.json",
-    "outputs/evidence/validation/super_recent/nested_walk_forward_report.txt",
-    "outputs/evidence/validation/super_recent/nested_walk_forward_summary.json",
-    "outputs/evidence/validation/super_recent/promotion_decision.json",
-    "outputs/evidence/validation/super_recent/promotion_report.txt",
-    "outputs/evolution_best_prediction.csv",
-    "outputs/evolution_prediction_history.csv",
-    "outputs/evolution_prediction_history_result.txt",
-    "outputs/generation4/champion_challenger_report.txt",
-    "outputs/generation4/champion_challenger_summary.json",
-    "outputs/generation4/latest_generation4_summary.json",
-    "outputs/generation4/latest_sealed_manifest.json",
-    "outputs/generation4/latest_shadow_predictions.json",
-    "outputs/generation4/null_strategy_league_report.txt",
-    "outputs/generation4/null_strategy_league_summary.json",
-    "outputs/generation4/production_history_result_snapshot.txt",
-    "outputs/generation4/sealed/prediction_686_01d145e967136712.json",
-    "outputs/generation4/sealed/prediction_686_01d145e967136712.sha256",
-    "outputs/generation4/sealed/prediction_686_160e9357688fd3b3.json",
-    "outputs/generation4/sealed/prediction_686_160e9357688fd3b3.sha256",
-    "outputs/generation4/sealed/prediction_686_248483ec6829b31c.json",
-    "outputs/generation4/sealed/prediction_686_248483ec6829b31c.sha256",
-    "outputs/generation4/sealed/prediction_686_28f6e31848a8948e.json",
-    "outputs/generation4/sealed/prediction_686_28f6e31848a8948e.sha256",
-    "outputs/generation4/sealed/prediction_686_29a0c7361a5f691d.json",
-    "outputs/generation4/sealed/prediction_686_29a0c7361a5f691d.sha256",
-    "outputs/generation4/sealed/prediction_686_4422dd7b5d5c9f7e.json",
-    "outputs/generation4/sealed/prediction_686_4422dd7b5d5c9f7e.sha256",
-    "outputs/generation4/sealed/prediction_686_4b743099e627aef1.json",
-    "outputs/generation4/sealed/prediction_686_4b743099e627aef1.sha256",
-    "outputs/generation4/sealed/prediction_686_59c5749ed8213fd8.json",
-    "outputs/generation4/sealed/prediction_686_59c5749ed8213fd8.sha256",
-    "outputs/generation4/sealed/prediction_686_611eeb3427cd3f2e.json",
-    "outputs/generation4/sealed/prediction_686_611eeb3427cd3f2e.sha256",
-    "outputs/generation4/sealed/prediction_686_6d7cacaa4d7d144d.json",
-    "outputs/generation4/sealed/prediction_686_6d7cacaa4d7d144d.sha256",
-    "outputs/generation4/sealed/prediction_686_792723c6bb06b74a.json",
-    "outputs/generation4/sealed/prediction_686_792723c6bb06b74a.sha256",
-    "outputs/generation4/sealed/prediction_686_84728927fb6166c3.json",
-    "outputs/generation4/sealed/prediction_686_84728927fb6166c3.sha256",
-    "outputs/generation4/sealed/prediction_686_8dfaba5c77abc881.json",
-    "outputs/generation4/sealed/prediction_686_8dfaba5c77abc881.sha256",
-    "outputs/generation4/sealed/prediction_686_98457b45928fe73d.json",
-    "outputs/generation4/sealed/prediction_686_98457b45928fe73d.sha256",
-    "outputs/generation4/sealed/prediction_686_a206fe994fd7735c.json",
-    "outputs/generation4/sealed/prediction_686_a206fe994fd7735c.sha256",
-    "outputs/generation4/sealed/prediction_686_bcf35223e5a2139f.json",
-    "outputs/generation4/sealed/prediction_686_bcf35223e5a2139f.sha256",
-    "outputs/generation4/sealed/prediction_686_dc9fa2951a0bb47d.json",
-    "outputs/generation4/sealed/prediction_686_dc9fa2951a0bb47d.sha256",
-    "outputs/generation4/sealed/prediction_686_e48de775625ddbfb.json",
-    "outputs/generation4/sealed/prediction_686_e48de775625ddbfb.sha256",
-    "outputs/generation4/sealed/prediction_686_e5e6a1f92d36ce22.json",
-    "outputs/generation4/sealed/prediction_686_e5e6a1f92d36ce22.sha256",
-    "outputs/generation4/sealed/prediction_686_f9c8e56a92cf91f5.json",
-    "outputs/generation4/sealed/prediction_686_f9c8e56a92cf91f5.sha256",
-    "outputs/generation4/sealed/prediction_687_0a29136f76af26ed.json",
-    "outputs/generation4/sealed/prediction_687_0a29136f76af26ed.sha256",
-    "outputs/generation4/sealed/prediction_687_0e1144893d1c288d.json",
-    "outputs/generation4/sealed/prediction_687_0e1144893d1c288d.sha256",
-    "outputs/generation4/sealed/prediction_687_f68f26b91e4535cc.json",
-    "outputs/generation4/sealed/prediction_687_f68f26b91e4535cc.sha256",
-    "outputs/generation4/sealed/prediction_688_0d2bc5622e33c593.json",
-    "outputs/generation4/sealed/prediction_688_0d2bc5622e33c593.sha256",
-    "outputs/generation4/sealed/prediction_688_0e7f8b4eb49f517c.json",
-    "outputs/generation4/sealed/prediction_688_0e7f8b4eb49f517c.sha256",
-    "outputs/generation4/sealed/prediction_688_11296d72d4756e92.json",
-    "outputs/generation4/sealed/prediction_688_11296d72d4756e92.sha256",
-    "outputs/generation4/sealed/prediction_688_14495e0349750fc7.json",
-    "outputs/generation4/sealed/prediction_688_14495e0349750fc7.sha256",
-    "outputs/generation4/sealed/prediction_688_1cc61ea66c4ed8e1.json",
-    "outputs/generation4/sealed/prediction_688_1cc61ea66c4ed8e1.sha256",
-    "outputs/generation4/sealed/prediction_688_1cf549f3e5f7cd6e.json",
-    "outputs/generation4/sealed/prediction_688_1cf549f3e5f7cd6e.sha256",
-    "outputs/generation4/sealed/prediction_688_262c208b153d4be0.json",
-    "outputs/generation4/sealed/prediction_688_262c208b153d4be0.sha256",
-    "outputs/generation4/sealed/prediction_688_2e825596f349a46d.json",
-    "outputs/generation4/sealed/prediction_688_2e825596f349a46d.sha256",
-    "outputs/generation4/sealed/prediction_688_33cfb4d2ac100286.json",
-    "outputs/generation4/sealed/prediction_688_33cfb4d2ac100286.sha256",
-    "outputs/generation4/sealed/prediction_688_3b8bc4158dc00742.json",
-    "outputs/generation4/sealed/prediction_688_3b8bc4158dc00742.sha256",
-    "outputs/generation4/sealed/prediction_688_3f7fd274d229a45b.json",
-    "outputs/generation4/sealed/prediction_688_3f7fd274d229a45b.sha256",
-    "outputs/generation4/sealed/prediction_688_4d6505d701bedb32.json",
-    "outputs/generation4/sealed/prediction_688_4d6505d701bedb32.sha256",
-    "outputs/generation4/sealed/prediction_688_4ed2e9b3636b5726.json",
-    "outputs/generation4/sealed/prediction_688_4ed2e9b3636b5726.sha256",
-    "outputs/generation4/sealed/prediction_688_654697595c77d3dd.json",
-    "outputs/generation4/sealed/prediction_688_654697595c77d3dd.sha256",
-    "outputs/generation4/sealed/prediction_688_6c284dd9d5affa91.json",
-    "outputs/generation4/sealed/prediction_688_6c284dd9d5affa91.sha256",
-    "outputs/generation4/sealed/prediction_688_832402ae53262926.json",
-    "outputs/generation4/sealed/prediction_688_832402ae53262926.sha256",
-    "outputs/generation4/sealed/prediction_688_83792b8fdba228de.json",
-    "outputs/generation4/sealed/prediction_688_83792b8fdba228de.sha256",
-    "outputs/generation4/sealed/prediction_688_866f11c23c0b0cb2.json",
-    "outputs/generation4/sealed/prediction_688_866f11c23c0b0cb2.sha256",
-    "outputs/generation4/sealed/prediction_688_988309e8169daf00.json",
-    "outputs/generation4/sealed/prediction_688_988309e8169daf00.sha256",
-    "outputs/generation4/sealed/prediction_688_9bb3da655b096e94.json",
-    "outputs/generation4/sealed/prediction_688_9bb3da655b096e94.sha256",
-    "outputs/generation4/sealed/prediction_688_a38cc82fe5da4221.json",
-    "outputs/generation4/sealed/prediction_688_a38cc82fe5da4221.sha256",
-    "outputs/generation4/sealed/prediction_688_a7a3485d00d53152.json",
-    "outputs/generation4/sealed/prediction_688_a7a3485d00d53152.sha256",
-    "outputs/generation4/sealed/prediction_688_ae79814d5e4b09bc.json",
-    "outputs/generation4/sealed/prediction_688_ae79814d5e4b09bc.sha256",
-    "outputs/generation4/sealed/prediction_688_c4bd2f51d0330464.json",
-    "outputs/generation4/sealed/prediction_688_c4bd2f51d0330464.sha256",
-    "outputs/generation4/sealed/prediction_688_ccb96d65e7368786.json",
-    "outputs/generation4/sealed/prediction_688_ccb96d65e7368786.sha256",
-    "outputs/generation4/sealed/prediction_688_d760c4d0469d78d7.json",
-    "outputs/generation4/sealed/prediction_688_d760c4d0469d78d7.sha256",
-    "outputs/generation4/sealed/prediction_688_d82eb51bd3edd81f.json",
-    "outputs/generation4/sealed/prediction_688_d82eb51bd3edd81f.sha256",
-    "outputs/generation4/sealed/prediction_688_dc3c2d1ea5d0ab91.json",
-    "outputs/generation4/sealed/prediction_688_dc3c2d1ea5d0ab91.sha256",
-    "outputs/generation4/sealed/prediction_688_e5a32021bf787f19.json",
-    "outputs/generation4/sealed/prediction_688_e5a32021bf787f19.sha256",
-    "outputs/generation4/sealed/prediction_688_ecdf4a460e4e251b.json",
-    "outputs/generation4/sealed/prediction_688_ecdf4a460e4e251b.sha256",
-    "outputs/generation4/sealed_index.json",
-    "outputs/generation4/shadow_history.csv",
-    "outputs/generation4/strict_adoption_gate.json",
-    "outputs/holdout/holdout_report.txt",
-    "outputs/holdout/holdout_result.csv",
-    "outputs/holdout/holdout_state.json",
-    "outputs/holdout/holdout_summary.json",
-    "outputs/holdout/latest_prediction_report.txt",
-    "outputs/holdout/recent_era_report.txt",
-    "outputs/holdout/recent_era_summary.json",
-    "outputs/layout_manifest.json",
-    "outputs/loto7_progress_summary.json",
-    "outputs/loto7_progress_summary.md",
-    "outputs/model_self_evolution/best_candidate_model.json",
-    "outputs/model_self_evolution/history.csv",
-    "outputs/model_self_evolution/history.pre_hit_first_20260721231909.csv",
-    "outputs/model_self_evolution/report.txt",
-    "outputs/model_self_evolution/standalone_best_candidate_model.json",
-    "outputs/model_self_evolution/standalone_history.csv",
-    "outputs/model_self_evolution/standalone_report.txt",
-    "outputs/model_self_evolution/standalone_state.json",
-    "outputs/model_self_evolution/standalone_summary.json",
-    "outputs/model_self_evolution/state.json",
-    "outputs/model_self_evolution/summary.json",
-    "outputs/production/README.md",
-    "outputs/production/latest_prediction.csv",
-    "outputs/production/latest_prediction_report.txt",
-    "outputs/production/prediction_history.csv",
-    "outputs/production/prediction_history_result.txt",
-    "outputs/recent_era/baseline_best_model_before_self_evolution.json",
-    "outputs/recent_era/recent_era_adaptive_safety_guard.json",
-    "outputs/recent_era/recent_era_adaptive_safety_guard_report.txt",
-    "outputs/recent_era/recent_era_baseline_before_run.json",
-    "outputs/recent_era/recent_era_best_model.json",
-    "outputs/recent_era/recent_era_candidate_model.json",
-    "outputs/recent_era/recent_era_guarded_candidate_model.json",
-    "outputs/recent_era/recent_era_model_comparison_report.txt",
-    "outputs/recent_era/recent_era_model_comparison_summary.json",
-    "outputs/recent_era/recent_era_model_guard.json",
-    "outputs/recent_era/recent_era_model_guard_report.txt",
-    "outputs/recent_era/recent_era_model_history.csv",
-    "outputs/recent_era/recent_era_model_history.pre_hit_first_20260722035646.csv",
-    "outputs/recent_era/recent_era_model_report.txt",
-    "outputs/recent_era/recent_era_model_state.json",
-    "outputs/recent_era/recent_era_model_summary.json",
-    "outputs/recent_era/recent_era_optimizer.json",
-    "outputs/recent_era/recent_era_optimizer_report.txt",
-    "outputs/recent_era/recent_role_strategy.json",
-    "outputs/role_ensemble/regime_state.json",
-    "outputs/role_ensemble/regime_strategy.json",
-    "outputs/role_ensemble/regime_strategy_report.txt",
-    "outputs/role_ensemble/role_ensemble_backtest.csv",
-    "outputs/role_ensemble/role_ensemble_report.txt",
-    "outputs/role_ensemble/role_ensemble_state.json",
-    "outputs/role_ensemble/role_ensemble_summary.json",
-    "outputs/role_ensemble/role_strategy.json",
-    "outputs/role_ensemble/role_strategy_report.txt",
-    "outputs/state/README.md",
-    "outputs/state/full/best_candidate_model.json",
-    "outputs/state/full/report.txt",
-    "outputs/state/full/standalone_best_candidate_model.json",
-    "outputs/state/full/standalone_report.txt",
-    "outputs/state/full/standalone_state.json",
-    "outputs/state/full/standalone_summary.json",
-    "outputs/state/full/state.json",
-    "outputs/state/full/summary.json",
-    "outputs/state/recent/baseline_best_model_before_self_evolution.json",
-    "outputs/state/recent/recent_era_adaptive_safety_guard.json",
-    "outputs/state/recent/recent_era_adaptive_safety_guard_report.txt",
-    "outputs/state/recent/recent_era_baseline_before_run.json",
-    "outputs/state/recent/recent_era_best_model.json",
-    "outputs/state/recent/recent_era_candidate_model.json",
-    "outputs/state/recent/recent_era_guarded_candidate_model.json",
-    "outputs/state/recent/recent_era_model_comparison_report.txt",
-    "outputs/state/recent/recent_era_model_comparison_summary.json",
-    "outputs/state/recent/recent_era_model_guard.json",
-    "outputs/state/recent/recent_era_model_guard_report.txt",
-    "outputs/state/recent/recent_era_model_report.txt",
-    "outputs/state/recent/recent_era_model_state.json",
-    "outputs/state/recent/recent_era_model_summary.json",
-    "outputs/state/recent/recent_era_optimizer.json",
-    "outputs/state/recent/recent_era_optimizer_report.txt",
-    "outputs/state/recent/recent_role_strategy.json",
-    "outputs/state/super_recent/super_recent_adaptive_safety_guard.json",
-    "outputs/state/super_recent/super_recent_adaptive_safety_guard_report.txt",
-    "outputs/state/super_recent/super_recent_baseline_before_run.json",
-    "outputs/state/super_recent/super_recent_best_model.json",
-    "outputs/state/super_recent/super_recent_candidate_model.json",
-    "outputs/state/super_recent/super_recent_guarded_candidate_model.json",
-    "outputs/state/super_recent/super_recent_model_comparison_report.txt",
-    "outputs/state/super_recent/super_recent_model_comparison_summary.json",
-    "outputs/state/super_recent/super_recent_model_guard.json",
-    "outputs/state/super_recent/super_recent_model_guard_report.txt",
-    "outputs/state/super_recent/super_recent_model_report.txt",
-    "outputs/state/super_recent/super_recent_model_state.json",
-    "outputs/state/super_recent/super_recent_model_summary.json",
-    "outputs/super_recent/super_recent_adaptive_safety_guard.json",
-    "outputs/super_recent/super_recent_adaptive_safety_guard_report.txt",
-    "outputs/super_recent/super_recent_baseline_before_run.json",
-    "outputs/super_recent/super_recent_best_model.json",
-    "outputs/super_recent/super_recent_candidate_model.json",
-    "outputs/super_recent/super_recent_guarded_candidate_model.json",
-    "outputs/super_recent/super_recent_model_comparison_report.txt",
-    "outputs/super_recent/super_recent_model_comparison_summary.json",
-    "outputs/super_recent/super_recent_model_guard.json",
-    "outputs/super_recent/super_recent_model_guard_report.txt",
-    "outputs/super_recent/super_recent_model_history.csv",
-    "outputs/super_recent/super_recent_model_history.pre_hit_first_20260722083852.csv",
-    "outputs/super_recent/super_recent_model_report.txt",
-    "outputs/super_recent/super_recent_model_state.json",
-    "outputs/super_recent/super_recent_model_summary.json",
-    "outputs/validation/nested_walk_forward_summary.json",
-    "outputs/validation/recent/hit_rate_gate.json",
-    "outputs/validation/recent/nested_walk_forward_report.txt",
-    "outputs/validation/recent/nested_walk_forward_summary.json",
-    "outputs/validation/recent/promotion_decision.json",
-    "outputs/validation/recent/promotion_report.txt",
-    "outputs/validation/super_recent/hit_rate_gate.json",
-    "outputs/validation/super_recent/nested_walk_forward_report.txt",
-    "outputs/validation/super_recent/nested_walk_forward_summary.json",
-    "outputs/validation/super_recent/promotion_decision.json",
-    "outputs/validation/super_recent/promotion_report.txt"
-  ],
+  "script_python_count": 36,
+  "tracked_output_count": 389,
   "workflow_count": 15,
   "workflow_referenced_python": [
     "holdout_evaluator.py",
@@ -1486,9 +224,7 @@
     "scrapingloto7.py",
     "scripts/adaptive_model_safety_guard.py",
     "scripts/assert_latest_prediction_fresh.py",
-    "scripts/audit_repository_structure.py",
     "scripts/backtest_role_ensemble.py",
-    "scripts/build_dual_model_prediction.py",
     "scripts/build_generation4_prediction.py",
     "scripts/build_generation4_prediction_strict.py",
     "scripts/build_null_seed_bank.py",
@@ -1498,59 +234,30 @@
     "scripts/check_repository_architecture.py",
     "scripts/detect_loto7_regime.py",
     "scripts/enforce_prediction_constraints.py",
-    "scripts/evaluation_core.py",
     "scripts/finalize_generation4_report.py",
-    "scripts/generation4_core.py",
     "scripts/generation5_evolver.py",
     "scripts/migrate_output_layout.py",
     "scripts/nested_walk_forward_validation.py",
     "scripts/null_strategy_league.py",
     "scripts/optimize_role_strategy.py",
     "scripts/promote_generation5_candidate.py",
-    "scripts/promote_nested_candidate.py",
     "scripts/promote_nested_candidate_strict.py",
     "scripts/recent_era_dedicated_guard.py",
     "scripts/recent_era_optimizer.py",
     "scripts/repair_holdout_summary.py",
-    "scripts/robust_model_metrics.py",
     "scripts/run_fixed_null_league.py",
     "scripts/seal_generation4_prediction.py",
-    "scripts/strict_adoption_gates.py",
     "scripts/update_generation4_shadow_history.py",
     "scripts/update_prediction_history.py",
     "scripts/verify_evaluator_consistency.py",
-    "scripts/verify_full_evaluator_consistency.py",
-    "tests/test_evaluation_unification.py",
-    "tests/test_generation4_pipeline.py",
-    "tests/test_generation5_precision.py",
-    "tests/test_hit_first_learning.py",
-    "tests/test_holdout_portfolio_repair.py",
-    "tests/test_latest_prediction_freshness.py",
-    "tests/test_model_promotion_authorization.py",
-    "tests/test_nested_promotion_gates.py",
-    "tests/test_output_layout_compatibility.py",
-    "tests/test_package_layout_and_hit_metrics.py",
-    "tests/test_prediction_output_consistency.py",
-    "tests/test_production_ownership.py",
-    "tests/test_robust_validation_and_portfolio.py",
-    "tests/test_sealed_output_migration.py",
-    "tests/test_strict_adoption_gates.py",
-    "tests/test_workflow_resume_compatibility.py"
+    "scripts/verify_full_evaluator_consistency.py"
   ],
-  "workflow_trigger_counts": {
-    "pull_request": 6,
-    "push": 10,
-    "schedule": 4,
-    "workflow_dispatch": 13,
-    "workflow_run": 4
-  },
   "workflows": [
     {
-      "contains_nonstandard_concurrency_queue": false,
       "line_count": 66,
       "name": "Backfill LOTO7 prize amounts",
       "path": ".github/workflows/backfill-loto7-prizes.yml",
-      "referenced_paths": [
+      "referenced_python": [
         "scrapingloto7.py"
       ],
       "triggers": [
@@ -1559,11 +266,10 @@
       ]
     },
     {
-      "contains_nonstandard_concurrency_queue": false,
       "line_count": 256,
       "name": "Evaluator Full Data PR Check",
       "path": ".github/workflows/evaluator_full_data_pr_check.yml",
-      "referenced_paths": [
+      "referenced_python": [
         "scripts/backtest_role_ensemble.py",
         "scripts/check_hit_rate_promotion.py",
         "scripts/check_prediction_history_results.py",
@@ -1572,36 +278,17 @@
         "scripts/repair_holdout_summary.py",
         "scripts/update_generation4_shadow_history.py",
         "scripts/verify_evaluator_consistency.py",
-        "scripts/verify_full_evaluator_consistency.py",
-        "outputs/evolution_best_prediction.csv",
-        "outputs/evolution_prediction_history.csv",
-        "outputs/evolution_prediction_history_result.txt",
-        "outputs/generation4/champion_challenger_report.txt",
-        "outputs/generation4/champion_challenger_summary.json",
-        "outputs/generation4/latest_shadow_predictions.json",
-        "outputs/generation4/production_history_result_snapshot.txt",
-        "outputs/generation4/shadow_history.csv",
-        "outputs/holdout/holdout_result.csv",
-        "outputs/holdout/holdout_summary.json",
-        "outputs/holdout/recent_era_report.txt",
-        "outputs/holdout/recent_era_summary.json",
-        "scripts/evaluation_core.py",
-        "scripts/robust_model_metrics.py",
-        "tests/test_evaluation_unification.py",
-        "tests/test_holdout_portfolio_repair.py",
-        "tests/test_package_layout_and_hit_metrics.py",
-        "tests/test_production_ownership.py"
+        "scripts/verify_full_evaluator_consistency.py"
       ],
       "triggers": [
         "pull_request"
       ]
     },
     {
-      "contains_nonstandard_concurrency_queue": false,
       "line_count": 114,
       "name": "LOTO7 Smoke Test",
       "path": ".github/workflows/loto7-smoke.yml",
-      "referenced_paths": [
+      "referenced_python": [
         "holdout_evaluator.py",
         "loto7_safe_evolution_runner.py"
       ],
@@ -1611,11 +298,10 @@
       ]
     },
     {
-      "contains_nonstandard_concurrency_queue": false,
       "line_count": 460,
       "name": "LOTO7 Evolution Trainer",
       "path": ".github/workflows/loto7_evolution.yml",
-      "referenced_paths": [
+      "referenced_python": [
         "holdout_evaluator.py",
         "loto7_complete_ai_system.py",
         "loto7_ml_stack.py",
@@ -1624,26 +310,7 @@
         "scrapingloto7.py",
         "scripts/backtest_role_ensemble.py",
         "scripts/optimize_role_strategy.py",
-        "scripts/repair_holdout_summary.py",
-        "outputs/holdout/holdout_report.txt",
-        "outputs/holdout/holdout_result.csv",
-        "outputs/holdout/holdout_state.json",
-        "outputs/holdout/holdout_summary.json",
-        "outputs/holdout/recent_era_report.txt",
-        "outputs/holdout/recent_era_summary.json",
-        "outputs/loto7_progress_summary.json",
-        "outputs/loto7_progress_summary.md",
-        "outputs/model_self_evolution/best_candidate_model.json",
-        "outputs/model_self_evolution/history.csv",
-        "outputs/model_self_evolution/report.txt",
-        "outputs/model_self_evolution/state.json",
-        "outputs/model_self_evolution/summary.json",
-        "outputs/role_ensemble/role_ensemble_backtest.csv",
-        "outputs/role_ensemble/role_ensemble_report.txt",
-        "outputs/role_ensemble/role_ensemble_state.json",
-        "outputs/role_ensemble/role_ensemble_summary.json",
-        "outputs/role_ensemble/role_strategy.json",
-        "outputs/role_ensemble/role_strategy_report.txt"
+        "scripts/repair_holdout_summary.py"
       ],
       "triggers": [
         "workflow_dispatch",
@@ -1651,42 +318,17 @@
       ]
     },
     {
-      "contains_nonstandard_concurrency_queue": false,
       "line_count": 342,
       "name": "LOTO7 Generation 4 Evaluation",
       "path": ".github/workflows/loto7_generation4_run.yml",
-      "referenced_paths": [
+      "referenced_python": [
         "scripts/build_generation4_prediction_strict.py",
         "scripts/check_prediction_history_results.py",
         "scripts/detect_loto7_regime.py",
         "scripts/enforce_prediction_constraints.py",
         "scripts/finalize_generation4_report.py",
         "scripts/null_strategy_league.py",
-        "scripts/update_generation4_shadow_history.py",
-        "outputs/evolution_prediction_history.csv",
-        "outputs/generation4/champion_challenger_report.txt",
-        "outputs/generation4/champion_challenger_summary.json",
-        "outputs/generation4/latest_shadow_predictions.json",
-        "outputs/generation4/null_strategy_league_report.txt",
-        "outputs/generation4/null_strategy_league_summary.json",
-        "outputs/generation4/production_history_result_snapshot.txt",
-        "outputs/generation4/shadow_history.csv",
-        "outputs/generation4/strict_adoption_gate.json",
-        "outputs/recent_era/recent_era_best_model.json",
-        "outputs/recent_era/recent_role_strategy.json",
-        "outputs/role_ensemble/regime_state.json",
-        "outputs/role_ensemble/regime_strategy.json",
-        "outputs/role_ensemble/regime_strategy_report.txt",
-        "outputs/role_ensemble/role_strategy.json",
-        "outputs/super_recent/super_recent_best_model.json",
-        "scripts/build_generation4_prediction.py",
-        "scripts/evaluation_core.py",
-        "scripts/generation4_core.py",
-        "scripts/strict_adoption_gates.py",
-        "tests/test_evaluation_unification.py",
-        "tests/test_generation4_pipeline.py",
-        "tests/test_production_ownership.py",
-        "tests/test_strict_adoption_gates.py"
+        "scripts/update_generation4_shadow_history.py"
       ],
       "triggers": [
         "workflow_dispatch",
@@ -1695,16 +337,14 @@
       ]
     },
     {
-      "contains_nonstandard_concurrency_queue": false,
       "line_count": 245,
       "name": "LOTO7 Generation 5 Precision Evolution",
       "path": ".github/workflows/loto7_generation5.yml",
-      "referenced_paths": [
+      "referenced_python": [
         "scripts/build_null_seed_bank.py",
         "scripts/generation5_evolver.py",
         "scripts/promote_generation5_candidate.py",
-        "scripts/run_fixed_null_league.py",
-        "tests/test_generation5_precision.py"
+        "scripts/run_fixed_null_league.py"
       ],
       "triggers": [
         "workflow_dispatch",
@@ -1714,17 +354,11 @@
       ]
     },
     {
-      "contains_nonstandard_concurrency_queue": false,
       "line_count": 170,
       "name": "LOTO7 Holdout Summary Integrity",
       "path": ".github/workflows/loto7_holdout_summary_integrity.yml",
-      "referenced_paths": [
-        "scripts/repair_holdout_summary.py",
-        "outputs/holdout/holdout_result.csv",
-        "outputs/holdout/holdout_summary.json",
-        "outputs/holdout/recent_era_report.txt",
-        "outputs/holdout/recent_era_summary.json",
-        "tests/test_holdout_portfolio_repair.py"
+      "referenced_python": [
+        "scripts/repair_holdout_summary.py"
       ],
       "triggers": [
         "workflow_dispatch",
@@ -1733,26 +367,13 @@
       ]
     },
     {
-      "contains_nonstandard_concurrency_queue": false,
       "line_count": 197,
       "name": "LOTO7 Model Self Evolution",
       "path": ".github/workflows/loto7_model_self_evolution.yml",
-      "referenced_paths": [
+      "referenced_python": [
         "loto7_model_self_evolver.py",
         "scripts/detect_loto7_regime.py",
-        "scripts/recent_era_optimizer.py",
-        "outputs/model_self_evolution/standalone_best_candidate_model.json",
-        "outputs/model_self_evolution/standalone_history.csv",
-        "outputs/model_self_evolution/standalone_report.txt",
-        "outputs/model_self_evolution/standalone_state.json",
-        "outputs/model_self_evolution/standalone_summary.json",
-        "outputs/recent_era/baseline_best_model_before_self_evolution.json",
-        "outputs/recent_era/recent_era_optimizer.json",
-        "outputs/recent_era/recent_era_optimizer_report.txt",
-        "outputs/role_ensemble/regime_state.json",
-        "outputs/role_ensemble/regime_strategy.json",
-        "outputs/role_ensemble/regime_strategy_report.txt",
-        "outputs/role_ensemble/role_strategy.json"
+        "scripts/recent_era_optimizer.py"
       ],
       "triggers": [
         "workflow_dispatch",
@@ -1761,39 +382,14 @@
       ]
     },
     {
-      "contains_nonstandard_concurrency_queue": false,
       "line_count": 286,
       "name": "LOTO7 Nested Walk Forward Validation",
       "path": ".github/workflows/loto7_nested_walk_forward.yml",
-      "referenced_paths": [
+      "referenced_python": [
         "scripts/check_hit_rate_promotion.py",
         "scripts/migrate_output_layout.py",
         "scripts/nested_walk_forward_validation.py",
-        "scripts/promote_nested_candidate_strict.py",
-        "outputs/layout_manifest.json",
-        "outputs/recent_era/recent_era_best_model.json",
-        "outputs/recent_era/recent_era_candidate_model.json",
-        "outputs/recent_era/recent_era_guarded_candidate_model.json",
-        "outputs/super_recent/super_recent_best_model.json",
-        "outputs/super_recent/super_recent_candidate_model.json",
-        "outputs/super_recent/super_recent_guarded_candidate_model.json",
-        "outputs/validation/nested_walk_forward_summary.json",
-        "outputs/validation/recent/hit_rate_gate.json",
-        "outputs/validation/recent/nested_walk_forward_report.txt",
-        "outputs/validation/recent/nested_walk_forward_summary.json",
-        "outputs/validation/recent/promotion_decision.json",
-        "outputs/validation/recent/promotion_report.txt",
-        "outputs/validation/super_recent/hit_rate_gate.json",
-        "outputs/validation/super_recent/nested_walk_forward_report.txt",
-        "outputs/validation/super_recent/nested_walk_forward_summary.json",
-        "outputs/validation/super_recent/promotion_decision.json",
-        "outputs/validation/super_recent/promotion_report.txt",
-        "scripts/promote_nested_candidate.py",
-        "scripts/strict_adoption_gates.py",
-        "tests/test_nested_promotion_gates.py",
-        "tests/test_output_layout_compatibility.py",
-        "tests/test_package_layout_and_hit_metrics.py",
-        "tests/test_strict_adoption_gates.py"
+        "scripts/promote_nested_candidate_strict.py"
       ],
       "triggers": [
         "workflow_dispatch",
@@ -1801,13 +397,11 @@
       ]
     },
     {
-      "contains_nonstandard_concurrency_queue": false,
       "line_count": 114,
       "name": "LOTO7 Canonical Output Sync",
       "path": ".github/workflows/loto7_output_layout_sync.yml",
-      "referenced_paths": [
-        "scripts/migrate_output_layout.py",
-        "outputs/layout_manifest.json"
+      "referenced_python": [
+        "scripts/migrate_output_layout.py"
       ],
       "triggers": [
         "workflow_dispatch",
@@ -1815,44 +409,14 @@
       ]
     },
     {
-      "contains_nonstandard_concurrency_queue": false,
       "line_count": 306,
       "name": "LOTO7 Recent Era Self Evolution",
       "path": ".github/workflows/loto7_recent_era_self_evolution.yml",
-      "referenced_paths": [
+      "referenced_python": [
         "loto7_model_self_evolver.py",
         "scripts/adaptive_model_safety_guard.py",
         "scripts/build_recent_era_model_comparison.py",
-        "scripts/recent_era_dedicated_guard.py",
-        "outputs/evolution_prediction_history.csv",
-        "outputs/recent_era/recent_era_adaptive_safety_guard.json",
-        "outputs/recent_era/recent_era_adaptive_safety_guard_report.txt",
-        "outputs/recent_era/recent_era_baseline_before_run.json",
-        "outputs/recent_era/recent_era_best_model.json",
-        "outputs/recent_era/recent_era_candidate_model.json",
-        "outputs/recent_era/recent_era_guarded_candidate_model.json",
-        "outputs/recent_era/recent_era_model_comparison_report.txt",
-        "outputs/recent_era/recent_era_model_comparison_summary.json",
-        "outputs/recent_era/recent_era_model_guard.json",
-        "outputs/recent_era/recent_era_model_guard_report.txt",
-        "outputs/recent_era/recent_era_model_history.csv",
-        "outputs/recent_era/recent_era_model_report.txt",
-        "outputs/recent_era/recent_era_model_state.json",
-        "outputs/recent_era/recent_era_model_summary.json",
-        "outputs/super_recent/super_recent_adaptive_safety_guard.json",
-        "outputs/super_recent/super_recent_adaptive_safety_guard_report.txt",
-        "outputs/super_recent/super_recent_baseline_before_run.json",
-        "outputs/super_recent/super_recent_best_model.json",
-        "outputs/super_recent/super_recent_candidate_model.json",
-        "outputs/super_recent/super_recent_guarded_candidate_model.json",
-        "outputs/super_recent/super_recent_model_comparison_report.txt",
-        "outputs/super_recent/super_recent_model_comparison_summary.json",
-        "outputs/super_recent/super_recent_model_guard.json",
-        "outputs/super_recent/super_recent_model_guard_report.txt",
-        "outputs/super_recent/super_recent_model_history.csv",
-        "outputs/super_recent/super_recent_model_report.txt",
-        "outputs/super_recent/super_recent_model_state.json",
-        "outputs/super_recent/super_recent_model_summary.json"
+        "scripts/recent_era_dedicated_guard.py"
       ],
       "triggers": [
         "workflow_dispatch",
@@ -1860,11 +424,10 @@
       ]
     },
     {
-      "contains_nonstandard_concurrency_queue": false,
       "line_count": 297,
       "name": "LOTO7 Production Prediction Publisher",
       "path": ".github/workflows/loto7_refresh_latest_prediction.yml",
-      "referenced_paths": [
+      "referenced_python": [
         "scripts/assert_latest_prediction_fresh.py",
         "scripts/build_generation4_prediction.py",
         "scripts/check_prediction_history_results.py",
@@ -1873,27 +436,7 @@
         "scripts/enforce_prediction_constraints.py",
         "scripts/finalize_generation4_report.py",
         "scripts/seal_generation4_prediction.py",
-        "scripts/update_prediction_history.py",
-        "outputs/evolution_best_prediction.csv",
-        "outputs/evolution_prediction_history.csv",
-        "outputs/evolution_prediction_history_result.txt",
-        "outputs/generation4/latest_generation4_summary.json",
-        "outputs/generation4/latest_sealed_manifest.json",
-        "outputs/generation4/latest_shadow_predictions.json",
-        "outputs/generation4/null_strategy_league_summary.json",
-        "outputs/generation4/sealed_index.json",
-        "outputs/generation4/shadow_history.csv",
-        "outputs/generation4/strict_adoption_gate.json",
-        "outputs/holdout/latest_prediction_report.txt",
-        "outputs/recent_era/recent_era_best_model.json",
-        "outputs/recent_era/recent_role_strategy.json",
-        "outputs/role_ensemble/regime_state.json",
-        "outputs/role_ensemble/regime_strategy.json",
-        "outputs/role_ensemble/regime_strategy_report.txt",
-        "outputs/role_ensemble/role_strategy.json",
-        "outputs/super_recent/super_recent_best_model.json",
-        "tests/test_latest_prediction_freshness.py",
-        "tests/test_production_ownership.py"
+        "scripts/update_prediction_history.py"
       ],
       "triggers": [
         "workflow_dispatch",
@@ -1903,48 +446,12 @@
       ]
     },
     {
-      "contains_nonstandard_concurrency_queue": false,
       "line_count": 140,
       "name": "LOTO7 Validation Tests",
       "path": ".github/workflows/loto7_validation_tests.yml",
-      "referenced_paths": [
+      "referenced_python": [
         "scripts/check_repository_architecture.py",
-        "scripts/migrate_output_layout.py",
-        "scripts/adaptive_model_safety_guard.py",
-        "scripts/backtest_role_ensemble.py",
-        "scripts/build_dual_model_prediction.py",
-        "scripts/build_generation4_prediction.py",
-        "scripts/build_generation4_prediction_strict.py",
-        "scripts/check_hit_rate_promotion.py",
-        "scripts/check_prediction_history_results.py",
-        "scripts/enforce_prediction_constraints.py",
-        "scripts/evaluation_core.py",
-        "scripts/finalize_generation4_report.py",
-        "scripts/generation4_core.py",
-        "scripts/nested_walk_forward_validation.py",
-        "scripts/null_strategy_league.py",
-        "scripts/promote_nested_candidate.py",
-        "scripts/promote_nested_candidate_strict.py",
-        "scripts/repair_holdout_summary.py",
-        "scripts/robust_model_metrics.py",
-        "scripts/seal_generation4_prediction.py",
-        "scripts/strict_adoption_gates.py",
-        "scripts/update_generation4_shadow_history.py",
-        "scripts/verify_evaluator_consistency.py",
-        "tests/test_evaluation_unification.py",
-        "tests/test_generation4_pipeline.py",
-        "tests/test_hit_first_learning.py",
-        "tests/test_holdout_portfolio_repair.py",
-        "tests/test_latest_prediction_freshness.py",
-        "tests/test_nested_promotion_gates.py",
-        "tests/test_output_layout_compatibility.py",
-        "tests/test_package_layout_and_hit_metrics.py",
-        "tests/test_prediction_output_consistency.py",
-        "tests/test_production_ownership.py",
-        "tests/test_robust_validation_and_portfolio.py",
-        "tests/test_sealed_output_migration.py",
-        "tests/test_strict_adoption_gates.py",
-        "tests/test_workflow_resume_compatibility.py"
+        "scripts/migrate_output_layout.py"
       ],
       "triggers": [
         "workflow_dispatch",
@@ -1953,34 +460,24 @@
       ]
     },
     {
-      "contains_nonstandard_concurrency_queue": false,
       "line_count": 57,
       "name": "LOTO7 Model Promotion Authorization",
       "path": ".github/workflows/model_promotion_authorization.yml",
-      "referenced_paths": [
-        "tests/test_model_promotion_authorization.py"
-      ],
+      "referenced_python": [],
       "triggers": [
         "push",
         "pull_request"
       ]
     },
     {
-      "contains_nonstandard_concurrency_queue": false,
-      "line_count": 88,
+      "line_count": 117,
       "name": "Repository Structure Audit",
       "path": ".github/workflows/repository_structure_audit.yml",
-      "referenced_paths": [
-        "scripts/audit_repository_structure.py",
-        "scripts/check_repository_architecture.py",
-        "docs/architecture/repository_architecture_guard.json",
-        "docs/architecture/repository_architecture_guard.md",
-        "docs/architecture/repository_structure_audit.json",
-        "docs/architecture/repository_structure_audit.md"
-      ],
+      "referenced_python": [],
       "triggers": [
         "workflow_dispatch",
-        "push"
+        "push",
+        "pull_request"
       ]
     }
   ]

@@ -1,23 +1,26 @@
 # Repository Architecture Guard
 
-Generated: `2026-07-28T00:47:00.762762+00:00`
+Generated: `2026-07-28T04:12:57.094354+00:00`
 
 Status: **pass**
 
 ## Summary
 
+- Policy schema: **4**
 - Workflows: **15**
-- Root Python files: **12**
-- Tracked output files: **385**
+- Root Python compatibility files: **12**
+- Tracked outputs: **389**
+- Unclassified outputs: **2**
 - Errors: **0**
 - Warnings: **2**
 
-## Production output writers
+## Workflow ownership
 
-- `outputs/evolution_best_prediction.csv`: `.github/workflows/loto7_refresh_latest_prediction.yml`
-- `outputs/evolution_prediction_history.csv`: `.github/workflows/loto7_refresh_latest_prediction.yml`
-- `outputs/evolution_prediction_history_result.txt`: `.github/workflows/loto7_refresh_latest_prediction.yml`
-- `outputs/holdout/latest_prediction_report.txt`: `.github/workflows/loto7_refresh_latest_prediction.yml`
+- **production_prediction_publication**: `LOTO7 Production Prediction Publisher` (`.github/workflows/loto7_refresh_latest_prediction.yml`)
+- **automatic_model_promotion**: `LOTO7 Generation 5 Precision Evolution` (`.github/workflows/loto7_generation5.yml`)
+- **generation4_diagnostics**: `LOTO7 Generation 4 Evaluation` (`.github/workflows/loto7_generation4_run.yml`)
+- **canonical_output_sync**: `LOTO7 Canonical Output Sync` (`.github/workflows/loto7_output_layout_sync.yml`)
+- **repository_architecture_guard**: `Repository Structure Audit` (`.github/workflows/repository_structure_audit.yml`)
 
 ## Errors
 
@@ -25,13 +28,5 @@ Status: **pass**
 
 ## Warnings
 
-- Root still contains 12 Python modules; retain as compatibility layer until Phase 2 migration
-- outputs/ contains 385 tracked files; reproducible diagnostics should move to Actions artifacts
-
-## Policy
-
-- `LOTO7 Production Prediction Publisher` is the only workflow that may build committed production predictions.
-- Generation 4 evaluation writes candidate and diagnostic outputs only.
-- Evolution workflows produce models, candidates, state and diagnostics only.
-- Sealed production manifests are immutable evidence.
-- Root Python implementations remain a compatibility layer until package migration tests exist.
+- 191 files remain in legacy output roots during compatibility migration
+- 2 output files are not classified by repository policy
