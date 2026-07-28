@@ -1,9 +1,99 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
+  "architecture_phase": "phase_2_package_and_governance",
+  "allowed_top_level_directories": [
+    ".github",
+    "config",
+    "docs",
+    "outputs",
+    "scripts",
+    "src",
+    "tests"
+  ],
+  "allowed_root_files": [
+    ".gitattributes",
+    ".gitignore",
+    "_loto7_evolution_trainer_impl.py",
+    "_loto7_model_self_evolver_impl.py",
+    "holdout_evaluator.py",
+    "loto7_complete_ai_system.py",
+    "loto7_evolution_trainer.py",
+    "loto7_ml_stack.py",
+    "loto7_model_self_evolver.py",
+    "loto7_progress_monitor.py",
+    "loto7_safe_evolution_runner.py",
+    "merge_evolution_shards.py",
+    "scrapingloto7.py",
+    "sitecustomize.py"
+  ],
+  "allowed_root_suffixes": [
+    ".csv",
+    ".json",
+    ".md",
+    ".toml",
+    ".txt",
+    ".yaml",
+    ".yml"
+  ],
+  "allowed_root_python": [
+    "_loto7_evolution_trainer_impl.py",
+    "_loto7_model_self_evolver_impl.py",
+    "holdout_evaluator.py",
+    "loto7_complete_ai_system.py",
+    "loto7_evolution_trainer.py",
+    "loto7_ml_stack.py",
+    "loto7_model_self_evolver.py",
+    "loto7_progress_monitor.py",
+    "loto7_safe_evolution_runner.py",
+    "merge_evolution_shards.py",
+    "scrapingloto7.py",
+    "sitecustomize.py"
+  ],
+  "compatibility_wrappers": [
+    "loto7_model_self_evolver.py",
+    "scripts/check_repository_architecture.py"
+  ],
   "production_workflow": ".github/workflows/loto7_refresh_latest_prediction.yml",
   "production_workflow_name": "LOTO7 Production Prediction Publisher",
   "generation4_evaluation_workflow": ".github/workflows/loto7_generation4_run.yml",
   "generation4_evaluation_workflow_name": "LOTO7 Generation 4 Evaluation",
+  "workflow_ownership": [
+    {
+      "responsibility": "production_prediction_publication",
+      "workflow_path": ".github/workflows/loto7_refresh_latest_prediction.yml",
+      "workflow_name": "LOTO7 Production Prediction Publisher",
+      "outputs": [
+        "outputs/evolution_best_prediction.csv",
+        "outputs/evolution_prediction_history.csv",
+        "outputs/evolution_prediction_history_result.txt",
+        "outputs/holdout/latest_prediction_report.txt"
+      ]
+    },
+    {
+      "responsibility": "automatic_model_promotion",
+      "workflow_path": ".github/workflows/loto7_generation5.yml",
+      "workflow_name": "LOTO7 Generation 5 Precision Evolution",
+      "outputs": []
+    },
+    {
+      "responsibility": "generation4_diagnostics",
+      "workflow_path": ".github/workflows/loto7_generation4_run.yml",
+      "workflow_name": "LOTO7 Generation 4 Evaluation",
+      "outputs": []
+    },
+    {
+      "responsibility": "canonical_output_sync",
+      "workflow_path": ".github/workflows/loto7_output_layout_sync.yml",
+      "workflow_name": "LOTO7 Canonical Output Sync",
+      "outputs": []
+    },
+    {
+      "responsibility": "repository_architecture_guard",
+      "workflow_path": ".github/workflows/repository_structure_audit.yml",
+      "workflow_name": "Repository Structure Audit",
+      "outputs": []
+    }
+  ],
   "forbidden_workflows": [
     ".github/workflows/loto7_dual_prediction.yml",
     ".github/workflows/trigger_generation4_once.yml",
@@ -45,24 +135,38 @@
       "src/loto7/evaluation/core.py",
       "src/loto7/evaluation/hit_metrics.py",
       "src/loto7/evaluation/robust.py",
+      "src/loto7/evolution/hit_first.py",
+      "src/loto7/evolution/generation5.py",
       "src/loto7/validation/hit_rate_gate.py",
+      "src/loto7/repository/layout.py",
+      "src/loto7/repository/audit.py",
       "src/loto7/paths.py"
     ]
   },
   "root_python_policy": {
-    "status": "compatibility_layer",
+    "status": "frozen_compatibility_allowlist",
     "target": "src/loto7",
-    "migration_rule": "Move implementations only with import-compatible wrappers and dedicated regression tests."
+    "migration_rule": "No new root Python modules. Existing implementations move only with import-compatible wrappers and regression tests."
   },
   "output_layout": {
-    "version": 2,
-    "migration_mode": "canonical_mirror_with_legacy_resume_compatibility",
+    "version": 3,
+    "migration_mode": "canonical_first_with_legacy_resume_compatibility",
     "config": "config/output_layout.json",
     "canonical_roots": [
       "outputs/production/",
       "outputs/evidence/",
       "outputs/state/",
       "outputs/diagnostics/"
+    ],
+    "legacy_roots": [
+      "outputs/model_self_evolution/",
+      "outputs/recent_era/",
+      "outputs/super_recent/",
+      "outputs/holdout/",
+      "outputs/role_ensemble/",
+      "outputs/generation4/",
+      "outputs/generation5/",
+      "outputs/validation/"
     ]
   },
   "output_classes": {
@@ -70,14 +174,10 @@
       "outputs/production/",
       "outputs/evolution_best_prediction.csv",
       "outputs/evolution_prediction_history.csv",
-      "outputs/evolution_prediction_history_result.txt",
-      "outputs/holdout/latest_prediction_report.txt"
+      "outputs/evolution_prediction_history_result.txt"
     ],
     "evidence": [
       "outputs/evidence/",
-      "outputs/generation4/latest_sealed_manifest.json",
-      "outputs/generation4/sealed_index.json",
-      "outputs/generation4/sealed/",
       "outputs/validation/"
     ],
     "state": [
@@ -90,7 +190,8 @@
       "outputs/diagnostics/",
       "outputs/holdout/",
       "outputs/role_ensemble/",
-      "outputs/generation4/"
+      "outputs/generation4/",
+      "outputs/generation5/"
     ],
     "artifact_only_diagnostics": [
       "outputs/ml_stack/",
