@@ -1,0 +1,245 @@
+name: LOTO7 Generation 5 Precision Evolution
+
+on:
+  workflow_dispatch:
+    inputs:
+      generations:
+        description: "Generation 5 island generations"
+        required: false
+        default: "4"
+      island_population:
+        description: "Candidates generated per island and generation"
+        required: false
+        default: "4"
+      apply_model:
+        description: "Apply only when internal and fixed final Null gates pass"
+        required: true
+        type: choice
+        default: "true"
+        options:
+          - "true"
+          - "false"
+  schedule:
+    - cron: "30 20 * * *"
+  push:
+    branches:
+      - main
+    paths:
+      - "src/loto7/evolution/generation5.py"
+      - "scripts/generation5_evolver.py"
+      - "scripts/build_null_seed_bank.py"
+      - "scripts/run_fixed_null_league.py"
+      - "scripts/promote_generation5_candidate.py"
+      - "tests/test_generation5_precision.py"
+      - ".github/workflows/loto7_generation5.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "src/loto7/evolution/generation5.py"
+      - "scripts/generation5_evolver.py"
+      - "scripts/build_null_seed_bank.py"
+      - "scripts/run_fixed_null_league.py"
+      - "scripts/promote_generation5_candidate.py"
+      - "tests/test_generation5_precision.py"
+      - ".github/workflows/loto7_generation5.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: loto7-generation5-${{ github.event_name == 'pull_request' && github.event.pull_request.number || 'main' }}
+  cancel-in-progress: true
+
+jobs:
+  validate-generation5:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package
+        run: python -m pip install -e .
+      - name: Compile Generation 5 modules
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            src/loto7/evolution/generation5.py \
+            scripts/generation5_evolver.py \
+            scripts/build_null_seed_bank.py \
+            scripts/run_fixed_null_league.py \
+            scripts/promote_generation5_candidate.py \
+            tests/test_generation5_precision.py
+      - name: Run Generation 5 regression tests
+        run: python -m unittest tests.test_generation5_precision -v
+      - name: Verify deterministic seed bank
+        run: |
+          set -euo pipefail
+          python scripts/build_null_seed_bank.py \
+            --csv loto7.csv \
+            --output /tmp/null_seed_bank_a.json
+          python scripts/build_null_seed_bank.py \
+            --csv loto7.csv \
+            --output /tmp/null_seed_bank_b.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          a = json.loads(Path('/tmp/null_seed_bank_a.json').read_text(encoding='utf-8'))
+          b = json.loads(Path('/tmp/null_seed_bank_b.json').read_text(encoding='utf-8'))
+          a.pop('created_at', None)
+          b.pop('created_at', None)
+          assert a == b
+          phases = a['phases']
+          combined = phases['learning'] + phases['selection'] + phases['final']
+          assert len(combined) == 1000
+          assert len(set(combined)) == 1000
+          PY
+
+  evolve-generation5:
+    needs: validate-generation5
+    if: ${{ github.event_name != 'pull_request' && github.ref_name == 'main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package
+        run: python -m pip install -e .
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Pull latest model and outputs
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git reset --hard origin/main
+      - name: Build fixed disjoint Null seed bank
+        run: |
+          set -euo pipefail
+          python scripts/build_null_seed_bank.py \
+            --csv loto7.csv \
+            --output outputs/generation5/null_seed_bank.json \
+            --learning 700 \
+            --selection 150 \
+            --final 150
+      - name: Run four-island Generation 5 evolution
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: |
+          set -euo pipefail
+          python scripts/generation5_evolver.py \
+            --csv loto7.csv \
+            --best-model loto7_best_model.json \
+            --generations "${{ github.event.inputs.generations || '4' }}" \
+            --island-population "${{ github.event.inputs.island_population || '4' }}" \
+            --archive-size 8 \
+            --folds 5 \
+            --stage1-targets 104 \
+            --stage2-targets 260 \
+            --retention-rate 0.5 \
+            --migration-interval 2 \
+            --stagnation-intensify 8 \
+            --stagnation-reset 12 \
+            --purchase-count 5 \
+            --unit-cost 300 \
+            --min-train-draws 52 \
+            --holdout-start-draw 2 \
+            --max-runtime-minutes 315 \
+            --safe-exit-minutes 25 \
+            --min-positive-folds 3 \
+            --min-fold-objective-delta 0.05 \
+            --min-average-max-delta 0.03 \
+            --min-draw4-rate-delta-percent 0.50 \
+            --min-draw5-count-delta 0 \
+            --min-draw6-count-delta 0 \
+            --max-worst-fold-drop-percent 2.0 \
+            --min-average-unique-numbers 13.0 \
+            --max-mean-overlap 4.2 \
+            --max-pair-overlap 4 \
+            --min-payout-roi-percent 8.0 \
+            --max-roi-drop-percent 5.0 \
+            --max-top1-payout-share 0.50
+      - name: Run fixed final Null League on Generation 5 candidate
+        run: |
+          set -euo pipefail
+          python scripts/run_fixed_null_league.py \
+            --csv loto7.csv \
+            --model outputs/generation5/generation5_candidate_model.json \
+            --seed-bank outputs/generation5/null_seed_bank.json \
+            --seed-phase final \
+            --simulations 150 \
+            --summary outputs/generation5/null_strategy_league_summary.json \
+            --report outputs/generation5/null_strategy_league_report.txt \
+            --start-year 2020 \
+            --purchase-count 5 \
+            --unit-cost 300 \
+            --max-null-exceedance 0.10 \
+            --max-pbo 0.40
+      - name: Promote only after every Generation 5 gate passes
+        run: |
+          set -euo pipefail
+          APPLY_FLAG="--apply"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.apply_model || 'true' }}" != "true" ]; then
+            APPLY_FLAG=""
+          fi
+          python scripts/promote_generation5_candidate.py \
+            --candidate outputs/generation5/generation5_candidate_model.json \
+            --baseline loto7_best_model.json \
+            --summary outputs/generation5/generation5_summary.json \
+            --null-summary outputs/generation5/null_strategy_league_summary.json \
+            --decision outputs/generation5/promotion_decision.json \
+            --report outputs/generation5/promotion_report.txt \
+            ${APPLY_FLAG}
+      - name: Verify Generation 5 outputs
+        run: |
+          set -euo pipefail
+          test -s outputs/generation5/generation5_candidate_model.json
+          test -s outputs/generation5/generation5_summary.json
+          test -s outputs/generation5/generation5_report.txt
+          test -s outputs/generation5/generation5_history.csv
+          test -s outputs/generation5/null_seed_bank.json
+          test -s outputs/generation5/null_strategy_league_summary.json
+          test -s outputs/generation5/null_strategy_league_report.txt
+          test -s outputs/generation5/promotion_decision.json
+          test -s outputs/generation5/promotion_report.txt
+      - name: Commit Generation 5 evidence and approved model
+        run: |
+          set -euo pipefail
+          SNAPSHOT="$(mktemp -d)"
+          mkdir -p "$SNAPSHOT/outputs/generation5"
+          cp -f loto7_best_model.json "$SNAPSHOT/"
+          cp -f outputs/generation5/* "$SNAPSHOT/outputs/generation5/"
+          for ATTEMPT in 1 2 3 4; do
+            git fetch origin main
+            git reset --hard origin/main
+            mkdir -p outputs/generation5
+            cp -f "$SNAPSHOT/loto7_best_model.json" loto7_best_model.json
+            cp -f "$SNAPSHOT/outputs/generation5/"* outputs/generation5/
+            git add -f loto7_best_model.json outputs/generation5
+            if git diff --cached --quiet; then
+              echo "No Generation 5 changes"
+              exit 0
+            fi
+            git commit -m "Run LOTO7 Generation 5 precision evolution [skip ci]"
+            if git push origin HEAD:main; then exit 0; fi
+            sleep $((ATTEMPT * 10))
+          done
+          exit 1
+      - name: Upload Generation 5 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: loto7-generation5-precision
+          path: |
+            loto7_best_model.json
+            outputs/generation5/**
+          if-no-files-found: error

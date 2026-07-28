@@ -9,6 +9,7 @@ on:
       - LOTO7 Recent Era Self Evolution
       - LOTO7 Nested Walk Forward Validation
       - LOTO7 Generation 4 Evaluation
+      - LOTO7 Generation 5 Precision Evolution
       - LOTO7 Production Prediction Publisher
       - LOTO7 Holdout Summary Integrity
     types:

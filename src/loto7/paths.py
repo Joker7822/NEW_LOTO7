@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable
 
-OUTPUT_LAYOUT_VERSION = 2
+OUTPUT_LAYOUT_VERSION = 3
 
 
 @dataclass(frozen=True)
@@ -34,6 +34,7 @@ BINDINGS = (
     OutputBinding("holdout_diagnostics", "outputs/holdout", "outputs/diagnostics/holdout", "diagnostics"),
     OutputBinding("role_diagnostics", "outputs/role_ensemble", "outputs/diagnostics/role_ensemble", "diagnostics"),
     OutputBinding("generation4_diagnostics", "outputs/generation4", "outputs/diagnostics/generation4", "diagnostics"),
+    OutputBinding("generation5_diagnostics", "outputs/generation5", "outputs/diagnostics/generation5", "diagnostics", True),
 )
 
 BY_KEY: Dict[str, OutputBinding] = {binding.key: binding for binding in BINDINGS}
