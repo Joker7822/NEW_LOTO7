@@ -12,10 +12,10 @@ on:
         required: false
         default: "0"
       apply_model:
-        description: "Apply improved model to loto7_best_model.json when adoption passes"
+        description: "Legacy manual direct apply. Automated promotion is owned by Generation 5."
         required: true
         type: choice
-        default: "true"
+        default: "false"
         options:
           - "true"
           - "false"
@@ -73,9 +73,10 @@ jobs:
           PYTHONUNBUFFERED: "1"
         run: |
           set -euo pipefail
-          APPLY_FLAG="--apply"
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.apply_model || 'true' }}" != "true" ]; then
-            APPLY_FLAG=""
+          APPLY_FLAG=""
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.apply_model || 'false' }}" = "true" ]; then
+            APPLY_FLAG="--apply"
+            echo "::warning::Legacy manual direct apply is enabled. Generation 5 remains the recommended automatic promotion path."
           fi
           python loto7_model_self_evolver.py \
             --iterations "${{ github.event.inputs.iterations || '1000' }}" \
@@ -176,7 +177,7 @@ jobs:
             echo "No model self-evolution changes"
             exit 0
           fi
-          git commit -m "Run LOTO7 model self-evolution and recent era guard [skip ci]"
+          git commit -m "Run LOTO7 model self-evolution candidate search [skip ci]"
           git push origin HEAD:"${GITHUB_REF_NAME}"
 
       - name: Upload model self-evolution artifacts
