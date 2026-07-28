@@ -13,6 +13,7 @@ from loto7.repository.layout import RepositoryLayout, load_repository_layout
 
 ROOT = Path(__file__).resolve().parents[3]
 WORKFLOW_DIR = ROOT / ".github/workflows"
+DEFAULT_CONFIG = ROOT / "config/repository_layout.json"
 DEFAULT_JSON = ROOT / "docs/architecture/repository_architecture_guard.json"
 DEFAULT_MARKDOWN = ROOT / "docs/architecture/repository_architecture_guard.md"
 
@@ -58,6 +59,13 @@ def detect_git_writers(
             if all(marker in text for marker in markers):
                 writers[output].append(workflow)
     return {key: sorted(value) for key, value in sorted(writers.items())}
+
+
+# Import-compatible public name used by established ownership tests.
+def detect_production_writers(
+    workflows: Mapping[str, str], production_outputs: Iterable[str]
+) -> dict[str, List[str]]:
+    return detect_git_writers(workflows, production_outputs)
 
 
 def all_repository_paths() -> List[str]:
@@ -143,7 +151,7 @@ def audit(layout: RepositoryLayout) -> dict[str, object]:
             errors.append(f"Forbidden or one-time workflow still exists: {path}")
 
     production_outputs = [str(item) for item in layout.raw.get("production_outputs", [])]
-    writers = detect_git_writers(workflows, production_outputs)
+    writers = detect_production_writers(workflows, production_outputs)
     errors.extend(ownership_errors(layout, workflows, writers))
 
     for module in layout.required_package_modules:
