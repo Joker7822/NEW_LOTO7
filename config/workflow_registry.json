@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "workflows": [
+    {
+      "path": ".github/workflows/backfill-loto7-prizes.yml",
+      "name": "Backfill LOTO7 prize amounts",
+      "stage": "data",
+      "responsibility": "historical_prize_backfill",
+      "write_class": "source_data"
+    },
+    {
+      "path": ".github/workflows/evaluator_full_data_pr_check.yml",
+      "name": "Evaluator Full Data PR Check",
+      "stage": "validation",
+      "responsibility": "full_data_regression",
+      "write_class": "artifact_only"
+    },
+    {
+      "path": ".github/workflows/loto7_output_layout_sync.yml",
+      "name": "LOTO7 Canonical Output Sync",
+      "stage": "publication",
+      "responsibility": "canonical_output_sync",
+      "write_class": "canonical_mirror"
+    },
+    {
+      "path": ".github/workflows/loto7_evolution.yml",
+      "name": "LOTO7 Evolution Trainer",
+      "stage": "training",
+      "responsibility": "full_history_candidate_training",
+      "write_class": "state_and_diagnostics"
+    },
+    {
+      "path": ".github/workflows/loto7_generation4_run.yml",
+      "name": "LOTO7 Generation 4 Evaluation",
+      "stage": "validation",
+      "responsibility": "generation4_diagnostics",
+      "write_class": "diagnostics"
+    },
+    {
+      "path": ".github/workflows/loto7_generation5.yml",
+      "name": "LOTO7 Generation 5 Precision Evolution",
+      "stage": "promotion",
+      "responsibility": "automatic_model_promotion",
+      "write_class": "approved_model_and_diagnostics"
+    },
+    {
+      "path": ".github/workflows/loto7_holdout_summary_integrity.yml",
+      "name": "LOTO7 Holdout Summary Integrity",
+      "stage": "validation",
+      "responsibility": "holdout_completeness",
+      "write_class": "diagnostics"
+    },
+    {
+      "path": ".github/workflows/model_promotion_authorization.yml",
+      "name": "LOTO7 Model Promotion Authorization",
+      "stage": "validation",
+      "responsibility": "promotion_ownership_guard",
+      "write_class": "none"
+    },
+    {
+      "path": ".github/workflows/loto7_model_self_evolution.yml",
+      "name": "LOTO7 Model Self Evolution",
+      "stage": "training",
+      "responsibility": "standalone_candidate_training",
+      "write_class": "state_and_diagnostics"
+    },
+    {
+      "path": ".github/workflows/loto7_nested_walk_forward.yml",
+      "name": "LOTO7 Nested Walk Forward Validation",
+      "stage": "validation",
+      "responsibility": "nested_walk_forward",
+      "write_class": "evidence"
+    },
+    {
+      "path": ".github/workflows/loto7_refresh_latest_prediction.yml",
+      "name": "LOTO7 Production Prediction Publisher",
+      "stage": "publication",
+      "responsibility": "production_prediction_publication",
+      "write_class": "production_and_sealed_evidence"
+    },
+    {
+      "path": ".github/workflows/loto7_recent_era_self_evolution.yml",
+      "name": "LOTO7 Recent Era Self Evolution",
+      "stage": "training",
+      "responsibility": "recent_and_super_recent_candidates",
+      "write_class": "state_and_diagnostics"
+    },
+    {
+      "path": ".github/workflows/loto7-smoke.yml",
+      "name": "LOTO7 Smoke Test",
+      "stage": "validation",
+      "responsibility": "minimal_runtime_check",
+      "write_class": "artifact_only"
+    },
+    {
+      "path": ".github/workflows/loto7_validation_tests.yml",
+      "name": "LOTO7 Validation Tests",
+      "stage": "validation",
+      "responsibility": "focused_regression",
+      "write_class": "none"
+    },
+    {
+      "path": ".github/workflows/repository_structure_audit.yml",
+      "name": "Repository Structure Audit",
+      "stage": "governance",
+      "responsibility": "repository_architecture_guard",
+      "write_class": "architecture_reports"
+    }
+  ]
+}
