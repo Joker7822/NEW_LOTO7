@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import unittest
 from pathlib import Path
 
@@ -53,6 +54,26 @@ class RepositoryArchitectureV4Tests(unittest.TestCase):
         self.assertIn("workflow_ownership", payload)
         self.assertIn("compatibility_wrappers", payload)
         self.assertEqual(payload["output_layout"]["version"], 3)
+
+    def test_workflow_registry_covers_every_workflow(self) -> None:
+        registry = json.loads(
+            Path("config/workflow_registry.json").read_text(encoding="utf-8")
+        )
+        items = registry["workflows"]
+        registered_paths = {item["path"] for item in items}
+        actual_paths = {
+            path.as_posix()
+            for path in Path(".github/workflows").glob("*.y*ml")
+        }
+        self.assertEqual(registered_paths, actual_paths)
+        self.assertEqual(len(items), len({item["name"] for item in items}))
+
+        for item in items:
+            text = Path(item["path"]).read_text(encoding="utf-8")
+            match = re.search(r"^name:\s*(.+?)\s*$", text, re.MULTILINE)
+            self.assertIsNotNone(match, item["path"])
+            actual_name = match.group(1).strip().strip("\"'")
+            self.assertEqual(item["name"], actual_name)
 
 
 if __name__ == "__main__":
