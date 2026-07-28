@@ -1,7 +1,7 @@
 LOTO7 Adaptive Model Safety Guard
 =================================
 
-created_at: 2026-07-28T00:14:18.054789+00:00
+created_at: 2026-07-28T06:55:03.297219+00:00
 focus_start_year: 2020
 accepted: True
 restored_baseline: False
@@ -299,7 +299,7 @@ independent_from_reference: None
 
 [Nested Walk Forward]
 {
-  "created_at": "2026-07-27T17:27:28.880413+00:00",
+  "created_at": "2026-07-27T22:51:39.563049+00:00",
   "fold_count": 3,
   "folds": [
     {
@@ -780,15 +780,15 @@ independent_from_reference: None
         }
       },
       "candidate_metrics": {
-        "average_max_main_match": 2.019608,
-        "average_portfolio_unique_numbers": 14.352941,
-        "bootstrap_roi_percent_p05": 8.49,
-        "bootstrap_roi_percent_p50": 18.889,
-        "bootstrap_roi_percent_p95": 31.902,
+        "average_max_main_match": 2.196078,
+        "average_portfolio_unique_numbers": 13.490196,
+        "bootstrap_roi_percent_p05": 4.314,
+        "bootstrap_roi_percent_p50": 13.595,
+        "bootstrap_roi_percent_p95": 26.928,
         "cvar20_profit_per_draw": -1500.0,
-        "draw_main4_plus_count": 5,
-        "draw_main4_plus_rate": 0.098039,
-        "draw_main4_plus_rate_percent": 9.804,
+        "draw_main4_plus_count": 3,
+        "draw_main4_plus_rate": 0.058824,
+        "draw_main4_plus_rate_percent": 5.882,
         "draw_main5_plus_count": 0,
         "draw_main5_plus_rate": 0.0,
         "draw_main5_plus_rate_percent": 0.0,
@@ -799,56 +799,56 @@ independent_from_reference: None
         "draw_main7_plus_rate": 0.0,
         "draw_main7_plus_rate_percent": 0.0,
         "draw_max_main_match_distribution": {
-          "0": 2,
-          "1": 15,
-          "2": 19,
-          "3": 10,
-          "4": 5,
+          "0": 0,
+          "1": 10,
+          "2": 24,
+          "3": 14,
+          "4": 3,
           "5": 0,
           "6": 0,
           "7": 0
         },
-        "genome_id": "g038_0382_7298",
-        "grade_hit_count": 13,
+        "genome_id": "g070_0070_3390",
+        "grade_hit_count": 11,
         "high_grade_hit_count": 0,
         "hit_metric_version": "loto7-hit-metrics-2026.07.27-v2",
-        "hit_objective_score": 13.046024,
+        "hit_objective_score": 12.705362,
         "hit_objective_score_complete": true,
-        "largest_draw_payout": 4400,
-        "largest_two_draw_payout": 7100,
+        "largest_draw_payout": 4000,
+        "largest_two_draw_payout": 6400,
         "max_bonus_match": 2,
         "max_main_match": 4,
         "max_ticket_pair_overlap": 4,
-        "mean_ticket_pair_overlap": 3.831373,
+        "mean_ticket_pair_overlap": 3.927451,
         "median_max_main_match": 2.0,
-        "median_year_roi_percent": 18.693,
+        "median_year_roi_percent": 14.248,
         "missing_prize_draw_count": 0,
         "missing_prize_draws": [],
         "path": "outputs/validation/recent/folds/fold_3_2025/best_model.json",
-        "payout_hhi": 0.186562,
+        "payout_hhi": 0.227506,
         "portfolio_metric_draw_count": 51,
         "portfolio_metrics_available": true,
         "positive_year_count": 0,
-        "profit": -62200,
-        "profit_roi_percent": -81.307,
+        "profit": -65600,
+        "profit_roi_percent": -85.752,
         "purchase_count": 5,
         "rank_counts": {
           "1等": 0,
           "2等": 0,
           "3等": 0,
           "4等": 0,
-          "5等": 6,
+          "5等": 4,
           "6等": 7,
-          "外れ": 242
+          "外れ": 244
         },
-        "roi": 0.186928,
-        "roi_excluding_top1_percent": 12.941,
-        "roi_excluding_top2_percent": 9.412,
-        "roi_percent": 18.693,
+        "roi": 0.142484,
+        "roi_excluding_top1_percent": 9.02,
+        "roi_excluding_top2_percent": 5.882,
+        "roi_percent": 14.248,
         "target_draws": 51,
-        "ticket_main4_plus_count": 6,
-        "ticket_main4_plus_rate": 0.023529,
-        "ticket_main4_plus_rate_percent": 2.353,
+        "ticket_main4_plus_count": 4,
+        "ticket_main4_plus_rate": 0.015686,
+        "ticket_main4_plus_rate_percent": 1.569,
         "ticket_main5_plus_count": 0,
         "ticket_main5_plus_rate": 0.0,
         "ticket_main5_plus_rate_percent": 0.0,
@@ -858,27 +858,27 @@ independent_from_reference: None
         "ticket_main7_plus_count": 0,
         "ticket_main7_plus_rate": 0.0,
         "ticket_main7_plus_rate_percent": 0.0,
-        "top1_payout_share": 0.307692,
+        "top1_payout_share": 0.366972,
         "total_cost": 76500,
-        "total_payout": 14300,
+        "total_payout": 10900,
         "total_tickets": 255,
         "unit_cost": 300,
-        "worst_year_roi_percent": 18.693,
+        "worst_year_roi_percent": 14.248,
         "year_count": 1,
         "yearly_roi_percent": {
-          "2025": 18.693
+          "2025": 14.248
         }
       },
       "evaluation_year": 2025,
-      "fold_model_id": "g038_0382_7298",
+      "fold_model_id": "g070_0070_3390",
       "fold_model_path": "outputs/validation/recent/folds/fold_3_2025/best_model.json",
       "label": "train_through_2023_select_2024_evaluate_2025",
       "leakage_check": true,
-      "roi_delta_percent": 4.445,
+      "roi_delta_percent": 0.0,
       "selection_csv_max_year": 2024,
       "selection_csv_rows": 607,
       "selection_year": 2024,
-      "top1_removed_roi_delta_percent": 3.921,
+      "top1_removed_roi_delta_percent": 0.0,
       "train_end_year": 2023
     }
   ],
