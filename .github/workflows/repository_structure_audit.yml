@@ -64,6 +64,7 @@ jobs:
           python -m py_compile \
             src/loto7/repository/layout.py \
             src/loto7/repository/audit.py \
+            src/loto7/repository/inventory.py \
             scripts/check_repository_architecture.py \
             scripts/audit_repository_structure.py \
             tests/test_repository_architecture_v4.py
@@ -77,7 +78,7 @@ jobs:
           loto7-repository-audit \
             --json docs/architecture/repository_architecture_guard.json \
             --markdown docs/architecture/repository_architecture_guard.md
-          python scripts/audit_repository_structure.py \
+          loto7-repository-inventory \
             --json docs/architecture/repository_structure_audit.json \
             --markdown docs/architecture/repository_structure_audit.md
 
