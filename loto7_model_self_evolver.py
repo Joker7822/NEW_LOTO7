@@ -7,8 +7,9 @@ may contain scores created by older ROI-centered objectives; those persisted
 scores are cleared before the new learning run starts.
 
 Direct replacement of ``loto7_best_model.json`` is denied by default. Automated
-promotion is owned by Generation 5. Legacy manual application requires both the
-``--apply`` argument and ``LOTO7_ALLOW_LEGACY_DIRECT_APPLY=1``.
+promotion is owned by Generation 5. Legacy manual application requires ``--apply``
+and either an explicit authorization environment variable or a workflow-dispatch
+run of the standalone ``LOTO7 Model Self Evolution`` workflow.
 """
 from __future__ import annotations
 
@@ -34,18 +35,30 @@ def _load_high_match_seed_genomes(patterns):
 _impl.load_seed_genomes = _load_high_match_seed_genomes
 
 
+def _legacy_apply_authorized() -> bool:
+    explicit = os.environ.get(
+        "LOTO7_ALLOW_LEGACY_DIRECT_APPLY", ""
+    ).strip().lower() in {"1", "true", "yes"}
+    standalone_dispatch = (
+        os.environ.get("GITHUB_EVENT_NAME", "") == "workflow_dispatch"
+        and os.environ.get("GITHUB_WORKFLOW", "")
+        == "LOTO7 Model Self Evolution"
+    )
+    return explicit or standalone_dispatch
+
+
 def _authorized_argv(argv: Optional[List[str]] = None) -> List[str]:
     arguments = list(sys.argv[1:] if argv is None else argv)
     if "--apply" not in arguments:
         return arguments
-    allowed = os.environ.get("LOTO7_ALLOW_LEGACY_DIRECT_APPLY", "").strip().lower()
-    if allowed in {"1", "true", "yes"}:
+    if _legacy_apply_authorized():
         print("[AUTH] explicit legacy direct-apply authorization accepted")
         return arguments
     arguments = [argument for argument in arguments if argument != "--apply"]
     print(
         "[AUTH] --apply ignored: automatic model promotion is owned by Generation 5; "
-        "set LOTO7_ALLOW_LEGACY_DIRECT_APPLY=1 only for an explicit manual override",
+        "use the standalone Model Self Evolution workflow dispatch or set "
+        "LOTO7_ALLOW_LEGACY_DIRECT_APPLY=1 for an explicit manual override",
         file=sys.stderr,
     )
     return arguments
