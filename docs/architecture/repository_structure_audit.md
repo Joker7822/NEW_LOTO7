@@ -1,13 +1,13 @@
 # NEW_LOTO7 Repository Structure Audit
 
-Generated: `2026-07-28T00:39:25.343736+00:00`
+Generated: `2026-07-28T00:43:48.518540+00:00`
 
 ## Summary
 
-- Tracked files: **493**
-- Workflows: **14**
+- Tracked files: **495**
+- Workflows: **15**
 - Python implementation/CLI files: **59**
-- Test files: **16**
+- Test files: **17**
 - Tracked files under `outputs/`: **385**
 - Root Python files: **12**
 
@@ -15,14 +15,14 @@ Generated: `2026-07-28T00:39:25.343736+00:00`
 
 | Location | Files |
 |---|---:|
-| `.github` | 14 |
+| `.github` | 15 |
 | `<root>` | 22 |
 | `config` | 2 |
 | `docs` | 7 |
 | `outputs` | 385 |
 | `scripts` | 36 |
 | `src` | 11 |
-| `tests` | 16 |
+| `tests` | 17 |
 
 ## Workflows
 
@@ -41,6 +41,7 @@ Generated: `2026-07-28T00:39:25.343736+00:00`
 | `LOTO7 Recent Era Self Evolution`<br>`.github/workflows/loto7_recent_era_self_evolution.yml` | workflow_dispatch, schedule | 306 | - |
 | `LOTO7 Production Prediction Publisher`<br>`.github/workflows/loto7_refresh_latest_prediction.yml` | workflow_dispatch, workflow_run, push, pull_request | 297 | - |
 | `LOTO7 Validation Tests`<br>`.github/workflows/loto7_validation_tests.yml` | workflow_dispatch, push, pull_request | 140 | - |
+| `LOTO7 Model Promotion Authorization`<br>`.github/workflows/model_promotion_authorization.yml` | push, pull_request | 57 | - |
 | `Repository Structure Audit`<br>`.github/workflows/repository_structure_audit.yml` | workflow_dispatch, push | 88 | - |
 
 ## Highest-priority findings
@@ -90,7 +91,7 @@ State, reports, model candidates and sealed evidence share outputs/.
 | `outputs/model_self_evolution/history.pre_hit_first_20260721231909.csv` | 149791 |
 | `loto7.csv` | 135724 |
 | `outputs/super_recent/super_recent_model_history.pre_hit_first_20260722083852.csv` | 127953 |
-| `docs/architecture/repository_structure_audit.json` | 91776 |
+| `docs/architecture/repository_structure_audit.json` | 96943 |
 | `outputs/recent_era/recent_era_model_history.csv` | 66385 |
 | `outputs/state/super_recent/super_recent_model_state.json` | 63922 |
 | `outputs/super_recent/super_recent_model_state.json` | 63922 |

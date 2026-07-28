@@ -6,19 +6,19 @@
     "root_data_or_report": 7,
     "root_python": 23,
     "script": 36,
-    "test": 16,
-    "workflow": 14
+    "test": 17,
+    "workflow": 15
   },
-  "created_at": "2026-07-28T00:39:25.343736+00:00",
+  "created_at": "2026-07-28T00:43:48.518540+00:00",
   "directory_file_counts": {
-    ".github": 14,
+    ".github": 15,
     "<root>": 22,
     "config": 2,
     "docs": 7,
     "outputs": 385,
     "scripts": 36,
     "src": 11,
-    "tests": 16
+    "tests": 17
   },
   "duplicate_filenames": {
     "baseline_best_model_before_self_evolution.json": [
@@ -734,7 +734,7 @@
     ]
   },
   "duplicate_workflow_names": {},
-  "file_count": 493,
+  "file_count": 495,
   "history_report_summary_files": [
     "outputs/diagnostics/generation4/champion_challenger_report.txt",
     "outputs/diagnostics/generation4/champion_challenger_summary.json",
@@ -860,7 +860,7 @@
       "path": "outputs/super_recent/super_recent_model_history.pre_hit_first_20260722083852.csv"
     },
     {
-      "bytes": 91776,
+      "bytes": 96943,
       "path": "docs/architecture/repository_structure_audit.json"
     },
     {
@@ -1079,14 +1079,14 @@
     ".csv": 16,
     ".json": 214,
     ".md": 13,
-    ".py": 75,
+    ".py": 76,
     ".sha256": 106,
     ".toml": 1,
     ".txt": 53,
-    ".yml": 14,
+    ".yml": 15,
     "<none>": 1
   },
-  "test_file_count": 16,
+  "test_file_count": 17,
   "tracked_output_count": 385,
   "tracked_outputs": [
     "outputs/diagnostics/README.md",
@@ -1475,7 +1475,7 @@
     "outputs/validation/super_recent/promotion_decision.json",
     "outputs/validation/super_recent/promotion_report.txt"
   ],
-  "workflow_count": 14,
+  "workflow_count": 15,
   "workflow_referenced_python": [
     "holdout_evaluator.py",
     "loto7_complete_ai_system.py",
@@ -1526,6 +1526,7 @@
     "tests/test_hit_first_learning.py",
     "tests/test_holdout_portfolio_repair.py",
     "tests/test_latest_prediction_freshness.py",
+    "tests/test_model_promotion_authorization.py",
     "tests/test_nested_promotion_gates.py",
     "tests/test_output_layout_compatibility.py",
     "tests/test_package_layout_and_hit_metrics.py",
@@ -1537,8 +1538,8 @@
     "tests/test_workflow_resume_compatibility.py"
   ],
   "workflow_trigger_counts": {
-    "pull_request": 5,
-    "push": 9,
+    "pull_request": 6,
+    "push": 10,
     "schedule": 4,
     "workflow_dispatch": 13,
     "workflow_run": 4
@@ -1947,6 +1948,19 @@
       ],
       "triggers": [
         "workflow_dispatch",
+        "push",
+        "pull_request"
+      ]
+    },
+    {
+      "contains_nonstandard_concurrency_queue": false,
+      "line_count": 57,
+      "name": "LOTO7 Model Promotion Authorization",
+      "path": ".github/workflows/model_promotion_authorization.yml",
+      "referenced_paths": [
+        "tests/test_model_promotion_authorization.py"
+      ],
+      "triggers": [
         "push",
         "pull_request"
       ]
