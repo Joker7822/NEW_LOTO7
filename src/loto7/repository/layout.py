@@ -22,6 +22,7 @@ class RepositoryLayout:
     schema_version: int
     allowed_top_level_directories: tuple[str, ...]
     allowed_root_files: tuple[str, ...]
+    allowed_root_suffixes: tuple[str, ...]
     allowed_root_python: tuple[str, ...]
     required_package_modules: tuple[str, ...]
     canonical_output_roots: tuple[str, ...]
@@ -52,6 +53,7 @@ class RepositoryLayout:
         errors: list[str] = []
         allowed_dirs = set(self.allowed_top_level_directories)
         allowed_files = set(self.allowed_root_files)
+        allowed_suffixes = set(self.allowed_root_suffixes)
         for value in paths:
             normalized = value.replace("\\", "/").lstrip("./")
             if not normalized:
@@ -60,8 +62,13 @@ class RepositoryLayout:
                 top = normalized.split("/", 1)[0]
                 if top not in allowed_dirs:
                     errors.append(f"Unexpected top-level directory: {top}")
-            elif normalized not in allowed_files:
-                errors.append(f"Unexpected root file: {normalized}")
+                continue
+            if normalized in allowed_files:
+                continue
+            suffix = Path(normalized).suffix.lower()
+            if suffix and suffix in allowed_suffixes:
+                continue
+            errors.append(f"Unexpected root file: {normalized}")
         return sorted(set(errors))
 
 
@@ -104,6 +111,7 @@ def load_repository_layout(
         schema_version=int(payload.get("schema_version", 0)),
         allowed_top_level_directories=_strings(payload.get("allowed_top_level_directories")),
         allowed_root_files=_strings(payload.get("allowed_root_files")),
+        allowed_root_suffixes=_strings(payload.get("allowed_root_suffixes")),
         allowed_root_python=_strings(payload.get("allowed_root_python")),
         required_package_modules=_strings(package_policy.get("required_modules")),
         canonical_output_roots=_strings(output_layout.get("canonical_roots")),
