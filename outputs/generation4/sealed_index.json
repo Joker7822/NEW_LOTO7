@@ -349,8 +349,15 @@
       "manifest_path": "outputs/generation4/sealed/prediction_688_ae79814d5e4b09bc.json",
       "manifest_sha256": "ae79814d5e4b09bcff75d8f76f0ec6ce6d16899eb71c8bde33862e0aeb4ac709",
       "prediction_draw_no": 688
+    },
+    {
+      "created_at": "2026-07-28T00:15:19.197549+00:00",
+      "git_sha": "923023a7f16d4a3a1ad7371bef00b4602fe7175e",
+      "manifest_path": "outputs/generation4/sealed/prediction_688_262c208b153d4be0.json",
+      "manifest_sha256": "262c208b153d4be016f6d24136a4df6b7aa85a89f0946a3680e75377cd2004c9",
+      "prediction_draw_no": 688
     }
   ],
   "kind": "loto7_generation4_sealed_index",
-  "latest_manifest_sha256": "ae79814d5e4b09bcff75d8f76f0ec6ce6d16899eb71c8bde33862e0aeb4ac709"
+  "latest_manifest_sha256": "262c208b153d4be016f6d24136a4df6b7aa85a89f0946a3680e75377cd2004c9"
 }
