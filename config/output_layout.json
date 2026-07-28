@@ -1,17 +1,34 @@
 {
-  "schema_version": 2,
-  "migration_mode": "canonical_mirror_with_legacy_resume_compatibility",
+  "schema_version": 3,
+  "migration_mode": "canonical_first_with_legacy_resume_compatibility",
   "categories": {
     "production": "outputs/production/",
     "evidence": "outputs/evidence/",
     "state": "outputs/state/",
     "diagnostics": "outputs/diagnostics/"
   },
+  "legacy_aliases": {
+    "outputs/model_self_evolution/": "outputs/state/full/",
+    "outputs/recent_era/": "outputs/state/recent/",
+    "outputs/super_recent/": "outputs/state/super_recent/",
+    "outputs/holdout/": "outputs/diagnostics/holdout/",
+    "outputs/role_ensemble/": "outputs/diagnostics/role_ensemble/",
+    "outputs/generation4/": "outputs/diagnostics/generation4/",
+    "outputs/generation5/": "outputs/diagnostics/generation5/",
+    "outputs/validation/": "outputs/evidence/validation/"
+  },
+  "retention": {
+    "production": "Retain latest public prediction, cumulative history and compact public reports.",
+    "evidence": "Retain immutable sealed manifests and compact adoption or rejection evidence.",
+    "state": "Retain only compact resumable state needed by active workflows.",
+    "diagnostics": "Retain latest compact summaries; upload reproducible detail to Actions artifacts."
+  },
   "rules": [
     "Canonical directories are the long-term public layout.",
-    "Legacy paths remain readable and writable during the compatibility phase.",
+    "New implementations must read canonical paths first and use legacy paths only as fallback aliases.",
     "Resume state is copied, never destructively moved, until every workflow uses canonical paths.",
-    "Immutable sealed evidence must never be pruned by the migration utility.",
-    "Large reproducible detail files should be uploaded as Actions artifacts rather than retained indefinitely."
+    "Immutable sealed evidence must never be pruned or rewritten by migration utilities.",
+    "Generation 5 candidate, fixed-Null and promotion summaries are diagnostics until promotion succeeds.",
+    "Large reproducible detail files are Actions artifacts rather than permanent repository history."
   ]
 }
