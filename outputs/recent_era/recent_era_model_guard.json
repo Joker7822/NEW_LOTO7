@@ -28,38 +28,38 @@
   },
   "best_model_after_guard": "outputs/recent_era/recent_era_guarded_candidate_model.json",
   "candidate": {
-    "model_id": "g104_0104_2777",
+    "model_id": "g145_0145_4389",
     "path": "outputs/recent_era/recent_era_candidate_model.json",
     "recent": {
-      "grade_hit_count": 55,
-      "high_grade_hit_count": 1,
+      "grade_hit_count": 53,
+      "high_grade_hit_count": 0,
       "max_bonus_match": 2,
-      "max_main_match": 5,
+      "max_main_match": 4,
       "missing_prize_draw_count": 0,
-      "profit": -443600,
+      "profit": -447900,
       "rank_counts": {
         "1等": 0,
         "2等": 0,
         "3等": 0,
-        "4等": 1,
-        "5等": 22,
-        "6等": 32,
-        "外れ": 1635
+        "4等": 0,
+        "5等": 26,
+        "6等": 27,
+        "外れ": 1637
       },
-      "roi": 0.125049,
-      "roi_percent": 12.505,
+      "roi": 0.116568,
+      "roi_percent": 11.657,
       "target_draws": 338,
       "total_cost": 507000,
-      "total_payout": 63400,
+      "total_payout": 59100,
       "total_tickets": 1690
     }
   },
-  "created_at": "2026-07-27T19:01:38.033718+00:00",
+  "created_at": "2026-07-28T00:12:13.275095+00:00",
   "csv": "loto7.csv",
   "decision": {
     "accepted": false,
     "reasons": [
-      "recent roi floor ok: 12.505% >= 8.000%"
+      "recent roi floor ok: 11.657% >= 8.000%"
     ],
     "restore_on_fail": true,
     "restored_baseline": true,
@@ -71,9 +71,9 @@
       "min_recent_roi_delta_percent": 0.0
     },
     "warnings": [
-      "recent roi dropped: delta=-78.974pt < 0.000pt",
-      "recent profit dropped: delta=-400400 < 0",
-      "recent high-grade dropped: delta=-3"
+      "recent roi dropped: delta=-79.822pt < 0.000pt",
+      "recent profit dropped: delta=-404700 < 0",
+      "recent high-grade dropped: delta=-4"
     ]
   },
   "kind": "loto7_recent_era_dedicated_guard",
