@@ -2,6 +2,18 @@ name: Repository Structure Audit
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/**"
+      - "src/**"
+      - "scripts/**"
+      - "tests/**"
+      - "config/**"
+      - "docs/architecture/**"
+      - "README.md"
+      - "pyproject.toml"
   push:
     branches:
       - main
@@ -19,13 +31,13 @@ permissions:
   contents: write
 
 concurrency:
-  group: repository-structure-audit-${{ github.ref_name }}
+  group: repository-structure-audit-${{ github.event_name }}-${{ github.ref_name }}
   cancel-in-progress: true
 
 jobs:
   audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -33,6 +45,7 @@ jobs:
           fetch-depth: 0
 
       - name: Configure git
+        if: ${{ github.event_name != 'pull_request' }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -42,13 +55,26 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Generate and enforce structure audit
+      - name: Install canonical package
+        run: python -m pip install -e .
+
+      - name: Compile architecture modules
         run: |
           set -euo pipefail
           python -m py_compile \
+            src/loto7/repository/layout.py \
+            src/loto7/repository/audit.py \
+            scripts/check_repository_architecture.py \
             scripts/audit_repository_structure.py \
-            scripts/check_repository_architecture.py
-          python scripts/check_repository_architecture.py \
+            tests/test_repository_architecture_v4.py
+
+      - name: Run architecture regression tests
+        run: python -m unittest tests.test_repository_architecture_v4 -v
+
+      - name: Generate and enforce architecture audit
+        run: |
+          set -euo pipefail
+          loto7-repository-audit \
             --json docs/architecture/repository_architecture_guard.json \
             --markdown docs/architecture/repository_architecture_guard.md
           python scripts/audit_repository_structure.py \
@@ -56,6 +82,7 @@ jobs:
             --markdown docs/architecture/repository_structure_audit.md
 
       - name: Commit audit reports
+        if: ${{ github.event_name != 'pull_request' }}
         run: |
           set -euo pipefail
           git add \
@@ -78,6 +105,7 @@ jobs:
 
       - name: Upload structure audit
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: repository-structure-audit
           path: |
