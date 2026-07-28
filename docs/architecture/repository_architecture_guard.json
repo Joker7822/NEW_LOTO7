@@ -2,7 +2,7 @@
   "canonical_production_workflow": ".github/workflows/loto7_refresh_latest_prediction.yml",
   "canonical_production_workflow_name": "LOTO7 Production Prediction Publisher",
   "config": "config/repository_layout.json",
-  "created_at": "2026-07-27T10:07:35.429973+00:00",
+  "created_at": "2026-07-28T00:39:25.241940+00:00",
   "errors": [],
   "generation4_evaluation_workflow": ".github/workflows/loto7_generation4_run.yml",
   "production_writers": {
@@ -35,12 +35,12 @@
     "sitecustomize.py"
   ],
   "status": "pass",
-  "tracked_output_count": 363,
+  "tracked_output_count": 385,
   "warnings": [
     "Root still contains 12 Python modules; retain as compatibility layer until Phase 2 migration",
-    "outputs/ contains 363 tracked files; reproducible diagnostics should move to Actions artifacts"
+    "outputs/ contains 385 tracked files; reproducible diagnostics should move to Actions artifacts"
   ],
-  "workflow_count": 13,
+  "workflow_count": 14,
   "workflow_names": {
     "Backfill LOTO7 prize amounts": [
       ".github/workflows/backfill-loto7-prizes.yml"
@@ -56,6 +56,9 @@
     ],
     "LOTO7 Generation 4 Evaluation": [
       ".github/workflows/loto7_generation4_run.yml"
+    ],
+    "LOTO7 Generation 5 Precision Evolution": [
+      ".github/workflows/loto7_generation5.yml"
     ],
     "LOTO7 Holdout Summary Integrity": [
       ".github/workflows/loto7_holdout_summary_integrity.yml"
