@@ -55,7 +55,9 @@ class RepositoryLayout:
         allowed_files = set(self.allowed_root_files)
         allowed_suffixes = set(self.allowed_root_suffixes)
         for value in paths:
-            normalized = value.replace("\\", "/").lstrip("./")
+            normalized = value.replace("\\", "/")
+            while normalized.startswith("./"):
+                normalized = normalized[2:]
             if not normalized:
                 continue
             if "/" in normalized:
