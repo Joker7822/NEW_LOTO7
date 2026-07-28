@@ -10,6 +10,7 @@ requires-python = ">=3.11"
 
 [project.scripts]
 loto7-repository-audit = "loto7.repository.audit:main"
+loto7-repository-inventory = "loto7.repository.inventory:main"
 
 [project.optional-dependencies]
 dev = [
