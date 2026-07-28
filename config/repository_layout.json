@@ -13,6 +13,9 @@
   "allowed_root_files": [
     ".gitattributes",
     ".gitignore",
+    "Dockerfile",
+    "LICENSE",
+    "Procfile",
     "_loto7_evolution_trainer_impl.py",
     "_loto7_model_self_evolver_impl.py",
     "holdout_evaluator.py",
@@ -29,6 +32,7 @@
   "allowed_root_suffixes": [
     ".csv",
     ".json",
+    ".lock",
     ".md",
     ".toml",
     ".txt",
@@ -51,6 +55,7 @@
   ],
   "compatibility_wrappers": [
     "loto7_model_self_evolver.py",
+    "scripts/audit_repository_structure.py",
     "scripts/check_repository_architecture.py"
   ],
   "production_workflow": ".github/workflows/loto7_refresh_latest_prediction.yml",
@@ -140,6 +145,7 @@
       "src/loto7/validation/hit_rate_gate.py",
       "src/loto7/repository/layout.py",
       "src/loto7/repository/audit.py",
+      "src/loto7/repository/inventory.py",
       "src/loto7/paths.py"
     ]
   },
@@ -174,11 +180,16 @@
       "outputs/production/",
       "outputs/evolution_best_prediction.csv",
       "outputs/evolution_prediction_history.csv",
-      "outputs/evolution_prediction_history_result.txt"
+      "outputs/evolution_prediction_history_result.txt",
+      "outputs/holdout/latest_prediction_report.txt"
     ],
     "evidence": [
       "outputs/evidence/",
-      "outputs/validation/"
+      "outputs/validation/",
+      "outputs/generation4/sealed/",
+      "outputs/generation4/latest_sealed_manifest.json",
+      "outputs/generation4/sealed_index.json",
+      "outputs/layout_manifest.json"
     ],
     "state": [
       "outputs/state/",
