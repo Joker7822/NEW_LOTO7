@@ -1,12 +1,12 @@
 LOTO7 High-Match-First Self Evolution Report
 ==============================================
 
-created_at: 2026-07-30T02:49:14.855030+00:00
-status: safe_exit_at_131.30_minutes
+created_at: 2026-07-30T09:12:03.384758+00:00
+status: safe_exit_at_151.26_minutes
 objective: hit_first_temporal_robustness
 objective_version: loto7-hit-first-2026.07.22-v1
 resume_used: True
-iterations_evaluated: 139
+iterations_evaluated: 148
 target_draws: 184
 
 [Baseline]
