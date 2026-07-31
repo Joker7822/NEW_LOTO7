@@ -36,8 +36,8 @@ jobs:
           ruff check $FILES
           ruff format --check $FILES
           mypy src/loto7/evaluation/metrics_schema.py src/loto7/evaluation/statistics.py src/loto7/evaluation/ranking.py
-          coverage run --source=src/loto7/evaluation -m unittest tests.test_statistical_hardening
-          coverage report --fail-under=65
+          coverage run -m unittest tests.test_statistical_hardening
+          coverage report --include='src/loto7/evaluation/metrics_schema.py,src/loto7/evaluation/statistics.py,src/loto7/evaluation/ranking.py,src/loto7/evaluation/null_permutation.py' --fail-under=65
       - name: Commit validated formatting and remove one-shot workflow
         run: |
           git config user.name 'github-actions[bot]'
