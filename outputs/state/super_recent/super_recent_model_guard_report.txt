@@ -1,24 +1,24 @@
 LOTO7 Recent Era Dedicated Guard Report
 ========================================
 
-created_at: 2026-07-31T14:28:59.999790+00:00
+created_at: 2026-07-31T19:45:05.680557+00:00
 recent_start_year: 2023
 accepted: False
 restored_baseline: True
 baseline_model_id: g070_0070_3390
-candidate_model_id: g201_2013_2254
+candidate_model_id: g033_0033_7598
 
 [Decision Reasons]
-- recent roi floor ok: 14.855% >= 8.000%
+- recent roi floor ok: 14.090% >= 8.000%
 - recent high-grade ok: delta=0
 
 [Warnings]
-- recent roi dropped: delta=-136.341pt < 0.000pt
-- recent profit dropped: delta=-376300 < 0
+- recent roi dropped: delta=-136.288pt < 0.000pt
+- recent profit dropped: delta=-378200 < 0
 
 [Recent Era]
-baseline: roi=151.196% profit=141300 high_grade=1 max_main=6
-candidate: roi=14.855% profit=-235000 high_grade=1 max_main=5
+baseline: roi=150.378% profit=139800 high_grade=1 max_main=6
+candidate: roi=14.09% profit=-238400 high_grade=1 max_main=5
 
 Full-period ROI is intentionally ignored here because this model is used only for Recent Era prediction slots.
 注意: 過去検証上のrecent era専用ガードであり、将来の当せんや利益を保証しません。
