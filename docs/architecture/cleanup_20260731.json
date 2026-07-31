@@ -26,5 +26,17 @@
   "reintroduction_guards": [
     "outputs/**/*pre_hit_first*",
     "outputs/role_ensemble/role_ensemble_backtest.csv"
-  ]
+  ],
+  "validation": {
+    "completed_at": "2026-07-31T18:05:56+09:00",
+    "compile": "pass",
+    "coverage_gate_percent": 65,
+    "mypy": "pass",
+    "ruff": "pass",
+    "ruff_format": "pass",
+    "statistical_regression_tests": {
+      "passed": 5,
+      "total": 5
+    }
+  }
 }
