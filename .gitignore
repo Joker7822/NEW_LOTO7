@@ -5,6 +5,8 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.coverage
+htmlcov/
 
 # Virtual environments
 .venv/
@@ -48,12 +50,17 @@ outputs/*
 !outputs/layout_manifest.json
 *.log
 
-# Artifact-only diagnostics
+# Artifact-only diagnostics and reproducible details
 outputs/ml_stack/
 outputs/complete_ai/
 outputs/deep_ai/
 outputs/txt_reports/
 outputs/diagnostics/**/*.csv
+outputs/**/*pre_hit_first*
+outputs/holdout/holdout_result.csv
+outputs/role_ensemble/role_ensemble_backtest.csv
+outputs/generation5/stages/
+outputs/generation5/*.tmp
 
 # Deprecated root generated LOTO7 outputs
 latest_loto7_prediction.txt
