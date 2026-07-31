@@ -6,6 +6,19 @@ from typing import Dict, Mapping
 METRIC_SCHEMA_VERSION = "loto7-metrics-2026.07.31-v2"
 
 
+def _number(value: object, default: float = 0.0) -> float:
+    if value is None:
+        return default
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value.strip())
+        except ValueError:
+            return default
+    return default
+
+
 def financial_metrics(total_cost: int, total_payout: int) -> Dict[str, object]:
     cost = int(total_cost)
     payout = int(total_payout)
@@ -31,8 +44,8 @@ def financial_metrics(total_cost: int, total_payout: int) -> Dict[str, object]:
 
 def normalize_financial_metrics(payload: Mapping[str, object]) -> Dict[str, object]:
     result = dict(payload)
-    cost = int(float(result.get("total_cost", 0) or 0))
-    payout = int(float(result.get("total_payout", 0) or 0))
+    cost = int(_number(result.get("total_cost")))
+    payout = int(_number(result.get("total_payout")))
     result.update(financial_metrics(cost, payout))
     return result
 
@@ -40,22 +53,22 @@ def normalize_financial_metrics(payload: Mapping[str, object]) -> Dict[str, obje
 def get_payout_roi_percent(payload: Mapping[str, object]) -> float:
     value = payload.get("payout_roi_percent")
     if value is not None:
-        return float(value)
+        return _number(value)
     ratio = payload.get("payout_ratio", payload.get("payout_roi"))
     if ratio is not None:
-        return float(ratio) * 100.0
-    cost = float(payload.get("total_cost", 0) or 0)
-    payout = float(payload.get("total_payout", 0) or 0)
+        return _number(ratio) * 100.0
+    cost = _number(payload.get("total_cost"))
+    payout = _number(payload.get("total_payout"))
     return payout / cost * 100.0 if cost else 0.0
 
 
 def get_profit_roi_percent(payload: Mapping[str, object]) -> float:
     value = payload.get("profit_roi_percent")
     if value is not None:
-        return float(value)
+        return _number(value)
     ratio = payload.get("profit_ratio")
     if ratio is not None:
-        return float(ratio) * 100.0
-    cost = float(payload.get("total_cost", 0) or 0)
-    profit = float(payload.get("profit", 0) or 0)
+        return _number(ratio) * 100.0
+    cost = _number(payload.get("total_cost"))
+    profit = _number(payload.get("profit"))
     return profit / cost * 100.0 if cost else 0.0
