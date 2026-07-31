@@ -1,12 +1,12 @@
 {
-  "created_at": "2026-07-31T14:49:49.729779+00:00",
+  "created_at": "2026-07-31T20:11:58.323644+00:00",
   "csv": "loto7.csv",
   "delta_recent_minus_full": {
     "grade_hit_count_delta": -1,
     "high_grade_hit_count_delta": 0,
     "max_main_match_delta": 1,
     "profit_delta": 370400,
-    "roi_percent_delta": 134.203,
+    "roi_percent_delta": 133.477,
     "total_payout_delta": 370400
   },
   "full_period_model_recent_era": {
@@ -16,7 +16,7 @@
       "max_bonus_match": 2,
       "max_main_match": 5,
       "missing_prize_draw_count": 0,
-      "profit": -229100,
+      "profit": -230600,
       "rank_counts": {
         "1等": 0,
         "2等": 0,
@@ -24,14 +24,14 @@
         "4等": 1,
         "5等": 16,
         "6等": 22,
-        "外れ": 881
+        "外れ": 886
       },
-      "roi": 0.169928,
-      "roi_percent": 16.993,
-      "target_draws": 184,
-      "total_cost": 276000,
+      "roi": 0.169009,
+      "roi_percent": 16.901,
+      "target_draws": 185,
+      "total_cost": 277500,
       "total_payout": 46900,
-      "total_tickets": 920
+      "total_tickets": 925
     },
     "model_id": "g228_0228_2057",
     "path": "loto7_best_model.json"
@@ -50,7 +50,7 @@
       "max_bonus_match": 2,
       "max_main_match": 6,
       "missing_prize_draw_count": 0,
-      "profit": 141300,
+      "profit": 139800,
       "rank_counts": {
         "1等": 0,
         "2等": 0,
@@ -58,19 +58,19 @@
         "4等": 0,
         "5等": 15,
         "6等": 22,
-        "外れ": 882
+        "外れ": 887
       },
-      "roi": 1.511957,
-      "roi_percent": 151.196,
-      "target_draws": 184,
-      "total_cost": 276000,
+      "roi": 1.503784,
+      "roi_percent": 150.378,
+      "target_draws": 185,
+      "total_cost": 277500,
       "total_payout": 417300,
-      "total_tickets": 920
+      "total_tickets": 925
     },
     "model_id": "g070_0070_3390",
     "path": "outputs/super_recent/super_recent_best_model.json"
   },
   "recent_start_year": 2023,
-  "recent_target_draws": 184,
+  "recent_target_draws": 185,
   "unit_cost": 300
 }
