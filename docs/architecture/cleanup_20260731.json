@@ -1,0 +1,31 @@
+{
+  "kind": "loto7_repository_cleanup",
+  "applied_at": "2026-07-31",
+  "deleted_files": [
+    "scripts/apply_full_statistical_hardening.py",
+    ".github/workflows/apply_full_statistical_hardening.yml",
+    ".github/workflows/cleanup_obsolete_once.yml",
+    "outputs/recent_era/recent_era_model_history.pre_hit_first_20260722035646.csv",
+    "outputs/super_recent/super_recent_model_history.pre_hit_first_20260722083852.csv",
+    "outputs/model_self_evolution/history.pre_hit_first_20260721231909.csv",
+    "outputs/holdout/holdout_result.csv",
+    "outputs/role_ensemble/role_ensemble_backtest.csv"
+  ],
+  "deletion_reasons": {
+    "pre_hit_first_histories": "旧目的関数由来で現行学習・Resume・昇格に使用しない",
+    "detail_csv": "正規Summaryから再生成可能な全口詳細でありActions Artifact対象",
+    "migration_files": "一回限りの移行処理が完了したため不要"
+  },
+  "preserved": [
+    "current resume state",
+    "current model histories",
+    "approved production model",
+    "production prediction and cumulative history",
+    "sealed prediction evidence"
+  ],
+  "reintroduction_guards": [
+    "outputs/**/*pre_hit_first*",
+    "outputs/holdout/holdout_result.csv",
+    "outputs/role_ensemble/role_ensemble_backtest.csv"
+  ]
+}
