@@ -40,12 +40,14 @@ def paired_moving_block_bootstrap(
     block = int(block_size) if block_size > 0 else max(2, round(size ** (1 / 3)))
     block = min(size, max(1, block))
     rng = random.Random(seed)
-    estimates = []
+    estimates: list[float] = []
     for _ in range(max(100, int(samples))):
-        sampled = []
+        sampled: list[float] = []
         while len(sampled) < size:
             start = rng.randrange(size)
-            sampled.extend(differences[(start + offset) % size] for offset in range(block))
+            sampled.extend(
+                differences[(start + offset) % size] for offset in range(block)
+            )
         estimates.append(statistics.fmean(sampled[:size]))
     alpha = (1.0 - confidence) / 2.0
     return {
