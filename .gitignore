@@ -57,7 +57,6 @@ outputs/deep_ai/
 outputs/txt_reports/
 outputs/diagnostics/**/*.csv
 outputs/**/*pre_hit_first*
-outputs/holdout/holdout_result.csv
 outputs/role_ensemble/role_ensemble_backtest.csv
 outputs/generation5/stages/
 outputs/generation5/*.tmp
