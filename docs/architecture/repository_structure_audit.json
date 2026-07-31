@@ -1,96 +1,76 @@
 {
   "category_counts": {
-    "cli_or_compatibility": 36,
+    "cli_or_compatibility": 41,
     "configuration": 3,
-    "documentation": 7,
-    "other": 16,
-    "output:diagnostics": 50,
-    "output:evidence": 244,
+    "documentation": 9,
+    "other": 17,
+    "output:diagnostics": 49,
+    "output:evidence": 356,
     "output:production": 9,
-    "output:state": 84,
+    "output:state": 81,
     "output:unclassified": 2,
-    "package": 15,
+    "package": 20,
     "root_compatibility": 12,
-    "test": 18,
+    "test": 19,
     "workflow": 15
   },
-  "created_at": "2026-07-28T04:12:57.164737+00:00",
+  "created_at": "2026-07-31T09:43:45.658837+00:00",
   "directory_file_counts": {
     ".github": 15,
-    "<root>": 22,
+    "<root>": 23,
     "config": 3,
-    "docs": 7,
-    "outputs": 389,
-    "scripts": 36,
-    "src": 21,
-    "tests": 18
+    "docs": 9,
+    "outputs": 497,
+    "scripts": 41,
+    "src": 26,
+    "tests": 19
   },
   "duplicate_workflow_names": {},
-  "file_count": 511,
+  "file_count": 633,
   "largest_files": [
-    {
-      "bytes": 769265,
-      "path": "outputs/role_ensemble/role_ensemble_backtest.csv"
-    },
     {
       "bytes": 325490,
       "path": "outputs/holdout/holdout_result.csv"
     },
     {
-      "bytes": 223169,
-      "path": "outputs/recent_era/recent_era_model_history.pre_hit_first_20260722035646.csv"
-    },
-    {
-      "bytes": 179777,
+      "bytes": 224899,
       "path": "outputs/super_recent/super_recent_model_history.csv"
-    },
-    {
-      "bytes": 149791,
-      "path": "outputs/model_self_evolution/history.pre_hit_first_20260721231909.csv"
     },
     {
       "bytes": 135724,
       "path": "loto7.csv"
     },
     {
-      "bytes": 127953,
-      "path": "outputs/super_recent/super_recent_model_history.pre_hit_first_20260722083852.csv"
-    },
-    {
-      "bytes": 97367,
-      "path": "docs/architecture/repository_structure_audit.json"
-    },
-    {
-      "bytes": 70532,
+      "bytes": 99050,
       "path": "outputs/recent_era/recent_era_model_history.csv"
     },
     {
-      "bytes": 64682,
+      "bytes": 66712,
+      "path": "outputs/model_self_evolution/history.csv"
+    },
+    {
+      "bytes": 64631,
       "path": "outputs/state/super_recent/super_recent_model_state.json"
     },
     {
-      "bytes": 64682,
+      "bytes": 64631,
       "path": "outputs/super_recent/super_recent_model_state.json"
     },
     {
-      "bytes": 60719,
+      "bytes": 60771,
       "path": "outputs/recent_era/recent_era_model_state.json"
     },
     {
-      "bytes": 60719,
+      "bytes": 60771,
       "path": "outputs/state/recent/recent_era_model_state.json"
     },
     {
-      "bytes": 46338,
+      "bytes": 46326,
       "path": "outputs/diagnostics/generation4/null_strategy_league_summary.json"
     },
     {
-      "bytes": 46338,
+      "bytes": 46326,
       "path": "outputs/generation4/null_strategy_league_summary.json"
-    },
-    {
-      "bytes": 44859,
-      "path": "outputs/model_self_evolution/history.csv"
     },
     {
       "bytes": 42620,
@@ -117,14 +97,6 @@
       "path": "outputs/state/full/standalone_state.json"
     },
     {
-      "bytes": 37990,
-      "path": "outputs/model_self_evolution/state.json"
-    },
-    {
-      "bytes": 37990,
-      "path": "outputs/state/full/state.json"
-    },
-    {
       "bytes": 37639,
       "path": "outputs/diagnostics/holdout/recent_era_summary.json"
     },
@@ -133,35 +105,63 @@
       "path": "outputs/holdout/recent_era_summary.json"
     },
     {
-      "bytes": 31833,
+      "bytes": 33562,
+      "path": "outputs/model_self_evolution/state.json"
+    },
+    {
+      "bytes": 33562,
+      "path": "outputs/state/full/state.json"
+    },
+    {
+      "bytes": 31828,
       "path": "outputs/state/super_recent/super_recent_adaptive_safety_guard.json"
     },
     {
-      "bytes": 31833,
+      "bytes": 31828,
       "path": "outputs/super_recent/super_recent_adaptive_safety_guard.json"
     },
     {
-      "bytes": 31686,
+      "bytes": 31681,
       "path": "outputs/recent_era/recent_era_adaptive_safety_guard.json"
     },
     {
-      "bytes": 31686,
+      "bytes": 31681,
       "path": "outputs/state/recent/recent_era_adaptive_safety_guard.json"
+    },
+    {
+      "bytes": 31114,
+      "path": "scripts/backtest_role_ensemble.py"
+    },
+    {
+      "bytes": 30990,
+      "path": "_loto7_model_self_evolver_impl.py"
+    },
+    {
+      "bytes": 30798,
+      "path": "outputs/diagnostics/holdout/holdout_report.txt"
+    },
+    {
+      "bytes": 30798,
+      "path": "outputs/holdout/holdout_report.txt"
+    },
+    {
+      "bytes": 29103,
+      "path": "outputs/state/super_recent/super_recent_adaptive_safety_guard_report.txt"
     }
   ],
   "output_class_counts": {
-    "diagnostics": 50,
-    "evidence": 244,
+    "diagnostics": 49,
+    "evidence": 356,
     "production": 9,
-    "state": 84,
+    "state": 81,
     "unclassified": 2
   },
-  "package_python_count": 15,
+  "package_python_count": 20,
   "policy_schema_version": 4,
   "recommendations": [
     {
       "action": "Convert active workflows to canonical paths before removing aliases.",
-      "detail": "191 files remain under legacy output roots.",
+      "detail": "243 files remain under legacy output roots.",
       "issue": "legacy_output_aliases",
       "priority": "P1"
     },
@@ -193,6 +193,7 @@
     "merge_evolution_shards.py",
     "pyproject.toml",
     "requirements-ml.txt",
+    "requirements.lock",
     "requirements.txt",
     "scrapingloto7.py",
     "sitecustomize.py"
@@ -211,8 +212,8 @@
     "scrapingloto7.py",
     "sitecustomize.py"
   ],
-  "script_python_count": 36,
-  "tracked_output_count": 389,
+  "script_python_count": 41,
+  "tracked_output_count": 497,
   "workflow_count": 15,
   "workflow_referenced_python": [
     "holdout_evaluator.py",

@@ -1,26 +1,26 @@
 # NEW_LOTO7 Repository Structure Audit
 
-Generated: `2026-07-28T04:12:57.164737+00:00`
+Generated: `2026-07-31T09:43:45.658837+00:00`
 
 ## Summary
 
 - Policy schema: **4**
-- Tracked files: **511**
+- Tracked files: **633**
 - Workflows: **15**
 - Registered Workflows: **15**
-- Package Python files: **15**
-- Script/compatibility Python files: **36**
+- Package Python files: **20**
+- Script/compatibility Python files: **41**
 - Root compatibility Python files: **12**
-- Tracked outputs: **389**
+- Tracked outputs: **497**
 
 ## Output classes
 
 | Class | Files |
 |---|---:|
-| `diagnostics` | 50 |
-| `evidence` | 244 |
+| `diagnostics` | 49 |
+| `evidence` | 356 |
 | `production` | 9 |
-| `state` | 84 |
+| `state` | 81 |
 | `unclassified` | 2 |
 
 ## Workflow inventory
@@ -47,7 +47,7 @@ Generated: `2026-07-28T04:12:57.164737+00:00`
 
 ### P1 — legacy_output_aliases
 
-191 files remain under legacy output roots.
+243 files remain under legacy output roots.
 
 **Action:** Convert active workflows to canonical paths before removing aliases.
 
