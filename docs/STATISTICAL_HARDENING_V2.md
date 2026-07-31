@@ -62,9 +62,10 @@ PBOと最大1回払戻依存率は、独立した財務安全ゲートとして�
 
 以下はGit追跡から削除し、再生成時も無視します。
 
-- hit-first移行前の履歴バックアップ
-- Holdout全口詳細CSV
+- hit-first移行前の履歴バックアップ3件
 - Role Ensemble全口詳細CSV
 - 一回限りの移行スクリプトとWorkflow
 
-現行Resume state、現行履歴、本番予測、累積予測履歴、封印証跡は保持します。
+`outputs/holdout/holdout_result.csv`は、Holdout Summary IntegrityとEvaluator Full Data PR Checkの正本入力として使用されているため保持します。
+
+現行Resume state、現行履歴、本番予測、累積予測履歴、Holdout正本入力、封印証跡は保持します。
