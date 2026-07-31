@@ -1,6 +1,6 @@
 {
   "complete": true,
-  "completed_draw_count": 686,
+  "completed_draw_count": 687,
   "completed_draws": [
     2,
     3,
@@ -687,7 +687,8 @@
     684,
     685,
     686,
-    687
+    687,
+    688
   ],
   "remaining_draw_count": 0,
   "state_key": {
@@ -704,6 +705,6 @@
     "purchase_count": 5,
     "unit_cost": 300
   },
-  "total_targets": 686,
-  "updated_at": "2026-07-31T09:15:03.147179+00:00"
+  "total_targets": 687,
+  "updated_at": "2026-07-31T13:48:31.203617+00:00"
 }
