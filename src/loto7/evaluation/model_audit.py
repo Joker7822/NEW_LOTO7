@@ -1,7 +1,8 @@
 """Chronological, payout-aware model audit used by hardened promotion gates."""
+
 from __future__ import annotations
 
-from typing import Dict, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
 from loto7.evaluation.hit_metrics import summarize_hit_metrics
 from loto7.evaluation.metrics_schema import financial_metrics
@@ -37,7 +38,7 @@ def evaluate_model(
     target_indices: Sequence[int],
     purchase_count: int = 5,
     unit_cost: int = 300,
-) -> Dict[str, object]:
+) -> dict[str, object]:
     genome = load_genome(model_path)
     portfolios = []
     mains = []

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Promote a Generation 5 candidate only after every hardened gate passes."""
+
 from __future__ import annotations
 
 import argparse
@@ -7,13 +8,13 @@ import datetime as dt
 import hashlib
 import json
 import shutil
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Dict, Mapping
 
 from scripts.prepromotion_hardening import run_prepromotion_hardening
 
 
-def read_json(path: str) -> Dict[str, object]:
+def read_json(path: str) -> dict[str, object]:
     file = Path(path)
     return json.loads(file.read_text(encoding="utf-8")) if file.exists() else {}
 
@@ -37,11 +38,17 @@ def write_json(path: str, payload: Mapping[str, object]) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--candidate", default="outputs/generation5/generation5_candidate_model.json")
+    parser.add_argument(
+        "--candidate", default="outputs/generation5/generation5_candidate_model.json"
+    )
     parser.add_argument("--baseline", default="loto7_best_model.json")
     parser.add_argument("--summary", default="outputs/generation5/generation5_summary.json")
-    parser.add_argument("--null-summary", default="outputs/generation5/null_strategy_league_summary.json")
-    parser.add_argument("--financial-null-summary", default="outputs/generation5/financial_null_summary.json")
+    parser.add_argument(
+        "--null-summary", default="outputs/generation5/null_strategy_league_summary.json"
+    )
+    parser.add_argument(
+        "--financial-null-summary", default="outputs/generation5/financial_null_summary.json"
+    )
     parser.add_argument("--seed-bank", default="outputs/generation5/null_seed_bank.json")
     parser.add_argument("--ablation", default="outputs/generation5/prediction_ablation.json")
     parser.add_argument("--decision", default="outputs/generation5/promotion_decision.json")
@@ -97,8 +104,8 @@ def main() -> int:
     if applied:
         shutil.copyfile(args.candidate, args.baseline)
 
-    payload: Dict[str, object] = {
-        "created_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+    payload: dict[str, object] = {
+        "created_at": dt.datetime.now(dt.UTC).isoformat(),
         "kind": "loto7_generation5_hardened_promotion_decision",
         "promoted": promoted,
         "apply_requested": bool(args.apply),

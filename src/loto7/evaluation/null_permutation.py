@@ -1,9 +1,10 @@
 """Permutation Null League primitives for payout-independent model testing."""
+
 from __future__ import annotations
 
 import random
 import statistics
-from typing import Dict, Sequence
+from collections.abc import Sequence
 
 from loto7.evaluation.hit_metrics import summarize_hit_metrics
 from loto7.evaluation.ranking import summarize_portfolio_ranking
@@ -14,7 +15,7 @@ from loto7.evolution.hit_first import hit_first_score
 def evaluate_portfolios(
     portfolios: Sequence[Sequence[Sequence[int]]],
     mains: Sequence[Sequence[int]],
-) -> Dict[str, object]:
+) -> dict[str, object]:
     maximums = []
     ticket_matches = []
     for portfolio, main in zip(portfolios, mains):
@@ -40,7 +41,7 @@ def adaptive_null_test(
     checkpoints: Sequence[int],
     search_width: int = 6,
     max_exceedance: float = 0.10,
-) -> Dict[str, object]:
+) -> dict[str, object]:
     observed = evaluate_portfolios(portfolios, mains)
     observed_score = float(observed["hit_first_objective_score"])
     raw_scores: list[float] = []

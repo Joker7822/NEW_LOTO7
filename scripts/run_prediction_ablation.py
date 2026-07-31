@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Separate model ranking value from portfolio diversification value."""
+
 from __future__ import annotations
 
 import argparse
 import json
 import random
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Dict, Sequence
 
 from loto7.evaluation.hit_metrics import summarize_hit_metrics
 from loto7.evaluation.model_audit import year_of
@@ -33,7 +34,7 @@ def random_portfolio(rng: random.Random) -> list[tuple[int, ...]]:
 def metrics(
     portfolios: Sequence[Sequence[Sequence[int]]],
     mains: Sequence[Sequence[int]],
-) -> Dict[str, object]:
+) -> dict[str, object]:
     maximums = []
     ticket_matches = []
     for portfolio, main in zip(portfolios, mains):
@@ -83,13 +84,11 @@ def main() -> int:
         "C_learned_model_and_randomized_portfolio": c,
         "effects": {
             "model_ranking_value_A_minus_B": round(
-                float(a["hit_first_objective_score"])
-                - float(b["hit_first_objective_score"]),
+                float(a["hit_first_objective_score"]) - float(b["hit_first_objective_score"]),
                 6,
             ),
             "portfolio_optimizer_value_A_minus_C": round(
-                float(a["hit_first_objective_score"])
-                - float(c["hit_first_objective_score"]),
+                float(a["hit_first_objective_score"]) - float(c["hit_first_objective_score"]),
                 6,
             ),
         },

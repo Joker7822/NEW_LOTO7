@@ -1,7 +1,8 @@
 """Payout-independent ranking diagnostics for five-ticket portfolios."""
+
 from __future__ import annotations
 
-from typing import Dict, Sequence
+from collections.abc import Sequence
 
 NUMBERS = tuple(range(1, 38))
 
@@ -24,7 +25,7 @@ def _auc(scores: Sequence[float], labels: Sequence[int]) -> float:
 def summarize_portfolio_ranking(
     portfolios: Sequence[Sequence[Sequence[int]]],
     actual_main_numbers: Sequence[Sequence[int]],
-) -> Dict[str, object]:
+) -> dict[str, object]:
     if len(portfolios) != len(actual_main_numbers):
         raise ValueError("portfolio and result lengths differ")
     top_hits = {7: 0, 14: 0, 18: 0}
@@ -49,9 +50,9 @@ def summarize_portfolio_ranking(
         winner_count += len(actual_set)
         all_scores.extend(scores[number] for number in NUMBERS)
         all_labels.extend(1 if number in actual_set else 0 for number in NUMBERS)
-    brier = sum(
-        (score - label) ** 2 for score, label in zip(all_scores, all_labels)
-    ) / max(1, len(all_scores))
+    brier = sum((score - label) ** 2 for score, label in zip(all_scores, all_labels)) / max(
+        1, len(all_scores)
+    )
     calibration_error = 0.0
     for bin_index in range(5):
         lower = bin_index / 5

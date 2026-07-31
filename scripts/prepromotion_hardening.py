@@ -1,11 +1,12 @@
 """Run all hardened evidence builders immediately before Generation 5 promotion."""
+
 from __future__ import annotations
 
 import json
 import shutil
 import sys
+from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import Callable, Sequence
 
 from scripts.harden_generation5_summary import main as harden_summary_main
 from scripts.run_hit_first_null_league import main as hit_null_main
@@ -41,33 +42,50 @@ def run_prepromotion_hardening(
         _run_cli(
             harden_summary_main,
             [
-                "--candidate", candidate,
-                "--baseline", baseline,
-                "--summary", summary,
-                "--start-year", "2020",
-                "--bootstrap-samples", "2000",
+                "--candidate",
+                candidate,
+                "--baseline",
+                baseline,
+                "--summary",
+                summary,
+                "--start-year",
+                "2020",
+                "--bootstrap-samples",
+                "2000",
             ],
         )
         _run_cli(
             hit_null_main,
             [
-                "--model", candidate,
-                "--seed-bank", seed_bank,
-                "--seed-phase", "final",
-                "--summary", null_summary,
-                "--report", "outputs/generation5/null_strategy_league_report.txt",
-                "--start-year", "2020",
-                "--checkpoints", "150,500,1000",
-                "--search-width", "6",
-                "--max-null-exceedance", "0.10",
+                "--model",
+                candidate,
+                "--seed-bank",
+                seed_bank,
+                "--seed-phase",
+                "final",
+                "--summary",
+                null_summary,
+                "--report",
+                "outputs/generation5/null_strategy_league_report.txt",
+                "--start-year",
+                "2020",
+                "--checkpoints",
+                "150,500,1000",
+                "--search-width",
+                "6",
+                "--max-null-exceedance",
+                "0.10",
             ],
         )
         _run_cli(
             ablation_main,
             [
-                "--model", candidate,
-                "--output", ablation,
-                "--start-year", "2020",
+                "--model",
+                candidate,
+                "--output",
+                ablation,
+                "--start-year",
+                "2020",
             ],
         )
     except Exception as error:

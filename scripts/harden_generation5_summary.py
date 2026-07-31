@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Apply paired chronological evidence and canonical metrics to G5 summary."""
+
 from __future__ import annotations
 
 import argparse
 import json
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Dict, Mapping
 
 from loto7.evaluation.model_audit import evaluate_model, fold_indices, year_of
 from loto7.evaluation.statistics import paired_moving_block_bootstrap
@@ -13,14 +14,16 @@ from loto7_evolution_trainer import load_draws
 from merge_evolution_shards import load_prize_rows, select_target_indices
 
 
-def read_json(path: str) -> Dict[str, object]:
+def read_json(path: str) -> dict[str, object]:
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--csv", default="loto7.csv")
-    parser.add_argument("--candidate", default="outputs/generation5/generation5_candidate_model.json")
+    parser.add_argument(
+        "--candidate", default="outputs/generation5/generation5_candidate_model.json"
+    )
     parser.add_argument("--baseline", default="loto7_best_model.json")
     parser.add_argument("--summary", default="outputs/generation5/generation5_summary.json")
     parser.add_argument("--start-year", type=int, default=2020)
@@ -78,9 +81,7 @@ def main() -> int:
             prize_rows=prizes,
             target_indices=part,
         )
-        delta = float(left["hit_first_objective_score"]) - float(
-            right["hit_first_objective_score"]
-        )
+        delta = float(left["hit_first_objective_score"]) - float(right["hit_first_objective_score"])
         positive_folds += int(delta >= 0.05)
         folds.append({"fold": number, "target_draws": len(part), "delta": round(delta, 6)})
     average_delta = float(candidate["average_max_main_match"]) - float(
@@ -97,14 +98,17 @@ def main() -> int:
         "positive_folds_3_of_5": positive_folds >= 3,
         "average_max_delta_at_least_0_03": average_delta >= 0.03,
         "draw4_delta_at_least_0_50pt": draw4_delta >= 0.50,
-        "draw5_non_regression": int(candidate["draw_main5_plus_count"]) >= int(baseline["draw_main5_plus_count"]),
-        "draw6_non_regression": int(candidate["draw_main6_plus_count"]) >= int(baseline["draw_main6_plus_count"]),
+        "draw5_non_regression": int(candidate["draw_main5_plus_count"])
+        >= int(baseline["draw_main5_plus_count"]),
+        "draw6_non_regression": int(candidate["draw_main6_plus_count"])
+        >= int(baseline["draw_main6_plus_count"]),
         "paired_average_ci_positive": float(paired_average["ci_lower"]) > 0.0,
         "paired_draw4_ci_positive": float(paired_draw4["ci_lower"]) > 0.0,
         "average_unique_at_least_13": float(candidate["average_portfolio_unique_numbers"]) >= 13.0,
         "mean_overlap_at_most_4_2": float(candidate["mean_ticket_pair_overlap"]) <= 4.2,
         "max_overlap_at_most_4": int(candidate["max_ticket_pair_overlap"]) <= 4,
-        "payout_floor": float(candidate["payout_roi_percent"]) >= max(8.0, float(baseline["payout_roi_percent"]) - 5.0),
+        "payout_floor": float(candidate["payout_roi_percent"])
+        >= max(8.0, float(baseline["payout_roi_percent"]) - 5.0),
         "top1_share_at_most_0_50": float(candidate["top1_payout_share"]) <= 0.50,
     }
     failures = [name for name, passed in checks.items() if not passed]
@@ -118,8 +122,10 @@ def main() -> int:
         "deltas": {
             "average_max_main_match": round(average_delta, 6),
             "draw_main4_plus_rate_percent": round(draw4_delta, 6),
-            "draw_main5_plus_count": int(candidate["draw_main5_plus_count"]) - int(baseline["draw_main5_plus_count"]),
-            "draw_main6_plus_count": int(candidate["draw_main6_plus_count"]) - int(baseline["draw_main6_plus_count"]),
+            "draw_main5_plus_count": int(candidate["draw_main5_plus_count"])
+            - int(baseline["draw_main5_plus_count"]),
+            "draw_main6_plus_count": int(candidate["draw_main6_plus_count"])
+            - int(baseline["draw_main6_plus_count"]),
         },
         "paired_bootstrap": {
             "average_max_main_match": paired_average,

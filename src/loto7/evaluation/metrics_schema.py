@@ -1,7 +1,8 @@
 """Canonical financial metric schema shared by all hardened evaluators."""
+
 from __future__ import annotations
 
-from typing import Dict, Mapping
+from collections.abc import Mapping
 
 METRIC_SCHEMA_VERSION = "loto7-metrics-2026.07.31-v2"
 
@@ -19,7 +20,7 @@ def _number(value: object, default: float = 0.0) -> float:
     return default
 
 
-def financial_metrics(total_cost: int, total_payout: int) -> Dict[str, object]:
+def financial_metrics(total_cost: int, total_payout: int) -> dict[str, object]:
     cost = int(total_cost)
     payout = int(total_payout)
     profit = payout - cost
@@ -42,7 +43,7 @@ def financial_metrics(total_cost: int, total_payout: int) -> Dict[str, object]:
     }
 
 
-def normalize_financial_metrics(payload: Mapping[str, object]) -> Dict[str, object]:
+def normalize_financial_metrics(payload: Mapping[str, object]) -> dict[str, object]:
     result = dict(payload)
     cost = int(_number(result.get("total_cost")))
     payout = int(_number(result.get("total_payout")))

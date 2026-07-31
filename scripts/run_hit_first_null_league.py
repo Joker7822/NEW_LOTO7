@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Run adaptive search-adjusted hit-first permutation Null League."""
+
 from __future__ import annotations
 
 import argparse
 import json
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Mapping
 
 from loto7.evaluation.model_audit import year_of
 from loto7.evaluation.null_permutation import adaptive_null_test
@@ -20,7 +21,9 @@ def main() -> int:
     parser.add_argument("--model", default="outputs/generation5/generation5_candidate_model.json")
     parser.add_argument("--seed-bank", default="outputs/generation5/null_seed_bank.json")
     parser.add_argument("--seed-phase", default="final")
-    parser.add_argument("--summary", default="outputs/generation5/null_strategy_league_summary.json")
+    parser.add_argument(
+        "--summary", default="outputs/generation5/null_strategy_league_summary.json"
+    )
     parser.add_argument("--report", default="outputs/generation5/null_strategy_league_report.txt")
     parser.add_argument("--start-year", type=int, default=2020)
     parser.add_argument("--purchase-count", type=int, default=5)

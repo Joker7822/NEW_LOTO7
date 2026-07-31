@@ -1,4 +1,5 @@
 """Runtime guards for LOTO7 workflow compatibility and checkpoint evidence."""
+
 from __future__ import annotations
 
 import atexit

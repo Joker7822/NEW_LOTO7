@@ -1,10 +1,11 @@
 """Paired time-series inference utilities for promotion decisions."""
+
 from __future__ import annotations
 
 import math
 import random
 import statistics
-from typing import Dict, Sequence
+from collections.abc import Sequence
 
 
 def percentile(values: Sequence[float], q: float) -> float:
@@ -30,7 +31,7 @@ def paired_moving_block_bootstrap(
     block_size: int = 0,
     seed: int = 20260731,
     confidence: float = 0.95,
-) -> Dict[str, object]:
+) -> dict[str, object]:
     if len(candidate) != len(baseline):
         raise ValueError("paired sequences must have equal length")
     if not candidate:
@@ -45,9 +46,7 @@ def paired_moving_block_bootstrap(
         sampled: list[float] = []
         while len(sampled) < size:
             start = rng.randrange(size)
-            sampled.extend(
-                differences[(start + offset) % size] for offset in range(block)
-            )
+            sampled.extend(differences[(start + offset) % size] for offset in range(block))
         estimates.append(statistics.fmean(sampled[:size]))
     alpha = (1.0 - confidence) / 2.0
     return {
@@ -59,9 +58,7 @@ def paired_moving_block_bootstrap(
         "estimate": round(statistics.fmean(differences), 8),
         "ci_lower": round(percentile(estimates, alpha), 8),
         "ci_upper": round(percentile(estimates, 1.0 - alpha), 8),
-        "probability_positive": round(
-            sum(value > 0 for value in estimates) / len(estimates), 8
-        ),
+        "probability_positive": round(sum(value > 0 for value in estimates) / len(estimates), 8),
     }
 
 
@@ -75,8 +72,9 @@ def wilson_interval(
     proportion = successes / total
     denominator = 1.0 + confidence_z**2 / total
     centre = (proportion + confidence_z**2 / (2.0 * total)) / denominator
-    margin = confidence_z * math.sqrt(
-        proportion * (1.0 - proportion) / total
-        + confidence_z**2 / (4.0 * total**2)
-    ) / denominator
+    margin = (
+        confidence_z
+        * math.sqrt(proportion * (1.0 - proportion) / total + confidence_z**2 / (4.0 * total**2))
+        / denominator
+    )
     return max(0.0, centre - margin), min(1.0, centre + margin)

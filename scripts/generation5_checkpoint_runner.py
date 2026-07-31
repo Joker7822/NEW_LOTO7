@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Run Generation 5 in resumable generation-sized stages."""
+
 from __future__ import annotations
 
 import argparse
@@ -7,7 +8,6 @@ import hashlib
 import json
 import shutil
 from pathlib import Path
-from typing import Dict
 
 from scripts.generation5_evolver import main as run_generation5
 
@@ -18,11 +18,11 @@ def sha256(path: str) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def read_json(path: Path) -> Dict[str, object]:
+def read_json(path: Path) -> dict[str, object]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def write_json(path: Path, payload: Dict[str, object]) -> None:
+def write_json(path: Path, payload: dict[str, object]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
@@ -37,7 +37,9 @@ def main() -> int:
     parser.add_argument("--generations", type=int, default=4)
     parser.add_argument("--island-population", type=int, default=4)
     parser.add_argument("--checkpoint", default="outputs/state/generation5/checkpoint.json")
-    parser.add_argument("--candidate", default="outputs/generation5/generation5_candidate_model.json")
+    parser.add_argument(
+        "--candidate", default="outputs/generation5/generation5_candidate_model.json"
+    )
     parser.add_argument("--summary", default="outputs/generation5/generation5_summary.json")
     parser.add_argument("--report", default="outputs/generation5/generation5_report.txt")
     parser.add_argument("--history", default="outputs/generation5/generation5_history.csv")
@@ -49,7 +51,7 @@ def main() -> int:
     dataset_sha = sha256(args.csv)
     baseline_sha = sha256(args.baseline)
     checkpoint_path = Path(args.checkpoint)
-    checkpoint: Dict[str, object] = {}
+    checkpoint: dict[str, object] = {}
     if checkpoint_path.exists() and checkpoint_path.stat().st_size:
         checkpoint = read_json(checkpoint_path)
         valid = (
@@ -81,17 +83,28 @@ def main() -> int:
             if Path(optional).exists():
                 seeds.append(optional)
         argv = [
-            "--csv", args.csv,
-            "--best-model", args.baseline,
-            "--seed-patterns", *seeds,
-            "--candidate-model", str(stage_candidate),
-            "--summary", str(stage_summary),
-            "--report", str(stage_report),
-            "--history", args.history,
-            "--generations", "1",
-            "--island-population", str(args.island_population),
-            "--max-runtime-minutes", str(args.max_runtime_minutes_per_stage),
-            "--safe-exit-minutes", "10",
+            "--csv",
+            args.csv,
+            "--best-model",
+            args.baseline,
+            "--seed-patterns",
+            *seeds,
+            "--candidate-model",
+            str(stage_candidate),
+            "--summary",
+            str(stage_summary),
+            "--report",
+            str(stage_report),
+            "--history",
+            args.history,
+            "--generations",
+            "1",
+            "--island-population",
+            str(args.island_population),
+            "--max-runtime-minutes",
+            str(args.max_runtime_minutes_per_stage),
+            "--safe-exit-minutes",
+            "10",
         ]
         if run_generation5(argv) != 0:
             raise RuntimeError(f"Generation 5 stage failed: {generation}")
