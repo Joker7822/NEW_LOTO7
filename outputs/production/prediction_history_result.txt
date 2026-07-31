@@ -1,24 +1,24 @@
 LOTO7 Prediction History Result Check
 ====================================
 
-created_at: 2026-07-31T09:37:38.094738+00:00
+created_at: 2026-07-31T12:02:58.910108+00:00
 history_csv: outputs/evolution_prediction_history.csv
 loto7_csv: loto7.csv
 
 [Summary]
-history_draw_rows: 6
-prediction_rows: 30
-evaluated_rows: 25
+history_draw_rows: 7
+prediction_rows: 35
+evaluated_rows: 30
 pending_rows: 5
 winning_rows: 0
 hit_rate: 0.000%
 max_main_match: 3
-total_cost: 7,500円
+total_cost: 9,000円
 total_payout: 0円
-profit: -7,500円
+profit: -9,000円
 payout_roi: 0.000%
 profit_roi: -100.000%
-rank_counts: 外れ:25 / 未抽せん:5
+rank_counts: 外れ:30 / 未抽せん:5
 
 [Details]
 
@@ -63,9 +63,17 @@ actual_main: 15 22 23 24 25 29 36 / actual_bonus: 35 37
   予測5: 6, 9, 12, 17, 20, 22, 35 | 信頼度=0.75 | main=1 bonus=1 | result=外れ | payout=0円
 
 抽せん日: 2026-07-31 / 第688回
+actual_main: 04 21 25 28 30 35 37 / actual_bonus: 12 16
+  予測1: 10, 12, 14, 15, 22, 29, 35 | 信頼度=0.95 | main=1 bonus=1 | result=外れ | payout=0円
+  予測2: 1, 7, 12, 17, 18, 24, 29 | 信頼度=0.9 | main=0 bonus=1 | result=外れ | payout=0円
+  予測3: 6, 7, 15, 17, 20, 22, 33 | 信頼度=0.85 | main=0 bonus=0 | result=外れ | payout=0円
+  予測4: 8, 16, 17, 18, 24, 35, 36 | 信頼度=0.8 | main=1 bonus=1 | result=外れ | payout=0円
+  予測5: 1, 6, 9, 12, 22, 34, 36 | 信頼度=0.75 | main=0 bonus=1 | result=外れ | payout=0円
+
+抽せん日: 2026-08-07 / 第689回
 actual_main: - / actual_bonus: -
-  予測1: 10, 12, 14, 15, 22, 29, 35 | 信頼度=0.95 | main=- bonus=- | result=未抽せん | payout=0円
-  予測2: 1, 7, 12, 17, 18, 24, 29 | 信頼度=0.9 | main=- bonus=- | result=未抽せん | payout=0円
-  予測3: 6, 7, 15, 17, 20, 22, 33 | 信頼度=0.85 | main=- bonus=- | result=未抽せん | payout=0円
-  予測4: 8, 16, 17, 18, 24, 35, 36 | 信頼度=0.8 | main=- bonus=- | result=未抽せん | payout=0円
-  予測5: 1, 6, 9, 12, 22, 34, 36 | 信頼度=0.75 | main=- bonus=- | result=未抽せん | payout=0円
+  予測1: 9, 12, 17, 18, 24, 35, 36 | 信頼度=0.95 | main=- bonus=- | result=未抽せん | payout=0円
+  予測2: 6, 14, 15, 18, 22, 29, 35 | 信頼度=0.9 | main=- bonus=- | result=未抽せん | payout=0円
+  予測3: 1, 6, 7, 17, 24, 29, 36 | 信頼度=0.85 | main=- bonus=- | result=未抽せん | payout=0円
+  予測4: 1, 6, 8, 12, 22, 33, 35 | 信頼度=0.8 | main=- bonus=- | result=未抽せん | payout=0円
+  予測5: 7, 9, 15, 16, 22, 34, 36 | 信頼度=0.75 | main=- bonus=- | result=未抽せん | payout=0円
