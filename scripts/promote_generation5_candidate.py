@@ -10,9 +10,12 @@ import shutil
 from pathlib import Path
 from typing import Dict, Mapping
 
+from scripts.prepromotion_hardening import run_prepromotion_hardening
+
 
 def read_json(path: str) -> Dict[str, object]:
-    return json.loads(Path(path).read_text(encoding="utf-8"))
+    file = Path(path)
+    return json.loads(file.read_text(encoding="utf-8")) if file.exists() else {}
 
 
 def sha256(path: str) -> str:
@@ -23,6 +26,15 @@ def mapping(value: object) -> Mapping[str, object]:
     return value if isinstance(value, Mapping) else {}
 
 
+def write_json(path: str, payload: Mapping[str, object]) -> None:
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--candidate", default="outputs/generation5/generation5_candidate_model.json")
@@ -30,11 +42,24 @@ def main() -> int:
     parser.add_argument("--summary", default="outputs/generation5/generation5_summary.json")
     parser.add_argument("--null-summary", default="outputs/generation5/null_strategy_league_summary.json")
     parser.add_argument("--financial-null-summary", default="outputs/generation5/financial_null_summary.json")
+    parser.add_argument("--seed-bank", default="outputs/generation5/null_seed_bank.json")
+    parser.add_argument("--ablation", default="outputs/generation5/prediction_ablation.json")
     parser.add_argument("--decision", default="outputs/generation5/promotion_decision.json")
     parser.add_argument("--report", default="outputs/generation5/promotion_report.txt")
+    parser.add_argument("--run-status", default="outputs/generation5/run_status.json")
     parser.add_argument("--max-pbo", type=float, default=0.40)
     parser.add_argument("--apply", action="store_true")
     args = parser.parse_args()
+
+    run_prepromotion_hardening(
+        candidate=args.candidate,
+        baseline=args.baseline,
+        summary=args.summary,
+        null_summary=args.null_summary,
+        financial_null_summary=args.financial_null_summary,
+        seed_bank=args.seed_bank,
+        ablation=args.ablation,
+    )
 
     candidate = read_json(args.candidate)
     baseline = read_json(args.baseline)
@@ -60,6 +85,8 @@ def main() -> int:
         "financial_diagnostic_available": bool(financial_decision),
         "metric_schema_v2": str(candidate_metrics.get("metric_schema_version", ""))
         == "loto7-metrics-2026.07.31-v2",
+        "ablation_available": Path(args.ablation).exists()
+        and Path(args.ablation).stat().st_size > 0,
         "different_genome_id": bool(candidate_id and candidate_id != baseline_id),
         "different_model_sha256": candidate_sha != baseline_sha,
         "candidate_objective_version_present": bool(candidate.get("objective_version")),
@@ -92,12 +119,7 @@ def main() -> int:
             "decision": financial_decision,
         },
     }
-    target = Path(args.decision)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    write_json(args.decision, payload)
     lines = [
         "LOTO7 Generation 5 Hardened Promotion Decision",
         "================================================",
@@ -112,6 +134,23 @@ def main() -> int:
         *([f"- {item}" for item in failures] or ["- none"]),
     ]
     Path(args.report).write_text("\n".join(lines) + "\n", encoding="utf-8")
+    write_json(
+        args.run_status,
+        {
+            "kind": "loto7_generation5_run_status",
+            "created_at": payload["created_at"],
+            "status": "complete",
+            "promoted": promoted,
+            "applied": applied,
+            "required_outputs": [
+                args.summary,
+                args.null_summary,
+                args.financial_null_summary,
+                args.ablation,
+                args.decision,
+            ],
+        },
+    )
     print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
     return 0
 
