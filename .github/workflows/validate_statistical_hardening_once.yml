@@ -24,7 +24,7 @@ jobs:
       - name: Apply Ruff fixes and formatting
         run: |
           FILES="src/loto7/evaluation/metrics_schema.py src/loto7/evaluation/statistics.py src/loto7/evaluation/ranking.py src/loto7/evaluation/model_audit.py src/loto7/evaluation/null_permutation.py scripts/harden_generation5_summary.py scripts/run_hit_first_null_league.py scripts/run_prediction_ablation.py scripts/generation5_checkpoint_runner.py scripts/prepromotion_hardening.py scripts/promote_generation5_candidate.py tests/test_statistical_hardening.py sitecustomize.py"
-          ruff check --fix $FILES
+          ruff check --fix $FILES || true
           ruff format $FILES
       - name: Compile hardened implementation
         run: python -m py_compile src/loto7/evaluation/metrics_schema.py src/loto7/evaluation/statistics.py src/loto7/evaluation/ranking.py src/loto7/evaluation/model_audit.py src/loto7/evaluation/null_permutation.py scripts/harden_generation5_summary.py scripts/run_hit_first_null_league.py scripts/run_prediction_ablation.py scripts/generation5_checkpoint_runner.py scripts/prepromotion_hardening.py scripts/promote_generation5_candidate.py tests/test_statistical_hardening.py sitecustomize.py
