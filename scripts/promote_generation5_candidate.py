@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""Promote a Generation 5 candidate only after internal and fixed-null gates pass."""
+"""Promote a Generation 5 candidate only after every hardened gate passes."""
 from __future__ import annotations
 
 import argparse
@@ -20,26 +19,20 @@ def sha256(path: str) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+def mapping(value: object) -> Mapping[str, object]:
+    return value if isinstance(value, Mapping) else {}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--candidate",
-        default="outputs/generation5/generation5_candidate_model.json",
-    )
+    parser.add_argument("--candidate", default="outputs/generation5/generation5_candidate_model.json")
     parser.add_argument("--baseline", default="loto7_best_model.json")
-    parser.add_argument(
-        "--summary", default="outputs/generation5/generation5_summary.json"
-    )
-    parser.add_argument(
-        "--null-summary",
-        default="outputs/generation5/null_strategy_league_summary.json",
-    )
-    parser.add_argument(
-        "--decision", default="outputs/generation5/promotion_decision.json"
-    )
-    parser.add_argument(
-        "--report", default="outputs/generation5/promotion_report.txt"
-    )
+    parser.add_argument("--summary", default="outputs/generation5/generation5_summary.json")
+    parser.add_argument("--null-summary", default="outputs/generation5/null_strategy_league_summary.json")
+    parser.add_argument("--financial-null-summary", default="outputs/generation5/financial_null_summary.json")
+    parser.add_argument("--decision", default="outputs/generation5/promotion_decision.json")
+    parser.add_argument("--report", default="outputs/generation5/promotion_report.txt")
+    parser.add_argument("--max-pbo", type=float, default=0.40)
     parser.add_argument("--apply", action="store_true")
     args = parser.parse_args()
 
@@ -47,42 +40,29 @@ def main() -> int:
     baseline = read_json(args.baseline)
     summary = read_json(args.summary)
     null_summary = read_json(args.null_summary)
-
-    adoption = (
-        summary.get("adoption")
-        if isinstance(summary.get("adoption"), Mapping)
-        else {}
-    )
-    null_decision = (
-        null_summary.get("decision")
-        if isinstance(null_summary.get("decision"), Mapping)
-        else {}
-    )
-    candidate_genome = (
-        candidate.get("genome")
-        if isinstance(candidate.get("genome"), Mapping)
-        else {}
-    )
-    baseline_genome = (
-        baseline.get("genome", baseline) if isinstance(baseline, Mapping) else {}
-    )
+    financial_null = read_json(args.financial_null_summary)
+    adoption = mapping(summary.get("adoption"))
+    null_decision = mapping(null_summary.get("decision"))
+    candidate_metrics = mapping(mapping(summary.get("candidate")).get("full_metrics"))
+    financial_decision = mapping(financial_null.get("decision"))
+    candidate_genome = mapping(candidate.get("genome"))
+    baseline_genome = mapping(baseline.get("genome", baseline))
     candidate_id = str(candidate_genome.get("id", ""))
-    baseline_id = (
-        str(baseline_genome.get("id", ""))
-        if isinstance(baseline_genome, Mapping)
-        else ""
-    )
+    baseline_id = str(baseline_genome.get("id", ""))
     candidate_sha = sha256(args.candidate)
     baseline_sha = sha256(args.baseline)
+    pbo = float(financial_null.get("pbo", 1.0) or 1.0)
 
     checks = {
-        "generation5_internal_gate": bool(adoption.get("passed")),
-        "fixed_null_league_gate": bool(null_decision.get("passed")),
+        "generation5_hardened_gate": bool(adoption.get("passed")),
+        "hit_first_null_gate": bool(null_decision.get("passed")),
+        "financial_pbo_gate": pbo <= args.max_pbo,
+        "financial_diagnostic_available": bool(financial_decision),
+        "metric_schema_v2": str(candidate_metrics.get("metric_schema_version", ""))
+        == "loto7-metrics-2026.07.31-v2",
         "different_genome_id": bool(candidate_id and candidate_id != baseline_id),
         "different_model_sha256": candidate_sha != baseline_sha,
-        "candidate_objective_version_present": bool(
-            candidate.get("objective_version")
-        ),
+        "candidate_objective_version_present": bool(candidate.get("objective_version")),
     }
     failures = [name for name, passed in checks.items() if not passed]
     promoted = not failures
@@ -92,7 +72,7 @@ def main() -> int:
 
     payload: Dict[str, object] = {
         "created_at": dt.datetime.now(dt.timezone.utc).isoformat(),
-        "kind": "loto7_generation5_promotion_decision",
+        "kind": "loto7_generation5_hardened_promotion_decision",
         "promoted": promoted,
         "apply_requested": bool(args.apply),
         "applied": applied,
@@ -105,7 +85,12 @@ def main() -> int:
         "checks": checks,
         "failures": failures,
         "internal_gate": adoption,
-        "null_gate": null_decision,
+        "hit_first_null_gate": null_decision,
+        "financial_null_gate": {
+            "pbo": pbo,
+            "max_pbo": args.max_pbo,
+            "decision": financial_decision,
+        },
     }
     target = Path(args.decision)
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -113,21 +98,20 @@ def main() -> int:
         json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
-    report = [
-        "LOTO7 Generation 5 Promotion Decision",
-        "=====================================",
+    lines = [
+        "LOTO7 Generation 5 Hardened Promotion Decision",
+        "================================================",
         "",
         f"promoted: {promoted}",
         f"apply_requested: {args.apply}",
         f"applied: {applied}",
         f"candidate_genome_id: {candidate_id}",
         f"baseline_genome_id: {baseline_id}",
+        f"financial_pbo: {pbo:.6f}",
         "failures:",
         *([f"- {item}" for item in failures] or ["- none"]),
     ]
-    Path(args.report).write_text(
-        "\n".join(report) + "\n", encoding="utf-8"
-    )
+    Path(args.report).write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
     return 0
 
