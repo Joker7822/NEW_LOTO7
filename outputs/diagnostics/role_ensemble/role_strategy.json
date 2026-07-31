@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-07-31T09:15:34.049898+00:00",
+  "created_at": "2026-07-31T18:39:32.535503+00:00",
   "kind": "loto7_role_strategy",
   "max_main_best": 1,
   "notes": [
@@ -33,16 +33,16 @@
     }
   ],
   "scores": {
-    "contrarian": -142.311221,
-    "high_match": -69.15756,
-    "main_best": -60.626675,
-    "mid_high": -73.692054,
-    "recent120": 670.325594
+    "contrarian": -137.748569,
+    "high_match": -67.246455,
+    "main_best": -55.863339,
+    "mid_high": -92.516977,
+    "recent120": 1042.11549
   },
-  "source_completed_target_draws": 686,
+  "source_completed_target_draws": 458,
   "source_genome_id": "g228_0228_2057",
-  "source_summary_status": "completed",
-  "source_target_draws_total": 686,
+  "source_summary_status": "safe_exit_at_290.35_minutes",
+  "source_target_draws_total": 687,
   "strategy_counts": {
     "contrarian": 0,
     "high_match": 1,
