@@ -1,0 +1,85 @@
+name: Apply Full Statistical Hardening
+
+on:
+  push:
+    branches:
+      - agent/full-statistical-hardening-cleanup
+    paths:
+      - scripts/apply_full_statistical_hardening.py
+      - .github/workflows/apply_full_statistical_hardening.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-full-statistical-hardening
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/full-statistical-hardening-cleanup
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Configure git
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+      - name: Apply migration
+        run: python scripts/apply_full_statistical_hardening.py
+      - name: Install package and dev checks
+        run: python -m pip install -e '.[dev]'
+      - name: Compile changed modules
+        run: |
+          python -m py_compile \
+            src/loto7/evaluation/metrics_schema.py \
+            src/loto7/evaluation/statistics.py \
+            src/loto7/evaluation/ranking.py \
+            src/loto7/evolution/hit_first.py \
+            src/loto7/evolution/generation5.py \
+            scripts/generation5_evolver.py \
+            scripts/run_fixed_null_league.py \
+            scripts/run_hit_first_null_league.py \
+            scripts/run_prediction_ablation.py \
+            scripts/promote_generation5_candidate.py \
+            tests/test_statistical_hardening.py
+      - name: Run focused regression tests
+        run: |
+          python -m unittest \
+            tests.test_generation5_precision \
+            tests.test_hit_first_learning \
+            tests.test_evaluation_unification \
+            tests.test_statistical_hardening -v
+      - name: Run quality checks
+        run: |
+          ruff check \
+            src/loto7/evaluation/metrics_schema.py \
+            src/loto7/evaluation/statistics.py \
+            src/loto7/evaluation/ranking.py \
+            scripts/run_hit_first_null_league.py \
+            scripts/run_prediction_ablation.py \
+            tests/test_statistical_hardening.py
+          mypy \
+            src/loto7/evaluation/metrics_schema.py \
+            src/loto7/evaluation/statistics.py \
+            src/loto7/evaluation/ranking.py
+          coverage run --source=src/loto7/evaluation -m unittest tests.test_statistical_hardening
+          coverage report --fail-under=65
+      - name: Verify architecture
+        run: |
+          python scripts/check_repository_architecture.py \
+            --json /tmp/loto7-architecture.json \
+            --markdown /tmp/loto7-architecture.md
+      - name: Commit generated implementation
+        run: |
+          git add -A
+          git diff --cached --stat
+          git commit -m 'Harden LOTO7 statistics and remove obsolete artifacts [skip ci]'
+          git push origin HEAD:agent/full-statistical-hardening-cleanup
