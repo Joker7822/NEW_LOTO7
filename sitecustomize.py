@@ -1,14 +1,12 @@
-"""Runtime guards and fail-closed evidence hooks for LOTO7 CLI entry points."""
+"""Runtime guards for LOTO7 workflow compatibility and checkpoint evidence."""
 from __future__ import annotations
 
 import atexit
 import hashlib
 import json
 import os
-import shutil
 import sys
 from pathlib import Path
-from typing import Callable, Sequence
 
 ADOPTED_BEST_MODEL_PATTERNS = ["loto7_best_model.json"]
 
@@ -48,16 +46,6 @@ def _patch_model_self_evolver_args(script_name: str) -> None:
         _set_option("--max-targets", "0")
 
 
-def _run_cli(function: Callable[[], int], arguments: Sequence[str]) -> None:
-    original = list(sys.argv)
-    try:
-        sys.argv = [function.__module__, *arguments]
-        if function() != 0:
-            raise RuntimeError(f"command failed: {function.__module__}")
-    finally:
-        sys.argv = original
-
-
 def _write_json(path: str, payload: dict[str, object]) -> None:
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -65,79 +53,6 @@ def _write_json(path: str, payload: dict[str, object]) -> None:
         json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
-
-
-def _prepare_generation5_promotion(script_name: str) -> None:
-    if script_name != "promote_generation5_candidate.py":
-        return
-    base = Path("outputs/generation5")
-    base.mkdir(parents=True, exist_ok=True)
-    legacy_null = base / "null_strategy_league_summary.json"
-    financial_null = base / "financial_null_summary.json"
-    if legacy_null.exists() and legacy_null.stat().st_size:
-        shutil.copyfile(legacy_null, financial_null)
-    try:
-        from scripts.harden_generation5_summary import main as harden_main
-        from scripts.run_hit_first_null_league import main as hit_null_main
-        from scripts.run_prediction_ablation import main as ablation_main
-
-        _run_cli(
-            harden_main,
-            [
-                "--candidate", str(base / "generation5_candidate_model.json"),
-                "--baseline", "loto7_best_model.json",
-                "--summary", str(base / "generation5_summary.json"),
-                "--start-year", "2020",
-                "--bootstrap-samples", "2000",
-            ],
-        )
-        _run_cli(
-            hit_null_main,
-            [
-                "--model", str(base / "generation5_candidate_model.json"),
-                "--seed-bank", str(base / "null_seed_bank.json"),
-                "--seed-phase", "final",
-                "--summary", str(legacy_null),
-                "--report", str(base / "null_strategy_league_report.txt"),
-                "--start-year", "2020",
-                "--checkpoints", "150,500,1000",
-                "--search-width", "6",
-                "--max-null-exceedance", "0.10",
-            ],
-        )
-        _run_cli(
-            ablation_main,
-            [
-                "--model", str(base / "generation5_candidate_model.json"),
-                "--output", str(base / "prediction_ablation.json"),
-                "--start-year", "2020",
-            ],
-        )
-    except Exception as error:
-        _write_json(
-            str(base / "hardening_error.json"),
-            {
-                "kind": "loto7_generation5_hardening_error",
-                "error_type": type(error).__name__,
-                "error": str(error),
-                "fail_closed": True,
-            },
-        )
-
-    def finalize() -> None:
-        decision = base / "promotion_decision.json"
-        error = base / "hardening_error.json"
-        _write_json(
-            str(base / "run_status.json"),
-            {
-                "kind": "loto7_generation5_run_status",
-                "status": "complete" if decision.exists() and not error.exists() else "incomplete",
-                "promotion_decision_exists": decision.exists(),
-                "hardening_error_exists": error.exists(),
-            },
-        )
-
-    atexit.register(finalize)
 
 
 def _register_generation5_checkpoint(script_name: str) -> None:
@@ -176,7 +91,6 @@ def _patch_args() -> None:
     _patch_merge_evolution_args(script_name)
     _patch_model_self_evolver_args(script_name)
     _register_generation5_checkpoint(script_name)
-    _prepare_generation5_promotion(script_name)
 
 
 _patch_args()
