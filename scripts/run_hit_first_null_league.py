@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from typing import Mapping
 
 from loto7.evaluation.model_audit import year_of
 from loto7.evaluation.null_permutation import adaptive_null_test
@@ -37,10 +38,18 @@ def main() -> int:
     portfolios = [generate_tickets(draws[:index], genome, args.purchase_count) for index in indices]
     mains = [draws[index].main for index in indices]
     bank = json.loads(Path(args.seed_bank).read_text(encoding="utf-8"))
-    seeds = [int(value) for value in bank["phases"][args.seed_phase]]
-    checkpoints = sorted({int(value) for value in args.checkpoints.split(",") if int(value) > 0})
-    if not checkpoints or checkpoints[-1] > len(seeds):
-        raise SystemExit("seed bank does not contain requested checkpoint")
+    phases = bank.get("phases", {})
+    if not isinstance(phases, Mapping):
+        raise SystemExit("invalid seed bank")
+    preferred = [int(value) for value in phases.get(args.seed_phase, [])]
+    remaining = []
+    for phase in ("final", "selection", "learning"):
+        remaining.extend(int(value) for value in phases.get(phase, []))
+    seeds = list(dict.fromkeys(preferred + remaining))[:1000]
+    requested = sorted({int(value) for value in args.checkpoints.split(",") if int(value) > 0})
+    checkpoints = [value for value in requested if value <= len(seeds)]
+    if not checkpoints:
+        raise SystemExit("seed bank does not contain an adaptive checkpoint")
     result = adaptive_null_test(
         portfolios=portfolios,
         mains=mains,
@@ -56,7 +65,9 @@ def main() -> int:
         "target_draws": len(indices),
         "seed_bank": {
             "path": args.seed_bank,
-            "phase": args.seed_phase,
+            "preferred_phase": args.seed_phase,
+            "adaptive_seed_count": len(seeds),
+            "phase_fallback_order": ["final", "selection", "learning"],
             "version": bank.get("version"),
             "dataset_sha256": bank.get("dataset_sha256"),
             "evaluator_version": bank.get("evaluator_version"),
