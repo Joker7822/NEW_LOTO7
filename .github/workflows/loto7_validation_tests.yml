@@ -109,6 +109,7 @@ jobs:
             tests/test_workflow_resume_compatibility.py \
             tests/test_latest_prediction_freshness.py \
             tests/test_production_ownership.py \
+            tests/test_model_promotion_authorization.py \
             tests/test_prediction_freshness_watchdog.py \
             tests/test_generation5_checkpoint.py \
             tests/test_holdout_portfolio_repair.py
@@ -140,6 +141,7 @@ jobs:
             tests.test_workflow_resume_compatibility \
             tests.test_latest_prediction_freshness \
             tests.test_production_ownership \
+            tests.test_model_promotion_authorization \
             tests.test_prediction_freshness_watchdog \
             tests.test_generation5_checkpoint \
             tests.test_holdout_portfolio_repair -v
