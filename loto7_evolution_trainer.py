@@ -6,13 +6,14 @@ Core Genome operations remain in ``_loto7_evolution_trainer_impl.py``.
 Walk-forward candidate evaluation and survivor selection use the payout-
 independent high-match objective.
 
-Generation 5 candidates use two isolated improvements:
+Generation 5 candidates use three isolated improvements:
 
 * calibrated number ranking that shrinks short-window noise toward the lottery
   base rate and rewards agreement across multiple time windows;
-* a marginal-gain five-ticket selector that preserves a high-quality core while
-  spending later tickets on useful number/pair coverage instead of near-duplicate
-  combinations.
+* a marginal-gain selector retained as an explicit comparison baseline;
+* a tiered five-ticket selector with two high-match anchors and three coverage
+  tickets, promoted only after outperforming the marginal selector on the same
+  recent walk-forward diagnostic.
 
 Existing approved/legacy models keep the original scoring and ticket-selection
 paths unchanged.
@@ -40,6 +41,7 @@ from loto7.evolution.hit_first import (
     hit_first_score,
     match_quality_score,
 )
+from loto7.evolution.tiered_portfolio import select_tiered_generation5_portfolio
 
 _LEGACY_BLEND_NUMBER_SCORES = _impl.blend_number_scores
 _LEGACY_GENERATE_TICKETS = _impl.generate_tickets
@@ -243,10 +245,9 @@ def _select_generation5_portfolio(
 ) -> List[Tuple[int, ...]]:
     """Select five tickets by marginal quality plus useful new coverage.
 
-    Ticket 1-2 keep a strong model-quality bias. Tickets 3-5 gradually spend
-    more of the objective on new-number and new-pair coverage. This avoids the
-    common failure mode where five individually strong tickets are almost the
-    same bet, while keeping the hard pair-overlap constraint intact.
+    This remains available as a comparison baseline. Generation 5 production
+    generation now uses the tiered selector after the latter improved 5+ hits
+    and average maximum matches on the same recent diagnostic window.
     """
     if purchase_count <= 0 or not scored:
         return []
@@ -313,11 +314,12 @@ def _select_generation5_portfolio(
         chosen = best[2]
         selected.append(chosen)
         used_numbers.update(chosen)
-        used_pairs.update(tuple(sorted(pair)) for pair in itertools.combinations(chosen, 2))
+        used_pairs.update(
+            tuple(sorted(pair)) for pair in itertools.combinations(chosen, 2)
+        )
         for number in chosen:
             number_usage[number] += 1
 
-    # Search the full scored list with the hard overlap limit before relaxing it.
     if len(selected) < purchase_count:
         for _score, combo in scored:
             if combo in selected:
@@ -330,8 +332,6 @@ def _select_generation5_portfolio(
             if len(selected) >= purchase_count:
                 return selected[:purchase_count]
 
-    # Preserve legacy behavior as a final fail-safe if the pool cannot satisfy
-    # every overlap constraint.
     if len(selected) < purchase_count:
         for _score, combo in scored:
             if combo not in selected:
@@ -344,15 +344,17 @@ def _select_generation5_portfolio(
 def generate_tickets(
     train: Sequence[object], genome, purchase_count: int
 ) -> List[Tuple[int, ...]]:
-    """Use marginal portfolio selection only for Generation 5 genomes."""
+    """Use the validated tiered portfolio only for Generation 5 genomes."""
     genome_id = str(getattr(genome, "id", ""))
     if not genome_id.startswith(_GENERATION5_PREFIX):
         return _LEGACY_GENERATE_TICKETS(train, genome, purchase_count)
     scored = _score_generation5_candidates(train, genome)
-    return _select_generation5_portfolio(
+    return select_tiered_generation5_portfolio(
         scored,
         purchase_count,
         min(4, int(getattr(genome, "overlap_limit", 4))),
+        target_coverage=_GENERATION5_TARGET_COVERAGE,
+        candidate_limit=_GENERATION5_PORTFOLIO_CANDIDATE_LIMIT,
     )
 
 
