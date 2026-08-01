@@ -44,27 +44,6 @@
       "write_class": "approved_model_and_diagnostics"
     },
     {
-      "path": ".github/workflows/loto7_holdout_summary_integrity.yml",
-      "name": "LOTO7 Holdout Summary Integrity",
-      "stage": "validation",
-      "responsibility": "holdout_completeness",
-      "write_class": "diagnostics"
-    },
-    {
-      "path": ".github/workflows/model_promotion_authorization.yml",
-      "name": "LOTO7 Model Promotion Authorization",
-      "stage": "validation",
-      "responsibility": "promotion_ownership_guard",
-      "write_class": "none"
-    },
-    {
-      "path": ".github/workflows/loto7_model_self_evolution.yml",
-      "name": "LOTO7 Model Self Evolution",
-      "stage": "training",
-      "responsibility": "standalone_candidate_training",
-      "write_class": "state_and_diagnostics"
-    },
-    {
       "path": ".github/workflows/loto7_nested_walk_forward.yml",
       "name": "LOTO7 Nested Walk Forward Validation",
       "stage": "validation",
@@ -91,13 +70,6 @@
       "stage": "training",
       "responsibility": "recent_and_super_recent_candidates",
       "write_class": "state_and_diagnostics"
-    },
-    {
-      "path": ".github/workflows/loto7-smoke.yml",
-      "name": "LOTO7 Smoke Test",
-      "stage": "validation",
-      "responsibility": "minimal_runtime_check",
-      "write_class": "artifact_only"
     },
     {
       "path": ".github/workflows/loto7_validation_tests.yml",
