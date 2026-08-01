@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import math
 import unittest
 
 from loto7.evolution.generation5 import (
@@ -13,6 +14,15 @@ from loto7.evolution.generation5 import (
     pareto_front,
     seeds_for_phase,
     successive_halving_counts,
+)
+from loto7_evolution_trainer import (
+    Draw,
+    Genome,
+    _GENERATION5_PREFIX,
+    _LEGACY_BLEND_NUMBER_SCORES,
+    _generation5_blend_number_scores,
+    _window_consensus_signal,
+    blend_number_scores,
 )
 from scripts.optimize_role_strategy import (
     DEFAULT_COUNTS,
@@ -74,6 +84,55 @@ def role_row(
         "rank": rank,
         "payout": payout,
     }
+
+
+def scoring_genome(genome_id: str, *, dormancy_weight: float = 0.04) -> Genome:
+    return Genome(
+        id=genome_id,
+        generation=1,
+        full_weight=0.25,
+        recent240_weight=0.25,
+        recent120_weight=0.25,
+        recent60_weight=0.25,
+        pair_weight=0.08,
+        pair_recency_weight=0.08,
+        pair_stability_weight=0.08,
+        triple_weight=0.03,
+        dormancy_weight=dormancy_weight,
+        odd_bonus=0.30,
+        sum_bonus=0.30,
+        low_high_bonus=0.20,
+        consecutive_penalty=0.20,
+        overlap_limit=4,
+        pool_size=18,
+        target_sum_min=85,
+        target_sum_max=180,
+        max_consecutive_pairs=2,
+    )
+
+
+def synthetic_draws(count: int = 96):
+    draws = []
+    for index in range(count):
+        main = tuple(
+            sorted((((index * 3) + (offset * 5)) % 37) + 1 for offset in range(7))
+        )
+        draws.append(
+            Draw(
+                draw_no=index + 1,
+                date=f"2025-{(index % 12) + 1:02d}-01",
+                main=main,
+                bonus=tuple(),
+            )
+        )
+    return draws
+
+
+def mean_std(values):
+    values = [float(value) for value in values]
+    mean = sum(values) / len(values)
+    variance = sum((value - mean) ** 2 for value in values) / len(values)
+    return mean, math.sqrt(variance)
 
 
 class Generation5PrecisionTests(unittest.TestCase):
@@ -209,6 +268,53 @@ class Generation5PrecisionTests(unittest.TestCase):
         )
         self.assertTrue(decision["passed"], decision["failures"])
         self.assertEqual(decision["positive_folds"], 5)
+
+    def test_generation5_calibration_keeps_legacy_models_exact(self):
+        draws = synthetic_draws()
+        genome = scoring_genome("legacy_model")
+        self.assertEqual(
+            blend_number_scores(draws, genome),
+            _LEGACY_BLEND_NUMBER_SCORES(draws, genome),
+        )
+
+    def test_generation5_calibration_preserves_score_scale(self):
+        draws = synthetic_draws()
+        genome = scoring_genome(f"{_GENERATION5_PREFIX}scale_test")
+        legacy = _LEGACY_BLEND_NUMBER_SCORES(draws, genome)
+        calibrated = _generation5_blend_number_scores(draws, genome)
+        legacy_mean, legacy_std = mean_std(legacy.values())
+        calibrated_mean, calibrated_std = mean_std(calibrated.values())
+        self.assertAlmostEqual(calibrated_mean, legacy_mean, places=10)
+        self.assertAlmostEqual(calibrated_std, legacy_std, places=10)
+
+    def test_generation5_consensus_penalizes_unstable_window_spike(self):
+        stable_number = 1
+        unstable_number = 2
+        signals = []
+        unstable_values = [3.0, -1.0, -1.0, -1.0]
+        for unstable in unstable_values:
+            signal = {number: 0.0 for number in range(1, 38)}
+            signal[stable_number] = 1.0
+            signal[unstable_number] = unstable
+            signals.append(signal)
+        consensus = _window_consensus_signal(signals, [0.25] * 4)
+        self.assertGreater(consensus[stable_number], consensus[unstable_number])
+
+    def test_generation5_ranking_does_not_use_explicit_dormancy_bonus(self):
+        draws = synthetic_draws()
+        low = scoring_genome(
+            f"{_GENERATION5_PREFIX}dormancy_low",
+            dormancy_weight=0.0,
+        )
+        high = scoring_genome(
+            f"{_GENERATION5_PREFIX}dormancy_high",
+            dormancy_weight=0.08,
+        )
+        low_scores = _generation5_blend_number_scores(draws, low)
+        high_scores = _generation5_blend_number_scores(draws, high)
+        low_rank = sorted(low_scores, key=low_scores.get, reverse=True)
+        high_rank = sorted(high_scores, key=high_scores.get, reverse=True)
+        self.assertEqual(low_rank, high_rank)
 
     def test_role_payout_concentration_is_detected(self):
         rows = [role_row(index, 1) for index in range(1, 105)]
