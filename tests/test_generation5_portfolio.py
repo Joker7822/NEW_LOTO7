@@ -5,6 +5,7 @@ import json
 import unittest
 from pathlib import Path
 
+from loto7.evolution.tiered_portfolio import select_tiered_generation5_portfolio
 from loto7_evolution_trainer import (
     _GENERATION5_PREFIX,
     _score_generation5_candidates,
@@ -44,23 +45,21 @@ def evaluate_portfolio(tickets, target):
 
 def recent_portfolio_benchmark(draws, genome, target_count: int = 104):
     start = max(52, len(draws) - target_count)
+    mode_names = (
+        "greedy_calibrated",
+        "marginal_portfolio",
+        "tiered_high_match_portfolio",
+    )
     modes = {
-        "greedy_calibrated": {
+        mode: {
             "max_main_sum": 0,
             "main4_plus": 0,
             "main5_plus": 0,
             "unique_sum": 0.0,
             "overlap_sum": 0.0,
             "max_overlap": 0,
-        },
-        "marginal_portfolio": {
-            "max_main_sum": 0,
-            "main4_plus": 0,
-            "main5_plus": 0,
-            "unique_sum": 0.0,
-            "overlap_sum": 0.0,
-            "max_overlap": 0,
-        },
+        }
+        for mode in mode_names
     }
     targets = 0
     overlap_limit = min(4, int(genome.overlap_limit))
@@ -70,9 +69,11 @@ def recent_portfolio_benchmark(draws, genome, target_count: int = 104):
         scored = _score_generation5_candidates(train, genome)
         greedy = _select_greedy_scored_portfolio(scored, 5, overlap_limit)
         marginal = _select_generation5_portfolio(scored, 5, overlap_limit)
+        tiered = select_tiered_generation5_portfolio(scored, 5, overlap_limit)
         for mode, tickets in (
             ("greedy_calibrated", greedy),
             ("marginal_portfolio", marginal),
+            ("tiered_high_match_portfolio", tiered),
         ):
             metrics = evaluate_portfolio(tickets, target)
             bucket = modes[mode]
@@ -137,6 +138,27 @@ class Generation5PortfolioTests(unittest.TestCase):
             portfolio_shape(greedy)["unique_numbers"],
         )
 
+    def test_tiered_selector_is_deterministic_and_keeps_two_quality_anchors(self):
+        scored = [
+            (100.0, (1, 2, 3, 4, 5, 6, 7)),
+            (99.9, (1, 2, 3, 4, 8, 9, 10)),
+            (99.8, (1, 2, 3, 4, 11, 12, 13)),
+            (99.7, (1, 2, 5, 6, 14, 15, 16)),
+            (99.6, (3, 4, 7, 8, 17, 18, 19)),
+            (99.5, (9, 10, 11, 12, 20, 21, 22)),
+            (99.4, (13, 14, 15, 16, 23, 24, 25)),
+            (99.3, (5, 6, 7, 17, 20, 24, 26)),
+        ]
+        left = select_tiered_generation5_portfolio(scored, 5, 4)
+        right = select_tiered_generation5_portfolio(scored, 5, 4)
+        self.assertEqual(left, right)
+        self.assertEqual(len(left), 5)
+        self.assertEqual(left[0], scored[0][1])
+        self.assertGreaterEqual(len(set(left[0]) & set(left[1])), 3)
+        for index, ticket in enumerate(left):
+            for previous in left[:index]:
+                self.assertLessEqual(len(set(ticket) & set(previous)), 4)
+
     def test_recent_real_data_portfolio_ab_diagnostic(self):
         csv_path = Path("loto7.csv")
         model_path = Path("loto7_best_model.json")
@@ -150,7 +172,11 @@ class Generation5PortfolioTests(unittest.TestCase):
         metrics = recent_portfolio_benchmark(draws, genome, target_count=104)
         print("GEN5_PORTFOLIO_AB=" + json.dumps(metrics, sort_keys=True))
         self.assertEqual(metrics["targets"], min(104, len(draws) - 52))
-        for mode in ("greedy_calibrated", "marginal_portfolio"):
+        for mode in (
+            "greedy_calibrated",
+            "marginal_portfolio",
+            "tiered_high_match_portfolio",
+        ):
             self.assertEqual(metrics[mode]["max_pair_overlap"], genome.overlap_limit)
             self.assertGreaterEqual(metrics[mode]["average_unique_numbers"], 7.0)
             self.assertLessEqual(metrics[mode]["average_unique_numbers"], 35.0)
