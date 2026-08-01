@@ -27,6 +27,7 @@ on:
     paths:
       - "loto7_evolution_trainer.py"
       - "src/loto7/evolution/generation5.py"
+      - "src/loto7/evolution/tiered_portfolio.py"
       - "scripts/generation5_evolver.py"
       - "scripts/build_null_seed_bank.py"
       - "scripts/run_fixed_null_league.py"
@@ -40,6 +41,7 @@ on:
     paths:
       - "loto7_evolution_trainer.py"
       - "src/loto7/evolution/generation5.py"
+      - "src/loto7/evolution/tiered_portfolio.py"
       - "scripts/generation5_evolver.py"
       - "scripts/build_null_seed_bank.py"
       - "scripts/run_fixed_null_league.py"
@@ -72,6 +74,7 @@ jobs:
           python -m py_compile \
             loto7_evolution_trainer.py \
             src/loto7/evolution/generation5.py \
+            src/loto7/evolution/tiered_portfolio.py \
             scripts/generation5_evolver.py \
             scripts/build_null_seed_bank.py \
             scripts/run_fixed_null_league.py \
