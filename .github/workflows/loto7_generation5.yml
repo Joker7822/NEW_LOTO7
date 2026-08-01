@@ -25,23 +25,27 @@ on:
     branches:
       - main
     paths:
+      - "loto7_evolution_trainer.py"
       - "src/loto7/evolution/generation5.py"
       - "scripts/generation5_evolver.py"
       - "scripts/build_null_seed_bank.py"
       - "scripts/run_fixed_null_league.py"
       - "scripts/promote_generation5_candidate.py"
       - "tests/test_generation5_precision.py"
+      - "tests/test_generation5_portfolio.py"
       - ".github/workflows/loto7_generation5.yml"
   pull_request:
     branches:
       - main
     paths:
+      - "loto7_evolution_trainer.py"
       - "src/loto7/evolution/generation5.py"
       - "scripts/generation5_evolver.py"
       - "scripts/build_null_seed_bank.py"
       - "scripts/run_fixed_null_league.py"
       - "scripts/promote_generation5_candidate.py"
       - "tests/test_generation5_precision.py"
+      - "tests/test_generation5_portfolio.py"
       - ".github/workflows/loto7_generation5.yml"
 
 permissions:
@@ -66,14 +70,20 @@ jobs:
         run: |
           set -euo pipefail
           python -m py_compile \
+            loto7_evolution_trainer.py \
             src/loto7/evolution/generation5.py \
             scripts/generation5_evolver.py \
             scripts/build_null_seed_bank.py \
             scripts/run_fixed_null_league.py \
             scripts/promote_generation5_candidate.py \
-            tests/test_generation5_precision.py
+            tests/test_generation5_precision.py \
+            tests/test_generation5_portfolio.py
       - name: Run Generation 5 regression tests
-        run: python -m unittest tests.test_generation5_precision -v
+        run: |
+          python -m unittest \
+            tests.test_generation5_precision \
+            tests.test_generation5_portfolio \
+            -v
       - name: Verify deterministic seed bank
         run: |
           set -euo pipefail
