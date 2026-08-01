@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import json
 import math
 import unittest
+from pathlib import Path
 
 from loto7.evolution.generation5 import (
     OBJECTIVE_VERSION,
@@ -23,6 +25,8 @@ from loto7_evolution_trainer import (
     _generation5_blend_number_scores,
     _window_consensus_signal,
     blend_number_scores,
+    genome_from_dict,
+    load_draws,
 )
 from scripts.optimize_role_strategy import (
     DEFAULT_COUNTS,
@@ -133,6 +137,65 @@ def mean_std(values):
     mean = sum(values) / len(values)
     variance = sum((value - mean) ** 2 for value in values) / len(values)
     return mean, math.sqrt(variance)
+
+
+def number_ranking_benchmark(draws, genome, target_count: int = 104):
+    start = max(52, len(draws) - target_count)
+    totals = {
+        "targets": 0,
+        "legacy_top7_hits": 0,
+        "legacy_top14_hits": 0,
+        "legacy_top18_hits": 0,
+        "legacy_rank_sum": 0,
+        "calibrated_top7_hits": 0,
+        "calibrated_top14_hits": 0,
+        "calibrated_top18_hits": 0,
+        "calibrated_rank_sum": 0,
+    }
+    for index in range(start, len(draws)):
+        train = draws[:index]
+        target = draws[index]
+        legacy_scores = _LEGACY_BLEND_NUMBER_SCORES(train, genome)
+        calibrated_scores = _generation5_blend_number_scores(train, genome)
+        legacy_rank = sorted(legacy_scores, key=legacy_scores.get, reverse=True)
+        calibrated_rank = sorted(
+            calibrated_scores,
+            key=calibrated_scores.get,
+            reverse=True,
+        )
+        legacy_position = {number: rank for rank, number in enumerate(legacy_rank, start=1)}
+        calibrated_position = {
+            number: rank for rank, number in enumerate(calibrated_rank, start=1)
+        }
+        target_main = set(target.main)
+        totals["targets"] += 1
+        totals["legacy_top7_hits"] += len(target_main & set(legacy_rank[:7]))
+        totals["legacy_top14_hits"] += len(target_main & set(legacy_rank[:14]))
+        totals["legacy_top18_hits"] += len(target_main & set(legacy_rank[:18]))
+        totals["calibrated_top7_hits"] += len(target_main & set(calibrated_rank[:7]))
+        totals["calibrated_top14_hits"] += len(target_main & set(calibrated_rank[:14]))
+        totals["calibrated_top18_hits"] += len(target_main & set(calibrated_rank[:18]))
+        totals["legacy_rank_sum"] += sum(legacy_position[n] for n in target_main)
+        totals["calibrated_rank_sum"] += sum(
+            calibrated_position[n] for n in target_main
+        )
+
+    target_numbers = max(1, totals["targets"] * 7)
+    return {
+        "targets": totals["targets"],
+        "legacy": {
+            "top7_recall": totals["legacy_top7_hits"] / target_numbers,
+            "top14_recall": totals["legacy_top14_hits"] / target_numbers,
+            "top18_recall": totals["legacy_top18_hits"] / target_numbers,
+            "mean_winning_number_rank": totals["legacy_rank_sum"] / target_numbers,
+        },
+        "calibrated": {
+            "top7_recall": totals["calibrated_top7_hits"] / target_numbers,
+            "top14_recall": totals["calibrated_top14_hits"] / target_numbers,
+            "top18_recall": totals["calibrated_top18_hits"] / target_numbers,
+            "mean_winning_number_rank": totals["calibrated_rank_sum"] / target_numbers,
+        },
+    }
 
 
 class Generation5PrecisionTests(unittest.TestCase):
@@ -315,6 +378,23 @@ class Generation5PrecisionTests(unittest.TestCase):
         low_rank = sorted(low_scores, key=low_scores.get, reverse=True)
         high_rank = sorted(high_scores, key=high_scores.get, reverse=True)
         self.assertEqual(low_rank, high_rank)
+
+    def test_generation5_number_ranking_recent_ab_diagnostic(self):
+        csv_path = Path("loto7.csv")
+        model_path = Path("loto7_best_model.json")
+        self.assertTrue(csv_path.exists())
+        self.assertTrue(model_path.exists())
+        draws = load_draws(str(csv_path))
+        model_payload = json.loads(model_path.read_text(encoding="utf-8"))
+        genome_raw = model_payload.get("genome", model_payload)
+        genome = genome_from_dict(genome_raw)
+        metrics = number_ranking_benchmark(draws, genome, target_count=104)
+        print("GEN5_NUMBER_RANKING_AB=" + json.dumps(metrics, sort_keys=True))
+        self.assertEqual(metrics["targets"], min(104, len(draws) - 52))
+        for mode in ("legacy", "calibrated"):
+            self.assertGreaterEqual(metrics[mode]["top7_recall"], 0.0)
+            self.assertLessEqual(metrics[mode]["top18_recall"], 1.0)
+            self.assertGreater(metrics[mode]["mean_winning_number_rank"], 0.0)
 
     def test_role_payout_concentration_is_detected(self):
         rows = [role_row(index, 1) for index in range(1, 105)]
