@@ -1,15 +1,17 @@
 LOTO7 Null Strategy League
 ==========================
 
-created_at: 2026-08-02T18:58:00.186337+00:00
+created_at: 2026-08-02T22:11:24.721416+00:00
 model: loto7_best_model.json
 target_draws: 339
 null_simulations: 180
 model_roi: 16.46
 model_top1_removed_roi: 14.199
-null_exceedance_rate: 0.472222
-pbo: 0.5
+null_exceedance_rate: 0.527778
+paired_model_pbo: 0.697078
+league_wide_pbo: 0.6
 passed: False
 
-この検査は多数試行で偶然高く見える戦略を検出するための診断です。
+paired PBOはモデル対同一Null challengerのIS→OOS逆転率です。
+league-wide PBOはNull同士の偶然勝者も含むため診断としてのみ保持します。
 過去検証であり将来の当せんを保証しません。
