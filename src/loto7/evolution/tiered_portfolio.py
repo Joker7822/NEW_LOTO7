@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import itertools
+import math
 from collections import Counter
-from typing import List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 ScoredTicket = Tuple[float, Tuple[int, ...]]
 
@@ -47,12 +48,87 @@ def _support_score(
     return number_score, pair_score
 
 
+def _effective_support_size(values: Sequence[float]) -> float:
+    """Return inverse-Herfindahl effective support size.
+
+    A small value means elite candidates repeatedly use the same elements;
+    a large value means support is diffuse. This is computed only from the
+    current training candidate set, so it does not inspect the target draw.
+    """
+    positive = [max(0.0, float(value)) for value in values if float(value) > 0.0]
+    if not positive:
+        return 0.0
+    total = sum(positive)
+    square_sum = sum(value * value for value in positive)
+    if square_sum <= 1e-12:
+        return 0.0
+    return (total * total) / square_sum
+
+
+def infer_anchor_profile(
+    scored: Sequence[ScoredTicket],
+    *,
+    candidate_limit: int = 320,
+    elite_limit: int = 96,
+) -> Dict[str, float | int | str]:
+    """Infer how strongly the two anchor tickets should share a core.
+
+    The profile is deliberately coarse (2/3/4 shared-number target). It uses
+    only concentration in the elite candidate set. Concentrated support means
+    the model is expressing a clearer core and can justify stronger anchor
+    overlap; diffuse support keeps the anchors farther apart.
+    """
+    if not scored:
+        return {
+            "name": "diffuse",
+            "anchor_overlap_target": 2,
+            "number_effective_size": 0.0,
+            "pair_effective_size": 0.0,
+            "confidence": 0.0,
+        }
+
+    shortlist = list(scored[: max(1, candidate_limit)])
+    number_support, pair_support, _number_denom, _pair_denom = _elite_support(
+        shortlist,
+        elite_limit=min(elite_limit, len(shortlist)),
+    )
+    number_effective = _effective_support_size(list(number_support.values()))
+    pair_effective = _effective_support_size(list(pair_support.values()))
+
+    # Map concentration to [0, 1]. For a 7-of-37 problem, elite number support
+    # below roughly 13 effective numbers is meaningfully concentrated while
+    # values around 18+ are diffuse. Pair support is intentionally a weaker
+    # signal because there are many more possible pairs.
+    number_confidence = max(0.0, min(1.0, (19.0 - number_effective) / 7.0))
+    pair_confidence = max(0.0, min(1.0, (90.0 - pair_effective) / 55.0))
+    confidence = 0.72 * number_confidence + 0.28 * pair_confidence
+
+    if confidence >= 0.66:
+        name = "concentrated"
+        overlap_target = 4
+    elif confidence >= 0.36:
+        name = "balanced"
+        overlap_target = 3
+    else:
+        name = "diffuse"
+        overlap_target = 2
+
+    return {
+        "name": name,
+        "anchor_overlap_target": overlap_target,
+        "number_effective_size": number_effective,
+        "pair_effective_size": pair_effective,
+        "confidence": confidence,
+    }
+
+
 def select_tiered_generation5_portfolio(
     scored: Sequence[ScoredTicket],
     purchase_count: int,
     overlap_limit: int,
     *,
     anchor_count: int = 2,
+    anchor_overlap_target: int = 4,
     target_coverage: int = 18,
     candidate_limit: int = 320,
     elite_limit: int = 96,
@@ -80,6 +156,7 @@ def select_tiered_generation5_portfolio(
     used_pairs: set[Tuple[int, int]] = set()
     number_usage: Counter[int] = Counter()
     anchors = min(max(0, anchor_count), purchase_count)
+    overlap_target = min(max(0, int(anchor_overlap_target)), overlap_limit)
 
     while len(selected) < purchase_count:
         anchor_phase = len(selected) < anchors
@@ -115,13 +192,13 @@ def select_tiered_generation5_portfolio(
 
             if anchor_phase:
                 # Anchors intentionally exploit candidate consensus. The second
-                # anchor receives a mild reward for sharing 3-4 numbers with the
-                # first, concentrating two tickets around the strongest core
-                # without allowing near duplicates.
+                # anchor receives a reward for sharing the profile-specific core
+                # with the first, without allowing near duplicates.
                 core_overlap = 0.0
                 if selected:
                     overlap = len(combo_set & set(selected[0]))
-                    core_overlap = max(0.0, 1.0 - abs(4.0 - overlap) / 4.0)
+                    distance = abs(float(overlap_target) - float(overlap))
+                    core_overlap = max(0.0, 1.0 - distance / max(1.0, float(overlap_target)))
                 marginal = (
                     0.72 * quality
                     + 0.14 * elite_number_support
@@ -132,7 +209,7 @@ def select_tiered_generation5_portfolio(
                 )
             else:
                 # Later tickets explore enough of the candidate pool to improve
-                # draw-level coverage, while the elite-support terms prevent the
+                # draw-level coverage, while elite-support terms prevent the
                 # diversification layer from becoming random noise.
                 marginal = (
                     0.56 * quality
@@ -172,3 +249,32 @@ def select_tiered_generation5_portfolio(
             if len(selected) >= purchase_count:
                 break
     return selected[:purchase_count]
+
+
+def select_adaptive_tiered_generation5_portfolio(
+    scored: Sequence[ScoredTicket],
+    purchase_count: int,
+    overlap_limit: int,
+    *,
+    anchor_count: int = 2,
+    target_coverage: int = 18,
+    candidate_limit: int = 320,
+    elite_limit: int = 96,
+) -> Tuple[List[Tuple[int, ...]], Dict[str, float | int | str]]:
+    """Select a tiered portfolio with training-only uncertainty adaptation."""
+    profile = infer_anchor_profile(
+        scored,
+        candidate_limit=candidate_limit,
+        elite_limit=elite_limit,
+    )
+    tickets = select_tiered_generation5_portfolio(
+        scored,
+        purchase_count,
+        overlap_limit,
+        anchor_count=anchor_count,
+        anchor_overlap_target=int(profile["anchor_overlap_target"]),
+        target_coverage=target_coverage,
+        candidate_limit=candidate_limit,
+        elite_limit=elite_limit,
+    )
+    return tickets, profile
