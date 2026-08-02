@@ -49,14 +49,18 @@ def adaptive_null_test(
     checkpoints: Sequence[int],
     search_width: int = 6,
     max_exceedance: float = 0.10,
+    stop_early: bool = True,
 ) -> dict[str, object]:
-    """Run search-adjusted permutation testing while preserving final-seed power.
+    """Run search-adjusted permutation testing while preserving phase-seed power.
 
     Each phase seed is one independent adjusted trial. ``search_width`` internal
     permutations are derived from that seed and their maximum score is used for
-    the trial. This keeps multiplicity adjustment but does not collapse six
-    final seeds into one observation, so a 150-seed fixed-final phase retains
-    150 Wilson observations instead of only 25.
+    the trial. This keeps multiplicity adjustment without collapsing external
+    phase seeds into fewer observations.
+
+    ``stop_early`` defaults to the historical adaptive behavior. Selection Null
+    screening can disable early stopping so predeclared checkpoints such as
+    50/100/150 are all observed without spending or reading any Final-phase seed.
     """
     if not seeds:
         raise ValueError("seeds must not be empty")
@@ -92,6 +96,9 @@ def adaptive_null_test(
             exceedances = sum(value >= observed_score for value in adjusted_scores)
             rate = exceedances / len(adjusted_scores)
             lower, upper = wilson_interval(exceedances, len(adjusted_scores))
+            ordered_checkpoint = sorted(adjusted_scores)
+            p90_index = int(0.9 * (len(ordered_checkpoint) - 1))
+            adjusted_p90 = ordered_checkpoint[p90_index]
             verdict = "continue"
             if upper <= max_exceedance:
                 verdict = "pass"
@@ -106,10 +113,14 @@ def adaptive_null_test(
                     "exceedance": round(rate, 6),
                     "wilson_ci_lower": round(lower, 6),
                     "wilson_ci_upper": round(upper, 6),
+                    "adjusted_p90": round(adjusted_p90, 6),
+                    "observed_margin_vs_adjusted_p90": round(
+                        observed_score - adjusted_p90, 6
+                    ),
                     "verdict": verdict,
                 }
             )
-            if verdict != "continue":
+            if stop_early and verdict != "continue":
                 stop = position
                 break
 
@@ -124,6 +135,7 @@ def adaptive_null_test(
         "adaptive_checkpoints": decisions,
         "stopped_at_simulations": stop,
         "search_width": search_width,
+        "stop_early": stop_early,
         "search_adjustment_method": "within_seed_max",
         "null_distribution": {
             "raw_count": len(raw_scores),
