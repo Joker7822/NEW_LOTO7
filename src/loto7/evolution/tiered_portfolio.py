@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import itertools
-import math
 from collections import Counter
 from typing import Dict, List, Optional, Sequence, Tuple
 
@@ -25,7 +24,6 @@ def _elite_support(
     pair_support: Counter[Tuple[int, int]] = Counter()
     total_weight = 0.0
     for raw_score, combo in elite:
-        # Keep every elite ticket represented while emphasizing the top of the list.
         weight = 0.20 + 0.80 * _normalized_quality(raw_score, high, low)
         total_weight += weight
         for number in combo:
@@ -49,12 +47,6 @@ def _support_score(
 
 
 def _effective_support_size(values: Sequence[float]) -> float:
-    """Return inverse-Herfindahl effective support size.
-
-    A small value means elite candidates repeatedly use the same elements;
-    a large value means support is diffuse. This is computed only from the
-    current training candidate set, so it does not inspect the target draw.
-    """
     positive = [max(0.0, float(value)) for value in values if float(value) > 0.0]
     if not positive:
         return 0.0
@@ -71,13 +63,7 @@ def infer_anchor_profile(
     candidate_limit: int = 320,
     elite_limit: int = 96,
 ) -> Dict[str, float | int | str]:
-    """Infer how strongly the two anchor tickets should share a core.
-
-    The profile is deliberately coarse (2/3/4 shared-number target). It uses
-    only concentration in the elite candidate set. Concentrated support means
-    the model is expressing a clearer core and can justify stronger anchor
-    overlap; diffuse support keeps the anchors farther apart.
-    """
+    """Diagnostic-only uncertainty profile inferred from training candidates."""
     if not scored:
         return {
             "name": "diffuse",
@@ -94,11 +80,6 @@ def infer_anchor_profile(
     )
     number_effective = _effective_support_size(list(number_support.values()))
     pair_effective = _effective_support_size(list(pair_support.values()))
-
-    # Map concentration to [0, 1]. For a 7-of-37 problem, elite number support
-    # below roughly 13 effective numbers is meaningfully concentrated while
-    # values around 18+ are diffuse. Pair support is intentionally a weaker
-    # signal because there are many more possible pairs.
     number_confidence = max(0.0, min(1.0, (19.0 - number_effective) / 7.0))
     pair_confidence = max(0.0, min(1.0, (90.0 - pair_effective) / 55.0))
     confidence = 0.72 * number_confidence + 0.28 * pair_confidence
@@ -122,6 +103,31 @@ def infer_anchor_profile(
     }
 
 
+def _shared_core_support(
+    first: Sequence[int],
+    candidate: Sequence[int],
+    number_support: Counter[int],
+    pair_support: Counter[Tuple[int, int]],
+    number_denominator: float,
+    pair_denominator: float,
+) -> float:
+    """Score whether the shared anchor core is supported by elite candidates."""
+    shared = sorted(set(first) & set(candidate))
+    if not shared:
+        return 0.0
+    number_component = sum(
+        number_support[number] / number_denominator for number in shared
+    ) / len(shared)
+    shared_pairs = [tuple(sorted(pair)) for pair in itertools.combinations(shared, 2)]
+    if shared_pairs:
+        pair_component = sum(
+            pair_support[pair] / pair_denominator for pair in shared_pairs
+        ) / len(shared_pairs)
+    else:
+        pair_component = 0.0
+    return 0.65 * number_component + 0.35 * pair_component
+
+
 def select_tiered_generation5_portfolio(
     scored: Sequence[ScoredTicket],
     purchase_count: int,
@@ -129,16 +135,17 @@ def select_tiered_generation5_portfolio(
     *,
     anchor_count: int = 2,
     anchor_overlap_target: int = 4,
+    anchor_core_support_weight: float = 0.0,
     target_coverage: int = 18,
     candidate_limit: int = 320,
     elite_limit: int = 96,
 ) -> List[Tuple[int, ...]]:
-    """Build a two-layer portfolio: high-match anchors plus coverage tickets.
+    """Build high-match anchors plus coverage tickets.
 
-    The first two tickets emphasize score and support that repeats across the
-    elite candidate set. Remaining tickets emphasize marginal number/pair
-    coverage while retaining a quality floor. The overlap limit stays a hard
-    constraint until the final compatibility fallback.
+    ``anchor_core_support_weight`` is zero for the validated fixed Tiered
+    baseline. Experimental support-core selection assigns part of the anchor
+    objective to whether the numbers/pairs shared by the two anchors repeatedly
+    occur throughout the elite candidate set.
     """
     if purchase_count <= 0 or not scored:
         return []
@@ -157,6 +164,7 @@ def select_tiered_generation5_portfolio(
     number_usage: Counter[int] = Counter()
     anchors = min(max(0, anchor_count), purchase_count)
     overlap_target = min(max(0, int(anchor_overlap_target)), overlap_limit)
+    support_weight = max(0.0, min(0.12, float(anchor_core_support_weight)))
 
     while len(selected) < purchase_count:
         anchor_phase = len(selected) < anchors
@@ -178,7 +186,6 @@ def select_tiered_generation5_portfolio(
                 number_denominator,
                 pair_denominator,
             )
-
             new_numbers = len(combo_set - used_numbers)
             remaining_coverage = max(0, target_coverage - len(used_numbers))
             coverage_gain = min(new_numbers, remaining_coverage) / 7.0
@@ -191,26 +198,30 @@ def select_tiered_generation5_portfolio(
             concentration_penalty = max(0.0, projected_max_usage - 3.0) / 2.0
 
             if anchor_phase:
-                # Anchors intentionally exploit candidate consensus. The second
-                # anchor receives a reward for sharing the profile-specific core
-                # with the first, without allowing near duplicates.
                 core_overlap = 0.0
+                core_support = 0.0
                 if selected:
                     overlap = len(combo_set & set(selected[0]))
                     distance = abs(float(overlap_target) - float(overlap))
                     core_overlap = max(0.0, 1.0 - distance / max(1.0, float(overlap_target)))
+                    core_support = _shared_core_support(
+                        selected[0],
+                        combo,
+                        number_support,
+                        pair_support,
+                        number_denominator,
+                        pair_denominator,
+                    )
                 marginal = (
-                    0.72 * quality
+                    (0.72 - support_weight) * quality
                     + 0.14 * elite_number_support
                     + 0.08 * elite_pair_support
                     + 0.05 * core_overlap
+                    + support_weight * core_support
                     + 0.02 * coverage_gain
                     - 0.01 * concentration_penalty
                 )
             else:
-                # Later tickets explore enough of the candidate pool to improve
-                # draw-level coverage, while elite-support terms prevent the
-                # diversification layer from becoming random noise.
                 marginal = (
                     0.56 * quality
                     + 0.08 * elite_number_support
@@ -251,6 +262,30 @@ def select_tiered_generation5_portfolio(
     return selected[:purchase_count]
 
 
+def select_support_core_generation5_portfolio(
+    scored: Sequence[ScoredTicket],
+    purchase_count: int,
+    overlap_limit: int,
+    *,
+    target_coverage: int = 18,
+    candidate_limit: int = 320,
+    elite_limit: int = 96,
+    core_support_weight: float = 0.06,
+) -> List[Tuple[int, ...]]:
+    """Experimental Tiered selector that prefers evidence-backed shared cores."""
+    return select_tiered_generation5_portfolio(
+        scored,
+        purchase_count,
+        overlap_limit,
+        anchor_count=2,
+        anchor_overlap_target=min(4, overlap_limit),
+        anchor_core_support_weight=core_support_weight,
+        target_coverage=target_coverage,
+        candidate_limit=candidate_limit,
+        elite_limit=elite_limit,
+    )
+
+
 def select_adaptive_tiered_generation5_portfolio(
     scored: Sequence[ScoredTicket],
     purchase_count: int,
@@ -261,7 +296,7 @@ def select_adaptive_tiered_generation5_portfolio(
     candidate_limit: int = 320,
     elite_limit: int = 96,
 ) -> Tuple[List[Tuple[int, ...]], Dict[str, float | int | str]]:
-    """Select a tiered portfolio with training-only uncertainty adaptation."""
+    """Diagnostic uncertainty adaptation retained for evidence comparison."""
     profile = infer_anchor_profile(
         scored,
         candidate_limit=candidate_limit,
