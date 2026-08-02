@@ -133,19 +133,24 @@ def select_tiered_generation5_portfolio(
     purchase_count: int,
     overlap_limit: int,
     *,
-    anchor_count: int = 2,
+    anchor_count: int = 1,
     anchor_overlap_target: int = 4,
     anchor_core_support_weight: float = 0.0,
     target_coverage: int = 18,
     candidate_limit: int = 320,
     elite_limit: int = 96,
 ) -> List[Tuple[int, ...]]:
-    """Build high-match anchors plus coverage tickets.
+    """Build one high-match anchor plus evidence-backed coverage tickets.
 
-    ``anchor_core_support_weight`` is zero for the validated fixed Tiered
-    baseline. Experimental support-core selection assigns part of the anchor
-    objective to whether the numbers/pairs shared by the two anchors repeatedly
-    occur throughout the elite candidate set.
+    The one-anchor default was selected after a direct 1/2/3-anchor ablation:
+    it improved recent average maximum matches and 4+ draw count without losing
+    the observed 5+ hit, diversity, or overlap constraint. Explicit anchor_count
+    values remain available for controlled comparison and future validation.
+
+    ``anchor_core_support_weight`` is zero for the validated production path.
+    Experimental support-core selection assigns part of the anchor objective to
+    whether numbers/pairs shared by multiple anchors repeat through the elite
+    candidate set.
     """
     if purchase_count <= 0 or not scored:
         return []
@@ -272,7 +277,7 @@ def select_support_core_generation5_portfolio(
     elite_limit: int = 96,
     core_support_weight: float = 0.06,
 ) -> List[Tuple[int, ...]]:
-    """Experimental Tiered selector that prefers evidence-backed shared cores."""
+    """Experimental two-anchor selector that prefers evidence-backed shared cores."""
     return select_tiered_generation5_portfolio(
         scored,
         purchase_count,
