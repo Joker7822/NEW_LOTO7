@@ -1,6 +1,6 @@
 # Repository Architecture Guard
 
-Generated: `2026-07-31T09:43:45.584063+00:00`
+Generated: `2026-08-02T21:54:03.010401+00:00`
 
 Status: **pass**
 
@@ -9,7 +9,7 @@ Status: **pass**
 - Policy schema: **4**
 - Workflows: **15**
 - Root Python compatibility files: **12**
-- Tracked outputs: **497**
+- Tracked outputs: **588**
 - Unclassified outputs: **2**
 - Errors: **0**
 - Warnings: **2**
@@ -29,4 +29,4 @@ Status: **pass**
 ## Warnings
 
 - 2 output files are not classified by repository policy
-- 243 files remain in legacy output roots during compatibility migration
+- 290 files remain in legacy output roots during compatibility migration

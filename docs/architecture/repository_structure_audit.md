@@ -1,26 +1,26 @@
 # NEW_LOTO7 Repository Structure Audit
 
-Generated: `2026-07-31T09:43:45.658837+00:00`
+Generated: `2026-08-02T21:54:03.090980+00:00`
 
 ## Summary
 
 - Policy schema: **4**
-- Tracked files: **633**
+- Tracked files: **729**
 - Workflows: **15**
 - Registered Workflows: **15**
-- Package Python files: **20**
-- Script/compatibility Python files: **41**
+- Package Python files: **21**
+- Script/compatibility Python files: **43**
 - Root compatibility Python files: **12**
-- Tracked outputs: **497**
+- Tracked outputs: **588**
 
 ## Output classes
 
 | Class | Files |
 |---|---:|
-| `diagnostics` | 49 |
-| `evidence` | 356 |
+| `diagnostics` | 50 |
+| `evidence` | 444 |
 | `production` | 9 |
-| `state` | 81 |
+| `state` | 83 |
 | `unclassified` | 2 |
 
 ## Workflow inventory
@@ -32,7 +32,7 @@ Generated: `2026-07-31T09:43:45.658837+00:00`
 | `LOTO7 Smoke Test`<br>`.github/workflows/loto7-smoke.yml` | workflow_dispatch, push | 114 |
 | `LOTO7 Evolution Trainer`<br>`.github/workflows/loto7_evolution.yml` | workflow_dispatch, schedule | 460 |
 | `LOTO7 Generation 4 Evaluation`<br>`.github/workflows/loto7_generation4_run.yml` | workflow_dispatch, workflow_run, push | 342 |
-| `LOTO7 Generation 5 Precision Evolution`<br>`.github/workflows/loto7_generation5.yml` | workflow_dispatch, push, schedule, pull_request | 245 |
+| `LOTO7 Generation 5 Precision Evolution`<br>`.github/workflows/loto7_generation5.yml` | workflow_dispatch, push, schedule, pull_request | 325 |
 | `LOTO7 Holdout Summary Integrity`<br>`.github/workflows/loto7_holdout_summary_integrity.yml` | workflow_dispatch, push, pull_request | 170 |
 | `LOTO7 Model Self Evolution`<br>`.github/workflows/loto7_model_self_evolution.yml` | workflow_dispatch, push, schedule | 197 |
 | `LOTO7 Nested Walk Forward Validation`<br>`.github/workflows/loto7_nested_walk_forward.yml` | workflow_dispatch, workflow_run | 286 |
@@ -47,7 +47,7 @@ Generated: `2026-07-31T09:43:45.658837+00:00`
 
 ### P1 — legacy_output_aliases
 
-243 files remain under legacy output roots.
+290 files remain under legacy output roots.
 
 **Action:** Convert active workflows to canonical paths before removing aliases.
 
