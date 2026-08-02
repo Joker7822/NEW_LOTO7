@@ -28,12 +28,17 @@ on:
       - "loto7_evolution_trainer.py"
       - "src/loto7/evolution/generation5.py"
       - "src/loto7/evolution/tiered_portfolio.py"
+      - "src/loto7/evaluation/null_permutation.py"
       - "scripts/generation5_evolver.py"
       - "scripts/build_null_seed_bank.py"
+      - "scripts/null_strategy_league.py"
       - "scripts/run_fixed_null_league.py"
+      - "scripts/run_hit_first_null_league.py"
+      - "scripts/prepromotion_hardening.py"
       - "scripts/promote_generation5_candidate.py"
       - "tests/test_generation5_precision.py"
       - "tests/test_generation5_portfolio.py"
+      - "tests/test_statistical_hardening.py"
       - ".github/workflows/loto7_generation5.yml"
   pull_request:
     branches:
@@ -42,12 +47,17 @@ on:
       - "loto7_evolution_trainer.py"
       - "src/loto7/evolution/generation5.py"
       - "src/loto7/evolution/tiered_portfolio.py"
+      - "src/loto7/evaluation/null_permutation.py"
       - "scripts/generation5_evolver.py"
       - "scripts/build_null_seed_bank.py"
+      - "scripts/null_strategy_league.py"
       - "scripts/run_fixed_null_league.py"
+      - "scripts/run_hit_first_null_league.py"
+      - "scripts/prepromotion_hardening.py"
       - "scripts/promote_generation5_candidate.py"
       - "tests/test_generation5_precision.py"
       - "tests/test_generation5_portfolio.py"
+      - "tests/test_statistical_hardening.py"
       - ".github/workflows/loto7_generation5.yml"
 
 permissions:
@@ -75,17 +85,23 @@ jobs:
             loto7_evolution_trainer.py \
             src/loto7/evolution/generation5.py \
             src/loto7/evolution/tiered_portfolio.py \
+            src/loto7/evaluation/null_permutation.py \
             scripts/generation5_evolver.py \
             scripts/build_null_seed_bank.py \
+            scripts/null_strategy_league.py \
             scripts/run_fixed_null_league.py \
+            scripts/run_hit_first_null_league.py \
+            scripts/prepromotion_hardening.py \
             scripts/promote_generation5_candidate.py \
             tests/test_generation5_precision.py \
-            tests/test_generation5_portfolio.py
+            tests/test_generation5_portfolio.py \
+            tests/test_statistical_hardening.py
       - name: Run Generation 5 regression tests
         run: |
           python -m unittest \
             tests.test_generation5_precision \
             tests.test_generation5_portfolio \
+            tests.test_statistical_hardening \
             -v
       - name: Verify deterministic seed bank
         run: |
@@ -108,6 +124,7 @@ jobs:
           combined = phases['learning'] + phases['selection'] + phases['final']
           assert len(combined) == 1000
           assert len(set(combined)) == 1000
+          assert len(phases['final']) == 150
           PY
 
   evolve-generation5:
@@ -181,7 +198,7 @@ jobs:
             --min-payout-roi-percent 8.0 \
             --max-roi-drop-percent 5.0 \
             --max-top1-payout-share 0.50
-      - name: Run fixed final Null League on Generation 5 candidate
+      - name: Run fixed final financial Null League on Generation 5 candidate
         run: |
           set -euo pipefail
           python scripts/run_fixed_null_league.py \
