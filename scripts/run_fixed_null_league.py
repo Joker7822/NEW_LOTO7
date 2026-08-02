@@ -22,6 +22,7 @@ from merge_evolution_shards import load_prize_rows, select_target_indices  # noq
 from scripts.null_strategy_league import (  # noqa: E402
     evaluate_strategy,
     now_iso,
+    paired_model_pbo,
     probability_of_backtest_overfitting,
     summarize_records,
     write_report,
@@ -128,6 +129,7 @@ def main() -> int:
     )
     null_results: List[Dict[str, object]] = []
     all_records: List[Sequence[Mapping[str, object]]] = [model_records]
+    null_record_sets: List[Sequence[Mapping[str, object]]] = []
     for simulation, seed in enumerate(seeds):
         strategy = strategy_names[simulation % len(strategy_names)]
         records = evaluate_strategy(
@@ -151,6 +153,7 @@ def main() -> int:
                 },
             }
         )
+        null_record_sets.append(records)
         all_records.append(records)
 
     model_score = float(model_summary["robust_score"])
@@ -159,7 +162,12 @@ def main() -> int:
         for result in null_results
         if float(result["robust_score"]) >= model_score
     ) / len(null_results)
-    pbo = probability_of_backtest_overfitting(all_records, block_count=6)
+    league_pbo = probability_of_backtest_overfitting(all_records, block_count=6)
+    paired_pbo = paired_model_pbo(
+        model_records,
+        null_record_sets,
+        block_count=6,
+    )
     null_scores = [float(result["robust_score"]) for result in null_results]
     null_top1 = [
         float(result["roi_excluding_top1_percent"])
@@ -167,7 +175,7 @@ def main() -> int:
     ]
     passed = bool(
         exceedance <= args.max_null_exceedance
-        and float(pbo["pbo"]) <= args.max_pbo
+        and float(paired_pbo["pbo"]) <= args.max_pbo
     )
     payload: Dict[str, object] = {
         "created_at": now_iso(),
@@ -197,21 +205,27 @@ def main() -> int:
             "top1_removed_roi_p95": round(percentile(null_top1, 0.95), 6),
         },
         "model_percentile": round(exceedance, 6),
-        "pbo": pbo.get("pbo"),
-        "pbo_detail": pbo,
+        "pbo": paired_pbo.get("pbo"),
+        "pbo_detail": paired_pbo,
+        "league_pbo": league_pbo.get("pbo"),
+        "league_pbo_detail": league_pbo,
         "decision": {
             "passed": passed,
             "max_null_exceedance": args.max_null_exceedance,
             "max_pbo": args.max_pbo,
+            "pbo_method": "paired_model_vs_null_is_oos_reversal",
             "reasons": [
                 f"null exceedance={exceedance:.6f}",
-                f"PBO={float(pbo['pbo']):.6f}",
+                f"paired PBO={float(paired_pbo['pbo']):.6f}",
+                f"league-wide PBO diagnostic={float(league_pbo['pbo']):.6f}",
             ],
         },
         "null_results": null_results,
         "notes": [
             "The same dataset and evaluator version produce the same disjoint seed bank.",
             "The final phase is not used during Generation 5 candidate search.",
+            "Paired PBO measures model-vs-null IS/OOS reversals and is the PBO gate.",
+            "League-wide CSCV PBO remains diagnostic because null simulations are challengers, not selectable models.",
             "PBO is a diagnostic and not proof of predictability.",
         ],
     }
