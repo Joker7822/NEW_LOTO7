@@ -70,7 +70,7 @@ def run_prepromotion_hardening(
                 "--start-year",
                 "2020",
                 "--checkpoints",
-                "150,500,1000",
+                "150",
                 "--search-width",
                 "6",
                 "--max-null-exceedance",

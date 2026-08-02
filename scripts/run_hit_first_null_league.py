@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run adaptive search-adjusted hit-first permutation Null League."""
+"""Run fixed-final search-adjusted hit-first permutation Null League."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ def main() -> int:
     parser.add_argument("--report", default="outputs/generation5/null_strategy_league_report.txt")
     parser.add_argument("--start-year", type=int, default=2020)
     parser.add_argument("--purchase-count", type=int, default=5)
-    parser.add_argument("--checkpoints", default="150,500,1000")
+    parser.add_argument("--checkpoints", default="150")
     parser.add_argument("--search-width", type=int, default=6)
     parser.add_argument("--max-null-exceedance", type=float, default=0.10)
     args = parser.parse_args()
@@ -40,19 +40,27 @@ def main() -> int:
     genome = load_genome(args.model)
     portfolios = [generate_tickets(draws[:index], genome, args.purchase_count) for index in indices]
     mains = [draws[index].main for index in indices]
+
     bank = json.loads(Path(args.seed_bank).read_text(encoding="utf-8"))
     phases = bank.get("phases", {})
     if not isinstance(phases, Mapping):
         raise SystemExit("invalid seed bank")
-    preferred = [int(value) for value in phases.get(args.seed_phase, [])]
-    remaining = []
-    for phase in ("final", "selection", "learning"):
-        remaining.extend(int(value) for value in phases.get(phase, []))
-    seeds = list(dict.fromkeys(preferred + remaining))[:1000]
-    requested = sorted({int(value) for value in args.checkpoints.split(",") if int(value) > 0})
+    raw_phase = phases.get(args.seed_phase, [])
+    if not isinstance(raw_phase, list) or not raw_phase:
+        raise SystemExit(f"fixed seed phase is missing or empty: {args.seed_phase}")
+    seeds = [int(value) for value in raw_phase]
+    if len(seeds) != len(set(seeds)):
+        raise SystemExit(f"fixed seed phase contains duplicate seeds: {args.seed_phase}")
+
+    requested = sorted(
+        {int(value) for value in args.checkpoints.split(",") if int(value) > 0}
+    )
     checkpoints = [value for value in requested if value <= len(seeds)]
     if not checkpoints:
-        raise SystemExit("seed bank does not contain an adaptive checkpoint")
+        raise SystemExit(
+            f"seed phase {args.seed_phase} has {len(seeds)} seeds; no requested checkpoint fits"
+        )
+
     result = adaptive_null_test(
         portfolios=portfolios,
         mains=mains,
@@ -62,23 +70,24 @@ def main() -> int:
         max_exceedance=args.max_null_exceedance,
     )
     payload = {
-        "kind": "loto7_hit_first_adaptive_null_league",
+        "kind": "loto7_hit_first_fixed_final_null_league",
         "metric_schema_version": "loto7-metrics-2026.07.31-v2",
         "model": args.model,
         "target_draws": len(indices),
         "seed_bank": {
             "path": args.seed_bank,
-            "preferred_phase": args.seed_phase,
-            "adaptive_seed_count": len(seeds),
-            "phase_fallback_order": ["final", "selection", "learning"],
+            "phase": args.seed_phase,
+            "fixed_phase_only": True,
+            "fixed_seed_count": len(seeds),
             "version": bank.get("version"),
             "dataset_sha256": bank.get("dataset_sha256"),
             "evaluator_version": bank.get("evaluator_version"),
         },
         **result,
         "notes": [
+            "Only the requested fixed seed phase is used; no selection/learning seed fallback is allowed.",
+            "Each fixed-final seed owns search-width internal permutations and contributes one max-adjusted trial.",
             "Winning-number rows are permuted against fixed chronological portfolios.",
-            "Maxima over search-width trials adjust for candidate selection multiplicity.",
             "Payout values never contribute to this adoption decision.",
         ],
     }
