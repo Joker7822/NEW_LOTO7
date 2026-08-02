@@ -6,6 +6,7 @@ from loto7.evaluation.metrics_schema import financial_metrics
 from loto7.evaluation.null_permutation import adaptive_null_test
 from loto7.evaluation.ranking import summarize_portfolio_ranking
 from loto7.evaluation.statistics import paired_moving_block_bootstrap, wilson_interval
+from scripts.null_strategy_league import paired_model_pbo
 
 
 class StatisticalHardeningTests(unittest.TestCase):
@@ -40,7 +41,7 @@ class StatisticalHardeningTests(unittest.TestCase):
         self.assertGreaterEqual(result["portfolio_inclusion_auc"], 0.5)
         self.assertLessEqual(result["portfolio_inclusion_brier"], 1.0)
 
-    def test_adaptive_null_is_deterministic(self) -> None:
+    def test_adaptive_null_is_deterministic_and_preserves_seed_count(self) -> None:
         portfolios = [[(1, 2, 3, 4, 5, 6, 7)] * 5] * 8
         mains = [(1, 2, 3, 4, 5, 6, 7)] * 8
         kwargs = {
@@ -51,7 +52,41 @@ class StatisticalHardeningTests(unittest.TestCase):
             "search_width": 3,
             "max_exceedance": 0.10,
         }
-        self.assertEqual(adaptive_null_test(**kwargs), adaptive_null_test(**kwargs))
+        left = adaptive_null_test(**kwargs)
+        right = adaptive_null_test(**kwargs)
+        self.assertEqual(left, right)
+        self.assertEqual(left["null_distribution"]["search_adjusted_count"], 12)
+        self.assertEqual(left["null_distribution"]["raw_count"], 36)
+        self.assertEqual(left["search_adjustment_method"], "within_seed_max")
+
+    @staticmethod
+    def _financial_records(payout: int, count: int = 12) -> list[dict[str, object]]:
+        return [
+            {
+                "draw_no": index + 1,
+                "year": 2020 + index // 4,
+                "cost": 1500,
+                "payout": payout,
+                "profit": payout - 1500,
+                "max_main_match": 4 if payout else 2,
+            }
+            for index in range(count)
+        ]
+
+    def test_paired_model_pbo_is_zero_for_stable_model_advantage(self) -> None:
+        model = self._financial_records(3000)
+        nulls = [self._financial_records(0) for _ in range(6)]
+        result = paired_model_pbo(model, nulls, block_count=6)
+        self.assertEqual(result["pbo"], 0.0)
+        self.assertEqual(result["model_is_win_rate"], 1.0)
+        self.assertEqual(result["oos_win_rate_when_selected"], 1.0)
+
+    def test_paired_model_pbo_fails_closed_without_is_advantage(self) -> None:
+        model = self._financial_records(0)
+        nulls = [self._financial_records(3000) for _ in range(3)]
+        result = paired_model_pbo(model, nulls, block_count=6)
+        self.assertEqual(result["pbo"], 1.0)
+        self.assertEqual(result["paired_comparisons"], 0)
 
 
 if __name__ == "__main__":
