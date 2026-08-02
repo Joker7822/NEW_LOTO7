@@ -9,6 +9,7 @@ from pathlib import Path
 from loto7.evolution.tiered_portfolio import (
     infer_anchor_profile,
     select_adaptive_tiered_generation5_portfolio,
+    select_support_core_generation5_portfolio,
     select_tiered_generation5_portfolio,
 )
 from loto7_evolution_trainer import (
@@ -91,6 +92,7 @@ def recent_portfolio_benchmark(draws, genome, target_count: int = 104):
         "greedy_calibrated",
         "marginal_portfolio",
         "tiered_high_match_portfolio",
+        "support_core_portfolio",
         "adaptive_tiered_portfolio",
     )
     modes = {mode: _empty_bucket() for mode in mode_names}
@@ -111,6 +113,9 @@ def recent_portfolio_benchmark(draws, genome, target_count: int = 104):
         greedy = _select_greedy_scored_portfolio(scored, 5, overlap_limit)
         marginal = _select_generation5_portfolio(scored, 5, overlap_limit)
         tiered = select_tiered_generation5_portfolio(scored, 5, overlap_limit)
+        support_core = select_support_core_generation5_portfolio(
+            scored, 5, overlap_limit
+        )
         adaptive, profile = select_adaptive_tiered_generation5_portfolio(
             scored, 5, overlap_limit
         )
@@ -123,6 +128,7 @@ def recent_portfolio_benchmark(draws, genome, target_count: int = 104):
             ("greedy_calibrated", greedy),
             ("marginal_portfolio", marginal),
             ("tiered_high_match_portfolio", tiered),
+            ("support_core_portfolio", support_core),
             ("adaptive_tiered_portfolio", adaptive),
         ):
             metrics = evaluate_portfolio(tickets, target)
@@ -207,6 +213,25 @@ class Generation5PortfolioTests(unittest.TestCase):
             for previous in left[:index]:
                 self.assertLessEqual(len(set(ticket) & set(previous)), 4)
 
+    def test_support_core_selector_is_deterministic_and_respects_overlap(self):
+        scored = [
+            (100.0, (1, 2, 3, 4, 5, 6, 7)),
+            (99.9, (1, 2, 3, 4, 8, 9, 10)),
+            (99.8, (1, 2, 3, 4, 11, 12, 13)),
+            (99.7, (1, 2, 3, 5, 8, 14, 15)),
+            (99.6, (1, 2, 4, 6, 9, 16, 17)),
+            (99.5, (3, 4, 5, 7, 10, 18, 19)),
+            (99.4, (8, 9, 10, 11, 20, 21, 22)),
+            (99.3, (12, 13, 14, 15, 23, 24, 25)),
+        ]
+        left = select_support_core_generation5_portfolio(scored, 5, 4)
+        right = select_support_core_generation5_portfolio(scored, 5, 4)
+        self.assertEqual(left, right)
+        self.assertEqual(len(left), 5)
+        for index, ticket in enumerate(left):
+            for previous in left[:index]:
+                self.assertLessEqual(len(set(ticket) & set(previous)), 4)
+
     def test_adaptive_profile_is_deterministic_and_training_only(self):
         concentrated = [
             (100.0 - index * 0.1, (1, 2, 3, 4, 5 + (index % 3), 8 + (index % 4), 15 + (index % 5)))
@@ -242,6 +267,7 @@ class Generation5PortfolioTests(unittest.TestCase):
             "greedy_calibrated",
             "marginal_portfolio",
             "tiered_high_match_portfolio",
+            "support_core_portfolio",
             "adaptive_tiered_portfolio",
         ):
             self.assertEqual(metrics[mode]["max_pair_overlap"], genome.overlap_limit)
