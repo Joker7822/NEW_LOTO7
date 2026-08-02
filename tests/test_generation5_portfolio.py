@@ -204,7 +204,7 @@ class Generation5PortfolioTests(unittest.TestCase):
             portfolio_shape(greedy)["unique_numbers"],
         )
 
-    def test_tiered_selector_is_deterministic_and_keeps_two_quality_anchors(self):
+    def test_tiered_two_anchor_baseline_is_deterministic(self):
         scored = [
             (100.0, (1, 2, 3, 4, 5, 6, 7)),
             (99.9, (1, 2, 3, 4, 8, 9, 10)),
@@ -215,8 +215,12 @@ class Generation5PortfolioTests(unittest.TestCase):
             (99.4, (13, 14, 15, 16, 23, 24, 25)),
             (99.3, (5, 6, 7, 17, 20, 24, 26)),
         ]
-        left = select_tiered_generation5_portfolio(scored, 5, 4)
-        right = select_tiered_generation5_portfolio(scored, 5, 4)
+        left = select_tiered_generation5_portfolio(
+            scored, 5, 4, anchor_count=2
+        )
+        right = select_tiered_generation5_portfolio(
+            scored, 5, 4, anchor_count=2
+        )
         self.assertEqual(left, right)
         self.assertEqual(len(left), 5)
         self.assertEqual(left[0], scored[0][1])
@@ -224,6 +228,22 @@ class Generation5PortfolioTests(unittest.TestCase):
         for index, ticket in enumerate(left):
             for previous in left[:index]:
                 self.assertLessEqual(len(set(ticket) & set(previous)), 4)
+
+    def test_tiered_default_is_one_anchor(self):
+        scored = [
+            (100.0, (1, 2, 3, 4, 5, 6, 7)),
+            (99.9, (1, 2, 3, 4, 8, 9, 10)),
+            (99.8, (1, 2, 3, 4, 11, 12, 13)),
+            (99.7, (1, 2, 5, 6, 14, 15, 16)),
+            (99.6, (3, 4, 7, 8, 17, 18, 19)),
+            (99.5, (9, 10, 11, 12, 20, 21, 22)),
+            (99.4, (13, 14, 15, 16, 23, 24, 25)),
+        ]
+        default = select_tiered_generation5_portfolio(scored, 5, 4)
+        explicit = select_tiered_generation5_portfolio(
+            scored, 5, 4, anchor_count=1
+        )
+        self.assertEqual(default, explicit)
 
     def test_support_core_selector_is_deterministic_and_respects_overlap(self):
         scored = [
