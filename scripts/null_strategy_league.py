@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""LOTO7 null-strategy league and probability-of-backtest-overfitting diagnostic."""
+"""LOTO7 null-strategy league and probability-of-backtest-overfitting diagnostics."""
 from __future__ import annotations
 
 import argparse
@@ -173,6 +173,12 @@ def block_scores(records: Sequence[Mapping[str, object]], block_ids: Sequence[in
 def probability_of_backtest_overfitting(
     records_by_strategy: Sequence[Sequence[Mapping[str, object]]], *, block_count: int = 6
 ) -> Dict[str, object]:
+    """Legacy league-wide CSCV diagnostic.
+
+    This intentionally remains available for continuity. It treats every null
+    simulation as a selectable strategy, so it is reported as a diagnostic and
+    is not the final model-selection PBO gate.
+    """
     if not records_by_strategy or not records_by_strategy[0]:
         return {"pbo": 1.0, "combinations": 0}
     size = len(records_by_strategy[0])
@@ -200,6 +206,67 @@ def probability_of_backtest_overfitting(
             "block_count": block_count}
 
 
+def paired_model_pbo(
+    model_records: Sequence[Mapping[str, object]],
+    null_records_by_strategy: Sequence[Sequence[Mapping[str, object]]],
+    *,
+    block_count: int = 6,
+) -> Dict[str, object]:
+    """Measure IS->OOS reversals for the model against each fixed null challenger.
+
+    Unlike the league-wide CSCV diagnostic, null simulations are challengers,
+    not alternative models that are eligible to become the selected winner.
+    A reversal is counted only when the model beats a null challenger in-sample
+    and then fails to beat the same challenger out-of-sample. Splits with no
+    in-sample model wins fail closed with reversal rate 1.0.
+    """
+    if not model_records or not null_records_by_strategy:
+        return {"pbo": 1.0, "combinations": 0, "paired_comparisons": 0}
+    size = len(model_records)
+    if any(len(records) != size for records in null_records_by_strategy):
+        raise ValueError("model and null record lengths must match")
+    block_ids = [min(block_count - 1, int(index * block_count / size)) for index in range(size)]
+    half = block_count // 2
+    split_rates: List[float] = []
+    paired_comparisons = 0
+    reversals = 0
+    possible_comparisons = 0
+    for in_blocks_tuple in combinations(range(block_count), half):
+        in_blocks = set(in_blocks_tuple)
+        out_blocks = set(range(block_count)) - in_blocks
+        model_is = block_scores(model_records, block_ids, in_blocks)
+        model_oos = block_scores(model_records, block_ids, out_blocks)
+        split_wins = 0
+        split_reversals = 0
+        for records in null_records_by_strategy:
+            possible_comparisons += 1
+            null_is = block_scores(records, block_ids, in_blocks)
+            null_oos = block_scores(records, block_ids, out_blocks)
+            if model_is > null_is:
+                split_wins += 1
+                paired_comparisons += 1
+                if model_oos <= null_oos:
+                    split_reversals += 1
+                    reversals += 1
+        split_rates.append(
+            split_reversals / split_wins if split_wins else 1.0
+        )
+    return {
+        "pbo": round(statistics.mean(split_rates), 6) if split_rates else 1.0,
+        "combinations": len(split_rates),
+        "paired_comparisons": paired_comparisons,
+        "reversals": reversals,
+        "model_is_win_rate": round(
+            paired_comparisons / possible_comparisons, 6
+        ) if possible_comparisons else 0.0,
+        "oos_win_rate_when_selected": round(
+            1.0 - reversals / paired_comparisons, 6
+        ) if paired_comparisons else 0.0,
+        "block_count": block_count,
+        "method": "paired_model_vs_null_is_oos_reversal",
+    }
+
+
 def write_report(path: Path, payload: Mapping[str, object]) -> None:
     decision = payload.get("decision", {}) if isinstance(payload.get("decision"), dict) else {}
     model = payload.get("model_metrics", {}) if isinstance(payload.get("model_metrics"), dict) else {}
@@ -210,8 +277,11 @@ def write_report(path: Path, payload: Mapping[str, object]) -> None:
              f"model_roi: {model.get('roi_percent')}",
              f"model_top1_removed_roi: {model.get('roi_excluding_top1_percent')}",
              f"null_exceedance_rate: {payload.get('model_percentile')}",
-             f"pbo: {payload.get('pbo')}", f"passed: {decision.get('passed')}", "",
-             "この検査は多数試行で偶然高く見える戦略を検出するための診断です。",
+             f"paired_model_pbo: {payload.get('pbo')}",
+             f"league_wide_pbo: {payload.get('league_pbo')}",
+             f"passed: {decision.get('passed')}", "",
+             "paired PBOはモデル対同一Null challengerのIS→OOS逆転率です。",
+             "league-wide PBOはNull同士の偶然勝者も含むため診断としてのみ保持します。",
              "過去検証であり将来の当せんを保証しません。"]
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -258,6 +328,7 @@ def main() -> int:
     strategy_names = ("random", "balanced", "frequency", "dormancy", "recent", "hybrid")
     null_results: List[Dict[str, object]] = []
     all_records: List[Sequence[Mapping[str, object]]] = [model_records]
+    null_record_sets: List[Sequence[Mapping[str, object]]] = []
     for simulation in range(args.simulations):
         strategy = strategy_names[simulation % len(strategy_names)]
         records = evaluate_strategy(draws, target_indices, prize_rows, strategy=strategy,
@@ -266,14 +337,16 @@ def main() -> int:
         metrics = summarize_records(records)
         null_results.append({"simulation": simulation, "strategy": strategy,
                              **{key: round(value, 6) for key, value in metrics.items()}})
+        null_record_sets.append(records)
         all_records.append(records)
 
     model_score = float(model_summary["robust_score"])
     exceedance = sum(1 for result in null_results if float(result["robust_score"]) >= model_score) / len(null_results)
-    pbo = probability_of_backtest_overfitting(all_records, block_count=6)
+    league_pbo = probability_of_backtest_overfitting(all_records, block_count=6)
+    paired_pbo = paired_model_pbo(model_records, null_record_sets, block_count=6)
     null_scores = [float(result["robust_score"]) for result in null_results]
     null_top1 = [float(result["roi_excluding_top1_percent"]) for result in null_results]
-    passed = bool(exceedance <= args.max_null_exceedance and float(pbo["pbo"]) <= args.max_pbo)
+    passed = bool(exceedance <= args.max_null_exceedance and float(paired_pbo["pbo"]) <= args.max_pbo)
     payload: Dict[str, object] = {
         "created_at": now_iso(), "kind": "loto7_null_strategy_league", "csv": args.csv,
         "model": args.model, "target_draws": len(target_indices), "start_year": args.start_year,
@@ -286,13 +359,19 @@ def main() -> int:
             "robust_score_p95": round(percentile(null_scores, 0.95), 6),
             "top1_removed_roi_p90": round(percentile(null_top1, 0.90), 6),
             "top1_removed_roi_p95": round(percentile(null_top1, 0.95), 6)},
-        "model_percentile": round(exceedance, 6), "pbo": pbo.get("pbo"), "pbo_detail": pbo,
+        "model_percentile": round(exceedance, 6),
+        "pbo": paired_pbo.get("pbo"),
+        "pbo_detail": paired_pbo,
+        "league_pbo": league_pbo.get("pbo"),
+        "league_pbo_detail": league_pbo,
         "decision": {"passed": passed, "max_null_exceedance": args.max_null_exceedance,
                      "max_pbo": args.max_pbo,
-                     "reasons": [f"null exceedance={exceedance:.6f}", f"PBO={float(pbo['pbo']):.6f}"]},
+                     "pbo_method": "paired_model_vs_null_is_oos_reversal",
+                     "reasons": [f"null exceedance={exceedance:.6f}", f"paired PBO={float(paired_pbo['pbo']):.6f}"]},
         "null_results": null_results,
         "notes": ["The model is compared with many deterministic null strategies under the same five-ticket cost.",
-                  "PBO is a CSCV-style diagnostic and not a proof of predictability."]}
+                  "Paired PBO gates model-vs-null IS/OOS reversals; league-wide CSCV remains diagnostic only.",
+                  "PBO is a diagnostic and not proof of predictability."]}
     summary_path = Path(args.summary)
     summary_path.parent.mkdir(parents=True, exist_ok=True)
     summary_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
