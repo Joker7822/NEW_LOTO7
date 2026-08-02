@@ -12,7 +12,7 @@ on:
         required: false
         default: "4"
       apply_model:
-        description: "Apply only when internal and fixed final Null gates pass"
+        description: "Apply only when internal, Selection, and fixed Final Null gates pass"
         required: true
         type: choice
         default: "true"
@@ -30,7 +30,9 @@ on:
       - "src/loto7/evolution/tiered_portfolio.py"
       - "src/loto7/evaluation/null_permutation.py"
       - "scripts/generation5_evolver.py"
+      - "scripts/generation5_selection_evolver.py"
       - "scripts/build_null_seed_bank.py"
+      - "scripts/split_null_seed_bank.py"
       - "scripts/null_strategy_league.py"
       - "scripts/run_fixed_null_league.py"
       - "scripts/run_hit_first_null_league.py"
@@ -38,6 +40,7 @@ on:
       - "scripts/promote_generation5_candidate.py"
       - "tests/test_generation5_precision.py"
       - "tests/test_generation5_portfolio.py"
+      - "tests/test_generation5_selection_null.py"
       - "tests/test_statistical_hardening.py"
       - ".github/workflows/loto7_generation5.yml"
   pull_request:
@@ -49,7 +52,9 @@ on:
       - "src/loto7/evolution/tiered_portfolio.py"
       - "src/loto7/evaluation/null_permutation.py"
       - "scripts/generation5_evolver.py"
+      - "scripts/generation5_selection_evolver.py"
       - "scripts/build_null_seed_bank.py"
+      - "scripts/split_null_seed_bank.py"
       - "scripts/null_strategy_league.py"
       - "scripts/run_fixed_null_league.py"
       - "scripts/run_hit_first_null_league.py"
@@ -57,6 +62,7 @@ on:
       - "scripts/promote_generation5_candidate.py"
       - "tests/test_generation5_precision.py"
       - "tests/test_generation5_portfolio.py"
+      - "tests/test_generation5_selection_null.py"
       - "tests/test_statistical_hardening.py"
       - ".github/workflows/loto7_generation5.yml"
 
@@ -87,7 +93,9 @@ jobs:
             src/loto7/evolution/tiered_portfolio.py \
             src/loto7/evaluation/null_permutation.py \
             scripts/generation5_evolver.py \
+            scripts/generation5_selection_evolver.py \
             scripts/build_null_seed_bank.py \
+            scripts/split_null_seed_bank.py \
             scripts/null_strategy_league.py \
             scripts/run_fixed_null_league.py \
             scripts/run_hit_first_null_league.py \
@@ -95,15 +103,17 @@ jobs:
             scripts/promote_generation5_candidate.py \
             tests/test_generation5_precision.py \
             tests/test_generation5_portfolio.py \
+            tests/test_generation5_selection_null.py \
             tests/test_statistical_hardening.py
       - name: Run Generation 5 regression tests
         run: |
           python -m unittest \
             tests.test_generation5_precision \
             tests.test_generation5_portfolio \
+            tests.test_generation5_selection_null \
             tests.test_statistical_hardening \
             -v
-      - name: Verify deterministic seed bank
+      - name: Verify deterministic and physically isolated seed banks
         run: |
           set -euo pipefail
           python scripts/build_null_seed_bank.py \
@@ -112,6 +122,10 @@ jobs:
           python scripts/build_null_seed_bank.py \
             --csv loto7.csv \
             --output /tmp/null_seed_bank_b.json
+          python scripts/split_null_seed_bank.py \
+            --input /tmp/null_seed_bank_a.json \
+            --selection-output /tmp/selection_null_seed_bank.json \
+            --final-output /tmp/final_null_seed_bank.json
           python - <<'PY'
           import json
           from pathlib import Path
@@ -124,12 +138,18 @@ jobs:
           combined = phases['learning'] + phases['selection'] + phases['final']
           assert len(combined) == 1000
           assert len(set(combined)) == 1000
-          assert len(phases['final']) == 150
+          selection = json.loads(Path('/tmp/selection_null_seed_bank.json').read_text(encoding='utf-8'))
+          final = json.loads(Path('/tmp/final_null_seed_bank.json').read_text(encoding='utf-8'))
+          assert set(selection['phases']) == {'selection'}
+          assert set(final['phases']) == {'final'}
+          assert selection['seed_count'] == 150
+          assert final['seed_count'] == 150
+          assert not set(selection['phases']['selection']) & set(final['phases']['final'])
           PY
 
   evolve-generation5:
     needs: validate-generation5
-    if: ${{ github.event_name != 'pull_request' && github.ref_name == 'main' }}
+    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-latest
     timeout-minutes: 355
     steps:
@@ -152,7 +172,7 @@ jobs:
           set -euo pipefail
           git fetch origin main
           git reset --hard origin/main
-      - name: Build fixed disjoint Null seed bank
+      - name: Build and physically split disjoint Null seed phases
         run: |
           set -euo pipefail
           python scripts/build_null_seed_bank.py \
@@ -161,12 +181,23 @@ jobs:
             --learning 700 \
             --selection 150 \
             --final 150
-      - name: Run four-island Generation 5 evolution
+          python scripts/split_null_seed_bank.py \
+            --input outputs/generation5/null_seed_bank.json \
+            --selection-output outputs/generation5/selection_null_seed_bank.json \
+            --final-output outputs/generation5/final_null_seed_bank.json
+      - name: Run production four-island Generation 5 evolution and Selection Null screening
         env:
           PYTHONUNBUFFERED: "1"
         run: |
           set -euo pipefail
-          python scripts/generation5_evolver.py \
+          python scripts/generation5_selection_evolver.py \
+            --selection-seed-bank outputs/generation5/selection_null_seed_bank.json \
+            --selection-null-summary outputs/generation5/selection_null_candidate_summary.json \
+            --selection-null-shortlist 4 \
+            --selection-null-start-year 2020 \
+            --selection-null-search-width 6 \
+            --selection-null-max-exceedance 0.10 \
+            --selection-null-seed-count 150 \
             --csv loto7.csv \
             --best-model loto7_best_model.json \
             --generations "${{ github.event.inputs.generations || '4' }}" \
@@ -183,7 +214,7 @@ jobs:
             --unit-cost 300 \
             --min-train-draws 52 \
             --holdout-start-draw 2 \
-            --max-runtime-minutes 315 \
+            --max-runtime-minutes 275 \
             --safe-exit-minutes 25 \
             --min-positive-folds 3 \
             --min-fold-objective-delta 0.05 \
@@ -198,13 +229,28 @@ jobs:
             --min-payout-roi-percent 8.0 \
             --max-roi-drop-percent 5.0 \
             --max-top1-payout-share 0.50
-      - name: Run fixed final financial Null League on Generation 5 candidate
+      - name: Verify Selection phase never contains Final seeds
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          selection = json.loads(Path('outputs/generation5/selection_null_seed_bank.json').read_text(encoding='utf-8'))
+          final = json.loads(Path('outputs/generation5/final_null_seed_bank.json').read_text(encoding='utf-8'))
+          evidence = json.loads(Path('outputs/generation5/selection_null_candidate_summary.json').read_text(encoding='utf-8'))
+          assert set(selection['phases']) == {'selection'}
+          assert set(final['phases']) == {'final'}
+          assert not set(selection['phases']['selection']) & set(final['phases']['final'])
+          assert evidence['selection_seed_count'] == 150
+          assert evidence['final_phase_accessed'] is False
+          PY
+      - name: Run fixed final financial Null League on Selection-approved Generation 5 candidate
         run: |
           set -euo pipefail
           python scripts/run_fixed_null_league.py \
             --csv loto7.csv \
             --model outputs/generation5/generation5_candidate_model.json \
-            --seed-bank outputs/generation5/null_seed_bank.json \
+            --seed-bank outputs/generation5/final_null_seed_bank.json \
             --seed-phase final \
             --simulations 150 \
             --summary outputs/generation5/null_strategy_league_summary.json \
@@ -226,6 +272,7 @@ jobs:
             --baseline loto7_best_model.json \
             --summary outputs/generation5/generation5_summary.json \
             --null-summary outputs/generation5/null_strategy_league_summary.json \
+            --seed-bank outputs/generation5/final_null_seed_bank.json \
             --decision outputs/generation5/promotion_decision.json \
             --report outputs/generation5/promotion_report.txt \
             ${APPLY_FLAG}
@@ -237,6 +284,9 @@ jobs:
           test -s outputs/generation5/generation5_report.txt
           test -s outputs/generation5/generation5_history.csv
           test -s outputs/generation5/null_seed_bank.json
+          test -s outputs/generation5/selection_null_seed_bank.json
+          test -s outputs/generation5/final_null_seed_bank.json
+          test -s outputs/generation5/selection_null_candidate_summary.json
           test -s outputs/generation5/null_strategy_league_summary.json
           test -s outputs/generation5/null_strategy_league_report.txt
           test -s outputs/generation5/promotion_decision.json
