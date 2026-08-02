@@ -97,6 +97,24 @@ class Generation5SelectionNullTests(unittest.TestCase):
         }
         self.assertGreater(selection_candidate_key(stronger_null), selection_candidate_key(weaker_null))
 
+    def test_zero_exceedance_and_zero_wilson_are_preserved_as_best_values(self) -> None:
+        perfect_null_resistance = {
+            "adoption_passed": True,
+            "decision": {"passed": True, "wilson_ci_upper": 0.0, "exceedance": 0.0},
+            "null_margin_vs_adjusted_p90": 0.0,
+            "internal_key": [0.1],
+        }
+        merely_strong = {
+            "adoption_passed": True,
+            "decision": {"passed": True, "wilson_ci_upper": 0.01, "exceedance": 0.01},
+            "null_margin_vs_adjusted_p90": 1.0,
+            "internal_key": [9.0],
+        }
+        self.assertGreater(
+            selection_candidate_key(perfect_null_resistance),
+            selection_candidate_key(merely_strong),
+        )
+
     def test_workflow_runs_production_evolution_before_fixed_final(self) -> None:
         workflow = Path(".github/workflows/loto7_generation5.yml").read_text(encoding="utf-8")
         self.assertIn("github.event_name == 'push'", workflow)
