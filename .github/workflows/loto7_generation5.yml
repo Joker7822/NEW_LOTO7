@@ -26,22 +26,38 @@ on:
       - main
     paths:
       - "src/loto7/evolution/generation5.py"
+      - "src/loto7/evaluation/**"
       - "scripts/generation5_evolver.py"
+      - "scripts/generation5_checkpoint_runner.py"
       - "scripts/build_null_seed_bank.py"
       - "scripts/run_fixed_null_league.py"
+      - "scripts/run_hit_first_null_league.py"
+      - "scripts/harden_generation5_summary.py"
+      - "scripts/run_prediction_ablation.py"
+      - "scripts/prepromotion_hardening.py"
       - "scripts/promote_generation5_candidate.py"
       - "tests/test_generation5_precision.py"
+      - "tests/test_generation5_checkpoint.py"
+      - "tests/test_statistical_hardening.py"
       - ".github/workflows/loto7_generation5.yml"
   pull_request:
     branches:
       - main
     paths:
       - "src/loto7/evolution/generation5.py"
+      - "src/loto7/evaluation/**"
       - "scripts/generation5_evolver.py"
+      - "scripts/generation5_checkpoint_runner.py"
       - "scripts/build_null_seed_bank.py"
       - "scripts/run_fixed_null_league.py"
+      - "scripts/run_hit_first_null_league.py"
+      - "scripts/harden_generation5_summary.py"
+      - "scripts/run_prediction_ablation.py"
+      - "scripts/prepromotion_hardening.py"
       - "scripts/promote_generation5_candidate.py"
       - "tests/test_generation5_precision.py"
+      - "tests/test_generation5_checkpoint.py"
+      - "tests/test_statistical_hardening.py"
       - ".github/workflows/loto7_generation5.yml"
 
 permissions:
@@ -67,13 +83,30 @@ jobs:
           set -euo pipefail
           python -m py_compile \
             src/loto7/evolution/generation5.py \
+            src/loto7/evaluation/metrics_schema.py \
+            src/loto7/evaluation/model_audit.py \
+            src/loto7/evaluation/null_permutation.py \
+            src/loto7/evaluation/ranking.py \
+            src/loto7/evaluation/statistics.py \
             scripts/generation5_evolver.py \
+            scripts/generation5_checkpoint_runner.py \
             scripts/build_null_seed_bank.py \
             scripts/run_fixed_null_league.py \
+            scripts/run_hit_first_null_league.py \
+            scripts/harden_generation5_summary.py \
+            scripts/run_prediction_ablation.py \
+            scripts/prepromotion_hardening.py \
             scripts/promote_generation5_candidate.py \
-            tests/test_generation5_precision.py
+            tests/test_generation5_precision.py \
+            tests/test_generation5_checkpoint.py \
+            tests/test_statistical_hardening.py
       - name: Run Generation 5 regression tests
-        run: python -m unittest tests.test_generation5_precision -v
+        run: |
+          set -euo pipefail
+          python -m unittest \
+            tests.test_generation5_precision \
+            tests.test_generation5_checkpoint \
+            tests.test_statistical_hardening -v
       - name: Verify deterministic seed bank
         run: |
           set -euo pipefail
@@ -122,6 +155,7 @@ jobs:
           set -euo pipefail
           git fetch origin main
           git reset --hard origin/main
+          mkdir -p outputs/generation5 outputs/state/generation5
       - name: Build fixed disjoint Null seed bank
         run: |
           set -euo pipefail
@@ -131,16 +165,22 @@ jobs:
             --learning 700 \
             --selection 150 \
             --final 150
-      - name: Run four-island Generation 5 evolution
+      - name: Run resumable four-island Generation 5 evolution
         env:
           PYTHONUNBUFFERED: "1"
         run: |
           set -euo pipefail
-          python scripts/generation5_evolver.py \
+          python scripts/generation5_checkpoint_runner.py \
             --csv loto7.csv \
-            --best-model loto7_best_model.json \
+            --baseline loto7_best_model.json \
             --generations "${{ github.event.inputs.generations || '4' }}" \
             --island-population "${{ github.event.inputs.island_population || '4' }}" \
+            --checkpoint outputs/state/generation5/checkpoint.json \
+            --candidate outputs/generation5/generation5_candidate_model.json \
+            --summary outputs/generation5/generation5_summary.json \
+            --report outputs/generation5/generation5_report.txt \
+            --history outputs/generation5/generation5_history.csv \
+            --max-runtime-minutes-per-stage 70 \
             --archive-size 8 \
             --folds 5 \
             --stage1-targets 104 \
@@ -153,8 +193,6 @@ jobs:
             --unit-cost 300 \
             --min-train-draws 52 \
             --holdout-start-draw 2 \
-            --max-runtime-minutes 315 \
-            --safe-exit-minutes 25 \
             --min-positive-folds 3 \
             --min-fold-objective-delta 0.05 \
             --min-average-max-delta 0.03 \
@@ -168,7 +206,7 @@ jobs:
             --min-payout-roi-percent 8.0 \
             --max-roi-drop-percent 5.0 \
             --max-top1-payout-share 0.50
-      - name: Run fixed final Null League on Generation 5 candidate
+      - name: Run fixed final financial Null diagnostic
         run: |
           set -euo pipefail
           python scripts/run_fixed_null_league.py \
@@ -202,6 +240,7 @@ jobs:
       - name: Verify Generation 5 outputs
         run: |
           set -euo pipefail
+          test -s outputs/state/generation5/checkpoint.json
           test -s outputs/generation5/generation5_candidate_model.json
           test -s outputs/generation5/generation5_summary.json
           test -s outputs/generation5/generation5_report.txt
@@ -209,22 +248,27 @@ jobs:
           test -s outputs/generation5/null_seed_bank.json
           test -s outputs/generation5/null_strategy_league_summary.json
           test -s outputs/generation5/null_strategy_league_report.txt
+          test -s outputs/generation5/financial_null_summary.json
+          test -s outputs/generation5/prediction_ablation.json
           test -s outputs/generation5/promotion_decision.json
           test -s outputs/generation5/promotion_report.txt
+          test -s outputs/generation5/run_status.json
       - name: Commit Generation 5 evidence and approved model
         run: |
           set -euo pipefail
           SNAPSHOT="$(mktemp -d)"
-          mkdir -p "$SNAPSHOT/outputs/generation5"
+          mkdir -p "$SNAPSHOT/outputs/generation5" "$SNAPSHOT/outputs/state/generation5"
           cp -f loto7_best_model.json "$SNAPSHOT/"
-          cp -f outputs/generation5/* "$SNAPSHOT/outputs/generation5/"
+          find outputs/generation5 -maxdepth 1 -type f -exec cp -f {} "$SNAPSHOT/outputs/generation5/" \;
+          cp -f outputs/state/generation5/checkpoint.json "$SNAPSHOT/outputs/state/generation5/"
           for ATTEMPT in 1 2 3 4; do
             git fetch origin main
             git reset --hard origin/main
-            mkdir -p outputs/generation5
+            mkdir -p outputs/generation5 outputs/state/generation5
             cp -f "$SNAPSHOT/loto7_best_model.json" loto7_best_model.json
             cp -f "$SNAPSHOT/outputs/generation5/"* outputs/generation5/
-            git add -f loto7_best_model.json outputs/generation5
+            cp -f "$SNAPSHOT/outputs/state/generation5/checkpoint.json" outputs/state/generation5/checkpoint.json
+            git add -f loto7_best_model.json outputs/generation5 outputs/state/generation5/checkpoint.json
             if git diff --cached --quiet; then
               echo "No Generation 5 changes"
               exit 0
@@ -242,4 +286,5 @@ jobs:
           path: |
             loto7_best_model.json
             outputs/generation5/**
+            outputs/state/generation5/checkpoint.json
           if-no-files-found: error

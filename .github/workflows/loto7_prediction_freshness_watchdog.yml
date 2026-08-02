@@ -1,0 +1,74 @@
+name: LOTO7 Prediction Freshness Watchdog
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - LOTO7 Evolution Trainer
+    types:
+      - completed
+  schedule:
+    # Friday 20:30-24:30 JST. The job is a no-op while publication is current.
+    - cron: "30 11,12,13,14,15 * * 5"
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: loto7-prediction-freshness-watchdog
+  cancel-in-progress: true
+
+jobs:
+  check-and-dispatch:
+    if: ${{ github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check published prediction freshness
+        id: freshness
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          python scripts/assert_latest_prediction_fresh.py \
+            --csv loto7.csv \
+            --prediction outputs/evolution_best_prediction.csv \
+            --history outputs/evolution_prediction_history.csv
+
+      - name: Dispatch canonical production publisher when stale
+        if: ${{ steps.freshness.outcome == 'failure' }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'loto7_refresh_latest_prediction.yml',
+              ref: 'main'
+            })
+
+      - name: Record watchdog result
+        if: always()
+        run: |
+          {
+            echo "## LOTO7 prediction freshness watchdog"
+            echo ""
+            echo "- freshness outcome: ${{ steps.freshness.outcome }}"
+            if [ "${{ steps.freshness.outcome }}" = "failure" ]; then
+              echo "- action: dispatched canonical production publisher"
+            else
+              echo "- action: no dispatch required"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

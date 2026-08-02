@@ -128,7 +128,13 @@ jobs:
       - name: Clean Role backtest subset consistency
         run: |
           set -euo pipefail
-          rm -f /tmp/role_subset.csv /tmp/role_subset.json /tmp/role_subset.txt /tmp/role_subset_state.json /tmp/holdout_subset.csv
+          rm -f \
+            /tmp/role_subset.csv \
+            /tmp/role_subset_comparable.csv \
+            /tmp/role_subset.json \
+            /tmp/role_subset.txt \
+            /tmp/role_subset_state.json \
+            /tmp/holdout_subset.csv
           python scripts/backtest_role_ensemble.py \
             --csv loto7.csv \
             --best-model loto7_best_model.json \
@@ -146,23 +152,61 @@ jobs:
             --safe-exit-minutes 5
           python - <<'PY'
           import csv
+          import json
           from pathlib import Path
 
-          with Path('/tmp/role_subset.csv').open('r', encoding='utf-8-sig', newline='') as stream:
-              draw_nos = {int(row['target_draw_no']) for row in csv.DictReader(stream) if row['system'] == 'best_model'}
-          with Path('outputs/holdout/holdout_result.csv').open('r', encoding='utf-8-sig', newline='') as stream:
+          role_path = Path('/tmp/role_subset.csv')
+          holdout_path = Path('outputs/holdout/holdout_result.csv')
+
+          with role_path.open('r', encoding='utf-8-sig', newline='') as stream:
               reader = csv.DictReader(stream)
-              fields = reader.fieldnames
-              rows = [row for row in reader if int(row['draw_no']) in draw_nos]
-          with Path('/tmp/holdout_subset.csv').open('w', encoding='utf-8', newline='') as stream:
-              writer = csv.DictWriter(stream, fieldnames=fields)
+              role_fields = reader.fieldnames
+              role_rows = list(reader)
+          with holdout_path.open('r', encoding='utf-8-sig', newline='') as stream:
+              reader = csv.DictReader(stream)
+              holdout_fields = reader.fieldnames
+              holdout_rows = list(reader)
+
+          role_best_draws = {
+              int(row['target_draw_no'])
+              for row in role_rows
+              if row['system'] == 'best_model'
+          }
+          holdout_draws = {int(row['draw_no']) for row in holdout_rows}
+          comparable_draws = role_best_draws & holdout_draws
+          excluded_role_draws = sorted(role_best_draws - comparable_draws)
+          assert comparable_draws, 'role and holdout have no common draws'
+
+          comparable_role_rows = [
+              row for row in role_rows
+              if int(row['target_draw_no']) in comparable_draws
+          ]
+          comparable_holdout_rows = [
+              row for row in holdout_rows
+              if int(row['draw_no']) in comparable_draws
+          ]
+
+          with Path('/tmp/role_subset_comparable.csv').open('w', encoding='utf-8', newline='') as stream:
+              writer = csv.DictWriter(stream, fieldnames=role_fields)
               writer.writeheader()
-              writer.writerows(rows)
-          print(f'subset draws={len(draw_nos)} holdout rows={len(rows)}')
+              writer.writerows(comparable_role_rows)
+          with Path('/tmp/holdout_subset.csv').open('w', encoding='utf-8', newline='') as stream:
+              writer = csv.DictWriter(stream, fieldnames=holdout_fields)
+              writer.writeheader()
+              writer.writerows(comparable_holdout_rows)
+
+          print(json.dumps({
+              'role_draws': len(role_best_draws),
+              'holdout_draws': len(holdout_draws),
+              'comparable_draws': len(comparable_draws),
+              'excluded_role_draws_not_yet_in_holdout': excluded_role_draws,
+              'comparable_role_rows': len(comparable_role_rows),
+              'comparable_holdout_rows': len(comparable_holdout_rows),
+          }, ensure_ascii=False, indent=2))
           PY
           python scripts/verify_evaluator_consistency.py \
             --holdout /tmp/holdout_subset.csv \
-            --role /tmp/role_subset.csv \
+            --role /tmp/role_subset_comparable.csv \
             --output outputs/role_ensemble/evaluator_consistency_subset.json \
             --unit-cost 300
 
