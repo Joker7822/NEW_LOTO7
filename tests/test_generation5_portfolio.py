@@ -91,7 +91,9 @@ def recent_portfolio_benchmark(draws, genome, target_count: int = 104):
     mode_names = (
         "greedy_calibrated",
         "marginal_portfolio",
-        "tiered_high_match_portfolio",
+        "tiered_anchor1",
+        "tiered_anchor2",
+        "tiered_anchor3",
         "support_core_portfolio",
         "adaptive_tiered_portfolio",
     )
@@ -112,7 +114,15 @@ def recent_portfolio_benchmark(draws, genome, target_count: int = 104):
         scored = _score_generation5_candidates(train, genome)
         greedy = _select_greedy_scored_portfolio(scored, 5, overlap_limit)
         marginal = _select_generation5_portfolio(scored, 5, overlap_limit)
-        tiered = select_tiered_generation5_portfolio(scored, 5, overlap_limit)
+        anchor1 = select_tiered_generation5_portfolio(
+            scored, 5, overlap_limit, anchor_count=1
+        )
+        anchor2 = select_tiered_generation5_portfolio(
+            scored, 5, overlap_limit, anchor_count=2
+        )
+        anchor3 = select_tiered_generation5_portfolio(
+            scored, 5, overlap_limit, anchor_count=3
+        )
         support_core = select_support_core_generation5_portfolio(
             scored, 5, overlap_limit
         )
@@ -127,7 +137,9 @@ def recent_portfolio_benchmark(draws, genome, target_count: int = 104):
         for mode, tickets in (
             ("greedy_calibrated", greedy),
             ("marginal_portfolio", marginal),
-            ("tiered_high_match_portfolio", tiered),
+            ("tiered_anchor1", anchor1),
+            ("tiered_anchor2", anchor2),
+            ("tiered_anchor3", anchor3),
             ("support_core_portfolio", support_core),
             ("adaptive_tiered_portfolio", adaptive),
         ):
@@ -266,7 +278,9 @@ class Generation5PortfolioTests(unittest.TestCase):
         for mode in (
             "greedy_calibrated",
             "marginal_portfolio",
-            "tiered_high_match_portfolio",
+            "tiered_anchor1",
+            "tiered_anchor2",
+            "tiered_anchor3",
             "support_core_portfolio",
             "adaptive_tiered_portfolio",
         ):
