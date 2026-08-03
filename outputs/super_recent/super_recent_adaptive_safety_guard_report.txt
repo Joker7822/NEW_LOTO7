@@ -1,7 +1,7 @@
 LOTO7 Adaptive Model Safety Guard
 =================================
 
-created_at: 2026-08-02T14:45:23.977938+00:00
+created_at: 2026-08-03T09:53:46.885136+00:00
 focus_start_year: 2023
 accepted: False
 restored_baseline: True
@@ -299,7 +299,7 @@ independent_from_reference: False
 
 [Nested Walk Forward]
 {
-  "created_at": "2026-08-02T02:55:06.843441+00:00",
+  "created_at": "2026-08-02T16:39:11.218565+00:00",
   "fold_count": 3,
   "folds": [
     {
