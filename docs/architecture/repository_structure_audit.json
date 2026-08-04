@@ -1,11 +1,11 @@
 {
   "category_counts": {
-    "cli_or_compatibility": 43,
+    "cli_or_compatibility": 44,
     "configuration": 3,
     "documentation": 9,
     "other": 17,
     "output:diagnostics": 50,
-    "output:evidence": 444,
+    "output:evidence": 500,
     "output:production": 9,
     "output:state": 83,
     "output:unclassified": 2,
@@ -14,19 +14,19 @@
     "test": 21,
     "workflow": 15
   },
-  "created_at": "2026-08-02T21:54:03.090980+00:00",
+  "created_at": "2026-08-04T23:09:07.789622+00:00",
   "directory_file_counts": {
     ".github": 15,
     "<root>": 23,
     "config": 3,
     "docs": 9,
-    "outputs": 588,
-    "scripts": 43,
+    "outputs": 644,
+    "scripts": 44,
     "src": 27,
     "tests": 21
   },
   "duplicate_workflow_names": {},
-  "file_count": 729,
+  "file_count": 786,
   "largest_files": [
     {
       "bytes": 770389,
@@ -37,7 +37,7 @@
       "path": "outputs/holdout/holdout_result.csv"
     },
     {
-      "bytes": 288510,
+      "bytes": 324494,
       "path": "outputs/super_recent/super_recent_model_history.csv"
     },
     {
@@ -45,7 +45,7 @@
       "path": "outputs/recent_era/recent_era_model_history.pre_hit_first_20260722035646.csv"
     },
     {
-      "bytes": 138954,
+      "bytes": 151913,
       "path": "outputs/recent_era/recent_era_model_history.csv"
     },
     {
@@ -57,44 +57,56 @@
       "path": "outputs/super_recent/super_recent_model_history.pre_hit_first_20260722083852.csv"
     },
     {
-      "bytes": 83246,
+      "bytes": 97759,
       "path": "outputs/model_self_evolution/history.csv"
     },
     {
-      "bytes": 64760,
-      "path": "outputs/state/super_recent/super_recent_model_state.json"
-    },
-    {
-      "bytes": 64760,
+      "bytes": 64748,
       "path": "outputs/super_recent/super_recent_model_state.json"
     },
     {
-      "bytes": 61456,
+      "bytes": 64726,
+      "path": "outputs/state/super_recent/super_recent_model_state.json"
+    },
+    {
+      "bytes": 61429,
       "path": "outputs/recent_era/recent_era_model_state.json"
     },
     {
-      "bytes": 61456,
+      "bytes": 61415,
       "path": "outputs/state/recent/recent_era_model_state.json"
     },
     {
-      "bytes": 46308,
+      "bytes": 46779,
       "path": "outputs/diagnostics/generation4/null_strategy_league_summary.json"
     },
     {
-      "bytes": 46308,
+      "bytes": 46779,
       "path": "outputs/generation4/null_strategy_league_summary.json"
     },
     {
-      "bytes": 43212,
+      "bytes": 45820,
       "path": "outputs/model_self_evolution/state.json"
-    },
-    {
-      "bytes": 43212,
-      "path": "outputs/state/full/state.json"
     },
     {
       "bytes": 42620,
       "path": "merge_evolution_shards.py"
+    },
+    {
+      "bytes": 41508,
+      "path": "outputs/state/full/state.json"
+    },
+    {
+      "bytes": 40182,
+      "path": "outputs/diagnostics/generation4/sealed_index.json"
+    },
+    {
+      "bytes": 40182,
+      "path": "outputs/evidence/generation4/sealed_index.json"
+    },
+    {
+      "bytes": 40182,
+      "path": "outputs/generation4/sealed_index.json"
     },
     {
       "bytes": 39244,
@@ -125,18 +137,6 @@
       "path": "outputs/holdout/recent_era_summary.json"
     },
     {
-      "bytes": 35352,
-      "path": "outputs/diagnostics/generation4/sealed_index.json"
-    },
-    {
-      "bytes": 35352,
-      "path": "outputs/evidence/generation4/sealed_index.json"
-    },
-    {
-      "bytes": 35352,
-      "path": "outputs/generation4/sealed_index.json"
-    },
-    {
       "bytes": 31850,
       "path": "outputs/state/super_recent/super_recent_adaptive_safety_guard.json"
     },
@@ -151,7 +151,7 @@
   ],
   "output_class_counts": {
     "diagnostics": 50,
-    "evidence": 444,
+    "evidence": 500,
     "production": 9,
     "state": 83,
     "unclassified": 2
@@ -161,7 +161,7 @@
   "recommendations": [
     {
       "action": "Convert active workflows to canonical paths before removing aliases.",
-      "detail": "290 files remain under legacy output roots.",
+      "detail": "318 files remain under legacy output roots.",
       "issue": "legacy_output_aliases",
       "priority": "P1"
     },
@@ -212,8 +212,8 @@
     "scrapingloto7.py",
     "sitecustomize.py"
   ],
-  "script_python_count": 43,
-  "tracked_output_count": 588,
+  "script_python_count": 44,
+  "tracked_output_count": 644,
   "workflow_count": 15,
   "workflow_referenced_python": [
     "holdout_evaluator.py",
