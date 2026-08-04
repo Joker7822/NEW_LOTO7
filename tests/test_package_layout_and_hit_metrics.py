@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -20,6 +21,27 @@ from scripts.evaluation_core import EVALUATOR_VERSION as LEGACY_EVALUATOR_VERSIO
 class PackageAndHitMetricTests(unittest.TestCase):
     def test_legacy_wrapper_uses_packaged_evaluator(self) -> None:
         self.assertEqual(EVALUATOR_VERSION, LEGACY_EVALUATOR_VERSION)
+
+    def test_generation5_selection_script_direct_execution_imports(self) -> None:
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "scripts" / "generation5_selection_evolver.py"),
+                "--help",
+            ],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(
+            completed.returncode,
+            0,
+            msg=(
+                "generation5_selection_evolver.py failed during direct-execution "
+                f"imports\nstdout:\n{completed.stdout}\nstderr:\n{completed.stderr}"
+            ),
+        )
 
     def test_draw_level_high_match_metrics(self) -> None:
         metrics = summarize_hit_metrics(
