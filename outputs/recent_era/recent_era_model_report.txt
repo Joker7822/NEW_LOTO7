@@ -1,12 +1,12 @@
 LOTO7 High-Match-First Self Evolution Report
 ==============================================
 
-created_at: 2026-08-05T07:20:05.495835+00:00
-status: safe_exit_at_217.21_minutes
+created_at: 2026-08-05T13:05:33.907164+00:00
+status: safe_exit_at_207.34_minutes
 objective: hit_first_temporal_robustness
 objective_version: loto7-hit-first-2026.07.22-v1
 resume_used: True
-iterations_evaluated: 236
+iterations_evaluated: 244
 target_draws: 339
 
 [Baseline]
@@ -18,12 +18,12 @@ worst_segment_score: 10.11906
 payout_roi_percent(safety only): 91.209
 
 [Best Candidate]
-hit_first_objective_score: 18.185395
-average_max_main_match: 2.144543
-draw_main4_plus_rate_percent: 5.605
-draw_main5_plus_count: 3
-worst_segment_score: 10.952395
-payout_roi_percent(safety only): 14.69
+hit_first_objective_score: 18.32169
+average_max_main_match: 2.103245
+draw_main4_plus_rate_percent: 7.08
+draw_main5_plus_count: 2
+worst_segment_score: 10.119055
+payout_roi_percent(safety only): 16.539
 
 [Adoption]
 {
@@ -41,13 +41,13 @@ payout_roi_percent(safety only): 14.69
   "min_payout_roi_percent": 8.0,
   "min_temporal_min_delta": 0.0,
   "reasons": [
-    "objective delta=0.989482",
-    "draw4+ delta=0.295pt",
-    "average max delta=0.058997",
-    "worst-segment delta=0.833335",
-    "top1 payout share=0.119143 <= 0.500000",
-    "FAIL: draw5+ count delta -1 < 0",
-    "FAIL: financial floor failed: 14.690% < 86.209%"
+    "objective delta=1.125777",
+    "draw4+ delta=1.770pt",
+    "average max delta=0.017699",
+    "top1 payout share=0.116528 <= 0.500000",
+    "FAIL: draw5+ count delta -2 < 0",
+    "FAIL: worst-segment delta -0.000005 < 0.000000",
+    "FAIL: financial floor failed: 16.539% < 86.209%"
   ]
 }
 

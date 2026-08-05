@@ -1,7 +1,7 @@
 LOTO7 Adaptive Model Safety Guard
 =================================
 
-created_at: 2026-08-05T08:34:18.996364+00:00
+created_at: 2026-08-05T14:44:13.329682+00:00
 focus_start_year: 2020
 accepted: True
 restored_baseline: False
