@@ -5,6 +5,8 @@ on:
   workflow_run:
     workflows:
       - LOTO7 Generation 4 Evaluation
+      - LOTO7 Recent Era Self Evolution
+      - LOTO7 Generation 5 Precision Evolution
     types:
       - completed
   push:
@@ -33,6 +35,8 @@ on:
       - "tests/test_production_ownership.py"
       - ".github/workflows/loto7_refresh_latest_prediction.yml"
       - ".github/workflows/loto7_generation4_run.yml"
+      - ".github/workflows/loto7_generation5.yml"
+      - ".github/workflows/loto7_recent_era_self_evolution.yml"
 
 permissions:
   contents: write
