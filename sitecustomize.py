@@ -7,9 +7,26 @@ import hashlib
 import json
 import os
 import sys
+import threading
+import time
 from pathlib import Path
 
 ADOPTED_BEST_MODEL_PATTERNS = ["loto7_best_model.json"]
+GENERATION5_RUNTIME_SCRIPTS = {
+    "generation5_evolver.py",
+    "generation5_selection_evolver.py",
+    "generation5_checkpoint_runner.py",
+    "run_fixed_null_league.py",
+}
+GENERATION5_THREAD_LIMITS = {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "BLIS_NUM_THREADS": "1",
+    "MALLOC_ARENA_MAX": "2",
+}
 
 
 def _set_option(flag: str, value: str) -> None:
@@ -47,6 +64,70 @@ def _patch_model_self_evolver_args(script_name: str) -> None:
         _set_option("--max-targets", "0")
 
 
+def _mem_available_mb() -> int | None:
+    try:
+        for line in Path("/proc/meminfo").read_text(encoding="utf-8").splitlines():
+            if line.startswith("MemAvailable:"):
+                return int(line.split()[1]) // 1024
+    except (OSError, ValueError, IndexError):
+        return None
+    return None
+
+
+def _peak_rss_mb() -> float | None:
+    try:
+        import resource
+
+        value = float(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+        # Linux reports KiB, macOS reports bytes. GitHub hosted runners are Linux.
+        if sys.platform == "darwin":
+            return round(value / (1024.0 * 1024.0), 1)
+        return round(value / 1024.0, 1)
+    except (ImportError, OSError, ValueError):
+        return None
+
+
+def _start_generation5_heartbeat(script_name: str) -> None:
+    def heartbeat() -> None:
+        while True:
+            try:
+                load1 = round(os.getloadavg()[0], 2) if hasattr(os, "getloadavg") else None
+                print(
+                    "[G5_HEARTBEAT] "
+                    f"script={script_name} pid={os.getpid()} "
+                    f"load1={load1} peak_rss_mb={_peak_rss_mb()} "
+                    f"mem_available_mb={_mem_available_mb()}",
+                    flush=True,
+                )
+            except Exception as exc:  # pragma: no cover - diagnostics must never break production
+                print(f"[G5_HEARTBEAT_WARN] {type(exc).__name__}: {exc}", flush=True)
+            time.sleep(60)
+
+    threading.Thread(
+        target=heartbeat,
+        name="loto7-generation5-resource-heartbeat",
+        daemon=True,
+    ).start()
+
+
+def _apply_generation5_runtime_guard(script_name: str) -> None:
+    if script_name not in GENERATION5_RUNTIME_SCRIPTS:
+        return
+    for key, value in GENERATION5_THREAD_LIMITS.items():
+        os.environ[key] = value
+    try:
+        if hasattr(os, "nice"):
+            os.nice(5)
+    except OSError:
+        pass
+    print(
+        "[G5_RUNTIME_GUARD] "
+        "numeric_threads=1 malloc_arena_max=2 process_nice=5 heartbeat_seconds=60",
+        flush=True,
+    )
+    _start_generation5_heartbeat(script_name)
+
+
 def _write_json(path: str, payload: dict[str, object]) -> None:
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -57,7 +138,7 @@ def _write_json(path: str, payload: dict[str, object]) -> None:
 
 
 def _register_generation5_checkpoint(script_name: str) -> None:
-    if script_name != "generation5_evolver.py":
+    if script_name not in {"generation5_evolver.py", "generation5_selection_evolver.py"}:
         return
 
     def finalize() -> None:
@@ -89,6 +170,7 @@ def _register_generation5_checkpoint(script_name: str) -> None:
 
 def _patch_args() -> None:
     script_name = os.path.basename(sys.argv[0] or "")
+    _apply_generation5_runtime_guard(script_name)
     _patch_merge_evolution_args(script_name)
     _patch_model_self_evolver_args(script_name)
     _register_generation5_checkpoint(script_name)
