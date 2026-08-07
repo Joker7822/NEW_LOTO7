@@ -28,7 +28,7 @@
     }
   },
   "beam_baseline_portfolio": {
-    "average_pair_overlap": 2.3,
+    "average_pair_overlap": 2.4,
     "candidate_pool_counts": {
       "full": 210,
       "recent": 215,
@@ -39,26 +39,26 @@
     "max_pair_overlap": 4,
     "number_usage": {
       "1": 2,
-      "12": 2,
+      "12": 3,
       "14": 1,
       "15": 1,
-      "16": 2,
+      "16": 1,
       "17": 2,
       "18": 2,
       "22": 4,
       "24": 2,
       "28": 1,
-      "29": 3,
+      "29": 2,
       "33": 1,
       "35": 3,
-      "36": 2,
-      "6": 3,
+      "36": 3,
+      "6": 2,
       "7": 1,
       "8": 1,
-      "9": 2
+      "9": 3
     },
-    "objective_score": 580.24175,
-    "pair_coverage_count": 87,
+    "objective_score": 570.80175,
+    "pair_coverage_count": 85,
     "post_selection_number_replacements": 0,
     "source_counts": {
       "full": 1,
@@ -71,7 +71,7 @@
       "regime": 2,
       "super": 0
     },
-    "triple_coverage_count": 168,
+    "triple_coverage_count": 167,
     "unique_number_count": 18
   },
   "change_point": {
@@ -215,47 +215,47 @@
     "super": 0.0
   },
   "generation4_portfolio": {
-    "average_pair_overlap": 2.2,
+    "average_pair_overlap": 2.1,
     "candidate_pool_counts": {
       "full": 210,
       "recent": 215,
       "regime": 185,
       "super": 0
     },
-    "max_number_usage": 4,
+    "max_number_usage": 3,
     "max_pair_overlap": 3,
     "number_usage": {
       "1": 2,
-      "10": 1,
       "12": 2,
-      "15": 1,
-      "16": 2,
+      "14": 1,
+      "15": 2,
+      "16": 1,
       "17": 2,
       "18": 2,
-      "22": 4,
-      "24": 1,
+      "22": 3,
+      "24": 2,
       "29": 2,
       "33": 1,
       "34": 1,
       "35": 3,
-      "36": 2,
+      "36": 3,
       "6": 3,
       "7": 2,
-      "8": 2,
+      "8": 1,
       "9": 2
     },
     "objective_components": {
       "conformal": 31.0,
-      "dpp_logdet": 5.51893,
-      "entropy": 2.812497,
-      "hypergraph": 97.062212,
-      "hypergraph_pair": 71.509716,
-      "hypergraph_triple": 73.00713,
-      "overlap_penalty": 4.333333,
-      "quality": 6.836171,
-      "total": 47.60804
+      "dpp_logdet": 5.563741,
+      "entropy": 2.822205,
+      "hypergraph": 97.123603,
+      "hypergraph_pair": 72.475986,
+      "hypergraph_triple": 70.421763,
+      "overlap_penalty": 3.916667,
+      "quality": 6.879946,
+      "total": 48.22208
     },
-    "objective_score": 47.60804,
+    "objective_score": 48.22208,
     "post_selection_number_replacements": 0,
     "selector": "dpp_hypergraph_beam_search_v1",
     "source_counts": {
@@ -279,9 +279,9 @@
   ],
   "null_strategy_league": {
     "available": true,
-    "model_percentile": 0.427778,
+    "model_percentile": 0.405556,
     "passed": false,
-    "pbo": 0.635579,
+    "pbo": 0.55881,
     "summary_path": "outputs/generation4/null_strategy_league_summary.json"
   },
   "prediction_draw_no": 689,
