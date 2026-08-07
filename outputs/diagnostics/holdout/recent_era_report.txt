@@ -1,32 +1,32 @@
 LOTO7 Recent Era Holdout Report
 ===============================
 
-created_at: 2026-08-07T12:35:54.311247+00:00
+created_at: 2026-08-07T15:11:33.222045+00:00
 detail_csv: outputs/holdout/holdout_result.csv
 recent_start_year: 2020
 
 [Recent Era Summary]
-target_draws: 339
-total_tickets: 1695
-total_cost: 508,500円
+target_draws: 340
+total_tickets: 1700
+total_cost: 510,000円
 total_payout: 83,700円
-profit: -424,800円
-profit_roi_percent: -83.54%
-payout_roi_percent: 16.46%
-ticket_hit_rate_percent: 3.953%
-draw_hit_rate_percent: 9.145%
+profit: -426,300円
+profit_roi_percent: -83.588%
+payout_roi_percent: 16.412%
+ticket_hit_rate_percent: 3.941%
+draw_hit_rate_percent: 9.118%
 max_main_match: 5
-average_max_main_match: 1.737463
-draw_main4_plus_rate_percent: 4.13%
-draw_main5_plus_rate_percent: 0.59%
+average_max_main_match: 1.738235
+draw_main4_plus_rate_percent: 4.118%
+draw_main5_plus_rate_percent: 0.588%
 draw_main6_plus_rate_percent: 0.0%
 portfolio_metrics_available: True
-average_portfolio_unique_numbers: 9.982301
-mean_ticket_pair_overlap: 5.663127
+average_portfolio_unique_numbers: 9.982353
+mean_ticket_pair_overlap: 5.663529
 max_ticket_pair_overlap: 6
-hit_objective_score: 9.94568
+hit_objective_score: 9.945585
 hit_objective_score_complete: True
-rank_counts: {"1等": 0, "2等": 0, "3等": 0, "4等": 2, "5等": 30, "6等": 35, "外れ": 1628}
+rank_counts: {"1等": 0, "2等": 0, "3等": 0, "4等": 2, "5等": 30, "6等": 35, "外れ": 1633}
 
 [Year Summary Fixed]
 2013: target_draws=38 / payout_roi=90.351% / profit=-5,500円 / max_main=5 / main4+=2.632% / main5+=2.632% / portfolio_complete=True / hits=5
@@ -42,6 +42,6 @@ rank_counts: {"1等": 0, "2等": 0, "3等": 0, "4等": 2, "5等": 30, "6等": 35
 2023: target_draws=52 / payout_roi=15.897% / profit=-65,600円 / max_main=4 / main4+=3.846% / main5+=0.0% / portfolio_complete=True / hits=12
 2024: target_draws=52 / payout_roi=8.333% / profit=-71,500円 / max_main=4 / main4+=1.923% / main5+=0.0% / portfolio_complete=True / hits=6
 2025: target_draws=51 / payout_roi=22.092% / profit=-59,600円 / max_main=5 / main4+=3.922% / main5+=1.961% / portfolio_complete=True / hits=10
-2026: target_draws=30 / payout_roi=24.667% / profit=-33,900円 / max_main=4 / main4+=10.0% / main5+=0.0% / portfolio_complete=True / hits=11
+2026: target_draws=31 / payout_roi=23.871% / profit=-35,400円 / max_main=4 / main4+=9.677% / main5+=0.0% / portfolio_complete=True / hits=11
 
 注意: 過去検証上の評価であり、将来の当せんや利益を保証しません。
