@@ -5,18 +5,18 @@
     "method": "rolling_prior_top_k_minimum_hit_coverage_v1",
     "required_main_hits": 4
   },
-  "created_at": "2026-08-08T03:45:40.510202+00:00",
+  "created_at": "2026-08-08T10:10:50.578344+00:00",
   "kind": "loto7_generation4_strict_adoption_gate",
   "null_league_gate": {
     "adoption_allowed": false,
     "available": true,
-    "model_percentile": 0.444444,
+    "model_percentile": 0.466667,
     "passed": false,
-    "pbo": 0.523134,
+    "pbo": 0.529373,
     "reasons": [
       "null league passed=False",
-      "null exceedance=0.444444",
-      "PBO=0.523134",
+      "null exceedance=0.466667",
+      "PBO=0.529373",
       "Null League failed; production adoption is completely rejected"
     ]
   },
