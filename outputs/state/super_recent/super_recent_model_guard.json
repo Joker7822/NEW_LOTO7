@@ -8,7 +8,7 @@
       "max_bonus_match": 2,
       "max_main_match": 6,
       "missing_prize_draw_count": 0,
-      "profit": 139800,
+      "profit": 138300,
       "rank_counts": {
         "1等": 0,
         "2等": 0,
@@ -16,50 +16,50 @@
         "4等": 0,
         "5等": 15,
         "6等": 22,
-        "外れ": 887
+        "外れ": 892
       },
-      "roi": 1.503784,
-      "roi_percent": 150.378,
-      "target_draws": 185,
-      "total_cost": 277500,
+      "roi": 1.495699,
+      "roi_percent": 149.57,
+      "target_draws": 186,
+      "total_cost": 279000,
       "total_payout": 417300,
-      "total_tickets": 925
+      "total_tickets": 930
     }
   },
   "best_model_after_guard": "outputs/super_recent/super_recent_guarded_candidate_model.json",
   "candidate": {
-    "model_id": "g001_0001_5407",
+    "model_id": "g045_0453_1577",
     "path": "outputs/super_recent/super_recent_candidate_model.json",
     "recent": {
-      "grade_hit_count": 40,
+      "grade_hit_count": 33,
       "high_grade_hit_count": 0,
       "max_bonus_match": 2,
       "max_main_match": 4,
       "missing_prize_draw_count": 0,
-      "profit": -233600,
+      "profit": -241200,
       "rank_counts": {
         "1等": 0,
         "2等": 0,
         "3等": 0,
         "4等": 0,
-        "5等": 18,
-        "6等": 22,
-        "外れ": 885
+        "5等": 20,
+        "6等": 13,
+        "外れ": 897
       },
-      "roi": 0.158198,
-      "roi_percent": 15.82,
-      "target_draws": 185,
-      "total_cost": 277500,
-      "total_payout": 43900,
-      "total_tickets": 925
+      "roi": 0.135484,
+      "roi_percent": 13.548,
+      "target_draws": 186,
+      "total_cost": 279000,
+      "total_payout": 37800,
+      "total_tickets": 930
     }
   },
-  "created_at": "2026-08-06T15:09:19.047037+00:00",
+  "created_at": "2026-08-08T17:44:23.069143+00:00",
   "csv": "loto7.csv",
   "decision": {
     "accepted": false,
     "reasons": [
-      "recent roi floor ok: 15.820% >= 8.000%"
+      "recent roi floor ok: 13.548% >= 8.000%"
     ],
     "restore_on_fail": true,
     "restored_baseline": true,
@@ -71,8 +71,8 @@
       "min_recent_roi_delta_percent": 0.0
     },
     "warnings": [
-      "recent roi dropped: delta=-134.558pt < 0.000pt",
-      "recent profit dropped: delta=-373400 < 0",
+      "recent roi dropped: delta=-136.022pt < 0.000pt",
+      "recent profit dropped: delta=-379500 < 0",
       "recent high-grade dropped: delta=-1"
     ]
   },
@@ -84,6 +84,6 @@
   ],
   "purchase_count": 5,
   "recent_start_year": 2023,
-  "recent_target_draws_total": 185,
+  "recent_target_draws_total": 186,
   "unit_cost": 300
 }
