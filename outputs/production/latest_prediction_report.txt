@@ -9,11 +9,11 @@ LOTO7 Generation 4 Latest Prediction
 selection_integrity: original_model_candidates / post-selection replacement=0
 
 [最新予測 5口]
-1位 / 1口目: 01 12 16 17 24 33 35 / 相対スコア=0.95 / 方式=generation4_recent
-2位 / 2口目: 06 09 12 18 22 29 35 / 相対スコア=0.90 / 方式=generation4_full
-3位 / 3口目: 04 09 12 22 23 33 36 / 相対スコア=0.85 / 方式=portfolio_regime_high_match
-4位 / 4口目: 07 08 09 18 24 33 35 / 相対スコア=0.80 / 方式=generation4_recent
-5位 / 5口目: 01 08 14 15 22 35 36 / 相対スコア=0.75 / 方式=portfolio_regime_high_match
+1位 / 1口目: 06 07 08 17 24 33 36 / 相対スコア=0.95 / 方式=generation4_recent
+2位 / 2口目: 07 09 12 16 18 35 36 / 相対スコア=0.90 / 方式=generation4_recent
+3位 / 3口目: 09 14 17 18 22 29 36 / 相対スコア=0.85 / 方式=portfolio_regime_high_match
+4位 / 4口目: 01 04 08 22 23 33 35 / 相対スコア=0.80 / 方式=portfolio_regime_high_match
+5位 / 5口目: 01 06 12 15 22 24 35 / 相対スコア=0.75 / 方式=generation4_full
 
 [Generation 4 Evidence]
 source_quotas: {'full': 1, 'recent': 2, 'regime': 2, 'super': 0}
@@ -24,17 +24,17 @@ conformal_pool: [1, 4, 6, 7, 8, 9, 10, 12, 13, 14, 15, 17, 18, 19, 20, 22, 26, 2
 conformal_empirical_coverage: 0.64011
 null_league_passed: False
 null_model_percentile: 0.45
-null_pbo: 0.659653
+null_pbo: 0.539077
 
 [Portfolio Objective]
-objective_score: 47.633261
-dpp_logdet: 5.619562
-hypergraph_score: 94.756474
+objective_score: 49.009695
+dpp_logdet: 5.567517
+hypergraph_score: 100.587197
 conformal_hits: 31.0
 unique_number_count: 19
-max_number_usage: 4
+max_number_usage: 3
 max_pair_overlap: 3
-average_pair_overlap: 2.3
+average_pair_overlap: 1.9
 
 [相対スコアの意味]
 0.95から順に統一した5口内の順位です。当せん確率ではありません。
