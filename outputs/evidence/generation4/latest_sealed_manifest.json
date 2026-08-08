@@ -1,20 +1,20 @@
 {
-  "created_at": "2026-08-08T10:12:06.043861+00:00",
+  "created_at": "2026-08-08T11:47:56.963881+00:00",
   "files": {
     "loto7.csv": "9e887485512fbdd95dcf024e79aa91dbe952f588eba960b62874492a55246947",
     "loto7_best_model.json": "afd5c5193eaf3c414861e9849cb63fd1cb2f6809e1a5c45bf0864fac1e6ae529",
-    "outputs/evolution_best_prediction.csv": "8174cdf7c07f8e35f75e9bc35227ebea7b970ef8c6ca81185c7fd5e44cecb6c9",
-    "outputs/generation4/latest_generation4_summary.json": "af83f688933be695c65c28e7e0d004efdc9f6261419d3be1773454f97b0d8a7d",
-    "outputs/generation4/latest_shadow_predictions.json": "07e070719fe7a527bf2b4c86a799d426c94cae8c6d80e85bb21682be710b72a8",
+    "outputs/evolution_best_prediction.csv": "f7f0d19fdf006e41e1c7740ab61c6bd60f4bcd8475e3d7e1375eedcbce4e4328",
+    "outputs/generation4/latest_generation4_summary.json": "07a53ff617b6dd3bbf2725567eea9499f20087c23ae36880868ebe71631b5465",
+    "outputs/generation4/latest_shadow_predictions.json": "dda769f8d3a8a7cb20ae223fd21d0a627e5806a9c73d39b192f219de134eae69",
     "outputs/recent_era/recent_era_best_model.json": "fd3fedccfed17951a03cc2b2c2dfa1d86b4982c9c15f7522e48adfa46909b554",
     "outputs/super_recent/super_recent_best_model.json": "fd3fedccfed17951a03cc2b2c2dfa1d86b4982c9c15f7522e48adfa46909b554",
     "scripts/build_generation4_prediction.py": "079b7b664159f0ffb083c78b8a46f14b0c1464f787875e650daf8822b6a1a2f3"
   },
-  "git_sha": "a2277c39afdd16ad6827128908357f56c6f1642c",
+  "git_sha": "b1c061c07028fc98a33572e8d8abb091b21ff2b8",
   "github_run_attempt": "1",
-  "github_run_id": "31252221818",
+  "github_run_id": "31255745381",
   "hash_algorithm": "sha256",
   "kind": "loto7_generation4_sealed_prediction",
-  "manifest_sha256": "d772e69cfcfa9a4d3e27adb686dd1ede53bea2918be548d9eac7da7d7b65b3c6",
+  "manifest_sha256": "ef4fc38afdc0fc88c84e05bb1d5dfc52f96c6ca0679349b1503160d87d6f793e",
   "prediction_draw_no": 690
 }
