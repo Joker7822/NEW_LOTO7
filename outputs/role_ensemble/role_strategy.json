@@ -1,9 +1,8 @@
 {
   "concentrated_roles": [
-    "high_match",
     "recent120"
   ],
-  "created_at": "2026-08-07T20:02:09.611563+00:00",
+  "created_at": "2026-08-08T00:44:05.709272+00:00",
   "kind": "loto7_role_strategy",
   "max_main_best": 1,
   "notes": [
@@ -16,214 +15,214 @@
   "reason": "robust_recent_block_hit_optimization",
   "robust_metrics": {
     "contrarian": {
-      "block_count": 9,
-      "block_score_median": 33.125,
+      "block_count": 13,
+      "block_score_median": 28.461538,
       "block_score_min": 23.461538,
-      "block_score_stddev": 5.56032,
+      "block_score_stddev": 5.051423,
       "full": {
-        "average_main_match": 1.355603,
-        "draw4_rate_percent": 1.077586,
+        "average_main_match": 1.343023,
+        "draw4_rate_percent": 0.726744,
         "draw5_rate_percent": 0.0,
         "draw6_rate_percent": 0.0,
-        "draws": 464.0,
-        "hit_score": 31.637931,
-        "payout_roi_percent": 10.560345,
-        "ticket_hit_rate_percent": 2.586207
+        "draws": 688.0,
+        "hit_score": 30.203488,
+        "payout_roi_percent": 9.011628,
+        "ticket_hit_rate_percent": 2.325581
       },
       "recent": {
-        "average_main_match": 1.346154,
+        "average_main_match": 1.320513,
+        "draw4_rate_percent": 0.0,
+        "draw5_rate_percent": 0.0,
+        "draw6_rate_percent": 0.0,
+        "draws": 156.0,
+        "hit_score": 27.692308,
+        "payout_roi_percent": 8.333333,
+        "ticket_hit_rate_percent": 2.564103
+      },
+      "score": 22.486738,
+      "scoring_version": "loto7-role-strategy-2026.08.01-v2",
+      "short_recent": {
+        "average_main_match": 1.269231,
+        "draw4_rate_percent": 0.0,
+        "draw5_rate_percent": 0.0,
+        "draw6_rate_percent": 0.0,
+        "draws": 78.0,
+        "hit_score": 27.307692,
+        "payout_roi_percent": 12.393162,
+        "ticket_hit_rate_percent": 3.846154
+      },
+      "shrunk_payout_roi_percent": 9.432433,
+      "top1_payout_share": 0.102151,
+      "top3_payout_share": 0.295699
+    },
+    "high_match": {
+      "block_count": 13,
+      "block_score_median": 33.653846,
+      "block_score_min": 25.961538,
+      "block_score_stddev": 5.336035,
+      "full": {
+        "average_main_match": 1.344477,
+        "draw4_rate_percent": 1.30814,
+        "draw5_rate_percent": 0.145349,
+        "draw6_rate_percent": 0.0,
+        "draws": 688.0,
+        "hit_score": 33.502907,
+        "payout_roi_percent": 16.133721,
+        "ticket_hit_rate_percent": 3.052326
+      },
+      "recent": {
+        "average_main_match": 1.378205,
         "draw4_rate_percent": 1.282051,
         "draw5_rate_percent": 0.0,
         "draw6_rate_percent": 0.0,
         "draws": 156.0,
-        "hit_score": 32.051282,
-        "payout_roi_percent": 9.82906,
+        "hit_score": 32.692308,
+        "payout_roi_percent": 10.042735,
         "ticket_hit_rate_percent": 2.564103
       },
-      "score": 24.431218,
+      "score": 22.646045,
       "scoring_version": "loto7-role-strategy-2026.08.01-v2",
       "short_recent": {
-        "average_main_match": 1.282051,
+        "average_main_match": 1.461538,
         "draw4_rate_percent": 1.282051,
         "draw5_rate_percent": 0.0,
         "draw6_rate_percent": 0.0,
         "draws": 78.0,
-        "hit_score": 30.128205,
-        "payout_roi_percent": 5.982906,
-        "ticket_hit_rate_percent": 1.282051
+        "hit_score": 34.358974,
+        "payout_roi_percent": 9.401709,
+        "ticket_hit_rate_percent": 2.564103
       },
-      "shrunk_payout_roi_percent": 11.007752,
-      "top1_payout_share": 0.129252,
-      "top3_payout_share": 0.37415
+      "shrunk_payout_roi_percent": 16.054054,
+      "top1_payout_share": 0.294294,
+      "top3_payout_share": 0.396396
     },
-    "high_match": {
-      "block_count": 9,
-      "block_score_median": 33.125,
-      "block_score_min": 25.961538,
-      "block_score_stddev": 5.950922,
+    "main_best": {
+      "block_count": 13,
+      "block_score_median": 39.423077,
+      "block_score_min": 23.269231,
+      "block_score_stddev": 9.354026,
       "full": {
-        "average_main_match": 1.334052,
-        "draw4_rate_percent": 1.293103,
-        "draw5_rate_percent": 0.215517,
+        "average_main_match": 1.382267,
+        "draw4_rate_percent": 2.325581,
+        "draw5_rate_percent": 0.145349,
         "draw6_rate_percent": 0.0,
-        "draws": 464.0,
-        "hit_score": 33.793103,
-        "payout_roi_percent": 18.247126,
-        "ticket_hit_rate_percent": 3.017241
+        "draws": 688.0,
+        "hit_score": 37.965116,
+        "payout_roi_percent": 20.784884,
+        "ticket_hit_rate_percent": 4.360465
       },
       "recent": {
-        "average_main_match": 1.230769,
+        "average_main_match": 1.429487,
         "draw4_rate_percent": 1.923077,
+        "draw5_rate_percent": 0.0,
+        "draw6_rate_percent": 0.0,
+        "draws": 156.0,
+        "hit_score": 36.602564,
+        "payout_roi_percent": 16.452991,
+        "ticket_hit_rate_percent": 4.487179
+      },
+      "score": 29.395427,
+      "scoring_version": "loto7-role-strategy-2026.08.01-v2",
+      "short_recent": {
+        "average_main_match": 1.397436,
+        "draw4_rate_percent": 1.282051,
+        "draw5_rate_percent": 0.0,
+        "draw6_rate_percent": 0.0,
+        "draws": 78.0,
+        "hit_score": 33.717949,
+        "payout_roi_percent": 12.820513,
+        "ticket_hit_rate_percent": 3.846154
+      },
+      "shrunk_payout_roi_percent": 20.378379,
+      "top1_payout_share": 0.137529,
+      "top3_payout_share": 0.240093
+    },
+    "mid_high": {
+      "block_count": 13,
+      "block_score_median": 30.769231,
+      "block_score_min": 26.730769,
+      "block_score_stddev": 9.389052,
+      "full": {
+        "average_main_match": 1.337209,
+        "draw4_rate_percent": 1.30814,
+        "draw5_rate_percent": 0.145349,
+        "draw6_rate_percent": 0.0,
+        "draws": 688.0,
+        "hit_score": 33.72093,
+        "payout_roi_percent": 16.521318,
+        "ticket_hit_rate_percent": 3.77907
+      },
+      "recent": {
+        "average_main_match": 1.314103,
+        "draw4_rate_percent": 2.564103,
         "draw5_rate_percent": 0.641026,
         "draw6_rate_percent": 0.0,
         "draws": 156.0,
-        "hit_score": 36.794872,
-        "payout_roi_percent": 29.059829,
-        "ticket_hit_rate_percent": 2.564103
+        "hit_score": 41.666667,
+        "payout_roi_percent": 29.91453,
+        "ticket_hit_rate_percent": 5.128205
       },
-      "score": 20.006228,
+      "score": 31.667577,
       "scoring_version": "loto7-role-strategy-2026.08.01-v2",
       "short_recent": {
-        "average_main_match": 1.24359,
-        "draw4_rate_percent": 1.282051,
-        "draw5_rate_percent": 0.0,
+        "average_main_match": 1.320513,
+        "draw4_rate_percent": 5.128205,
+        "draw5_rate_percent": 1.282051,
         "draw6_rate_percent": 0.0,
         "draws": 78.0,
-        "hit_score": 29.358974,
-        "payout_roi_percent": 6.410256,
-        "ticket_hit_rate_percent": 1.282051
+        "hit_score": 55.25641,
+        "payout_roi_percent": 47.435897,
+        "ticket_hit_rate_percent": 6.410256
       },
-      "shrunk_payout_roi_percent": 17.919896,
-      "top1_payout_share": 0.385827,
-      "top3_payout_share": 0.519685
-    },
-    "main_best": {
-      "block_count": 9,
-      "block_score_median": 39.423077,
-      "block_score_min": 27.115385,
-      "block_score_stddev": 9.252023,
-      "full": {
-        "average_main_match": 1.387931,
-        "draw4_rate_percent": 2.586207,
-        "draw5_rate_percent": 0.215517,
-        "draw6_rate_percent": 0.0,
-        "draws": 464.0,
-        "hit_score": 39.50431,
-        "payout_roi_percent": 23.778736,
-        "ticket_hit_rate_percent": 4.525862
-      },
-      "recent": {
-        "average_main_match": 1.25641,
-        "draw4_rate_percent": 1.923077,
-        "draw5_rate_percent": 0.0,
-        "draw6_rate_percent": 0.0,
-        "draws": 156.0,
-        "hit_score": 31.858974,
-        "payout_roi_percent": 9.188034,
-        "ticket_hit_rate_percent": 1.923077
-      },
-      "score": 27.424659,
-      "scoring_version": "loto7-role-strategy-2026.08.01-v2",
-      "short_recent": {
-        "average_main_match": 1.307692,
-        "draw4_rate_percent": 2.564103,
-        "draw5_rate_percent": 0.0,
-        "draw6_rate_percent": 0.0,
-        "draws": 78.0,
-        "hit_score": 35.128205,
-        "payout_roi_percent": 11.965812,
-        "ticket_hit_rate_percent": 2.564103
-      },
-      "shrunk_payout_roi_percent": 22.894057,
-      "top1_payout_share": 0.178248,
-      "top3_payout_share": 0.311178
-    },
-    "mid_high": {
-      "block_count": 9,
-      "block_score_median": 32.115385,
-      "block_score_min": 27.083333,
-      "block_score_stddev": 3.630795,
-      "full": {
-        "average_main_match": 1.338362,
-        "draw4_rate_percent": 1.077586,
-        "draw5_rate_percent": 0.0,
-        "draw6_rate_percent": 0.0,
-        "draws": 464.0,
-        "hit_score": 31.831897,
-        "payout_roi_percent": 13.721264,
-        "ticket_hit_rate_percent": 3.663793
-      },
-      "recent": {
-        "average_main_match": 1.307692,
-        "draw4_rate_percent": 0.641026,
-        "draw5_rate_percent": 0.0,
-        "draw6_rate_percent": 0.0,
-        "draws": 156.0,
-        "hit_score": 29.358974,
-        "payout_roi_percent": 9.188034,
-        "ticket_hit_rate_percent": 2.564103
-      },
-      "score": 26.110418,
-      "scoring_version": "loto7-role-strategy-2026.08.01-v2",
-      "short_recent": {
-        "average_main_match": 1.307692,
-        "draw4_rate_percent": 1.282051,
-        "draw5_rate_percent": 0.0,
-        "draw6_rate_percent": 0.0,
-        "draws": 78.0,
-        "hit_score": 31.923077,
-        "payout_roi_percent": 14.529915,
-        "ticket_hit_rate_percent": 3.846154
-      },
-      "shrunk_payout_roi_percent": 13.850129,
-      "top1_payout_share": 0.099476,
-      "top3_payout_share": 0.272251
+      "shrunk_payout_roi_percent": 16.414415,
+      "top1_payout_share": 0.202346,
+      "top3_payout_share": 0.307918
     },
     "recent120": {
-      "block_count": 9,
-      "block_score_median": 36.923077,
+      "block_count": 13,
+      "block_score_median": 35.961538,
       "block_score_min": 22.692308,
-      "block_score_stddev": 16.242557,
+      "block_score_stddev": 14.165945,
       "full": {
-        "average_main_match": 1.340517,
-        "draw4_rate_percent": 1.724138,
-        "draw5_rate_percent": 0.431034,
-        "draw6_rate_percent": 0.215517,
-        "draws": 464.0,
-        "hit_score": 40.711207,
-        "payout_roi_percent": 588.433908,
-        "ticket_hit_rate_percent": 4.094828
+        "average_main_match": 1.338663,
+        "draw4_rate_percent": 1.889535,
+        "draw5_rate_percent": 0.290698,
+        "draw6_rate_percent": 0.145349,
+        "draws": 688.0,
+        "hit_score": 38.837209,
+        "payout_roi_percent": 401.017442,
+        "ticket_hit_rate_percent": 3.77907
       },
       "recent": {
-        "average_main_match": 1.24359,
-        "draw4_rate_percent": 1.923077,
+        "average_main_match": 1.384615,
+        "draw4_rate_percent": 2.564103,
         "draw5_rate_percent": 0.0,
         "draw6_rate_percent": 0.0,
         "draws": 156.0,
-        "hit_score": 31.602564,
-        "payout_roi_percent": 9.401709,
-        "ticket_hit_rate_percent": 1.923077
+        "hit_score": 37.307692,
+        "payout_roi_percent": 15.17094,
+        "ticket_hit_rate_percent": 3.846154
       },
-      "score": 2.844908,
+      "score": 6.434292,
       "scoring_version": "loto7-role-strategy-2026.08.01-v2",
       "short_recent": {
-        "average_main_match": 1.153846,
+        "average_main_match": 1.461538,
         "draw4_rate_percent": 2.564103,
         "draw5_rate_percent": 0.0,
         "draw6_rate_percent": 0.0,
         "draws": 78.0,
-        "hit_score": 32.051282,
-        "payout_roi_percent": 12.393162,
-        "ticket_hit_rate_percent": 2.564103
+        "hit_score": 38.846154,
+        "payout_roi_percent": 12.820513,
+        "ticket_hit_rate_percent": 3.846154
       },
       "shrunk_payout_roi_percent": 40.0,
-      "top1_payout_share": 0.964473,
-      "top3_payout_share": 0.978879
+      "top1_payout_share": 0.954452,
+      "top3_payout_share": 0.968708
     }
   },
   "role_caps": {
     "contrarian": 2,
-    "high_match": 1,
+    "high_match": 2,
     "main_best": 1,
     "mid_high": 2,
     "recent120": 1
@@ -242,25 +241,25 @@
       "role": "mid_high"
     },
     {
-      "label": "荒れ目/逆張り: 休眠・広めレンジ・低重複",
-      "role": "contrarian"
-    },
-    {
       "label": "高一致狙い: ペア/3連/最大一致重視",
       "role": "high_match"
+    },
+    {
+      "label": "荒れ目/逆張り: 休眠・広めレンジ・低重複",
+      "role": "contrarian"
     }
   ],
   "scores": {
-    "contrarian": 24.431218,
-    "high_match": 22.006228,
-    "main_best": 30.424659,
-    "mid_high": 26.110418,
-    "recent120": 2.844908
+    "contrarian": 22.486738,
+    "high_match": 24.646045,
+    "main_best": 32.395427,
+    "mid_high": 31.667577,
+    "recent120": 6.434292
   },
   "scoring_version": "loto7-role-strategy-2026.08.01-v2",
-  "source_completed_target_draws": 464,
+  "source_completed_target_draws": 688,
   "source_genome_id": "g228_0228_2057",
-  "source_summary_status": "safe_exit_at_290.09_minutes",
+  "source_summary_status": "completed",
   "source_target_draws_total": 688,
   "strategy_counts": {
     "contrarian": 1,
