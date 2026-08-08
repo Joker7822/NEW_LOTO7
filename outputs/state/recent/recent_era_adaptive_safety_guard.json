@@ -8,7 +8,7 @@
     "model_id": "g070_0070_3390",
     "path": "outputs/recent_era/recent_era_guarded_candidate_model.json"
   },
-  "created_at": "2026-08-07T21:03:06.065606+00:00",
+  "created_at": "2026-08-08T02:32:31.600964+00:00",
   "csv": "loto7.csv",
   "decision": {
     "accepted": true,
@@ -721,7 +721,7 @@
       "avg_max_overlap": 5.6,
       "exact_duplicates": 0,
       "high_overlap_count": 3,
-      "history_ticket_count": 32,
+      "history_ticket_count": 37,
       "max_overlap": 6,
       "penalty": 780.0,
       "ticket_count": 5,
@@ -737,7 +737,7 @@
       "avg_max_overlap": 5.6,
       "exact_duplicates": 0,
       "high_overlap_count": 3,
-      "history_ticket_count": 32,
+      "history_ticket_count": 37,
       "max_overlap": 6,
       "penalty": 780.0,
       "ticket_count": 5,
