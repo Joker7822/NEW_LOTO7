@@ -28,22 +28,23 @@
     }
   },
   "beam_baseline_portfolio": {
-    "average_pair_overlap": 2.4,
+    "average_pair_overlap": 2.3,
     "candidate_pool_counts": {
-      "full": 215,
-      "recent": 215,
-      "regime": 189,
+      "full": 214,
+      "recent": 213,
+      "regime": 188,
       "super": 0
     },
-    "max_number_usage": 3,
-    "max_pair_overlap": 4,
+    "max_number_usage": 4,
+    "max_pair_overlap": 3,
     "number_usage": {
       "1": 2,
-      "12": 3,
+      "12": 2,
+      "15": 1,
       "16": 2,
       "17": 1,
       "18": 2,
-      "22": 3,
+      "22": 4,
       "23": 1,
       "24": 2,
       "29": 1,
@@ -51,13 +52,13 @@
       "35": 3,
       "36": 3,
       "4": 1,
-      "6": 3,
+      "6": 2,
       "7": 2,
       "8": 1,
       "9": 2
     },
-    "objective_score": 574.6525,
-    "pair_coverage_count": 86,
+    "objective_score": 571.72225,
+    "pair_coverage_count": 89,
     "post_selection_number_replacements": 0,
     "source_counts": {
       "full": 1,
@@ -70,8 +71,8 @@
       "regime": 2,
       "super": 0
     },
-    "triple_coverage_count": 169,
-    "unique_number_count": 17
+    "triple_coverage_count": 170,
+    "unique_number_count": 18
   },
   "change_point": {
     "aggregate_distance": 0.029587892,
@@ -214,48 +215,48 @@
     "super": 0.0
   },
   "generation4_portfolio": {
-    "average_pair_overlap": 1.9,
+    "average_pair_overlap": 2.3,
     "candidate_pool_counts": {
-      "full": 215,
-      "recent": 215,
-      "regime": 189,
+      "full": 214,
+      "recent": 213,
+      "regime": 188,
       "super": 0
     },
-    "max_number_usage": 3,
+    "max_number_usage": 4,
     "max_pair_overlap": 3,
     "number_usage": {
       "1": 2,
-      "12": 2,
+      "12": 3,
       "14": 1,
       "15": 1,
       "16": 1,
-      "17": 2,
+      "17": 1,
       "18": 2,
       "22": 3,
       "23": 1,
       "24": 2,
       "29": 1,
-      "33": 2,
-      "35": 3,
-      "36": 3,
+      "33": 3,
+      "35": 4,
+      "36": 2,
       "4": 1,
-      "6": 2,
-      "7": 2,
+      "6": 1,
+      "7": 1,
       "8": 2,
-      "9": 2
+      "9": 3
     },
     "objective_components": {
       "conformal": 31.0,
-      "dpp_logdet": 5.564722,
-      "entropy": 2.876764,
-      "hypergraph": 100.587197,
-      "hypergraph_pair": 74.264777,
-      "hypergraph_triple": 75.206916,
-      "overlap_penalty": 3.416667,
-      "quality": 6.812226,
-      "total": 48.998912
+      "dpp_logdet": 5.619562,
+      "entropy": 2.822205,
+      "hypergraph": 94.756474,
+      "hypergraph_pair": 70.336526,
+      "hypergraph_triple": 69.77128,
+      "overlap_penalty": 4.583333,
+      "quality": 6.967866,
+      "total": 47.633261
     },
-    "objective_score": 48.998912,
+    "objective_score": 47.633261,
     "post_selection_number_replacements": 0,
     "selector": "dpp_hypergraph_beam_search_v1",
     "source_counts": {
@@ -279,9 +280,9 @@
   ],
   "null_strategy_league": {
     "available": true,
-    "model_percentile": 0.4,
+    "model_percentile": 0.444444,
     "passed": false,
-    "pbo": 0.585418,
+    "pbo": 0.523134,
     "summary_path": "outputs/generation4/null_strategy_league_summary.json"
   },
   "prediction_draw_no": 690,
